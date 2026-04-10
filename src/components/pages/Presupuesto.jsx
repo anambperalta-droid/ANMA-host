@@ -365,31 +365,44 @@ export default function Presupuesto() {
               <button className="cp-btn cp-btn-ghost" onClick={copyWA}><i className="fa-brands fa-whatsapp" /> Copiar WA</button>
               <button className="cp-btn cp-btn-ghost" onClick={openPreview}><i className="fa fa-eye" /> Vista previa</button>
               <button className="cp-btn cp-btn-ghost" onClick={printPDF}><i className="fa fa-file-pdf" /> PDF</button>
-              {mpCfg.enabled && (
-                <button className="cp-btn cp-btn-ghost" onClick={generateMP} disabled={mpLoading}
-                  style={{ background: 'rgba(0,158,227,.15)', color: '#009EE3', borderColor: 'rgba(0,158,227,.3)' }}>
-                  <i className="fa fa-credit-card" /> {mpLoading ? 'Generando...' : 'Link Mercado Pago'}
-                </button>
-              )}
-              {bankCfg.enabled && (
-                <button className="cp-btn cp-btn-ghost" onClick={copyBankInfo}
-                  style={{ background: 'rgba(5,150,105,.15)', color: 'var(--acento)', borderColor: 'rgba(5,150,105,.3)' }}>
-                  <i className="fa fa-building-columns" /> Copiar CBU / Alias
-                </button>
-              )}
-              {bankCfg.enabled && (
-                <button className="cp-btn cp-btn-ghost" onClick={copyBankWithBudget}
-                  style={{ background: 'rgba(5,150,105,.08)', color: 'var(--acento)', borderColor: 'rgba(5,150,105,.2)', fontSize: 11 }}>
-                  <i className="fa-brands fa-whatsapp" /> Copiar WA + datos bancarios
-                </button>
-              )}
-              {!mpCfg.enabled && !bankCfg.enabled && (
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', padding: '6px 4px', textAlign: 'center' }}>
-                  <i className="fa fa-circle-info" /> Activá un método de pago en Config &gt; Pagos
-                </div>
-              )}
               {mpResult && <div style={{ marginTop: 4, fontSize: 10, wordBreak: 'break-all' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
             </div>
+            {(mpCfg.enabled || bankCfg.enabled) ? (
+              <div className="cp-pay-group">
+                <div className="cp-pay-group-lbl"><i className="fa fa-money-check-dollar" /> Métodos de cobro</div>
+                {mpCfg.enabled && (
+                  <button className="cp-pay-btn mp" onClick={generateMP} disabled={mpLoading}>
+                    <div className="pay-btn-ico"><i className="fa fa-credit-card" /></div>
+                    <div className="pay-btn-txt">
+                      <div className="t">{mpLoading ? 'Generando link...' : 'Link Mercado Pago'}</div>
+                      <div className="s">Tarjeta · QR · Dinero en cuenta</div>
+                    </div>
+                  </button>
+                )}
+                {bankCfg.enabled && (
+                  <button className="cp-pay-btn bk" onClick={copyBankInfo}>
+                    <div className="pay-btn-ico"><i className="fa fa-building-columns" /></div>
+                    <div className="pay-btn-txt">
+                      <div className="t">Copiar CBU / Alias</div>
+                      <div className="s">Datos para transferencia bancaria</div>
+                    </div>
+                  </button>
+                )}
+                {bankCfg.enabled && (
+                  <button className="cp-pay-btn bk-wa" onClick={copyBankWithBudget}>
+                    <div className="pay-btn-ico"><i className="fa-brands fa-whatsapp" /></div>
+                    <div className="pay-btn-txt">
+                      <div className="t">WhatsApp + datos bancarios</div>
+                      <div className="s">Mensaje completo con CBU/Alias</div>
+                    </div>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="cp-pay-empty">
+                <i className="fa fa-circle-info" /> Activá un método de pago en Config &gt; Pagos
+              </div>
+            )}
             <div className="wa-prev">
               <div className="wa-prev-lbl">Vista previa WA</div>
               <div className="wa-bubble">{waText}</div>
@@ -401,7 +414,7 @@ export default function Presupuesto() {
       {/* MODAL PREVIEW */}
       {previewHtml && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setPreviewHtml('') }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 940, maxHeight: '85vh', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, margin: 'auto 0' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 940, height: 'min(900px, 90vh)', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, margin: 'auto 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', borderRadius: '18px 18px 0 0' }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Vista previa — {budgetNum}</h3>
               <div style={{ display: 'flex', gap: 6 }}>

@@ -391,6 +391,51 @@ td b{color:var(--txt);font-weight:600}
 @keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .page-enter{animation:pgIn .2s ease both}
 
+/* ─── PAY METHOD CARDS ─── */
+.pay-card{background:var(--surface);border:2px solid var(--border);border-radius:16px;overflow:hidden;transition:all var(--tr);box-shadow:var(--sh)}
+.pay-card.on{border-color:var(--acento);box-shadow:0 8px 28px rgba(5,150,105,.12),var(--sh-md)}
+.pay-card-head{display:flex;align-items:center;gap:14px;padding:18px 22px;cursor:pointer;background:var(--surface);transition:background var(--tr)}
+.pay-card-head:hover{background:var(--surface2)}
+.pay-card.on .pay-card-head{background:linear-gradient(90deg,var(--acento-xlt),transparent 70%)}
+.pay-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.pay-head-txt{flex:1;min-width:0}
+.pay-head-title{font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.2px;margin-bottom:2px}
+.pay-head-sub{font-size:11px;color:var(--txt3);line-height:1.4}
+.pay-status{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:800;letter-spacing:.8px;padding:5px 11px;border-radius:20px;background:var(--surface2);color:var(--txt3);border:1.5px solid var(--border);flex-shrink:0;text-transform:uppercase}
+.pay-status.on{background:var(--acento-xlt);color:var(--acento);border-color:var(--acento)}
+.pay-status i{font-size:9px}
+.pay-card-body{padding:18px 22px 22px;border-top:1.5px solid var(--border);background:var(--surface2);animation:pgIn .25s ease both}
+.pay-card-body .fg label{color:var(--txt2)}
+
+/* ─── TOGGLE SWITCH ─── */
+.toggle{width:40px;height:22px;border-radius:14px;background:var(--border2);border:none;position:relative;cursor:pointer;flex-shrink:0;transition:background var(--tr);padding:0}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:transform var(--tr)}
+.toggle.on{background:var(--acento)}
+.toggle.on::after{transform:translateX(18px)}
+.toggle-field{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;margin-top:8px}
+
+/* ─── PAY BUTTONS (Calc panel selectors) ─── */
+.cp-pay-group{margin-top:10px;display:flex;flex-direction:column;gap:7px;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px}
+.cp-pay-group-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px;display:flex;align-items:center;gap:5px}
+.cp-pay-btn{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:left;transition:all var(--tr)}
+.cp-pay-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);transform:translateY(-1px)}
+.cp-pay-btn:disabled{opacity:.6;cursor:wait}
+.cp-pay-btn .pay-btn-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.cp-pay-btn .pay-btn-txt{flex:1;line-height:1.2}
+.cp-pay-btn .pay-btn-txt .t{font-size:12px;font-weight:700;color:#fff}
+.cp-pay-btn .pay-btn-txt .s{font-size:9px;color:rgba(255,255,255,.55);font-weight:500;letter-spacing:.2px;margin-top:1px}
+.cp-pay-btn.mp{background:rgba(0,158,227,.14);border-color:rgba(0,158,227,.32)}
+.cp-pay-btn.mp:hover{background:rgba(0,158,227,.22);border-color:rgba(0,158,227,.5)}
+.cp-pay-btn.mp .pay-btn-ico{background:linear-gradient(135deg,#009EE3,#00C1EA);color:#fff}
+.cp-pay-btn.bk{background:rgba(16,185,129,.14);border-color:rgba(16,185,129,.32)}
+.cp-pay-btn.bk:hover{background:rgba(16,185,129,.22);border-color:rgba(16,185,129,.5)}
+.cp-pay-btn.bk .pay-btn-ico{background:linear-gradient(135deg,#10B981,#059669);color:#fff}
+.cp-pay-btn.bk-wa{background:rgba(37,211,102,.12);border-color:rgba(37,211,102,.28)}
+.cp-pay-btn.bk-wa:hover{background:rgba(37,211,102,.2);border-color:rgba(37,211,102,.45)}
+.cp-pay-btn.bk-wa .pay-btn-ico{background:linear-gradient(135deg,#25D366,#128C7E);color:#fff}
+.cp-pay-empty{font-size:10px;color:rgba(255,255,255,.5);padding:10px;text-align:center;line-height:1.5}
+.cp-pay-empty i{margin-right:4px}
+
 /* ─── METRIC ROW ─── */
 .metric-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
 .metric-row:last-child{border-bottom:none}
