@@ -219,11 +219,17 @@ td b{color:var(--txt);font-weight:600}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
 /* ─── MODALS ─── */
-.modal-bg{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,12,60,.5);backdrop-filter:blur(6px);align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
-.modal-bg.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--r-xl);padding:28px;width:100%;max-width:720px;box-shadow:var(--sh-lg);animation:pgIn .2s ease both;margin:auto 0;flex-shrink:0}
-.modal-lg{max-width:960px}
-.modal-xl{max-width:1120px}
+.modal-bg{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,12,60,.5);backdrop-filter:blur(6px);padding:16px;overflow-y:auto}
+.modal-bg.open{display:flex;align-items:center;justify-content:center;min-height:100%}
+.modal{background:var(--surface);border-radius:var(--r-xl);padding:22px 24px;width:100%;max-width:780px;box-shadow:var(--sh-lg);animation:pgIn .2s ease both;margin:auto;flex-shrink:0}
+.modal-lg{max-width:980px}
+.modal-xl{max-width:1140px}
+.modal .mh{margin-bottom:14px}
+.modal .fg{margin-bottom:12px}
+.modal .grid2{gap:10px 14px}
+.modal .grid3{gap:10px 14px}
+.modal textarea.f-inp{min-height:56px;max-height:110px}
+.modal .modal-actions,.modal .ma{margin-top:14px}
 .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .mh h3{font-size:17px;font-weight:800;color:var(--txt);letter-spacing:-.3px}
 .mclose{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);color:var(--txt2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
