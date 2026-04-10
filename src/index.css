@@ -219,17 +219,18 @@ td b{color:var(--txt);font-weight:600}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
 /* ─── MODALS ─── */
-.modal-bg{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,12,60,.5);backdrop-filter:blur(6px);padding:16px;overflow-y:auto}
-.modal-bg.open{display:flex;align-items:center;justify-content:center;min-height:100%}
-.modal{background:var(--surface);border-radius:var(--r-xl);padding:22px 24px;width:100%;max-width:780px;box-shadow:var(--sh-lg);animation:pgIn .2s ease both;margin:auto;flex-shrink:0}
+.modal-bg{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,12,60,.5);backdrop-filter:blur(6px);overflow-y:auto;padding:24px 16px}
+.modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:var(--surface);border-radius:var(--r-xl);padding:24px 26px;width:100%;max-width:780px;box-shadow:var(--sh-lg);animation:pgIn .2s ease both;margin:auto 0;flex-shrink:0}
 .modal-lg{max-width:980px}
 .modal-xl{max-width:1140px}
 .modal .mh{margin-bottom:14px}
 .modal .fg{margin-bottom:12px}
 .modal .grid2{gap:10px 14px}
 .modal .grid3{gap:10px 14px}
-.modal textarea.f-inp{min-height:56px;max-height:110px}
+.modal textarea.f-inp{min-height:56px;max-height:140px}
 .modal .modal-actions,.modal .ma{margin-top:14px}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:450;animation:pgIn .2s ease both}
 .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .mh h3{font-size:17px;font-weight:800;color:var(--txt);letter-spacing:-.3px}
 .mclose{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);color:var(--txt2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
@@ -419,7 +420,90 @@ td b{color:var(--txt);font-weight:600}
 .period-pills .pill{border:none;background:none;border-radius:6px;font-size:10px;font-weight:600;padding:4px 10px}
 .period-pills .pill.active{background:var(--surface);color:var(--acento);box-shadow:var(--sh)}
 
-/* ─── RESPONSIVE ─── */
-@media(max-width:1100px){.bento{grid-template-columns:repeat(2,1fr)}.bento-seg{grid-column:1/-1}.budget-layout{grid-template-columns:1fr}.analysis-grid{grid-template-columns:1fr}}
-@media(max-width:900px){.login-left{display:none}.login-right{width:100%}.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0;max-width:100vw}}
-@media(max-width:600px){.bento{grid-template-columns:1fr}.bento-wide,.bento-seg{grid-column:1/-1}.grid2,.grid3{grid-template-columns:1fr}.ph{flex-direction:column}.ph-right{width:100%;flex-wrap:wrap}.period-pills{order:-1}}
+/* ─── RESPONSIVE / MOBILE ─── */
+.tb-btn-menu{display:none}
+
+@media(max-width:1100px){
+  .bento{grid-template-columns:repeat(2,1fr)}
+  .bento-seg{grid-column:1/-1}
+  .budget-layout{grid-template-columns:1fr}
+  .analysis-grid{grid-template-columns:1fr}
+  .modal{max-width:calc(100vw - 40px)}
+  .modal-lg,.modal-xl{max-width:calc(100vw - 40px)}
+}
+
+@media(max-width:900px){
+  /* Sidebar: drawer */
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform .25s ease;z-index:500;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-overlay{display:block}
+  /* Main fills viewport */
+  .main{margin-left:0;width:100vw;max-width:100vw}
+  /* Burger menu visible */
+  .tb-btn-menu{display:inline-flex!important;align-items:center;justify-content:center}
+  /* Topbar reshape */
+  .topbar{padding:10px 14px;gap:10px}
+  .tb-search{display:none}
+  .tb-page-title{font-size:16px;font-weight:700}
+  /* Login: hide hero */
+  .login-left{display:none}
+  .login-right{width:100%;padding:20px}
+  /* Content padding */
+  .content{padding:16px 14px}
+  /* Page headers stack */
+  .ph{flex-direction:column;align-items:stretch;gap:12px}
+  .ph-right{width:100%;flex-wrap:wrap}
+  .ph h1{font-size:22px}
+  .ph-title-row{flex-wrap:wrap}
+  /* Tables scroll horizontally */
+  .tbl-wrap,.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:560px}
+  /* KPIs 2 cols */
+  .kpis,.kpis-4{grid-template-columns:1fr 1fr;gap:10px}
+  /* Modals wider proportion */
+  .modal{max-width:calc(100vw - 28px);padding:20px}
+  .modal-lg,.modal-xl{max-width:calc(100vw - 28px)}
+  .modal .grid2,.modal .grid3{grid-template-columns:1fr}
+  /* Tabs horizontal scroll */
+  .tabs,.tabs-bar{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .tabs::-webkit-scrollbar,.tabs-bar::-webkit-scrollbar{display:none}
+  /* FAB smaller */
+  .fab{right:18px;bottom:18px;width:48px;height:48px}
+}
+
+@media(max-width:600px){
+  .bento{grid-template-columns:1fr;gap:10px}
+  .bento-wide,.bento-seg{grid-column:1/-1}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .kpis,.kpis-4{grid-template-columns:1fr 1fr}
+  .content{padding:14px 12px}
+  /* Modals near full-screen but keep rounded */
+  .modal-bg{padding:12px 10px}
+  .modal{padding:18px 16px;border-radius:14px;max-width:calc(100vw - 20px)}
+  .modal-lg,.modal-xl{max-width:calc(100vw - 20px)}
+  .mh h3{font-size:15px}
+  /* Typography down */
+  .ph h1{font-size:20px;letter-spacing:-.3px}
+  .ph .s{font-size:12px}
+  /* Buttons smaller */
+  .btn,.btn-s{font-size:12px;padding:8px 11px}
+  .btn-primary{font-size:13px;padding:10px 14px}
+  /* Topbar */
+  .topbar{padding:10px 12px}
+  .tb-page-title{font-size:15px}
+  .tb-acts{gap:6px}
+  /* Period pills full width */
+  .period-pills{order:-1;width:100%;justify-content:center}
+  /* Cards and list items */
+  .card{padding:14px}
+  .sb-logo{width:38px;height:38px;font-size:14px}
+  /* Login form spacing */
+  .login-right{padding:16px}
+  .login-form-wrap{padding:24px 20px}
+  /* Detail modal header */
+  .dm-head{flex-wrap:wrap;gap:10px}
+  /* FAB */
+  .fab{right:14px;bottom:14px;width:46px;height:46px}
+  /* TaskFab panel full width */
+  .fab-panel{width:calc(100vw - 20px);right:10px;left:10px;max-height:70vh}
+}

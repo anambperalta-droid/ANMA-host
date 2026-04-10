@@ -38,6 +38,7 @@ export default function AppShell() {
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />
+      {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
       <div className="main">
         <Topbar onMenuClick={() => setSideOpen(!sideOpen)} onSearchClick={() => setCmdOpen(true)} />
         <div className="content">

@@ -8,7 +8,7 @@ export default function Topbar({ onMenuClick, onSearchClick }) {
 
   return (
     <header className="topbar">
-      <button className="tb-btn" onClick={onMenuClick} style={{ display: 'none' }}>
+      <button className="tb-btn tb-btn-menu" onClick={onMenuClick} aria-label="Menú">
         <i className="fa fa-bars" />
       </button>
       <div className="tb-page-title">{title}</div>
