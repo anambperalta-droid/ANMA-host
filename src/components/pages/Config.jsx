@@ -50,12 +50,21 @@ export default function Config() {
   const [validity, setValidity] = useState(c.validity || 15)
   const [conds, setConds] = useState(c.paymentConditions || '')
   const [legal, setLegal] = useState(c.legalNote || '')
+  const [mpEnabled, setMpEnabled] = useState(c.mpEnabled !== false)
   const [mpToken, setMpToken] = useState(c.mpToken || '')
   const [mpPubkey, setMpPubkey] = useState(c.mpPubkey || '')
   const [mpName, setMpName] = useState(c.mpName || '')
   const [mpCurrency, setMpCurrency] = useState(c.mpCurrency || 'ARS')
   const [mpSena, setMpSena] = useState(c.mpUseSena || false)
   const [mpTestResult, setMpTestResult] = useState('')
+  const [bankEnabled, setBankEnabled] = useState(c.bankEnabled === true)
+  const [bankHolder, setBankHolder] = useState(c.bankHolder || '')
+  const [bankName, setBankName] = useState(c.bankName || '')
+  const [bankAccountType, setBankAccountType] = useState(c.bankAccountType || 'Cuenta corriente')
+  const [bankCbu, setBankCbu] = useState(c.bankCbu || '')
+  const [bankAlias, setBankAlias] = useState(c.bankAlias || '')
+  const [bankCuit, setBankCuit] = useState(c.bankCuit || '')
+  const [bankNotes, setBankNotes] = useState(c.bankNotes || '')
   const [newPass, setNewPass] = useState('')
   const [repPass, setRepPass] = useState('')
   const [acctEmail, setAcctEmail] = useState(c.email || '')
@@ -87,8 +96,13 @@ export default function Config() {
   }
 
   const saveMPConfig = () => {
-    updateConfig({ mpToken, mpPubkey, mpName, mpCurrency, mpUseSena: mpSena })
+    updateConfig({ mpEnabled, mpToken, mpPubkey, mpName, mpCurrency, mpUseSena: mpSena })
     toast('Configuración MP guardada', 'ok')
+  }
+
+  const saveBankConfig = () => {
+    updateConfig({ bankEnabled, bankHolder, bankName, bankAccountType, bankCbu, bankAlias, bankCuit, bankNotes })
+    toast('Datos bancarios guardados', 'ok')
   }
 
   const testMP = async () => {
@@ -262,30 +276,81 @@ export default function Config() {
       )}
 
       {tab === 'pagos' && (
-        <div className="card" style={{ maxWidth: 640 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: '#009EE3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="fa fa-credit-card" style={{ color: '#fff', fontSize: 20 }} /></div>
-            <div><div style={{ fontWeight: 800, fontSize: 16, color: 'var(--txt)' }}>Mercado Pago — Checkout Pro</div><div style={{ fontSize: 12, color: 'var(--txt3)' }}>Generá links de cobro directo</div></div>
+        <div style={{ display: 'grid', gap: 20, maxWidth: 720 }}>
+          {/* ── MERCADO PAGO ── */}
+          <div className="card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#009EE3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-credit-card" style={{ color: '#fff', fontSize: 18 }} /></div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--txt)' }}>Mercado Pago — Checkout Pro</div>
+                <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Generá links de cobro directo</div>
+              </div>
+              <button className={`toggle ${mpEnabled ? 'on' : ''}`} onClick={() => setMpEnabled(!mpEnabled)} />
+            </div>
+            {mpEnabled && (<>
+              <div style={{ background: 'var(--blue-lt)', border: '1.5px solid #93C5FD', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 11, color: 'var(--blue)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <i className="fa fa-circle-info" style={{ marginTop: 2 }} />
+                <div>Obtené tu Access Token desde <b>mercadopago.com.ar → Tu negocio → Configuración → Credenciales</b>. Usá las de <b>producción</b>.</div>
+              </div>
+              <div className="fg"><label>Access Token</label><input type="password" value={mpToken} onChange={e => setMpToken(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
+              <div className="fg"><label>Public Key</label><input type="text" value={mpPubkey} onChange={e => setMpPubkey(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
+              <div className="grid2">
+                <div className="fg"><label>Nombre visible</label><input type="text" value={mpName} onChange={e => setMpName(e.target.value)} placeholder="Mi Negocio" /></div>
+                <div className="fg"><label>Moneda</label><select value={mpCurrency} onChange={e => setMpCurrency(e.target.value)}><option value="ARS">ARS</option><option value="BRL">BRL</option><option value="CLP">CLP</option><option value="MXN">MXN</option><option value="USD">USD</option></select></div>
+              </div>
+              <div className="toggle-field">
+                <div><div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>Cobrar solo la seña</div><div style={{ fontSize: 11, color: 'var(--txt3)' }}>Si está activo, el link cobra solo el % de seña</div></div>
+                <button className={`toggle ${mpSena ? 'on' : ''}`} onClick={() => setMpSena(!mpSena)} />
+              </div>
+              <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button className="btn btn-primary btn-sm" onClick={testMP}><i className="fa fa-flask-vial" /> Probar conexión</button>
+                <button className="btn btn-secondary btn-sm" onClick={saveMPConfig}><i className="fa fa-floppy-disk" /> Guardar MP</button>
+              </div>
+              {mpTestResult && <div style={{ marginTop: 12, fontSize: 12 }} dangerouslySetInnerHTML={{ __html: mpTestResult }} />}
+            </>)}
+            {!mpEnabled && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <button className="btn btn-ghost btn-sm" onClick={saveMPConfig}><i className="fa fa-floppy-disk" /> Guardar estado</button>
+              </div>
+            )}
           </div>
-          <div style={{ background: 'var(--blue-lt)', border: '1.5px solid #93C5FD', borderRadius: 10, padding: '12px 16px', marginBottom: 18, fontSize: 12, color: 'var(--blue)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            <i className="fa fa-circle-info" style={{ marginTop: 2 }} />
-            <div>Obtené tu Access Token desde <b>mercadopago.com.ar → Tu negocio → Configuración → Credenciales</b>. Usá las de <b>producción</b>.</div>
+
+          {/* ── TRANSFERENCIA BANCARIA ── */}
+          <div className="card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--acento)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-building-columns" style={{ color: '#fff', fontSize: 18 }} /></div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--txt)' }}>Transferencia bancaria</div>
+                <div style={{ fontSize: 11, color: 'var(--txt3)' }}>CBU / Alias para cobros directos</div>
+              </div>
+              <button className={`toggle ${bankEnabled ? 'on' : ''}`} onClick={() => setBankEnabled(!bankEnabled)} />
+            </div>
+            {bankEnabled && (<>
+              <div className="grid2">
+                <div className="fg"><label>Titular</label><input type="text" value={bankHolder} onChange={e => setBankHolder(e.target.value)} placeholder="Juan Pérez / Empresa SA" /></div>
+                <div className="fg"><label>Banco</label><input type="text" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Galicia, Santander, BBVA..." /></div>
+                <div className="fg"><label>Tipo de cuenta</label>
+                  <select value={bankAccountType} onChange={e => setBankAccountType(e.target.value)}>
+                    <option>Cuenta corriente</option>
+                    <option>Caja de ahorro</option>
+                    <option>Cuenta única</option>
+                  </select>
+                </div>
+                <div className="fg"><label>CUIT / CUIL</label><input type="text" value={bankCuit} onChange={e => setBankCuit(e.target.value)} placeholder="20-12345678-9" /></div>
+              </div>
+              <div className="fg"><label>CBU (22 dígitos)</label><input type="text" value={bankCbu} onChange={e => setBankCbu(e.target.value.replace(/\s/g, ''))} placeholder="0000000000000000000000" maxLength={22} style={{ fontFamily: 'monospace' }} /></div>
+              <div className="fg"><label>Alias</label><input type="text" value={bankAlias} onChange={e => setBankAlias(e.target.value)} placeholder="mi.negocio.arg" /></div>
+              <div className="fg"><label>Notas adicionales (opcional)</label><textarea value={bankNotes} onChange={e => setBankNotes(e.target.value)} rows={2} placeholder="Ej: Enviar comprobante por WhatsApp al finalizar." /></div>
+              <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary btn-sm" onClick={saveBankConfig}><i className="fa fa-floppy-disk" /> Guardar datos bancarios</button>
+              </div>
+            </>)}
+            {!bankEnabled && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <button className="btn btn-ghost btn-sm" onClick={saveBankConfig}><i className="fa fa-floppy-disk" /> Guardar estado</button>
+              </div>
+            )}
           </div>
-          <div className="fg"><label>Access Token</label><input type="password" value={mpToken} onChange={e => setMpToken(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
-          <div className="fg"><label>Public Key</label><input type="text" value={mpPubkey} onChange={e => setMpPubkey(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
-          <div className="grid2">
-            <div className="fg"><label>Nombre visible</label><input type="text" value={mpName} onChange={e => setMpName(e.target.value)} placeholder="Mi Negocio" /></div>
-            <div className="fg"><label>Moneda</label><select value={mpCurrency} onChange={e => setMpCurrency(e.target.value)}><option value="ARS">ARS</option><option value="BRL">BRL</option><option value="CLP">CLP</option><option value="MXN">MXN</option><option value="USD">USD</option></select></div>
-          </div>
-          <div className="toggle-field">
-            <div><div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>Incluir seña como monto</div><div style={{ fontSize: 11, color: 'var(--txt3)' }}>Si está activo, cobra solo el % de seña</div></div>
-            <button className={`toggle ${mpSena ? 'on' : ''}`} onClick={() => setMpSena(!mpSena)} />
-          </div>
-          <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary btn-sm" onClick={testMP}><i className="fa fa-flask-vial" /> Probar conexión</button>
-            <button className="btn btn-secondary btn-sm" onClick={saveMPConfig}><i className="fa fa-floppy-disk" /> Guardar config MP</button>
-          </div>
-          {mpTestResult && <div style={{ marginTop: 12 }} dangerouslySetInnerHTML={{ __html: mpTestResult }} />}
         </div>
       )}
 

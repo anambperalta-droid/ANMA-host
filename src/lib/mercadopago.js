@@ -3,12 +3,41 @@ import { cfg, fmt } from './storage'
 export function getMPConfig() {
   const c = cfg()
   return {
+    enabled: c.mpEnabled !== false && !!c.mpToken,
     token: c.mpToken || '',
     pubkey: c.mpPubkey || '',
     name: c.mpName || c.businessName || 'ANMA',
     currency: c.mpCurrency || 'ARS',
     useSena: c.mpUseSena || false,
   }
+}
+
+export function getBankConfig() {
+  const c = cfg()
+  return {
+    enabled: c.bankEnabled === true,
+    holder: c.bankHolder || '',
+    bankName: c.bankName || '',
+    accountType: c.bankAccountType || 'Cuenta corriente',
+    cbu: c.bankCbu || '',
+    alias: c.bankAlias || '',
+    cuit: c.bankCuit || '',
+    notes: c.bankNotes || '',
+  }
+}
+
+export function buildBankInfoText(bank, businessName = '') {
+  const lines = []
+  if (businessName) lines.push(`*Datos para transferencia — ${businessName}*`)
+  else lines.push('*Datos para transferencia*')
+  if (bank.holder) lines.push(`*Titular:* ${bank.holder}`)
+  if (bank.bankName) lines.push(`*Banco:* ${bank.bankName}`)
+  if (bank.accountType) lines.push(`*Tipo:* ${bank.accountType}`)
+  if (bank.cbu) lines.push(`*CBU:* ${bank.cbu}`)
+  if (bank.alias) lines.push(`*Alias:* ${bank.alias}`)
+  if (bank.cuit) lines.push(`*CUIT/CUIL:* ${bank.cuit}`)
+  if (bank.notes) lines.push(`\n${bank.notes}`)
+  return lines.join('\n')
 }
 
 export async function testMPConnection(token) {

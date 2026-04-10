@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
-import { getMPConfig, createPaymentLink } from '../../lib/mercadopago'
+import { getMPConfig, createPaymentLink, getBankConfig, buildBankInfoText } from '../../lib/mercadopago'
 
 const emptyItem = () => ({ name: '', qty: 1, costUnit: '', priceUnit: '' })
 
@@ -172,9 +172,12 @@ export default function Presupuesto() {
 
   const copyWA = () => navigator.clipboard.writeText(waText).then(() => toast('Mensaje WA copiado', 'ok'))
 
+  const mpCfg = getMPConfig()
+  const bankCfg = getBankConfig()
+
   const generateMP = async () => {
     const mp = getMPConfig()
-    if (!mp.token) { toast('Configurá tu token de Mercado Pago en Configuración > Pagos.', 'er'); return }
+    if (!mp.enabled || !mp.token) { toast('Activá y configurá Mercado Pago en Configuración > Pagos.', 'er'); return }
     setMpLoading(true)
     try {
       const budget = { num: budgetNum, contact: form.contact, company: form.company, items, shipCost: form.shipCost }
@@ -187,6 +190,22 @@ export default function Presupuesto() {
       }
     } catch { setMpResult('<span style="color:var(--red)">Error de conexión</span>') }
     setMpLoading(false)
+  }
+
+  const copyBankInfo = () => {
+    const bank = getBankConfig()
+    if (!bank.enabled) { toast('Activá la transferencia bancaria en Configuración > Pagos.', 'er'); return }
+    if (!bank.cbu && !bank.alias) { toast('Cargá al menos CBU o Alias en Configuración > Pagos.', 'er'); return }
+    const text = buildBankInfoText(bank, c.businessName || 'ANMA')
+    navigator.clipboard.writeText(text).then(() => toast('Datos de transferencia copiados', 'ok'))
+  }
+
+  const copyBankWithBudget = () => {
+    const bank = getBankConfig()
+    if (!bank.enabled) { toast('Activá la transferencia bancaria en Configuración > Pagos.', 'er'); return }
+    const bankText = buildBankInfoText(bank, c.businessName || 'ANMA')
+    const fullText = `${waText}\n\n${bankText}`
+    navigator.clipboard.writeText(fullText).then(() => toast('Presupuesto + datos bancarios copiados', 'ok'))
   }
 
   /* ── ESC cierra modales ── */
@@ -346,10 +365,29 @@ export default function Presupuesto() {
               <button className="cp-btn cp-btn-ghost" onClick={copyWA}><i className="fa-brands fa-whatsapp" /> Copiar WA</button>
               <button className="cp-btn cp-btn-ghost" onClick={openPreview}><i className="fa fa-eye" /> Vista previa</button>
               <button className="cp-btn cp-btn-ghost" onClick={printPDF}><i className="fa fa-file-pdf" /> PDF</button>
-              <button className="cp-btn cp-btn-ghost" onClick={generateMP} disabled={mpLoading}
-                style={{ background: 'rgba(0,158,227,.15)', color: '#009EE3', borderColor: 'rgba(0,158,227,.3)' }}>
-                <i className="fa fa-credit-card" /> {mpLoading ? 'Generando...' : 'Link Mercado Pago'}
-              </button>
+              {mpCfg.enabled && (
+                <button className="cp-btn cp-btn-ghost" onClick={generateMP} disabled={mpLoading}
+                  style={{ background: 'rgba(0,158,227,.15)', color: '#009EE3', borderColor: 'rgba(0,158,227,.3)' }}>
+                  <i className="fa fa-credit-card" /> {mpLoading ? 'Generando...' : 'Link Mercado Pago'}
+                </button>
+              )}
+              {bankCfg.enabled && (
+                <button className="cp-btn cp-btn-ghost" onClick={copyBankInfo}
+                  style={{ background: 'rgba(5,150,105,.15)', color: 'var(--acento)', borderColor: 'rgba(5,150,105,.3)' }}>
+                  <i className="fa fa-building-columns" /> Copiar CBU / Alias
+                </button>
+              )}
+              {bankCfg.enabled && (
+                <button className="cp-btn cp-btn-ghost" onClick={copyBankWithBudget}
+                  style={{ background: 'rgba(5,150,105,.08)', color: 'var(--acento)', borderColor: 'rgba(5,150,105,.2)', fontSize: 11 }}>
+                  <i className="fa-brands fa-whatsapp" /> Copiar WA + datos bancarios
+                </button>
+              )}
+              {!mpCfg.enabled && !bankCfg.enabled && (
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', padding: '6px 4px', textAlign: 'center' }}>
+                  <i className="fa fa-circle-info" /> Activá un método de pago en Config &gt; Pagos
+                </div>
+              )}
               {mpResult && <div style={{ marginTop: 4, fontSize: 10, wordBreak: 'break-all' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
             </div>
             <div className="wa-prev">
