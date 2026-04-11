@@ -451,9 +451,36 @@ td b{color:var(--txt);font-weight:600}
 
 /* ─── BUDGET LAYOUT ─── */
 .budget-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
-.bsec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
-.bsec-title{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;gap:7px}
-.bsec-title i{color:var(--brand)}
+.bsec{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);margin-bottom:12px;box-shadow:var(--sh);overflow:hidden;transition:border-color var(--tr),box-shadow var(--tr)}
+.bsec:hover{border-color:var(--border2)}
+.bsec.has-err{border-color:#FCA5A5}
+.bsec.has-err .bsec-title{background:linear-gradient(90deg,var(--red-lt),transparent 70%)}
+.bsec-title{font-size:12px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:7px;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;transition:background var(--tr)}
+.bsec-title:hover{background:var(--surface2)}
+.bsec-title-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.bsec-title-left i.fa{color:var(--brand);font-size:13px}
+.bsec-title .bsec-ch{color:var(--txt3);font-size:10px;transition:transform var(--tr);flex-shrink:0}
+.bsec.collapsed .bsec-ch{transform:rotate(0deg)}
+.bsec-body{padding:0 16px 16px;animation:pgIn .25s ease both}
+.bsec.collapsed .bsec-body{display:none}
+.bsec-badge{font-size:10px;font-weight:600;color:var(--brand);background:var(--brand-xlt);padding:2px 9px;border-radius:20px;margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+
+/* ─── INPUT ERROR STATE ─── */
+.fg input.inp-err,.fg select.inp-err,.fg textarea.inp-err{border-color:#FCA5A5;background:var(--red-lt)}
+.fg input.inp-err:focus,.fg select.inp-err:focus,.fg textarea.inp-err:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.12)}
+.fg-err{font-size:10px;color:var(--red);margin-top:5px;display:flex;align-items:center;gap:4px;font-weight:500}
+.fg-err i{font-size:10px}
+.fg-err b{font-family:monospace;background:rgba(220,38,38,.08);padding:1px 5px;border-radius:4px;font-weight:700}
+
+/* ─── MARGIN COMPARISON (Calc panel) ─── */
+.cp-margin-cmp{margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px}
+.cp-margin-cmp .cmp-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:3px 0}
+.cp-margin-cmp .cmp-lbl{color:rgba(255,255,255,.55);display:flex;align-items:center;gap:5px}
+.cp-margin-cmp .cmp-lbl i{font-size:9px}
+.cp-margin-cmp .cmp-val{font-weight:700;color:#fff}
+.cp-margin-cmp .cmp-delta{margin-top:8px;padding:7px 10px;border-radius:7px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px;line-height:1.3}
+.cp-margin-cmp .cmp-delta.pos{background:rgba(134,239,172,.15);color:#86EFAC;border:1px solid rgba(134,239,172,.3)}
+.cp-margin-cmp .cmp-delta.neg{background:rgba(252,165,165,.15);color:#FCA5A5;border:1px solid rgba(252,165,165,.3)}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:4px;height:4px}

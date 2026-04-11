@@ -11,6 +11,23 @@ const emptyItem = () => ({ name: '', qty: 1, costUnit: '', priceUnit: '' })
 const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
 const selectOnFocus = (e) => e.target.select()
 
+/* ── Validación WhatsApp ── */
+const isValidWA = (v) => { if (!v) return true; const cleaned = v.replace(/[\s\-()]/g, ''); return /^[+]?\d{8,15}$/.test(cleaned) }
+
+/* ── Sección colapsable ── */
+function BSection({ icon, title, badge, children, defaultOpen = true, error = false }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className={`bsec ${open ? '' : 'collapsed'} ${error ? 'has-err' : ''}`}>
+      <div className="bsec-title" onClick={() => setOpen(!open)}>
+        <div className="bsec-title-left"><i className={`fa ${icon}`} />{title}{badge ? <span className="bsec-badge">{badge}</span> : null}{error ? <i className="fa fa-circle-exclamation" style={{ color: 'var(--red)', fontSize: 11, marginLeft: 4 }} /> : null}</div>
+        <i className={`fa fa-chevron-${open ? 'up' : 'down'} bsec-ch`} />
+      </div>
+      <div className="bsec-body">{children}</div>
+    </div>
+  )
+}
+
 /* ── Combobox buscador de clientes ── */
 function ClientCombo({ clients, value, onSelect, onChange }) {
   const [open, setOpen] = useState(false)
@@ -81,9 +98,11 @@ export default function Presupuesto() {
   })
   const [items, setItems] = useState([emptyItem()])
   const [editId, setEditId] = useState(null)
+  const [marginBudgetedSaved, setMarginBudgetedSaved] = useState(null)
   const [mpResult, setMpResult] = useState('')
   const [mpLoading, setMpLoading] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
+  const [waTouched, setWaTouched] = useState(false)
 
   const clients = get('clients')
   const products = get('products')
@@ -105,6 +124,7 @@ export default function Presupuesto() {
         })
         setItems(b.items?.length ? b.items : [emptyItem()])
         setEditId(b.id)
+        setMarginBudgetedSaved(typeof b.marginBudgeted === 'number' ? b.marginBudgeted : null)
       }
     }
   }, [id])
@@ -155,11 +175,14 @@ export default function Presupuesto() {
   }, [editId, c.nextNum, c.budgetPrefix])
 
   const handleSave = () => {
-    if (!form.contact && !form.company) { toast('Ingresá al menos contacto o empresa.', 'er'); return }
+    if (!form.contact && !form.company) { toast('Falta el cliente. Cargá un nombre de contacto o empresa.', 'er'); return }
+    if (form.wa && !isValidWA(form.wa)) { toast('El WhatsApp no tiene un formato válido. Ej: +54 351 1234567', 'er'); setWaTouched(true); return }
     const validItems = items.filter(i => i.name).map(i => ({ ...i, qty: num(i.qty), costUnit: num(i.costUnit), priceUnit: num(i.priceUnit) }))
-    if (!validItems.length) { toast('Agregá al menos un producto.', 'er'); return }
+    if (!validItems.length) { toast('Necesitás al menos un producto. Agregá uno desde "Productos".', 'er'); return }
     const saveForm = { ...form, shipCost: num(form.shipCost), logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
-    saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt })
+    const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
+    saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
+    if (!editId) setMarginBudgetedSaved(marginBudgeted)
     toast('Presupuesto guardado', 'ok')
     nav('/')
   }
@@ -255,15 +278,24 @@ export default function Presupuesto() {
       <div className="budget-layout">
         <div>
           {/* CLIENTE */}
-          <div className="bsec">
-            <div className="bsec-title"><i className="fa fa-user-tie" />Cliente</div>
+          <BSection icon="fa-user-tie" title="Cliente" badge={form.contact || form.company || null} error={!form.contact && !form.company} defaultOpen={true}>
             <div className="grid2">
               <div className="fg">
                 <label>Contacto (buscar en CRM)</label>
                 <ClientCombo clients={clients} value={form.contact} onSelect={handleClientSelect} onChange={val => setF('contact', val)} />
               </div>
               <div className="fg"><label>Empresa</label><input type="text" value={form.company} onChange={e => setF('company', e.target.value)} placeholder="Empresa S.A." /></div>
-              <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} placeholder="+54 351 ..." /></div>
+              <div className="fg">
+                <label>WhatsApp</label>
+                <input type="text" value={form.wa}
+                  onChange={e => { setF('wa', e.target.value); if (!waTouched) setWaTouched(true) }}
+                  onBlur={() => setWaTouched(true)}
+                  placeholder="+54 351 1234567"
+                  className={waTouched && form.wa && !isValidWA(form.wa) ? 'inp-err' : ''} />
+                {waTouched && form.wa && !isValidWA(form.wa) && (
+                  <div className="fg-err"><i className="fa fa-circle-exclamation" /> Formato no válido. Ej: <b>+54 351 1234567</b> (8 a 15 dígitos)</div>
+                )}
+              </div>
               <div className="fg"><label>Ocasión</label>
                 <select value={form.ocasion} onChange={e => setF('ocasion', e.target.value)}>
                   <option value="">— seleccionar —</option>
@@ -271,11 +303,10 @@ export default function Presupuesto() {
                 </select>
               </div>
             </div>
-          </div>
+          </BSection>
 
           {/* ENTREGA */}
-          <div className="bsec">
-            <div className="bsec-title"><i className="fa fa-truck" />Entrega y estado</div>
+          <BSection icon="fa-truck" title="Entrega y estado" badge={form.deliveryDate || form.delivery || null} defaultOpen={false}>
             <div className="grid2">
               <div className="fg"><label>Modalidad</label>
                 <select value={form.delivery} onChange={e => setF('delivery', e.target.value)}>
@@ -304,11 +335,10 @@ export default function Presupuesto() {
               <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
               <div className="fg"><label>Nota al cliente (PDF)</label><textarea value={form.noteCli} onChange={e => setF('noteCli', e.target.value)} rows={2} placeholder="Visible en el presupuesto..." /></div>
             </div>
-          </div>
+          </BSection>
 
           {/* PRODUCTOS */}
-          <div className="bsec">
-            <div className="bsec-title"><i className="fa fa-box-open" />Productos</div>
+          <BSection icon="fa-box-open" title="Productos" badge={items.filter(i => i.name).length ? `${items.filter(i => i.name).length} ítems` : null} error={!items.some(i => i.name)} defaultOpen={true}>
             <div style={{ overflowX: 'auto' }}>
               <table>
                 <thead><tr><th style={{ minWidth: 160 }}>Producto</th><th style={{ width: 65 }}>Cant.</th><th style={{ width: 100 }}>Costo u.</th><th style={{ width: 100 }}>Precio u.</th><th style={{ width: 95 }}>Subtotal</th><th style={{ width: 36 }}></th></tr></thead>
@@ -328,17 +358,16 @@ export default function Presupuesto() {
               <datalist id="prod-suggestions">{products.map(p => <option key={p.id} value={p.name} />)}</datalist>
             </div>
             <button className="btn btn-ghost btn-xs" style={{ marginTop: 8 }} onClick={addItem}><i className="fa fa-plus" /> Agregar producto</button>
-          </div>
+          </BSection>
 
           {/* PARÁMETROS */}
-          <div className="bsec">
-            <div className="bsec-title"><i className="fa fa-sliders" />Parámetros de precio</div>
+          <BSection icon="fa-sliders" title="Parámetros de precio" badge={`${form.margin || 0}% margen · ${form.deposit || 0}% seña`} defaultOpen={false}>
             <div className="grid3">
               <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setF('margin', e.target.value)} onBlur={e => { if (e.target.value === '') setF('margin', 0) }} min="0" max="100" /></div>
               <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
               <div className="fg"><label>Impresión/logo x u. ($)</label><input type="number" value={form.logoCost} onFocus={selectOnFocus} onChange={e => setF('logoCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('logoCost', 0) }} min="0" /></div>
             </div>
-          </div>
+          </BSection>
         </div>
 
         {/* PANEL LATERAL */}
@@ -351,6 +380,20 @@ export default function Presupuesto() {
             <div className="cp-row"><span className="cp-lbl">Envío</span><span className="cp-val">{fmt(num(form.shipCost))}</span></div>
             <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>
             <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val">{calc.marginReal}%</span></div>
+            {marginBudgetedSaved !== null && Math.abs(marginBudgetedSaved - Number(calc.marginReal)) >= 0.5 && (() => {
+              const delta = (Number(calc.marginReal) - marginBudgetedSaved).toFixed(1)
+              const positive = Number(delta) >= 0
+              return (
+                <div className="cp-margin-cmp">
+                  <div className="cmp-row"><span className="cmp-lbl"><i className="fa fa-bookmark" /> Presupuestado</span><span className="cmp-val">{marginBudgetedSaved.toFixed(1)}%</span></div>
+                  <div className="cmp-row"><span className="cmp-lbl"><i className="fa fa-bullseye" /> Real actual</span><span className="cmp-val">{calc.marginReal}%</span></div>
+                  <div className={`cmp-delta ${positive ? 'pos' : 'neg'}`}>
+                    <i className={`fa fa-arrow-${positive ? 'up' : 'down'}`} />
+                    {positive ? '+' : ''}{delta}% {positive ? 'mejor que lo presupuestado' : 'por debajo de lo presupuestado'}
+                  </div>
+                </div>
+              )
+            })()}
             <div className="cp-total-row">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)' }}>Total</span>
