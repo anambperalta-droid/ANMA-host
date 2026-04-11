@@ -394,7 +394,7 @@ export default function Clientes() {
                             <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{b.date || '—'}{b.ocasion ? ` · ${b.ocasion}` : ''}</div>
                           </div>
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--brand)' }}>{fmt(b.total)}</div>
+                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--money)' }}>{fmt(b.total)}</div>
                             {b.totalGain > 0 && <div style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600 }}>+{fmt(b.totalGain)}</div>}
                           </div>
                           <i className="fa fa-chevron-right" style={{ color: 'var(--txt4)', fontSize: 10 }} />

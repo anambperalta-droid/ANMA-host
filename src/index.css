@@ -32,17 +32,20 @@
   --sidebar-bg: #1E1B4B;
   --panel-grad: linear-gradient(160deg, #1E1B4B 0%, #312E81 50%, #4C1D95 100%);
 
-  /* ── Neutros (fijos) ── */
-  --bg: #F4F6FD;
+  /* ── Neutros (fijos) — optimizados para lectura fácil ── */
+  --bg: #F8F9FA;
   --surface: #FFFFFF;
-  --surface2: #F8F9FE;
-  --surface3: #F0F2FA;
-  --border: #E5E7F0;
-  --border2: #D1D5E8;
-  --txt: #1E1B4B;
-  --txt2: #4B5280;
-  --txt3: #8B90B8;
-  --txt4: #C4C9DF;
+  --surface2: #F3F4F6;
+  --surface3: #EDEFF3;
+  --border: #E5E7EB;
+  --border2: #D1D5DB;
+  --txt: #111827;
+  --txt2: #374151;
+  --txt3: #6B7280;
+  --txt4: #9CA3AF;
+  /* ── Montos: negro pleno, sin color ── */
+  --money: #000000;
+  --money-lg: #111827;
   --red: #DC2626;
   --red-lt: #FEF2F2;
   --red-dim: rgba(220,38,38,.12);
@@ -171,7 +174,7 @@ input,select,textarea{font-family:inherit}
 .kpi-glow{position:absolute;top:-16px;right:-16px;width:70px;height:70px;border-radius:50%;opacity:.08}
 .kpi-icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px}
 .kpi-label{font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
-.kpi-val{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;line-height:1}
+.kpi-val{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;line-height:1;color:var(--money)!important}
 .kpi-foot{font-size:11px;color:var(--txt3)}
 .bento-wide{grid-column:span 2}
 .bento-chart{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh);transition:all var(--tr)}

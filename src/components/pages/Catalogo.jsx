@@ -123,7 +123,7 @@ export default function Catalogo() {
                 <td><span className="badge b-purple">{p.cat}</span></td>
                 <td>{supplierName(p.supplierId)}</td>
                 <td>{fmt(p.cost)}</td>
-                <td style={{ fontWeight: 700, color: 'var(--brand)' }}>{fmt(suggestedPrice(p.cost))}</td>
+                <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
                 <td><div className="acts">
                   <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
                   <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>

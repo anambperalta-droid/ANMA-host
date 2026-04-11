@@ -262,7 +262,7 @@ export default function Proveedores() {
                             <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--txt)' }}>{p.name}</div>
                             <div style={{ fontSize: 10, color: 'var(--txt3)' }}>{p.cat}</div>
                           </div>
-                          <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--brand)' }}>{fmt(p.cost)}</div>
+                          <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--money)' }}>{fmt(p.cost)}</div>
                         </div>
                       ))}
                     </div>

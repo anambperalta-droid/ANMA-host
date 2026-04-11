@@ -18,7 +18,7 @@ function KpiCard({ label, value, foot, color, icon }) {
         <i className={`fa ${icon}`} style={{ color: c, fontSize: 18 }} />
       </div>
       <div className="kpi-label">{label}</div>
-      <div className="kpi-val" style={{ color: c }}>{value}</div>
+      <div className="kpi-val">{value}</div>
       <div className="kpi-foot">{foot}</div>
     </div>
   )
@@ -26,17 +26,28 @@ function KpiCard({ label, value, foot, color, icon }) {
 
 function BarChart({ data, type = 'income' }) {
   const maxV = Math.max(...data.map(m => m.val), 1)
-  const grad = type === 'gain'
-    ? 'linear-gradient(180deg,var(--green),rgba(5,150,105,.3))'
-    : 'linear-gradient(180deg,var(--brand),rgba(124,58,237,.3))'
+  // Monocromático: mismo brand-color para todas las barras, sin gradient
   return (
     <div>
       <div className="bar-chart" style={{ height: 130 }}>
-        {data.map((m, i) => (
-          <div key={i} className="bc">
-            <div className="bb" style={{ height: Math.max(4, (m.val / maxV) * 120), background: grad }} title={fmt(m.val)} />
-          </div>
-        ))}
+        {data.map((m, i) => {
+          const pct = m.val / maxV
+          // Opacidad plena variable según altura relativa (mín .35, máx 1)
+          const opacity = pct === 0 ? 0.15 : 0.35 + pct * 0.65
+          return (
+            <div key={i} className="bc">
+              <div
+                className="bb"
+                style={{
+                  height: Math.max(4, pct * 120),
+                  background: 'var(--brand)',
+                  opacity,
+                }}
+                title={fmt(m.val)}
+              />
+            </div>
+          )
+        })}
       </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         {data.map((m, i) => <div key={i} className="bl" style={{ flex: 1, textAlign: 'center' }}>{m.lbl}</div>)}
@@ -482,7 +493,7 @@ export default function Historial() {
                         <tr key={b.id}>
                           <td><b>{b.num || '—'}</b></td>
                           <td>{b.company || b.contact || '—'}</td>
-                          <td style={{ fontWeight: 700, color: 'var(--brand)' }}>{fmt(b.total)}</td>
+                          <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
                           <td><Badge status={b.status} /></td>
                           <td>
                             <div className="acts">
@@ -528,8 +539,8 @@ export default function Historial() {
                     <td>{b.contact || '—'}</td>
                     <td style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
                     <td>{b.deliveryDate || '—'}</td>
-                    <td style={{ fontWeight: 700, color: 'var(--brand)' }}>{fmt(b.total)}</td>
-                    <td style={{ color: 'var(--green)', fontWeight: 600 }}>{fmt(b.totalGain)}</td>
+                    <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
+                    <td style={{ color: 'var(--money)', fontWeight: 600 }}>{fmt(b.totalGain)}</td>
                     <td>
                       <select style={{ fontSize: 11, padding: '4px 8px', border: '2px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', background: 'var(--surface)', cursor: 'pointer', outline: 'none' }}
                         value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
@@ -567,7 +578,7 @@ export default function Historial() {
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-trophy" style={{ color: 'var(--amber)', marginRight: 6 }} />Clientes top</span></div>
             {topClients.length ? topClients.map(([n, v], i) => (
-              <div key={i} className="metric-row"><span className="mr-label">{n}</span><span className="mr-val" style={{ color: 'var(--brand)' }}>{fmt(v)}</span></div>
+              <div key={i} className="metric-row"><span className="mr-label">{n}</span><span className="mr-val" style={{ color: 'var(--money)' }}>{fmt(v)}</span></div>
             )) : <div className="empty" style={{ padding: 20 }}><p>Sin datos</p></div>}
           </div>
           <div className="card">

@@ -142,9 +142,9 @@ export default function Logistica() {
 
       {tab === 'resumen' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 16 }}>
-          <div className="card card-sm"><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Costo total envíos</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--brand)' }}>{fmt(totalShipCost)}</div></div>
-          <div className="card card-sm"><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Envíos este mes</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--blue)' }}>{thisMonth}</div></div>
-          <div className="card card-sm"><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Promedio por envío</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--green)' }}>{fmt(avgCost)}</div></div>
+          <div className="card card-sm"><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Costo total envíos</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--money)' }}>{fmt(totalShipCost)}</div></div>
+          <div className="card card-sm"><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Envíos este mes</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--money)' }}>{thisMonth}</div></div>
+          <div className="card card-sm"><div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Promedio por envío</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--money)' }}>{fmt(avgCost)}</div></div>
         </div>
       )}
 
