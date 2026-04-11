@@ -453,7 +453,8 @@ td b{color:var(--txt);font-weight:600}
 .wa-card-text{background:#ECE5DD;border-radius:6px;padding:10px;font-size:11px;line-height:1.6;color:#111;white-space:pre-wrap;max-height:100px;overflow-y:auto;margin-top:8px}
 
 /* ─── BUDGET LAYOUT ─── */
-.budget-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+.budget-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start}
+.budget-layout>*{min-width:0}
 .bsec{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);margin-bottom:12px;box-shadow:var(--sh);overflow:hidden;transition:border-color var(--tr),box-shadow var(--tr)}
 .bsec:hover{border-color:var(--border2)}
 .bsec.has-err{border-color:#FCA5A5}
