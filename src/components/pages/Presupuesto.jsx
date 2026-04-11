@@ -4,6 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
 import { getMPConfig, createPaymentLink, getBankConfig, buildBankInfoText } from '../../lib/mercadopago'
+import { pushBudget, getSheetsConfig } from '../../lib/sheets'
 
 const emptyItem = () => ({ name: '', qty: 1, costUnit: '', priceUnit: '' })
 
@@ -181,9 +182,16 @@ export default function Presupuesto() {
     if (!validItems.length) { toast('Necesitás al menos un producto. Agregá uno desde "Productos".', 'er'); return }
     const saveForm = { ...form, shipCost: num(form.shipCost), logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
-    saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
+    const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
     toast('Presupuesto guardado', 'ok')
+    // ─── Auto-sync a Google Sheets (fire-and-forget) ───
+    const gs = getSheetsConfig()
+    if (gs.enabled && gs.autoSync && gs.url && savedBudget) {
+      pushBudget(savedBudget).then(r => {
+        if (r.ok) toast('Sincronizado con Google Sheets', 'ok')
+      }).catch(() => {})
+    }
     nav('/')
   }
 

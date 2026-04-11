@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { testMPConnection } from '../../lib/mercadopago'
 import { applyThemeColors } from '../../lib/theme'
+import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets, APPS_SCRIPT_TEMPLATE } from '../../lib/sheets'
 
 function ListEditor({ label, items, onAdd, onRemove }) {
   const [val, setVal] = useState('')
@@ -69,6 +70,17 @@ export default function Config() {
   const [repPass, setRepPass] = useState('')
   const [acctEmail, setAcctEmail] = useState(c.email || '')
 
+  /* ── Google Sheets sync state ── */
+  const initSheets = getSheetsConfig()
+  const [gsEnabled, setGsEnabled] = useState(initSheets.enabled)
+  const [gsUrl, setGsUrl] = useState(initSheets.url)
+  const [gsAuto, setGsAuto] = useState(initSheets.autoSync !== false)
+  const [gsLastSync, setGsLastSync] = useState(initSheets.lastSync)
+  const [gsLastStatus, setGsLastStatus] = useState(initSheets.lastStatus)
+  const [gsTestResult, setGsTestResult] = useState('')
+  const [gsShowScript, setGsShowScript] = useState(false)
+  const [gsBulkLoading, setGsBulkLoading] = useState(false)
+
   /* ── Marca blanca: cambio en tiempo real ── */
   const handlePrincipalChange = (hex) => {
     setBcolor(hex)
@@ -103,6 +115,39 @@ export default function Config() {
   const saveBankConfig = () => {
     updateConfig({ bankEnabled, bankHolder, bankName, bankAccountType, bankCbu, bankAlias, bankCuit, bankNotes })
     toast('Datos bancarios guardados', 'ok')
+  }
+
+  const saveSheetsConfig = () => {
+    setSheetsConfig({ enabled: gsEnabled, url: gsUrl.trim(), autoSync: gsAuto })
+    toast('Integración con Google Sheets guardada', 'ok')
+  }
+  const testSheets = async () => {
+    setGsTestResult('<span style="color:var(--amber)"><i class="fa fa-spinner fa-spin"></i> Enviando ping...</span>')
+    const r = await testSheetsConnection(gsUrl.trim())
+    if (r.ok) {
+      setGsTestResult(`<span style="color:var(--green)"><i class="fa fa-circle-check"></i> ${r.message}</span>`)
+      setSheetsConfig({ enabled: gsEnabled, url: gsUrl.trim(), autoSync: gsAuto, lastSync: new Date().toISOString(), lastStatus: 'ok' })
+      setGsLastSync(new Date().toISOString()); setGsLastStatus('ok')
+    } else {
+      setGsTestResult(`<span style="color:var(--red)"><i class="fa fa-circle-xmark"></i> ${r.message}</span>`)
+    }
+  }
+  const syncAllBudgets = async () => {
+    if (!gsEnabled || !gsUrl.trim()) { toast('Primero activá y configurá la URL de Google Sheets.', 'er'); return }
+    setGsBulkLoading(true)
+    const bud = get('budgets')
+    const r = await pushAllBudgets(bud)
+    setGsBulkLoading(false)
+    if (r.ok) {
+      toast(`${r.count} presupuestos enviados a Google Sheets`, 'ok')
+      setGsLastSync(new Date().toISOString()); setGsLastStatus('ok')
+    } else {
+      toast(`Error: ${r.message}`, 'er')
+      setGsLastStatus('error')
+    }
+  }
+  const copyAppsScript = () => {
+    navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE).then(() => toast('Código Apps Script copiado al portapapeles', 'ok'))
   }
 
   const testMP = async () => {
@@ -157,6 +202,7 @@ export default function Config() {
     { id: 'comercial', icon: 'fa-dollar-sign', label: 'Comercial' },
     { id: 'listas', icon: 'fa-list', label: 'Listas' },
     { id: 'pagos', icon: 'fa-credit-card', label: 'Pagos' },
+    { id: 'integraciones', icon: 'fa-plug', label: 'Integraciones' },
     { id: 'cuenta', icon: 'fa-shield-halved', label: 'Cuenta' },
   ]
 
@@ -366,6 +412,99 @@ export default function Config() {
                 <div className="fg"><label>Notas adicionales (opcional)</label><textarea value={bankNotes} onChange={e => setBankNotes(e.target.value)} rows={2} placeholder="Ej: Enviar comprobante por WhatsApp al finalizar." /></div>
                 <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
                   <button className="btn btn-primary btn-sm" onClick={saveBankConfig}><i className="fa fa-floppy-disk" /> Guardar datos bancarios</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'integraciones' && (
+        <div style={{ display: 'grid', gap: 18, maxWidth: 820 }}>
+          <div style={{ fontSize: 13, color: 'var(--txt2)', marginBottom: 2 }}>
+            <i className="fa fa-circle-info" style={{ marginRight: 6, color: 'var(--brand)' }} />
+            Conectá ANMA con herramientas externas. Los datos se envían en tiempo real cuando guardás un presupuesto.
+          </div>
+
+          {/* ── GOOGLE SHEETS CARD ── */}
+          <div className={`pay-card ${gsEnabled ? 'on' : ''}`}>
+            <div className="pay-card-head" onClick={() => setGsEnabled(!gsEnabled)}>
+              <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#0F9D58,#34A853)' }}>
+                <i className="fa fa-table" />
+              </div>
+              <div className="pay-head-txt">
+                <div className="pay-head-title">Google Sheets <span style={{ fontSize: 9, padding: '2px 7px', background: 'var(--brand-xlt)', color: 'var(--brand)', borderRadius: 20, marginLeft: 6, fontWeight: 700, letterSpacing: '.3px', textTransform: 'uppercase' }}>Nuevo</span></div>
+                <div className="pay-head-sub">Sincronización automática — espeja los presupuestos en una hoja de cálculo</div>
+              </div>
+              <div className={`pay-status ${gsEnabled ? 'on' : ''}`}>
+                {gsEnabled ? <><i className="fa fa-circle-check" /> ACTIVO</> : <><i className="fa fa-circle" /> INACTIVO</>}
+              </div>
+              <button className={`toggle ${gsEnabled ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); setGsEnabled(!gsEnabled) }} />
+            </div>
+            {gsEnabled && (
+              <div className="pay-card-body">
+                <div style={{ background: 'rgba(52,168,83,.08)', border: '1.5px solid rgba(52,168,83,.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, fontSize: 11, color: '#0F9D58', lineHeight: 1.55 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><i className="fa fa-list-ol" /> Pasos para activar</div>
+                  <ol style={{ margin: 0, paddingLeft: 20 }}>
+                    <li>Abrí Google Sheets y creá una hoja nueva (ej: "ANMA Presupuestos").</li>
+                    <li>En el menú: <b>Extensiones → Apps Script</b>.</li>
+                    <li>Pegá el código (botón "Copiar código" abajo) y guardá.</li>
+                    <li>Hacé clic en <b>Implementar → Nueva implementación → Tipo: Aplicación web</b>.</li>
+                    <li>En "Quién tiene acceso" elegí <b>"Cualquier usuario"</b> y autorizá.</li>
+                    <li>Copiá la URL que termina en <code>/exec</code> y pegala abajo.</li>
+                    <li>Tocá <b>"Probar conexión"</b> — deberías ver una fila "PING" en tu Sheet.</li>
+                  </ol>
+                </div>
+
+                <div className="fg">
+                  <label><i className="fa fa-link" style={{ marginRight: 4, color: '#0F9D58' }} />URL del Web App (Apps Script /exec)</label>
+                  <input type="text" value={gsUrl} onChange={e => setGsUrl(e.target.value)} placeholder="https://script.google.com/macros/s/AKfycb.../exec" style={{ fontFamily: 'monospace', fontSize: 11 }} />
+                </div>
+
+                <div className="toggle-field">
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>Sincronización automática</div>
+                    <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Envía cada presupuesto al Sheet apenas se guarda</div>
+                  </div>
+                  <button className={`toggle ${gsAuto ? 'on' : ''}`} onClick={() => setGsAuto(!gsAuto)} />
+                </div>
+
+                {gsLastSync && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: gsLastStatus === 'ok' ? 'rgba(52,168,83,.08)' : 'rgba(220,38,38,.08)', border: `1px solid ${gsLastStatus === 'ok' ? 'rgba(52,168,83,.3)' : 'rgba(220,38,38,.3)'}`, borderRadius: 8, fontSize: 11, marginTop: 6 }}>
+                    <i className={`fa ${gsLastStatus === 'ok' ? 'fa-circle-check' : 'fa-circle-xmark'}`} style={{ color: gsLastStatus === 'ok' ? '#0F9D58' : 'var(--red)' }} />
+                    <span style={{ color: 'var(--txt2)' }}>Última sincronización:</span>
+                    <b style={{ color: 'var(--txt)' }}>{new Date(gsLastSync).toLocaleString('es-AR')}</b>
+                  </div>
+                )}
+
+                <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost btn-sm" onClick={testSheets}><i className="fa fa-flask-vial" /> Probar conexión</button>
+                  <button className="btn btn-primary btn-sm" onClick={saveSheetsConfig}><i className="fa fa-floppy-disk" /> Guardar integración</button>
+                  <button className="btn btn-secondary btn-sm" onClick={syncAllBudgets} disabled={gsBulkLoading}>
+                    <i className={`fa ${gsBulkLoading ? 'fa-spinner fa-spin' : 'fa-rotate'}`} />
+                    {gsBulkLoading ? ' Enviando...' : ' Sincronizar todo'}
+                  </button>
+                </div>
+
+                {gsTestResult && <div style={{ marginTop: 12, fontSize: 12 }} dangerouslySetInnerHTML={{ __html: gsTestResult }} />}
+
+                <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', letterSpacing: '.5px', textTransform: 'uppercase' }}>
+                      <i className="fa fa-code" style={{ marginRight: 6 }} />Código Apps Script
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="btn btn-ghost btn-xs" onClick={() => setGsShowScript(!gsShowScript)}>
+                        <i className={`fa fa-${gsShowScript ? 'eye-slash' : 'eye'}`} /> {gsShowScript ? 'Ocultar' : 'Ver'} código
+                      </button>
+                      <button className="btn btn-primary btn-xs" onClick={copyAppsScript}><i className="fa fa-copy" /> Copiar código</button>
+                    </div>
+                  </div>
+                  {gsShowScript && (
+                    <pre style={{ background: '#0F172A', color: '#E2E8F0', padding: '14px 16px', borderRadius: 10, fontSize: 10, maxHeight: 260, overflow: 'auto', fontFamily: 'Menlo, Monaco, monospace', lineHeight: 1.5, whiteSpace: 'pre', border: '1px solid var(--border)' }}>
+                      {APPS_SCRIPT_TEMPLATE}
+                    </pre>
+                  )}
                 </div>
               </div>
             )}
