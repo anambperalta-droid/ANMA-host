@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext'
 import { testMPConnection } from '../../lib/mercadopago'
 import { applyThemeColors } from '../../lib/theme'
 import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets, APPS_SCRIPT_TEMPLATE } from '../../lib/sheets'
+import { SITES, sendInvite } from '../../lib/invites'
 
 function ListEditor({ label, items, onAdd, onRemove }) {
   const [val, setVal] = useState('')
@@ -80,6 +81,32 @@ export default function Config() {
   const [gsTestResult, setGsTestResult] = useState('')
   const [gsShowScript, setGsShowScript] = useState(false)
   const [gsBulkLoading, setGsBulkLoading] = useState(false)
+
+  /* ── Invitaciones / Equipo ── */
+  const [invEmail, setInvEmail] = useState('')
+  const [invName, setInvName] = useState('')
+  const [invSite, setInvSite] = useState(SITES[0].key)
+  const [invRole, setInvRole] = useState('user')
+  const [invLoading, setInvLoading] = useState(false)
+  const [invMsg, setInvMsg] = useState(null)
+
+  const sendInviteHandler = async () => {
+    setInvMsg(null)
+    if (!invEmail.trim()) { setInvMsg({ type: 'er', text: 'Ingresá un email.' }); return }
+    setInvLoading(true)
+    try {
+      await sendInvite({ email: invEmail, siteKey: invSite, fullName: invName, role: invRole })
+      const site = SITES.find(s => s.key === invSite)
+      setInvMsg({ type: 'ok', text: `Invitación enviada a ${invEmail} — destino: ${site.label}` })
+      setInvEmail('')
+      setInvName('')
+      toast('Invitación enviada', 'ok')
+    } catch (e) {
+      setInvMsg({ type: 'er', text: e.message || 'Error al enviar la invitación' })
+    } finally {
+      setInvLoading(false)
+    }
+  }
 
   /* ── Marca blanca: cambio en tiempo real ── */
   const handlePrincipalChange = (hex) => {
@@ -203,6 +230,7 @@ export default function Config() {
     { id: 'listas', icon: 'fa-list', label: 'Listas' },
     { id: 'pagos', icon: 'fa-credit-card', label: 'Pagos' },
     { id: 'integraciones', icon: 'fa-plug', label: 'Integraciones' },
+    { id: 'equipo', icon: 'fa-user-plus', label: 'Equipo' },
     { id: 'cuenta', icon: 'fa-shield-halved', label: 'Cuenta' },
   ]
 
@@ -508,6 +536,148 @@ export default function Config() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'equipo' && (
+        <div style={{ display: 'grid', gap: 16, maxWidth: 720 }}>
+          <div className="card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18 }}>
+                <i className="fa fa-user-plus" />
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)' }}>Invitar nuevo usuario</div>
+                <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>Enviá un email con link mágico para que se sume al sitio elegido</div>
+              </div>
+            </div>
+
+            {invMsg && (
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: 10,
+                marginBottom: 14,
+                fontSize: 12,
+                fontWeight: 600,
+                background: invMsg.type === 'ok' ? 'rgba(16,185,129,.1)' : 'var(--red-lt)',
+                border: `1.5px solid ${invMsg.type === 'ok' ? '#10B981' : '#FCA5A5'}`,
+                color: invMsg.type === 'ok' ? '#047857' : 'var(--red)',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <i className={`fa ${invMsg.type === 'ok' ? 'fa-circle-check' : 'fa-circle-exclamation'}`} />
+                {invMsg.text}
+              </div>
+            )}
+
+            <div className="fg" style={{ marginBottom: 14 }}>
+              <label className="f-lbl">Sitio de destino <span style={{ color: 'var(--red)' }}>*</span></label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {SITES.map((s) => (
+                  <div
+                    key={s.key}
+                    onClick={() => setInvSite(s.key)}
+                    style={{
+                      padding: 14,
+                      borderRadius: 12,
+                      border: `2px solid ${invSite === s.key ? s.color : 'var(--border)'}`,
+                      background: invSite === s.key ? `${s.color}12` : 'var(--surface)',
+                      cursor: 'pointer',
+                      transition: 'all .18s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10,
+                      background: s.color, color: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 16, flexShrink: 0,
+                    }}>
+                      <i className={`fa ${s.icon}`} />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{s.label}</div>
+                      <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.description}</div>
+                    </div>
+                    {invSite === s.key && (
+                      <i className="fa fa-circle-check" style={{ color: s.color, fontSize: 16 }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 6, fontSize: 10, color: 'var(--txt3)' }}>
+                <i className="fa fa-circle-info" style={{ marginRight: 4 }} />
+                El usuario recibirá un email con link directo a <b>{SITES.find(s => s.key === invSite)?.url}/bienvenida</b>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div className="fg">
+                <label className="f-lbl">Email <span style={{ color: 'var(--red)' }}>*</span></label>
+                <input
+                  type="email"
+                  className="f-inp"
+                  placeholder="persona@empresa.com"
+                  value={invEmail}
+                  onChange={(e) => setInvEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendInviteHandler()}
+                  disabled={invLoading}
+                  style={{ padding: '9px 12px', fontSize: 13 }}
+                />
+              </div>
+              <div className="fg">
+                <label className="f-lbl">Nombre completo</label>
+                <input
+                  type="text"
+                  className="f-inp"
+                  placeholder="Juan Pérez"
+                  value={invName}
+                  onChange={(e) => setInvName(e.target.value)}
+                  disabled={invLoading}
+                  style={{ padding: '9px 12px', fontSize: 13 }}
+                />
+              </div>
+            </div>
+
+            <div className="fg" style={{ marginBottom: 16 }}>
+              <label className="f-lbl">Rol en el sitio</label>
+              <select
+                value={invRole}
+                onChange={(e) => setInvRole(e.target.value)}
+                disabled={invLoading}
+                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 13, background: 'var(--surface)', color: 'var(--txt)' }}
+              >
+                <option value="admin">Administrador — acceso total</option>
+                <option value="user">Usuario — operación diaria</option>
+                <option value="viewer">Solo lectura — reportes y consulta</option>
+              </select>
+            </div>
+
+            <button
+              className="btn btn-primary"
+              onClick={sendInviteHandler}
+              disabled={invLoading || !invEmail}
+              style={{ width: '100%', padding: 11, fontSize: 13, fontWeight: 700 }}
+            >
+              {invLoading ? (
+                <><i className="fa fa-spinner fa-spin" /> Enviando invitación...</>
+              ) : (
+                <><i className="fa fa-paper-plane" /> Enviar invitación</>
+              )}
+            </button>
+          </div>
+
+          <div className="card" style={{ background: 'var(--surface2)' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <i className="fa fa-shield-halved" style={{ color: 'var(--brand)' }} />
+              Seguridad
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--txt3)', lineHeight: 1.6 }}>
+              Las invitaciones se envían a través de una Edge Function de Supabase que usa el <b>service_role key</b> solo del lado del servidor.
+              Las URLs de destino están whitelist en la función y en el Dashboard de Supabase — si intentás invitar a un dominio no autorizado, el pedido es rechazado.
+            </div>
           </div>
         </div>
       )}
