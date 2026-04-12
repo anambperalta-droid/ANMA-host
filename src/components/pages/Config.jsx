@@ -5,7 +5,7 @@ import { useToast } from '../../context/ToastContext'
 import { testMPConnection } from '../../lib/mercadopago'
 import { applyThemeColors } from '../../lib/theme'
 import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets, APPS_SCRIPT_TEMPLATE } from '../../lib/sheets'
-import { SITES, sendInvite } from '../../lib/invites'
+import { SITES, CURRENT_SITE, sendInvite } from '../../lib/invites'
 
 function ListEditor({ label, items, onAdd, onRemove }) {
   const [val, setVal] = useState('')
@@ -85,7 +85,7 @@ export default function Config() {
   /* ── Invitaciones / Equipo ── */
   const [invEmail, setInvEmail] = useState('')
   const [invName, setInvName] = useState('')
-  const [invSite, setInvSite] = useState(SITES[0].key)
+  const [invSite] = useState(CURRENT_SITE.key)
   const [invRole, setInvRole] = useState('user')
   const [invLoading, setInvLoading] = useState(false)
   const [invMsg, setInvMsg] = useState(null)
@@ -570,47 +570,25 @@ export default function Config() {
               </div>
             )}
 
-            <div className="fg" style={{ marginBottom: 14 }}>
-              <label className="f-lbl">Sitio de destino <span style={{ color: 'var(--red)' }}>*</span></label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {SITES.map((s) => (
-                  <div
-                    key={s.key}
-                    onClick={() => setInvSite(s.key)}
-                    style={{
-                      padding: 14,
-                      borderRadius: 12,
-                      border: `2px solid ${invSite === s.key ? s.color : 'var(--border)'}`,
-                      background: invSite === s.key ? `${s.color}12` : 'var(--surface)',
-                      cursor: 'pointer',
-                      transition: 'all .18s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                    }}
-                  >
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 10,
-                      background: s.color, color: '#fff',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 16, flexShrink: 0,
-                    }}>
-                      <i className={`fa ${s.icon}`} />
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{s.label}</div>
-                      <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.description}</div>
-                    </div>
-                    {invSite === s.key && (
-                      <i className="fa fa-circle-check" style={{ color: s.color, fontSize: 16 }} />
-                    )}
-                  </div>
-                ))}
+            <div style={{
+              padding: 14, borderRadius: 12, marginBottom: 14,
+              border: `2px solid ${CURRENT_SITE.color}`,
+              background: `${CURRENT_SITE.color}12`,
+              display: 'flex', alignItems: 'center', gap: 12,
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10,
+                background: CURRENT_SITE.color, color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 16, flexShrink: 0,
+              }}>
+                <i className={`fa ${CURRENT_SITE.icon}`} />
               </div>
-              <div style={{ marginTop: 6, fontSize: 10, color: 'var(--txt3)' }}>
-                <i className="fa fa-circle-info" style={{ marginRight: 4 }} />
-                El usuario recibirá un email con link directo a <b>{SITES.find(s => s.key === invSite)?.url}/bienvenida</b>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{CURRENT_SITE.label}</div>
+                <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>El usuario recibirá acceso a este sitio</div>
               </div>
+              <i className="fa fa-circle-check" style={{ color: CURRENT_SITE.color, fontSize: 16 }} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>

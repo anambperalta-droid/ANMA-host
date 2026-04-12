@@ -5,13 +5,11 @@
 import { supabase } from './supabase'
 
 /**
- * Registro de sitios a los que se puede invitar.
- * Los `redirectTo` DEBEN estar whitelisted en:
- *  1) La Edge Function (`ALLOWED_REDIRECTS` en invite-user/index.ts)
- *  2) Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
+ * Cada app solo conoce SU sitio — no expone la existencia de otros.
+ * El key/label se determina automáticamente por hostname.
  */
-export const SITES = [
-  {
+const ALL_SITES = {
+  hub: {
     key: 'hub',
     label: 'ANMA Pro',
     description: 'Gestión de stock y ventas',
@@ -20,7 +18,7 @@ export const SITES = [
     icon: 'fa-chart-line',
     color: '#7C3AED',
   },
-  {
+  host: {
     key: 'host',
     label: 'ANMA Regalos',
     description: 'Cotización y regalos empresariales',
@@ -29,10 +27,21 @@ export const SITES = [
     icon: 'fa-gift',
     color: '#EC4899',
   },
-]
+}
+
+/** Detecta en qué sitio estamos corriendo */
+function detectCurrentSiteKey() {
+  const host = typeof window !== 'undefined' ? window.location.hostname : ''
+  if (host.includes('anma-host')) return 'host'
+  return 'hub'
+}
+
+/** Exporta solo el sitio propio — el cliente nunca ve el otro */
+export const CURRENT_SITE = ALL_SITES[detectCurrentSiteKey()]
+export const SITES = [CURRENT_SITE]
 
 export function getSiteByKey(key) {
-  return SITES.find((s) => s.key === key) || null
+  return ALL_SITES[key] || null
 }
 
 /**
