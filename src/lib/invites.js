@@ -58,26 +58,9 @@ export async function sendInvite({ email, siteKey, fullName = '', role = 'user' 
   const site = getSiteByKey(siteKey)
   if (!site) throw new Error('Sitio inválido')
 
-  // Sesión del admin que invita
-  const { data: { session }, error: sessErr } = await supabase.auth.getSession()
-  if (sessErr || !session) {
-    throw new Error('Sesión no activa. Iniciá sesión nuevamente.')
-  }
-
-  const supaUrl = import.meta.env.VITE_SUPABASE_URL
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-  if (!supaUrl || !anonKey) {
-    throw new Error('Faltan variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY')
-  }
-
-  const res = await fetch(`${supaUrl}/functions/v1/invite-user`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: anonKey,
-    },
-    body: JSON.stringify({
+  // Usa supabase.functions.invoke() — maneja JWT + apikey automáticamente
+  const { data, error: fnErr } = await supabase.functions.invoke('invite-user', {
+    body: {
       email: email.trim().toLowerCase(),
       redirectTo: site.redirectTo,
       metadata: {
@@ -86,15 +69,20 @@ export async function sendInvite({ email, siteKey, fullName = '', role = 'user' 
         full_name: fullName,
         role,
       },
-    }),
+    },
   })
 
-  let payload = null
-  try { payload = await res.json() } catch { /* ignore */ }
-
-  if (!res.ok) {
-    const msg = payload?.error || `Error ${res.status}: ${res.statusText}`
+  if (fnErr) {
+    let msg = fnErr.message || 'Error al invocar la función'
+    if (fnErr.context) {
+      try {
+        const body = await fnErr.context.json()
+        if (body?.error) msg = body.error
+      } catch { /* ignore */ }
+    }
     throw new Error(msg)
   }
-  return payload
+
+  if (data?.error) throw new Error(data.error)
+  return data
 }
