@@ -40,7 +40,7 @@ export default function AppShell() {
       <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />
       {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
       <div className="main">
-        <Topbar onMenuClick={() => setSideOpen(!sideOpen)} onSearchClick={() => setCmdOpen(true)} />
+        <Topbar onMenuClick={() => setSideOpen(!sideOpen)} />
         <div className="content">
           <Routes>
             <Route path="/" element={<Historial />} />

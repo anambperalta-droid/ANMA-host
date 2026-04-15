@@ -67,6 +67,33 @@
   --sh-brand: 0 6px 20px rgba(124,58,237,.25);
   --tr: .18s cubic-bezier(.4,0,.2,1);
 }
+
+/* ═══════════════════════════════════════
+   Modo Oscuro — se activa con <html data-theme="dark">
+═══════════════════════════════════════ */
+:root[data-theme="dark"] {
+  --bg: #0F1117;
+  --surface: #171A23;
+  --surface2: #1F2330;
+  --surface3: #262B3A;
+  --border: #2A2F3E;
+  --border2: #373D50;
+  --txt: #F3F4F6;
+  --txt2: #D1D5DB;
+  --txt3: #9CA3AF;
+  --txt4: #6B7280;
+  --money: #FFFFFF;
+  --money-lg: #F9FAFB;
+  --red-lt: rgba(220,38,38,.14);
+  --amber-lt: rgba(217,119,6,.14);
+  --blue-lt: rgba(37,99,235,.14);
+  --sh: 0 1px 3px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.25);
+  --sh-md: 0 4px 12px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
+  --sh-lg: 0 16px 48px rgba(0,0,0,.55), 0 4px 16px rgba(0,0,0,.35);
+}
+:root[data-theme="dark"] img.inv-on-dark,
+:root[data-theme="dark"] .inv-on-dark{filter:invert(1) hue-rotate(180deg)}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;font-size:13px}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
