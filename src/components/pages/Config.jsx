@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -31,7 +31,7 @@ function ListEditor({ label, items, onAdd, onRemove }) {
 
 export default function Config() {
   const { get, config, updateConfig } = useData()
-  const { logout, changePassword } = useAuth()
+  const { logout, changePassword, isGlobalAdmin } = useAuth()
   const toast = useToast()
   const [tab, setTab] = useState('identidad')
   const c = config()
@@ -223,7 +223,12 @@ export default function Config() {
 
   const userName = (c.email || '').split('@')[0] || 'Administrador'
 
-  const tabs = [
+  // Tabs que solo ve el admin global (info sensible / acciones de admin).
+  // Los usuarios invitados NO pueden invitar a otros, ni ver credenciales
+  // de Pagos/Integraciones, ni tocar la Cuenta del negocio.
+  const ADMIN_ONLY_TABS = new Set(['pagos', 'integraciones', 'equipo', 'cuenta'])
+
+  const allTabs = [
     { id: 'identidad', icon: 'fa-building', label: 'Identidad' },
     { id: 'contacto', icon: 'fa-phone', label: 'Contacto' },
     { id: 'comercial', icon: 'fa-dollar-sign', label: 'Comercial' },
@@ -233,6 +238,13 @@ export default function Config() {
     { id: 'equipo', icon: 'fa-user-plus', label: 'Equipo' },
     { id: 'cuenta', icon: 'fa-shield-halved', label: 'Cuenta' },
   ]
+  const tabs = isGlobalAdmin ? allTabs : allTabs.filter(t => !ADMIN_ONLY_TABS.has(t.id))
+
+  // Si un no-admin está parado en una tab sensible (por URL vieja o state
+  // residual), lo reubicamos en 'identidad' en el próximo render.
+  useEffect(() => {
+    if (!isGlobalAdmin && ADMIN_ONLY_TABS.has(tab)) setTab('identidad')
+  }, [isGlobalAdmin, tab])
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>

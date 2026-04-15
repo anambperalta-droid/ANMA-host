@@ -5,6 +5,14 @@ import { CURRENT_SITE } from '../lib/invites'
 
 const Ctx = createContext()
 
+// Lista única de admins globales. Tienen acceso cross-site y ven
+// todas las tabs sensibles (Equipo / Pagos / Integraciones / Cuenta).
+const GLOBAL_ADMINS = ['ana.mbperalta@gmail.com']
+
+export function isGlobalAdminEmail(email) {
+  return !!email && GLOBAL_ADMINS.includes(String(email).toLowerCase())
+}
+
 /**
  * Verifica si el usuario tiene permiso para acceder al sitio actual.
  * Reglas:
@@ -19,8 +27,7 @@ function canAccessSite(user) {
   const meta = user.user_metadata || {}
 
   // Admins globales: siempre tienen acceso a ambos sitios
-  const globalAdmins = ['ana.mbperalta@gmail.com']
-  if (globalAdmins.includes(user.email)) return true
+  if (isGlobalAdminEmail(user.email)) return true
 
   // Si el usuario tiene lista explícita de sitios permitidos
   const allowed = meta.allowed_sites
@@ -95,8 +102,10 @@ export function AuthProvider({ children }) {
     setSiteBlocked(false)
   }, [])
 
+  const isGlobalAdmin = isGlobalAdminEmail(user?.email)
+
   return (
-    <Ctx.Provider value={{ authed, loading, user, login, logout, siteBlocked }}>
+    <Ctx.Provider value={{ authed, loading, user, login, logout, siteBlocked, isGlobalAdmin }}>
       {children}
     </Ctx.Provider>
   )

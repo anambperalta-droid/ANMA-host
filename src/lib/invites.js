@@ -73,14 +73,30 @@ export async function sendInvite({ email, siteKey, fullName = '', role = 'user' 
   })
 
   if (fnErr) {
+    // fnErr.context suele ser la Response del Edge Function cuando el status != 2xx.
+    // Intentamos extraer el body real (puede venir como JSON o texto) para mostrar
+    // el mensaje concreto en vez del genérico "non-2xx status code".
     let msg = fnErr.message || 'Error al invocar la función'
-    if (fnErr.context) {
+    let status = ''
+    const ctx = fnErr.context
+    if (ctx && typeof ctx === 'object') {
+      status = ctx.status ? ` [${ctx.status}]` : ''
       try {
-        const body = await fnErr.context.json()
-        if (body?.error) msg = body.error
-      } catch { /* ignore */ }
+        const res = typeof ctx.clone === 'function' ? ctx.clone() : ctx
+        const raw = await res.text()
+        try {
+          const body = JSON.parse(raw)
+          if (body?.error) msg = body.error
+          else if (raw) msg = raw
+        } catch {
+          if (raw) msg = raw
+        }
+      } catch (e) {
+        console.error('[invites] no se pudo leer body de Edge Function:', e)
+      }
     }
-    throw new Error(msg)
+    console.error('[invites] Edge Function error:', { status, msg, raw: fnErr })
+    throw new Error(`${msg}${status}`)
   }
 
   if (data?.error) throw new Error(data.error)
