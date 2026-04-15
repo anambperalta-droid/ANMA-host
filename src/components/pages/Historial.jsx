@@ -229,6 +229,10 @@ export default function Historial() {
   const [loading, setLoading] = useState(true)
   const [resendBudget, setResendBudget] = useState(null)
   const [period, setPeriod] = useState('6m')
+  const [sortKey, setSortKey] = useState('id')
+  const [sortDir, setSortDir] = useState('desc')
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkStatus, setBulkStatus] = useState('')
 
   const budgets = get('budgets')
   const c = config()
@@ -306,7 +310,23 @@ export default function Historial() {
       (b.num || '').toLowerCase().includes(sq)
     )
   }
-  filteredBudgets.sort((a, b) => b.id - a.id)
+  // Ordenamiento dinámico
+  filteredBudgets.sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1
+    if (sortKey === 'date') return ((a.date || '') > (b.date || '') ? 1 : -1) * dir
+    if (sortKey === 'total') return ((a.total || 0) - (b.total || 0)) * dir
+    if (sortKey === 'gain') return ((a.totalGain || 0) - (b.totalGain || 0)) * dir
+    return (a.id - b.id) * dir
+  })
+
+  const toggleSort = (key) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('desc') }
+  }
+  const sortArrow = (key) => sortKey !== key ? <i className="fa fa-sort" style={{ opacity: .3, marginLeft: 4, fontSize: 10 }} /> : <i className={`fa fa-sort-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ marginLeft: 4, fontSize: 10 }} />
+
+  // días hasta entrega
+  const deliveryDays = (iso) => { if (!iso) return null; const t = new Date(); t.setHours(0,0,0,0); const d = new Date(iso + 'T00:00'); return Math.ceil((d - t) / 86400000) }
 
   // Seguimiento: ALL pending budgets (sent/negotiating), grouped by tier
   const seguimiento = useMemo(() => {
@@ -343,8 +363,36 @@ export default function Historial() {
     const text = `Hola ${b.contact || ''}! Te envío el presupuesto ${b.num} por ${fmt(b.total)}. Quedamos a disposición!`
     navigator.clipboard.writeText(text).then(() => toast('Mensaje WA copiado', 'ok'))
   }
-  const handleDelete = (id) => { if (window.confirm('¿Eliminar este presupuesto?')) { deleteBudget(id); toast('Presupuesto eliminado', 'in') } }
+  const handleDelete = (b) => {
+    const label = b.num || `#${b.id}`
+    if (!window.confirm(`⚠ ELIMINAR ${label}?\n\nCliente: ${b.contact || b.company || '—'}\nTotal: ${fmt(b.total)}\n\nEsta acción no se puede deshacer.`)) return
+    const confirm2 = window.prompt(`Para confirmar, escribí ELIMINAR (en mayúsculas):`)
+    if (confirm2 !== 'ELIMINAR') { toast('Eliminación cancelada', 'in'); return }
+    deleteBudget(b.id); toast('Presupuesto eliminado', 'in')
+    setSelectedIds(prev => { const n = new Set(prev); n.delete(b.id); return n })
+  }
   const handleStatusChange = (id, status) => { updateBudgetStatus(id, status); toast('Estado actualizado', 'ok') }
+  const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleSelectAll = (list) => setSelectedIds(prev => {
+    const allSel = list.every(b => prev.has(b.id))
+    if (allSel) { const n = new Set(prev); list.forEach(b => n.delete(b.id)); return n }
+    const n = new Set(prev); list.forEach(b => n.add(b.id)); return n
+  })
+  const applyBulkStatus = () => {
+    if (!bulkStatus || !selectedIds.size) return
+    selectedIds.forEach(id => updateBudgetStatus(id, bulkStatus))
+    toast(`${selectedIds.size} presupuestos actualizados`, 'ok')
+    setSelectedIds(new Set()); setBulkStatus('')
+  }
+  const bulkExportCSV = () => {
+    if (!selectedIds.size) return
+    const sel = budgets.filter(b => selectedIds.has(b.id))
+    const rows = [['N°', 'Fecha', 'Cliente', 'Empresa', 'Total', 'Ganancia', 'Estado'].join(',')]
+    sel.forEach(b => rows.push([b.num, b.date, b.contact, b.company, b.total, b.totalGain, STATUS_MAP[b.status]].join(',')))
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+    a.download = `presupuestos_sel_${new Date().toISOString().slice(0,10)}.csv`; a.click()
+  }
 
   /* ── ESC cierra modales ── */
   useEffect(() => {
@@ -528,36 +576,69 @@ export default function Historial() {
               </div>
             ))}
           </div>
+          {selectedIds.size > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--brand-xlt)', border: '1.5px solid var(--brand)', borderRadius: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+              <b style={{ color: 'var(--brand)', fontSize: 12 }}>{selectedIds.size} seleccionados</b>
+              <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} style={{ fontSize: 12, padding: '5px 8px' }}>
+                <option value="">Cambiar estado a...</option>
+                {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <button className="btn btn-primary btn-sm" onClick={applyBulkStatus} disabled={!bulkStatus}><i className="fa fa-check" /> Aplicar</button>
+              <button className="btn btn-secondary btn-sm" onClick={bulkExportCSV}><i className="fa fa-download" /> Exportar CSV</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())}><i className="fa fa-xmark" /> Quitar selección</button>
+            </div>
+          )}
           <div className="tbl-card">
             <table>
-              <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Empresa</th><th>Entrega</th><th>Total</th><th>Ganancia</th><th>Estado</th><th>Pago</th><th>Acciones</th></tr></thead>
+              <thead><tr>
+                <th style={{ width: 32 }}>
+                  <input type="checkbox" checked={filteredBudgets.length > 0 && filteredBudgets.every(b => selectedIds.has(b.id))} onChange={() => toggleSelectAll(filteredBudgets)} />
+                </th>
+                <th>N°</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>Fecha{sortArrow('date')}</th>
+                <th>Cliente</th><th>Empresa</th>
+                <th>Entrega</th>
+                <th>Días rest.</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('gain')}>Ganancia{sortArrow('gain')}</th>
+                <th>Estado</th><th>Pago</th><th>Acciones</th>
+              </tr></thead>
               <tbody>
-                {filteredBudgets.length ? filteredBudgets.map(b => (
-                  <tr key={b.id}>
-                    <td><b>{b.num || '—'}</b></td>
-                    <td>{b.date || '—'}</td>
-                    <td>{b.contact || '—'}</td>
-                    <td style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
-                    <td>{b.deliveryDate || '—'}</td>
-                    <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
-                    <td style={{ color: 'var(--money)', fontWeight: 600 }}>{fmt(b.totalGain)}</td>
-                    <td>
-                      <select style={{ fontSize: 11, padding: '4px 8px', border: '2px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', background: 'var(--surface)', cursor: 'pointer', outline: 'none' }}
-                        value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
-                        {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
-                    </td>
-                    <td><span className={`badge ${PAY_STATUS_CLS[b.payStatus] || 'b-draft'}`}>{PAY_STATUS_MAP[b.payStatus] || 'Pendiente'}</span></td>
-                    <td>
-                      <div className="acts">
-                        <button className="act edit" onClick={() => editB(b.id)} title="Editar"><i className="fa fa-pen" /></button>
-                        <button className="act wa" onClick={() => copyWA(b)} title="WA"><i className="fa-brands fa-whatsapp" /></button>
-                        <button className="act del" onClick={() => handleDelete(b.id)} title="Eliminar"><i className="fa fa-trash" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan={10}><div className="empty"><div className="ico"><i className="fa fa-file-invoice" /></div><p>No hay presupuestos con este filtro</p></div></td></tr>
+                {filteredBudgets.length ? filteredBudgets.map(b => {
+                  const dDays = deliveryDays(b.deliveryDate)
+                  const overdue = dDays !== null && dDays <= 0 && !['confirmed', 'lost'].includes(b.status)
+                  return (
+                    <tr key={b.id} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
+                      <td><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
+                      <td><b>{b.num || '—'}</b></td>
+                      <td>{b.date || '—'}</td>
+                      <td>{b.contact || '—'}</td>
+                      <td style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
+                      <td>{b.deliveryDate || '—'}</td>
+                      <td style={{ fontWeight: 700, fontSize: 11, color: overdue ? 'var(--red)' : dDays !== null && dDays <= 3 ? 'var(--amber)' : 'var(--txt3)' }}>
+                        {dDays === null ? '—' : overdue ? `⚠ ${dDays <= 0 ? (dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd pasó') : dDays + 'd'}` : `${dDays}d`}
+                      </td>
+                      <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
+                      <td style={{ color: 'var(--money)', fontWeight: 600 }}>{fmt(b.totalGain)}</td>
+                      <td>
+                        <select style={{ fontSize: 11, padding: '4px 8px', border: '2px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', background: 'var(--surface)', cursor: 'pointer', outline: 'none' }}
+                          value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
+                          {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                      </td>
+                      <td><span className={`badge ${PAY_STATUS_CLS[b.payStatus] || 'b-draft'}`}>{PAY_STATUS_MAP[b.payStatus] || 'Pendiente'}</span></td>
+                      <td>
+                        <div className="acts" style={{ gap: 4 }}>
+                          <button className="act edit" onClick={() => editB(b.id)} title="Editar"><i className="fa fa-pen" /></button>
+                          <button className="act wa" onClick={() => copyWA(b)} title="WA"><i className="fa-brands fa-whatsapp" /></button>
+                          <div style={{ width: 20 }} />
+                          <button className="act del" onClick={() => handleDelete(b)} title="Eliminar (pedirá confirmación)" style={{ background: 'var(--red)15', color: 'var(--red)' }}><i className="fa fa-trash" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                }) : (
+                  <tr><td colSpan={12}><div className="empty"><div className="ico"><i className="fa fa-file-invoice" /></div><p>No hay presupuestos con este filtro</p></div></td></tr>
                 )}
               </tbody>
             </table>

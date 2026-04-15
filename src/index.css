@@ -530,6 +530,7 @@ td b{color:var(--txt);font-weight:600}
   .bento{grid-template-columns:repeat(2,1fr)}
   .bento-seg{grid-column:1/-1}
   .budget-layout{grid-template-columns:1fr}
+  .budget-layout .calc-panel{position:static;margin-top:16px}
   .analysis-grid{grid-template-columns:1fr}
   .modal{max-width:calc(100vw - 40px)}
   .modal-lg,.modal-xl{max-width:calc(100vw - 40px)}

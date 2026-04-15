@@ -8,6 +8,10 @@ import { pushBudget, getSheetsConfig } from '../../lib/sheets'
 
 const emptyItem = () => ({ name: '', qty: 1, costUnit: '', priceUnit: '' })
 
+/* Utilidades de fecha */
+const todayISO = () => new Date().toISOString().slice(0, 10)
+const isWeekend = (iso) => { if (!iso) return false; const d = new Date(iso + 'T00:00'); const w = d.getDay(); return w === 0 || w === 6 }
+
 /* ── Helpers para inputs numéricos sin NaN ── */
 const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
 const selectOnFocus = (e) => e.target.select()
@@ -94,7 +98,7 @@ export default function Presupuesto() {
 
   const [form, setForm] = useState({
     contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '',
-    shipCost: 0, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
+    shipCost: 0, shipCharged: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
     margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0,
   })
   const [items, setItems] = useState([emptyItem()])
@@ -116,7 +120,7 @@ export default function Presupuesto() {
         setForm({
           contact: b.contact || '', company: b.company || '', wa: b.wa || '',
           ocasion: b.ocasion || '', delivery: b.delivery || '', deliveryDate: b.deliveryDate || '',
-          shipCost: b.shipCost || 0, status: b.status || 'draft',
+          shipCost: b.shipCost || 0, shipCharged: b.shipCharged !== false, status: b.status || 'draft',
           noteInt: b.noteInt || '', noteCli: b.noteCli || '',
           payStatus: b.payStatus || 'pending',
           margin: b.margin ?? c.defaultMargin ?? 40,
@@ -153,6 +157,26 @@ export default function Presupuesto() {
   const addItem = () => setItems(prev => [...prev, emptyItem()])
   const removeItem = (idx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)
 
+  /* ── Drag & drop de filas ── */
+  const dragIdxRef = useRef(null)
+  const [dragOver, setDragOver] = useState(null)
+  const handleDragStart = (idx) => (e) => { dragIdxRef.current = idx; e.dataTransfer.effectAllowed = 'move' }
+  const handleDragOver = (idx) => (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dragOver !== idx) setDragOver(idx) }
+  const handleDragLeave = () => setDragOver(null)
+  const handleDrop = (idx) => (e) => {
+    e.preventDefault()
+    const from = dragIdxRef.current
+    setDragOver(null)
+    dragIdxRef.current = null
+    if (from == null || from === idx) return
+    setItems(prev => {
+      const copy = [...prev]
+      const [moved] = copy.splice(from, 1)
+      copy.splice(idx, 0, moved)
+      return copy
+    })
+  }
+
   const calc = useMemo(() => {
     let totalCost = 0, totalRevenue = 0, totalQty = 0
     items.forEach(i => {
@@ -161,13 +185,17 @@ export default function Presupuesto() {
     })
     const logTotal = num(form.logoCost) * totalQty
     const ship = num(form.shipCost)
+    const shipCharged = form.shipCharged !== false
+    // Negocio siempre paga el envío; el cliente solo si shipCharged=true
     const baseCost = totalCost + logTotal + ship
-    const total = totalRevenue + ship
+    const total = totalRevenue + (shipCharged ? ship : 0)
     const gain = total - baseCost
     const marginReal = total > 0 ? ((gain / total) * 100).toFixed(1) : '0.0'
+    const marginThreshold = num(c.marginLowThreshold) || 10
+    const marginLow = total > 0 && Number(marginReal) < marginThreshold
     const depositAmt = Math.round(total * num(form.deposit) / 100)
-    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, depositAmt, totalQty }
-  }, [items, form.shipCost, form.logoCost, form.deposit])
+    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty }
+  }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, c.marginLowThreshold])
 
   const budgetNum = useMemo(() => {
     if (editId) { const b = get('budgets').find(x => x.id === editId); return b?.num || '#—' }
@@ -180,7 +208,7 @@ export default function Presupuesto() {
     if (form.wa && !isValidWA(form.wa)) { toast('El WhatsApp no tiene un formato válido. Ej: +54 351 1234567', 'er'); setWaTouched(true); return }
     const validItems = items.filter(i => i.name).map(i => ({ ...i, qty: num(i.qty), costUnit: num(i.costUnit), priceUnit: num(i.priceUnit) }))
     if (!validItems.length) { toast('Necesitás al menos un producto. Agregá uno desde "Productos".', 'er'); return }
-    const saveForm = { ...form, shipCost: num(form.shipCost), logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
+    const saveForm = { ...form, shipCost: num(form.shipCost), shipCharged: form.shipCharged !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
     const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
@@ -256,16 +284,73 @@ export default function Presupuesto() {
     const prodRows = items.filter(i => i.name).map(i =>
       `<tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right">${fmt(i.qty * i.priceUnit)}</td></tr>`
     ).join('')
+    // Vigencia auto-calculada
+    const validDays = num(c.budgetValidityDays) || 7
+    const validUntil = new Date(); validUntil.setDate(validUntil.getDate() + validDays)
+    const vigenciaISO = validUntil.toISOString().slice(0, 10)
+    // Link WA dueño para "Aceptar presupuesto"
+    const ownerWA = (c.ownerWA || c.businessWA || '').replace(/[^\d+]/g, '')
+    const acceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(calc.total)}.`)
+    const waLink = ownerWA ? `https://wa.me/${ownerWA.replace('+','')}?text=${acceptMsg}` : ''
+    const hasShip = num(form.shipCost) && form.shipCharged !== false
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${budgetNum}</title>
-    <style>body{font-family:Arial,sans-serif;padding:32px;color:#1E1B4B;font-size:12px}.header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:3px solid ${brandColor};margin-bottom:20px}.brand{font-size:20px;font-weight:800;color:${brandColor}}table{width:100%;border-collapse:collapse;margin:12px 0}th{background:${brandColor};color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase}td{padding:7px 10px;border-bottom:1px solid #E5E7F0}.total-row{font-size:16px;font-weight:800;color:${brandColor};text-align:right;margin-top:12px}.footer{margin-top:24px;padding-top:12px;border-top:1px solid #E5E7F0;font-size:10px;color:#888}</style></head><body>
-    <div class="header"><div class="brand">${c.logo ? '<img src="' + c.logo + '" style="height:40px">' : bName}</div><div style="text-align:right"><div style="font-size:16px;font-weight:700;color:#1E1B4B">${budgetNum}</div><div>Fecha: ${new Date().toISOString().slice(0, 10)}</div>${form.deliveryDate ? '<div>Entrega: ' + form.deliveryDate + '</div>' : ''}</div></div>
-    <div style="margin-bottom:16px"><b>Cliente:</b> ${form.contact || ''} ${form.company ? '— ' + form.company : ''}${form.wa ? '<br><b>WhatsApp:</b> ' + form.wa : ''}</div>
-    <table><thead><tr><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Precio unit.</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>${prodRows}</tbody></table>
-    ${num(form.shipCost) ? '<div style="text-align:right;font-size:12px;color:#666">Envío: ' + fmt(num(form.shipCost)) + '</div>' : ''}
-    <div class="total-row">Total: ${fmt(calc.total)}</div>
-    <div style="text-align:right;font-size:12px;color:${brandColor};font-weight:600">Seña (${form.deposit}%): ${fmt(calc.depositAmt)}</div>
-    ${form.noteCli ? '<div style="margin-top:12px;padding:10px;background:#F4F6FD;border-radius:6px;font-size:11px">' + form.noteCli + '</div>' : ''}
-    <div class="footer"><div>${c.paymentConditions || ''}</div><div style="margin-top:3px">${c.legalNote || ''}</div></div></body></html>`
+    <style>
+      *{box-sizing:border-box}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;padding:22px 28px 70px;color:#1E1B4B;font-size:11.5px;line-height:1.45;background:#fff}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2.5px solid ${brandColor};margin-bottom:14px}
+      .brand{font-size:18px;font-weight:800;color:${brandColor};letter-spacing:-.3px}
+      .brand img{height:38px;display:block}
+      .hd-meta{text-align:right;font-size:10.5px;color:#555;line-height:1.5}
+      .hd-meta .num{font-size:15px;font-weight:800;color:#1E1B4B;margin-bottom:2px}
+      .vig{display:inline-block;margin-top:5px;padding:3px 8px;background:#FEF3C7;color:#92400E;font-size:9.5px;font-weight:700;border-radius:4px;letter-spacing:.2px}
+      .client-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;padding:10px 12px;background:#F8F9FC;border-radius:6px;margin-bottom:12px;font-size:11px}
+      .client-row .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#888;font-weight:700;margin-bottom:1px}
+      .client-row .val{font-weight:600;color:#1E1B4B}
+      table{width:100%;border-collapse:collapse;margin:4px 0 0}
+      th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+      td{padding:6px 9px;border-bottom:1px solid #EEF0F7;font-size:11px}
+      tr:last-child td{border-bottom:none}
+      .totals{margin-top:6px;display:flex;justify-content:flex-end}
+      .totals-box{min-width:240px;padding:10px 14px;background:linear-gradient(135deg,${brandColor}0d,${brandColor}1a);border-radius:8px;border:1px solid ${brandColor}33}
+      .totals-row{display:flex;justify-content:space-between;padding:2px 0;font-size:11px;color:#555}
+      .totals-row.big{font-size:16px;font-weight:800;color:${brandColor};padding-top:6px;margin-top:4px;border-top:1px solid ${brandColor}33}
+      .totals-row.senia{font-size:11.5px;font-weight:700;color:${brandColor}}
+      .note{margin-top:12px;padding:9px 12px;background:#F4F6FD;border-left:3px solid ${brandColor};border-radius:4px;font-size:11px;color:#333}
+      .footer{margin-top:14px;padding-top:8px;border-top:1px solid #E5E7F0;font-size:9.5px;color:#999;line-height:1.5}
+      .accept-fab{position:fixed;bottom:18px;right:18px;background:#25D366;color:#fff;padding:13px 20px;border-radius:999px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(37,211,102,.4);font-size:12.5px;display:inline-flex;align-items:center;gap:7px}
+      .accept-fab:hover{background:#1da851}
+      @media print{.accept-fab{display:none}body{padding:18px 22px}}
+    </style></head><body>
+    <div class="header">
+      <div class="brand">${c.logo ? '<img src="' + c.logo + '" alt="' + bName + '">' : bName}</div>
+      <div class="hd-meta">
+        <div class="num">${budgetNum}</div>
+        <div>Fecha: ${new Date().toISOString().slice(0, 10)}</div>
+        ${form.deliveryDate ? '<div>Entrega: ' + form.deliveryDate + '</div>' : ''}
+        <div class="vig">⏱ Válido hasta: ${vigenciaISO}</div>
+      </div>
+    </div>
+    <div class="client-row">
+      ${form.contact ? `<div><div class="lbl">Contacto</div><div class="val">${form.contact}</div></div>` : ''}
+      ${form.company ? `<div><div class="lbl">Empresa</div><div class="val">${form.company}</div></div>` : ''}
+      ${form.wa ? `<div><div class="lbl">WhatsApp</div><div class="val">${form.wa}</div></div>` : ''}
+      ${form.ocasion ? `<div><div class="lbl">Ocasión</div><div class="val">${form.ocasion}</div></div>` : ''}
+      ${form.delivery ? `<div><div class="lbl">Modalidad</div><div class="val">${form.delivery}</div></div>` : ''}
+    </div>
+    <table>
+      <thead><tr><th>Producto</th><th style="text-align:center;width:55px">Cant.</th><th style="text-align:right;width:90px">P. unit.</th><th style="text-align:right;width:95px">Subtotal</th></tr></thead>
+      <tbody>${prodRows}</tbody>
+    </table>
+    <div class="totals"><div class="totals-box">
+      <div class="totals-row"><span>Subtotal productos</span><span>${fmt(calc.totalRevenue)}</span></div>
+      ${hasShip ? `<div class="totals-row"><span>Envío</span><span>${fmt(num(form.shipCost))}</span></div>` : ''}
+      <div class="totals-row big"><span>Total</span><span>${fmt(calc.total)}</span></div>
+      <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(calc.depositAmt)}</span></div>
+    </div></div>
+    ${form.noteCli ? `<div class="note">${form.noteCli}</div>` : ''}
+    ${(c.paymentConditions || c.legalNote) ? `<div class="footer">${c.paymentConditions ? '<div>' + c.paymentConditions + '</div>' : ''}${c.legalNote ? '<div style="margin-top:2px">' + c.legalNote + '</div>' : ''}</div>` : ''}
+    ${waLink ? `<a class="accept-fab" href="${waLink}" target="_blank" rel="noopener"><span style="font-size:15px">✓</span> Aceptar Presupuesto</a>` : ''}
+    </body></html>`
   }
 
   const openPreview = () => setPreviewHtml(buildPdfHtml())
@@ -322,8 +407,23 @@ export default function Presupuesto() {
                   {(c.deliveryModes || []).map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
-              <div className="fg"><label>Fecha pactada</label><input type="date" value={form.deliveryDate} onChange={e => setF('deliveryDate', e.target.value)} /></div>
-              <div className="fg"><label>Costo envío ($)</label><input type="number" value={form.shipCost} onFocus={selectOnFocus} onChange={e => setF('shipCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('shipCost', 0) }} min="0" /></div>
+              <div className="fg">
+                <label>Fecha pactada</label>
+                <input type="date" value={form.deliveryDate} onChange={e => setF('deliveryDate', e.target.value)} {...(editId ? {} : { min: todayISO() })} />
+                {form.deliveryDate && isWeekend(form.deliveryDate) && (
+                  <div style={{ fontSize: 10, color: 'var(--amber,#F59E0B)', marginTop: 3 }}>
+                    <i className="fa fa-triangle-exclamation" /> Es fin de semana. Verificá si entregás ese día.
+                  </div>
+                )}
+              </div>
+              <div className="fg">
+                <label>Costo envío ($)</label>
+                <input type="number" value={form.shipCost} onFocus={selectOnFocus} onChange={e => setF('shipCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('shipCost', 0) }} min="0" />
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, marginTop: 4, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.shipCharged !== false} onChange={e => setF('shipCharged', e.target.checked)} style={{ width: 'auto' }} />
+                  Cobrar envío al cliente (sumar al total)
+                </label>
+              </div>
               <div className="fg"><label>Estado</label>
                 <select value={form.status} onChange={e => setF('status', e.target.value)}>
                   <option value="draft">Borrador</option><option value="sent">Enviado</option>
@@ -349,10 +449,16 @@ export default function Presupuesto() {
           <BSection icon="fa-box-open" title="Productos" badge={items.filter(i => i.name).length ? `${items.filter(i => i.name).length} ítems` : null} error={!items.some(i => i.name)} defaultOpen={true}>
             <div style={{ overflowX: 'auto' }}>
               <table>
-                <thead><tr><th style={{ minWidth: 160 }}>Producto</th><th style={{ width: 65 }}>Cant.</th><th style={{ width: 100 }}>Costo u.</th><th style={{ width: 100 }}>Precio u.</th><th style={{ width: 95 }}>Subtotal</th><th style={{ width: 36 }}></th></tr></thead>
+                <thead><tr><th style={{ width: 24 }}></th><th style={{ minWidth: 160 }}>Producto</th><th style={{ width: 65 }}>Cant.</th><th style={{ width: 100 }}>Costo u.</th><th style={{ width: 100 }}>Precio u.</th><th style={{ width: 95 }}>Subtotal</th><th style={{ width: 36 }}></th></tr></thead>
                 <tbody>
                   {items.map((it, i) => (
-                    <tr key={i}>
+                    <tr key={i}
+                      onDragOver={handleDragOver(i)} onDrop={handleDrop(i)} onDragLeave={handleDragLeave}
+                      style={dragOver === i ? { background: 'var(--brand-xlt)', outline: '2px dashed var(--brand)' } : undefined}>
+                      <td style={{ textAlign: 'center', cursor: 'grab', color: 'var(--txt3)' }}
+                        draggable onDragStart={handleDragStart(i)} title="Arrastrar para reordenar">
+                        <i className="fa fa-grip-vertical" />
+                      </td>
                       <td><input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" list="prod-suggestions" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
                       <td><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
                       <td><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
@@ -387,7 +493,7 @@ export default function Presupuesto() {
             <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>
             <div className="cp-row"><span className="cp-lbl">Envío</span><span className="cp-val">{fmt(num(form.shipCost))}</span></div>
             <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>
-            <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val">{calc.marginReal}%</span></div>
+            <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined}>{calc.marginReal}%{calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}</span></div>
             {marginBudgetedSaved !== null && Math.abs(marginBudgetedSaved - Number(calc.marginReal)) >= 0.5 && (() => {
               const delta = (Number(calc.marginReal) - marginBudgetedSaved).toFixed(1)
               const positive = Number(delta) >= 0
