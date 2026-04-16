@@ -15,6 +15,7 @@ import Proveedores from '../pages/Proveedores'
 import Logistica from '../pages/Logistica'
 import Mensajes from '../pages/Mensajes'
 import Config from '../pages/Config'
+import { PrivacyProvider } from '../../context/PrivacyContext'
 
 export default function AppShell() {
   const { config } = useData()
@@ -37,6 +38,7 @@ export default function AppShell() {
   }, [cmdOpen])
 
   return (
+    <PrivacyProvider>
     <TaskFabProvider>
       <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
         <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />
@@ -61,5 +63,6 @@ export default function AppShell() {
         <TaskFab />
       </div>
     </TaskFabProvider>
+    </PrivacyProvider>
   )
 }

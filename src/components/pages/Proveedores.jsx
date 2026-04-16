@@ -137,10 +137,7 @@ export default function Proveedores() {
                 <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
-                  <td>
-                    <div style={{ fontWeight: 800, fontSize: 13 }}>{s.name}</div>
-                    {s.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{s.contact}</div>}
-                  </td>
+                  <td style={{ fontWeight: 800 }}>{s.name}</td>
                   <td>{s.contact}</td>
                   <td>{s.wa}</td><td>{s.rubro}</td><td>{s.email}</td>
                   <td><span className="badge b-sent">{supplierProducts(s).length}</span></td>

@@ -24,8 +24,12 @@ export function db(key, fallback = []) {
   }
 }
 
+let _writeHook = null
+export function setWriteHook(fn) { _writeHook = fn }
+
 export function dbW(key, value) {
   localStorage.setItem(K() + key, JSON.stringify(value))
+  _writeHook?.()
 }
 
 export function cfg() {
@@ -79,6 +83,13 @@ export const fmt = (v) => {
   const cur = c.currency || '$'
   const locale = c.numberFormat || 'es-AR'
   return cur + (Number(v) || 0).toLocaleString(locale, { maximumFractionDigits: 0 })
+}
+
+export const fmtDate = (iso) => {
+  if (!iso) return '—'
+  const p = String(iso).slice(0, 10).split('-')
+  if (p.length < 3) return iso
+  return `${p[2]}/${p[1]}/${p[0].slice(2)}`
 }
 
 export const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']

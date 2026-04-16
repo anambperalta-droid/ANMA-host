@@ -248,10 +248,7 @@ export default function Clientes() {
                 <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(c => (
                 <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
-                  <td>
-                    <div style={{ fontWeight: 800, fontSize: 13 }}>{c.company}</div>
-                    {c.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{c.contact}</div>}
-                  </td>
+                  <td style={{ fontWeight: 800 }}>{c.company}</td>
                   <td>{c.contact}</td>
                   <td><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
                   <td>{c.wa}</td>

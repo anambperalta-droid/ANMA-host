@@ -26,6 +26,12 @@ export function DataProvider({ children }) {
     })
   }, [])
 
+  useEffect(() => {
+    const h = () => refresh()
+    window.addEventListener('anma:synced', h)
+    return () => window.removeEventListener('anma:synced', h)
+  }, [refresh])
+
   const get = useCallback((key, fallback = []) => db(key, fallback), [tick])
   const set = useCallback((key, val) => { dbW(key, val); refresh() }, [refresh])
 

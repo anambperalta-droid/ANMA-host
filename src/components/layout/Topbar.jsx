@@ -2,6 +2,7 @@ import { useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import NotificationBell from './NotificationBell'
 import { useTaskFab } from '../../context/TaskFabContext'
+import { usePrivacy } from '../../context/PrivacyContext'
 
 const PAGE_NAMES = { '/': 'Historial', '/presupuesto': 'Presupuesto', '/clientes': 'Clientes', '/catalogo': 'Catálogo de Productos', '/proveedores': 'Proveedores', '/logistica': 'Logística', '/mensajes': 'Mensajes WhatsApp', '/config': 'Configuración' }
 
@@ -19,6 +20,7 @@ export default function Topbar({ onMenuClick }) {
   const title = PAGE_NAMES[loc.pathname] || 'ANMA'
   const [theme, setTheme] = useState(initialTheme)
   const { panelOpen, setPanelOpen, activeTasks } = useTaskFab()
+  const { hidden, toggle } = usePrivacy()
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -33,6 +35,27 @@ export default function Topbar({ onMenuClick }) {
         <i className="fa fa-bars" />
       </button>
       <div className="tb-page-title">{title}</div>
+      <button
+  className="tb-btn"
+  onClick={toggle}
+  title={hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
+  style={{
+    background: hidden ? '#FEE2E2' : 'var(--surface2)',
+    color: hidden ? '#DC2626' : 'var(--txt3)',
+    borderRadius: 10,
+    width: 36,
+    height: 36,
+    fontSize: 14,
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    transition: 'background .2s, color .2s',
+  }}
+>
+  <i className={`fa ${hidden ? 'fa-eye-slash' : 'fa-eye'}`} />
+</button>
       <NotificationBell />
       <button
         className="tb-btn"

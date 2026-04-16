@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
-import { fmt, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS } from '../../lib/storage'
+import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS } from '../../lib/storage'
+import { usePrivacy } from '../../context/PrivacyContext'
 
 function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
@@ -85,10 +86,12 @@ const TIERS = [
 ]
 
 const PERIODS = [
+  { key: '1m', label: '1 mes', months: 1 },
   { key: '3m', label: '3 meses', months: 3 },
   { key: '6m', label: '6 meses', months: 6 },
   { key: '12m', label: '12 meses', months: 12 },
   { key: 'all', label: 'Todo', months: 0 },
+  { key: 'custom', label: 'Personalizado', months: -1 },
 ]
 
 /* ── Seguimiento card with Re-enviar button ── */
@@ -109,8 +112,8 @@ function SeguimientoCard({ b, onEdit, onWA, onResend }) {
         <div className="seg-cli"><b>{b.contact || 'Sin contacto'}</b> — {b.company || 'Sin empresa'}</div>
         <div className="seg-co">
           {b.ocasion && <><i className="fa fa-calendar-day" style={{ marginRight: 4 }} />{b.ocasion}  ·  </>}
-          <i className="fa fa-calendar" style={{ marginRight: 4 }} />Enviado: {b.date || '—'}
-          {b.deliveryDate && ` · Entrega: ${b.deliveryDate}`}
+          <i className="fa fa-calendar" style={{ marginRight: 4 }} />Enviado: {fmtDate(b.date)}
+          {b.deliveryDate && ` · Entrega: ${fmtDate(b.deliveryDate)}`}
         </div>
       </div>
       <div className="seg-meta">
@@ -118,7 +121,7 @@ function SeguimientoCard({ b, onEdit, onWA, onResend }) {
           <div className="num" style={{ color: urg.color }}>{days}</div>
           <div className="lbl" style={{ color: urg.color }}>días</div>
         </div>
-        <div className="seg-total">{fmt(b.total)}</div>
+        <div className="seg-total">{money(b.total)}</div>
         <div className="seg-actions">
           <button className="act edit" onClick={() => onEdit(b.id)} title="Editar"><i className="fa fa-pen" /></button>
           <button className="act wa" onClick={() => onWA(b)} title="WhatsApp"><i className="fa-brands fa-whatsapp" /></button>
@@ -249,7 +252,9 @@ export default function Historial() {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatus, setBulkStatus] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
-  const [hideGain, setHideGain] = useState(false)
+  const { hidden, money } = usePrivacy()
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
 
   const budgets = get('budgets')
   const c = config()
@@ -258,11 +263,23 @@ export default function Historial() {
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
   // Period filter
-  const periodMonths = PERIODS.find(p => p.key === period)?.months || 0
-  const periodStart = periodMonths > 0 ? new Date(now.getFullYear(), now.getMonth() - periodMonths, 1) : null
-  const periodBudgets = periodStart
-    ? budgets.filter(b => b.date && new Date(b.date) >= periodStart)
-    : budgets
+  const periodMonths = PERIODS.find(p => p.key === period)?.months ?? 6
+  const periodStart = (period !== 'custom' && periodMonths > 0)
+    ? new Date(now.getFullYear(), now.getMonth() - periodMonths, 1)
+    : null
+
+  let periodBudgets
+  if (period === 'custom' && customFrom && customTo) {
+    const from = new Date(customFrom)
+    const to = new Date(customTo + 'T23:59:59')
+    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= from && new Date(b.date) <= to)
+  } else if (period === 'all' || periodMonths === 0) {
+    periodBudgets = budgets
+  } else if (periodStart) {
+    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= periodStart)
+  } else {
+    periodBudgets = budgets
+  }
 
   // Helper: dinero real cobrado segun estado de pago
   const cobrado = (b) => {
@@ -463,23 +480,26 @@ export default function Historial() {
         <div className="ph-left"><h2>Historial</h2><p>Registro de presupuestos y análisis del negocio</p></div>
         <div className="ph-right">
           {/* Period filter */}
-          <div className="period-pills">
-            {PERIODS.map(p => (
-              <button key={p.key} className={`pill ${period === p.key ? 'active' : ''}`}
-                onClick={() => setPeriod(p.key)} style={{ padding: '4px 10px', fontSize: 10 }}>
-                {p.label}
-              </button>
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div className="period-pills">
+              {PERIODS.map(p => (
+                <button key={p.key} className={`pill ${period === p.key ? 'active' : ''}`}
+                  onClick={() => setPeriod(p.key)} style={{ padding: '4px 10px', fontSize: 10 }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {period === 'custom' && (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12, color: 'var(--txt3)' }}>De:</span>
+                <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+                  style={{ padding: '4px 8px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12, fontFamily: 'inherit' }} />
+                <span style={{ fontSize: 12, color: 'var(--txt3)' }}>Hasta:</span>
+                <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+                  style={{ padding: '4px 8px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12, fontFamily: 'inherit' }} />
+              </div>
+            )}
           </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => setHideGain(h => !h)}
-            title={hideGain ? 'Mostrar ganancias' : 'Ocultar ganancias'}
-            style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-          >
-            <i className={`fa ${hideGain ? 'fa-eye-slash' : 'fa-eye'}`} />
-            <span style={{ fontSize: 10 }}>{hideGain ? 'Ganancia oculta' : 'Ocultar ganancia'}</span>
-          </button>
           <button className="btn btn-secondary btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
           <button className="btn btn-primary btn-sm" onClick={() => nav('/presupuesto')}><i className="fa fa-plus" /> Nuevo presupuesto</button>
         </div>
@@ -504,9 +524,9 @@ export default function Historial() {
             </div>
           ) : (
             <div className="bento sk-fade-in">
-              <KpiCard label="Total cobrado" value={fmt(totCobrado)} foot={`${pagados.length} pagos recibidos`} color="brand" icon="fa-dollar-sign" />
-              <KpiCard label="Ingresos del mes" value={fmt(mInc)} foot={`${monthBudgets.length} presupuestos`} color="blue" icon="fa-chart-line" delta={deltaInc} />
-              <KpiCard label="Ganancia del mes" value={hideGain ? '••••' : fmt(mGain)} foot="del período actual" color="green" icon="fa-coins" delta={hideGain ? undefined : deltaGain} />
+              <KpiCard label="Total cobrado" value={money(totCobrado)} foot={`${pagados.length} pagos recibidos`} color="brand" icon="fa-dollar-sign" />
+              <KpiCard label="Ingresos del mes" value={money(mInc)} foot={`${monthBudgets.length} presupuestos`} color="blue" icon="fa-chart-line" delta={deltaInc} />
+              <KpiCard label="Ganancia del mes" value={money(mGain)} foot="del período actual" color="green" icon="fa-coins" delta={hidden ? undefined : deltaGain} />
               <KpiCard label="Tasa de conversión" value={convRate} foot={`${confirmed.length} de ${periodBudgets.length} confirmados`} color="amber" icon="fa-funnel" />
 
               <div className="bento-chart bento-wide">
@@ -542,7 +562,7 @@ export default function Historial() {
                                 {b.company || b.contact || '—'}
                               </div>
                               <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
-                                {b.num} · {b.days}d · {fmt(b.total)}
+                                {b.num} · {b.days}d · {money(b.total)}
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: 4 }}>
@@ -584,7 +604,7 @@ export default function Historial() {
                         <tr key={b.id}>
                           <td><b>{b.num || '—'}</b></td>
                           <td>{b.company || b.contact || '—'}</td>
-                          <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
+                          <td style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
                           <td><Badge status={b.status} /></td>
                           <td style={{ position: 'relative' }}>
                             <button
@@ -670,7 +690,7 @@ export default function Historial() {
                 <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
                 <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('gain')}>
                   Ganancia{sortArrow('gain')}
-                  {hideGain && <i className="fa fa-eye-slash" style={{ marginLeft: 4, fontSize: 9, color: 'var(--txt4)' }} />}
+                  {hidden && <i className="fa fa-eye-slash" style={{ marginLeft: 4, fontSize: 9, color: 'var(--txt4)' }} />}
                 </th>
                 <th>Estado</th><th>Pago</th><th>Acciones</th>
               </tr></thead>
@@ -682,15 +702,15 @@ export default function Historial() {
                     <tr key={b.id} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
                       <td><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
                       <td><b>{b.num || '—'}</b></td>
-                      <td>{b.date || '—'}</td>
+                      <td>{fmtDate(b.date)}</td>
                       <td>{b.contact || '—'}</td>
                       <td style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
-                      <td>{b.deliveryDate || '—'}</td>
+                      <td>{fmtDate(b.deliveryDate)}</td>
                       <td style={{ fontWeight: 700, fontSize: 11, color: overdue ? 'var(--red)' : dDays !== null && dDays <= 3 ? 'var(--amber)' : 'var(--txt3)' }}>
                         {dDays === null ? '—' : overdue ? `⚠ ${dDays <= 0 ? (dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd pasó') : dDays + 'd'}` : `${dDays}d`}
                       </td>
-                      <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
-                      <td style={{ color: hideGain ? 'var(--txt4)' : 'var(--money)', fontWeight: 600 }}>{hideGain ? '••••' : fmt(b.totalGain)}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
+                      <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600 }}>{money(b.totalGain)}</td>
                       <td>
                         <select style={{ fontSize: 11, padding: '4px 8px', border: '2px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', background: 'var(--surface)', cursor: 'pointer', outline: 'none' }}
                           value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
@@ -724,10 +744,10 @@ export default function Historial() {
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-chart-pie" style={{ color: 'var(--brand)', marginRight: 6 }} />Métricas globales</span></div>
             {[
-              ['Total presupuestado', fmt(totBudgeted), null],
-              ['Total cobrado', fmt(totCobrado), 'Suma de pagos recibidos (totales + señas)'],
-              ['Ganancia cobrada', hideGain ? '••••' : fmt(totGain), 'Margen cobrado — no descuenta costos de insumos ni logística'],
-              ['Ticket promedio', fmt(avgTicket), null],
+              ['Total presupuestado', money(totBudgeted), null],
+              ['Total cobrado', money(totCobrado), 'Suma de pagos recibidos (totales + señas)'],
+              ['Ganancia cobrada', money(totGain), 'Margen cobrado — no descuenta costos de insumos ni logística'],
+              ['Ticket promedio', money(avgTicket), null],
               ['Tasa de conversión', convRate, null],
               ['N° de presupuestos', periodBudgets.length, null],
             ].map(([l, v, tip], i) => (
@@ -751,7 +771,7 @@ export default function Historial() {
                     <span className="mr-label" style={{ flex: 1, marginBottom: 0 }}>{n}</span>
                     <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-xlt)', padding: '1px 6px', borderRadius: 10, flexShrink: 0 }}>{Math.round(v / totalTopSales * 100)}%</span>
                   </div>
-                  <span className="mr-val" style={{ color: 'var(--money)' }}>{fmt(v)}</span>
+                  <span className="mr-val" style={{ color: 'var(--money)' }}>{money(v)}</span>
                 </div>
               ))
             })() : <div className="empty" style={{ padding: 20 }}><p>Sin datos</p></div>}

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useToast } from './ToastContext'
 import { CURRENT_SITE } from '../lib/invites'
 import { setStorageUser } from '../lib/storage'
+import { initSync, pullFromCloud } from '../lib/sync'
 
 const Ctx = createContext()
 
@@ -64,6 +65,10 @@ export function AuthProvider({ children }) {
         setAuthed(!!session)
         setUser(session?.user ?? null)
         setStorageUser(session?.user?.id ?? null)
+        if (session?.user?.id) {
+          initSync(session.user.id)
+          pullFromCloud(session.user.id)
+        }
       }
       setLoading(false)
     })
@@ -80,6 +85,10 @@ export function AuthProvider({ children }) {
       setAuthed(!!session)
       setUser(session?.user ?? null)
       setStorageUser(session?.user?.id ?? null)
+      initSync(session?.user?.id ?? null)
+      if (_event === 'SIGNED_IN' && session?.user?.id) {
+        pullFromCloud(session.user.id)
+      }
       if (_event === 'SIGNED_OUT') {
         setStorageUser(null)
         toast('Sesion cerrada.', 'in')
