@@ -46,6 +46,7 @@ export default function Config() {
   const [cWeb, setCWeb] = useState(c.contactWeb || '')
   const [cAddr, setCAddr] = useState(c.address || '')
   const [currency, setCurrency] = useState(c.currency || '$')
+  const [numberFormat, setNumberFormat] = useState(c.numberFormat || 'es-AR')
   const [prefix, setPrefix] = useState(c.budgetPrefix || 'AN')
   const [defMargin, setDefMargin] = useState(c.defaultMargin || 40)
   const [defDeposit, setDefDeposit] = useState(c.defaultDeposit || 50)
@@ -127,7 +128,7 @@ export default function Config() {
     updateConfig({
       businessName: bname, subtitle: bsub, brandColor: bcolor, accentColor: acolor,
       contactEmail: cEmail, contactWA: cWA, contactIG: cIG, contactWeb: cWeb, address: cAddr,
-      currency, budgetPrefix: prefix, defaultMargin: Number(defMargin), defaultDeposit: Number(defDeposit), validity: Number(validity),
+      currency, numberFormat, budgetPrefix: prefix, defaultMargin: Number(defMargin), defaultDeposit: Number(defDeposit), validity: Number(validity),
       paymentConditions: conds, legalNote: legal,
     })
     applyThemeColors(bcolor, acolor)
@@ -341,7 +342,13 @@ export default function Config() {
       {tab === 'comercial' && (
         <div className="card" style={{ maxWidth: 600 }}>
           <div className="grid2">
-            <div className="fg"><label>Moneda</label><input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ maxWidth: 80 }} /></div>
+            <div className="fg"><label>Símbolo moneda</label><input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ maxWidth: 80 }} /></div>
+            <div className="fg"><label>Formato de números</label>
+              <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)}>
+                <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
+                <option value="en-US">1,234,567 (coma miles — US/UK)</option>
+              </select>
+            </div>
             <div className="fg"><label>Prefijo numeración</label><input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ maxWidth: 100 }} /></div>
             <div className="fg"><label>Margen por defecto (%)</label><input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} /></div>
             <div className="fg"><label>Seña por defecto (%)</label><input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} /></div>

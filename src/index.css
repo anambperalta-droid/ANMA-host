@@ -654,10 +654,24 @@ td b{color:var(--txt);font-weight:600}
   .budget-layout{flex-direction:column}
   .calc-panel{position:static!important;margin-top:16px;width:100%!important}
   .grid2,.grid3{grid-template-columns:1fr!important}
+  /* Page headers apilados en mobile */
+  .ph{flex-direction:column;align-items:stretch;gap:8px}
+  .ph-right{width:100%;flex-wrap:wrap;justify-content:flex-start}
+  .content{padding:14px 12px}
+  .login-left{display:none}
+  .login-right{width:100%!important;padding:20px!important}
+  /* KPI cards 2 cols en mobile */
+  .kpis,.kpis-4{grid-template-columns:1fr 1fr;gap:10px}
+  /* Ocultar col menos importantes en tabla */
+  .col-hide-mobile{display:none}
 }
 @media(max-width:640px){
   .topbar{height:56px!important;padding:0 14px!important}
   .tfab-btn{bottom:72px!important;right:16px!important}
+  /* Botones del header más compactos */
+  .ph-right .btn{font-size:11px;padding:5px 8px}
+  .ph-right .period-pills{display:none}
+  .ph-left h2{font-size:16px}
 }
 
 /* ── Theme variants ── */
