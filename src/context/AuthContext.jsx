@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { supabase } from '../lib/supabase'
 import { useToast } from './ToastContext'
 import { CURRENT_SITE } from '../lib/invites'
+import { setStorageUser } from '../lib/storage'
 
 const Ctx = createContext()
 
@@ -58,9 +59,11 @@ export function AuthProvider({ children }) {
         setSiteBlocked(true)
         setAuthed(false)
         setUser(null)
+        setStorageUser(null)
       } else {
         setAuthed(!!session)
         setUser(session?.user ?? null)
+        setStorageUser(session?.user?.id ?? null)
       }
       setLoading(false)
     })
@@ -70,12 +73,15 @@ export function AuthProvider({ children }) {
         setSiteBlocked(true)
         setAuthed(false)
         setUser(null)
+        setStorageUser(null)
         return
       }
       setSiteBlocked(false)
       setAuthed(!!session)
       setUser(session?.user ?? null)
+      setStorageUser(session?.user?.id ?? null)
       if (_event === 'SIGNED_OUT') {
+        setStorageUser(null)
         toast('Sesion cerrada.', 'in')
       }
     })
@@ -97,6 +103,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut()
+    setStorageUser(null)
     setAuthed(false)
     setUser(null)
     setSiteBlocked(false)

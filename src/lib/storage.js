@@ -1,15 +1,31 @@
-const K = 'anma3_'
+/* ═══════════════════════════════════════
+   ANMA Regalos — Storage Layer v4
+   Modelo: Presupuestos / Clientes / Catálogo
+   Datos aislados por usuario (userId)
+═══════════════════════════════════════ */
+const BASE = 'anma3_'
+
+// userId se setea al loguearse (ver AuthContext)
+let _userId = null
+
+export function setStorageUser(userId) {
+  _userId = userId || null
+}
+
+function K() {
+  return _userId ? `${BASE}u_${_userId}_` : `${BASE}`
+}
 
 export function db(key, fallback = []) {
   try {
-    return JSON.parse(localStorage.getItem(K + key)) ?? fallback
+    return JSON.parse(localStorage.getItem(K() + key)) ?? fallback
   } catch {
     return fallback
   }
 }
 
 export function dbW(key, value) {
-  localStorage.setItem(K + key, JSON.stringify(value))
+  localStorage.setItem(K() + key, JSON.stringify(value))
 }
 
 export function cfg() {
@@ -55,14 +71,6 @@ export const DEFAULTS = {
 export function ensureDefaults() {
   const c = cfg()
   if (!c.businessName) wCfg(DEFAULTS)
-  // Create default admin account if none exists
-  if (!c.email || !c.ph) {
-    wCfg({
-      email: 'admin@anma.com',
-      // SHA-256 hash of "admin123" with salt "_anma_salt_2024"
-      ph: '944ce261c4dc5b37feb359c238187e5ea6ceb915f0e28a648448d7c4a5c7f7d3',
-    })
-  }
 }
 
 export const fmt = (v) => {
