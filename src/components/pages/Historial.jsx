@@ -249,6 +249,7 @@ export default function Historial() {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatus, setBulkStatus] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [hideGain, setHideGain] = useState(false)
 
   const budgets = get('budgets')
   const c = config()
@@ -470,6 +471,15 @@ export default function Historial() {
               </button>
             ))}
           </div>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => setHideGain(h => !h)}
+            title={hideGain ? 'Mostrar ganancias' : 'Ocultar ganancias'}
+            style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+          >
+            <i className={`fa ${hideGain ? 'fa-eye-slash' : 'fa-eye'}`} />
+            <span style={{ fontSize: 10 }}>{hideGain ? 'Ganancia oculta' : 'Ocultar ganancia'}</span>
+          </button>
           <button className="btn btn-secondary btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
           <button className="btn btn-primary btn-sm" onClick={() => nav('/presupuesto')}><i className="fa fa-plus" /> Nuevo presupuesto</button>
         </div>
@@ -496,7 +506,7 @@ export default function Historial() {
             <div className="bento sk-fade-in">
               <KpiCard label="Total cobrado" value={fmt(totCobrado)} foot={`${pagados.length} pagos recibidos`} color="brand" icon="fa-dollar-sign" />
               <KpiCard label="Ingresos del mes" value={fmt(mInc)} foot={`${monthBudgets.length} presupuestos`} color="blue" icon="fa-chart-line" delta={deltaInc} />
-              <KpiCard label="Ganancia del mes" value={fmt(mGain)} foot="del período actual" color="green" icon="fa-coins" delta={deltaGain} />
+              <KpiCard label="Ganancia del mes" value={hideGain ? '••••' : fmt(mGain)} foot="del período actual" color="green" icon="fa-coins" delta={hideGain ? undefined : deltaGain} />
               <KpiCard label="Tasa de conversión" value={convRate} foot={`${confirmed.length} de ${periodBudgets.length} confirmados`} color="amber" icon="fa-funnel" />
 
               <div className="bento-chart bento-wide">
@@ -658,7 +668,10 @@ export default function Historial() {
                 <th>Entrega</th>
                 <th>Días rest.</th>
                 <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
-                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('gain')}>Ganancia{sortArrow('gain')}</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('gain')}>
+                  Ganancia{sortArrow('gain')}
+                  {hideGain && <i className="fa fa-eye-slash" style={{ marginLeft: 4, fontSize: 9, color: 'var(--txt4)' }} />}
+                </th>
                 <th>Estado</th><th>Pago</th><th>Acciones</th>
               </tr></thead>
               <tbody>
@@ -677,7 +690,7 @@ export default function Historial() {
                         {dDays === null ? '—' : overdue ? `⚠ ${dDays <= 0 ? (dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd pasó') : dDays + 'd'}` : `${dDays}d`}
                       </td>
                       <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
-                      <td style={{ color: 'var(--money)', fontWeight: 600 }}>{fmt(b.totalGain)}</td>
+                      <td style={{ color: hideGain ? 'var(--txt4)' : 'var(--money)', fontWeight: 600 }}>{hideGain ? '••••' : fmt(b.totalGain)}</td>
                       <td>
                         <select style={{ fontSize: 11, padding: '4px 8px', border: '2px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', background: 'var(--surface)', cursor: 'pointer', outline: 'none' }}
                           value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
@@ -713,7 +726,7 @@ export default function Historial() {
             {[
               ['Total presupuestado', fmt(totBudgeted), null],
               ['Total cobrado', fmt(totCobrado), 'Suma de pagos recibidos (totales + señas)'],
-              ['Ganancia cobrada', fmt(totGain), 'Margen cobrado — no descuenta costos de insumos ni logística'],
+              ['Ganancia cobrada', hideGain ? '••••' : fmt(totGain), 'Margen cobrado — no descuenta costos de insumos ni logística'],
               ['Ticket promedio', fmt(avgTicket), null],
               ['Tasa de conversión', convRate, null],
               ['N° de presupuestos', periodBudgets.length, null],

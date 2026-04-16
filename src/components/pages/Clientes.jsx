@@ -16,7 +16,6 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
   return (
     <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 940, height: 'min(900px, 92vh)', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, margin: 'auto 0' }} onClick={e => e.stopPropagation()}>
-        {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', borderRadius: '18px 18px 0 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <i className="fa fa-file-invoice-dollar" style={{ color: brandColor }} />
@@ -28,17 +27,10 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
             <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
           </div>
         </div>
-
-        {/* Document body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', background: '#fff' }}>
-          {/* Header: brand + budget info */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 18, borderBottom: `3px solid ${brandColor}`, marginBottom: 20 }}>
             <div>
-              {c.logo ? (
-                <img src={c.logo} alt={bName} style={{ height: 44, marginBottom: 6 }} />
-              ) : (
-                <div style={{ fontSize: 24, fontWeight: 800, color: brandColor, letterSpacing: '-1px' }}>{bName}</div>
-              )}
+              {c.logo ? <img src={c.logo} alt={bName} style={{ height: 44, marginBottom: 6 }} /> : <div style={{ fontSize: 24, fontWeight: 800, color: brandColor, letterSpacing: '-1px' }}>{bName}</div>}
               {c.subtitle && <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{c.subtitle}</div>}
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -47,19 +39,14 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
               {budget.deliveryDate && <div style={{ fontSize: 12, color: '#666' }}>Entrega: {budget.deliveryDate}</div>}
             </div>
           </div>
-
-          {/* Client info */}
           <div style={{ background: '#F8F9FE', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>Datos del cliente</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px', fontSize: 13, color: '#1E1B4B' }}>
               {budget.contact && <div><span style={{ color: '#888', fontSize: 11 }}>Contacto: </span><b>{budget.contact}</b></div>}
               {budget.company && <div><span style={{ color: '#888', fontSize: 11 }}>Empresa: </span><b>{budget.company}</b></div>}
               {budget.wa && <div><span style={{ color: '#888', fontSize: 11 }}>WhatsApp: </span>{budget.wa}</div>}
-              {budget.ocasion && <div><span style={{ color: '#888', fontSize: 11 }}>Ocasión: </span>{budget.ocasion}</div>}
             </div>
           </div>
-
-          {/* Products table */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Detalle de productos</div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -79,14 +66,10 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
                     <td style={{ padding: '10px 12px', textAlign: 'right' }}>{fmt(num(it.priceUnit))}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
                   </tr>
-                )) : (
-                  <tr><td colSpan={4} style={{ padding: 16, textAlign: 'center', color: '#888' }}>Sin productos</td></tr>
-                )}
+                )) : <tr><td colSpan={4} style={{ padding: 16, textAlign: 'center', color: '#888' }}>Sin productos</td></tr>}
               </tbody>
             </table>
           </div>
-
-          {/* Totals */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ width: 260 }}>
               {num(budget.shipCost) > 0 && (
@@ -104,16 +87,11 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
               )}
             </div>
           </div>
-
-          {/* Client note */}
           {budget.noteCli && (
             <div style={{ marginTop: 20, background: '#F4F6FD', borderRadius: 8, padding: '12px 16px', fontSize: 12, color: '#4B5280', lineHeight: 1.6 }}>
-              <i className="fa fa-message" style={{ color: brandColor, marginRight: 6 }} />
-              {budget.noteCli}
+              <i className="fa fa-message" style={{ color: brandColor, marginRight: 6 }} />{budget.noteCli}
             </div>
           )}
-
-          {/* Footer: conditions */}
           <div style={{ marginTop: 24, paddingTop: 14, borderTop: '1px solid #E5E7F0', fontSize: 10, color: '#999', lineHeight: 1.6 }}>
             {c.paymentConditions && <div>{c.paymentConditions}</div>}
             {c.legalNote && <div style={{ marginTop: 3 }}>{c.legalNote}</div>}
@@ -135,7 +113,7 @@ export default function Clientes() {
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '' })
+  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c' })
   const [newNote, setNewNote] = useState('')
   const [previewBudget, setPreviewBudget] = useState(null)
   const fileRef = useRef(null)
@@ -151,7 +129,7 @@ export default function Clientes() {
   ) : clients
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '' }); setModal(true) }
+  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c' }); setModal(true) }
   const save = () => {
     if (!form.company) { toast('Ingresá el nombre de la empresa.', 'er'); return }
     saveEntity('clients', form); setModal(false); toast('Cliente guardado', 'ok')
@@ -200,6 +178,17 @@ export default function Clientes() {
 
   const clientBudgets = (c) => budgets.filter(b => b.company === c.company || b.contact === c.contact)
 
+  const clientTotalVendido = (c) => clientBudgets(c)
+    .filter(b => ['confirmed', 'paid', 'partial'].includes(b.status))
+    .reduce((s, b) => s + (Number(b.total) || 0), 0)
+
+  const clientLastBudgetDays = (c) => {
+    const sorted = clientBudgets(c).filter(b => b.date).sort((a, b) => new Date(b.date) - new Date(a.date))
+    if (!sorted.length) return null
+    const diff = Math.floor((Date.now() - new Date(sorted[0].date)) / 86400000)
+    return diff
+  }
+
   const addNote = () => {
     if (!newNote.trim() || !detailClient) return
     const existing = detailClient.noteHistory || []
@@ -210,7 +199,13 @@ export default function Clientes() {
     toast('Nota agregada', 'ok')
   }
 
-  /* ── ESC cierra modales (prioridad: topmost primero) ── */
+  const openWA = (c) => {
+    if (!c.wa) return
+    const num = c.wa.replace(/\D/g, '')
+    const text = `Hola ${c.contact || c.company}, te contacto desde ANMA por el siguiente tema: `
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
+  }
+
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
@@ -247,13 +242,19 @@ export default function Clientes() {
       {viewMode === 'table' ? (
         <div className="tbl-card">
           <table>
-            <thead><tr><th>Empresa</th><th>Contacto</th><th>WhatsApp</th><th>Email</th><th>Rubro</th><th>Presup.</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Empresa</th><th>Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Acciones</th></tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
                 <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(c => (
                 <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
-                  <td><b>{c.company}</b></td><td>{c.contact}</td><td>{c.wa}</td><td>{c.email}</td>
+                  <td>
+                    <div style={{ fontWeight: 800, fontSize: 13 }}>{c.company}</div>
+                    {c.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{c.contact}</div>}
+                  </td>
+                  <td>{c.contact}</td>
+                  <td><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
+                  <td>{c.wa}</td>
                   <td>{c.rubro && <span className="badge b-purple">{c.rubro}</span>}</td>
                   <td><span className="badge b-sent">{clientBudgets(c).length}</span></td>
                   <td><div className="acts" onClick={e => e.stopPropagation()}>
@@ -261,7 +262,7 @@ export default function Clientes() {
                     <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
                   </div></td>
                 </tr>
-              )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente</p></div></td></tr>}
+              )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
             </tbody>
           </table>
         </div>
@@ -279,8 +280,8 @@ export default function Clientes() {
                   {(c.company || '?')[0].toUpperCase()}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.company}</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)' }}>{c.contact}</div>
+                  <div style={{ fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.company}</div>
+                  {c.contact && <div style={{ fontSize: 11, color: 'var(--txt3)' }}>{c.contact}</div>}
                 </div>
               </div>
               {c.rubro && <span className="badge b-purple" style={{ marginBottom: 6 }}>{c.rubro}</span>}
@@ -312,18 +313,26 @@ export default function Clientes() {
               <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} placeholder="+54 ..." /></div>
               <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
             </div>
-            <div className="fg"><label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud..." /></div>
+            <div className="grid2">
+              <div className="fg"><label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud..." /></div>
+              <div className="fg"><label>Tipo de cliente</label>
+                <select value={form.clientType || 'b2c'} onChange={e => setF('clientType', e.target.value)}>
+                  <option value="b2c">B2C — Cliente final</option>
+                  <option value="b2b">B2B — Empresa / Mayorista</option>
+                </select>
+              </div>
+            </div>
             <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} placeholder="Observaciones..." /></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
           </div>
         </div>
       )}
 
-      {/* FICHA DETALLE CON PESTAÑAS */}
+      {/* FICHA DETALLE */}
       {detailClient && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailClient(null) }}>
           <div className="modal" style={{ maxWidth: 820, height: 'min(820px, 92vh)', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }} onClick={e => e.stopPropagation()}>
-            {/* Header compacto */}
+            {/* Header */}
             <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -331,8 +340,12 @@ export default function Clientes() {
                     {(detailClient.company || '?')[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px', margin: 0 }}>{detailClient.company}</h3>
-                    <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 1 }}>{detailClient.contact}{detailClient.rubro ? ` · ${detailClient.rubro}` : ''}</div>
+                    <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailClient.company}</h3>
+                    <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {detailClient.contact && <span>{detailClient.contact}</span>}
+                      <span className={`badge ${detailClient.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`} style={{ fontSize: 9 }}>{detailClient.clientType === 'b2b' ? 'B2B' : 'B2C'}</span>
+                      {detailClient.rubro && <span style={{ color: 'var(--txt4)' }}>· {detailClient.rubro}</span>}
+                    </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 5 }}>
@@ -355,19 +368,67 @@ export default function Clientes() {
               {/* TAB: Información */}
               {detailTab === 'info' && (
                 <div>
+                  {/* Links activos */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-                    {detailClient.wa && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DCFCE7', color: '#16A34A', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}><i className="fa-brands fa-whatsapp" />{detailClient.wa}</span>}
-                    {detailClient.email && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--blue-lt)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}><i className="fa fa-envelope" />{detailClient.email}</span>}
+                    {detailClient.wa && (
+                      <a
+                        href="#"
+                        onClick={e => { e.preventDefault(); openWA(detailClient) }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DCFCE7', color: '#16A34A', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', cursor: 'pointer', transition: 'opacity .15s' }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                        title="Abrir chat de WhatsApp"
+                      >
+                        <i className="fa-brands fa-whatsapp" />{detailClient.wa}
+                      </a>
+                    )}
+                    {detailClient.email && (
+                      <a
+                        href={`mailto:${detailClient.email}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--blue-lt)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', transition: 'opacity .15s' }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                      >
+                        <i className="fa fa-envelope" />{detailClient.email}
+                      </a>
+                    )}
                     {detailClient.rubro && <span className="badge b-purple">{detailClient.rubro}</span>}
                   </div>
-                  {detailClient.notes && (
+
+                  {/* KPI rápido */}
+                  {(() => {
+                    const bgs = clientBudgets(detailClient)
+                    const totalVendido = clientTotalVendido(detailClient)
+                    const lastDays = clientLastBudgetDays(detailClient)
+                    if (bgs.length > 0) return (
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(totalVendido)}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Total vendido</div>
+                        </div>
+                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>
+                            {lastDays === null ? '—' : lastDays === 0 ? 'Hoy' : `hace ${lastDays}d`}
+                          </div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Último pedido</div>
+                        </div>
+                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{bgs.length}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Presupuestos</div>
+                        </div>
+                      </div>
+                    )
+                    return null
+                  })()}
+
+                  {/* Nota general */}
+                  {detailClient.notes ? (
                     <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: 'var(--txt2)', fontStyle: 'italic', borderLeft: '3px solid var(--brand)' }}>
                       {detailClient.notes}
                     </div>
-                  )}
-                  {!detailClient.wa && !detailClient.email && !detailClient.notes && (
-                    <div style={{ textAlign: 'center', padding: 20, color: 'var(--txt3)', fontSize: 12 }}>
-                      <i className="fa fa-circle-info" style={{ marginRight: 5 }} />Sin datos de contacto adicionales
+                  ) : (
+                    <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: 'var(--txt4)', fontStyle: 'italic', borderLeft: '3px solid var(--border)' }}>
+                      <i className="fa fa-pencil" style={{ marginRight: 6 }} />Agrega notas sobre preferencias, condiciones especiales o recordatorios de seguimiento...
                     </div>
                   )}
                 </div>
@@ -391,11 +452,10 @@ export default function Clientes() {
                               <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)' }}>{b.num || '—'}</span>
                               <span className={`badge ${STATUS_CLS[b.status] || 'b-draft'}`}>{STATUS_MAP[b.status] || 'Borrador'}</span>
                             </div>
-                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{b.date || '—'}{b.ocasion ? ` · ${b.ocasion}` : ''}</div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{b.date || '—'}</div>
                           </div>
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
                             <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--money)' }}>{fmt(b.total)}</div>
-                            {b.totalGain > 0 && <div style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600 }}>+{fmt(b.totalGain)}</div>}
                           </div>
                           <i className="fa fa-chevron-right" style={{ color: 'var(--txt4)', fontSize: 10 }} />
                         </div>
@@ -412,7 +472,7 @@ export default function Clientes() {
               {/* TAB: Notas de seguimiento */}
               {detailTab === 'notas' && (
                 <div>
-                  {(detailClient.noteHistory || []).length > 0 && (
+                  {(detailClient.noteHistory || []).length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12, maxHeight: 280, overflowY: 'auto' }}>
                       {(detailClient.noteHistory || []).map((n, i) => (
                         <div key={i} style={{ background: 'var(--surface2)', borderRadius: 8, padding: '10px 12px', borderLeft: '3px solid var(--amber)' }}>
@@ -420,6 +480,11 @@ export default function Clientes() {
                           <div style={{ fontSize: 9, color: 'var(--txt3)', marginTop: 3 }}><i className="fa fa-clock" style={{ marginRight: 3 }} />{n.date}</div>
                         </div>
                       ))}
+                    </div>
+                  ) : (
+                    <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '16px 14px', marginBottom: 12, textAlign: 'center', color: 'var(--txt4)', fontSize: 12 }}>
+                      <i className="fa fa-note-sticky" style={{ fontSize: 18, display: 'block', marginBottom: 6, opacity: .4 }} />
+                      Agrega notas de seguimiento, acuerdos o recordatorios sobre este cliente...
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -450,9 +515,7 @@ export default function Clientes() {
             </div>
             {csvPreview.length > 0 && (
               <>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', margin: '8px 0 6px' }}>
-                  Vista previa ({csvPreview.length} registros)
-                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', margin: '8px 0 6px' }}>Vista previa ({csvPreview.length} registros)</div>
                 <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 6 }}>
                   <table style={{ fontSize: 11 }}>
                     <thead><tr><th>Empresa</th><th>Contacto</th><th>WA</th><th>Email</th><th>Rubro</th></tr></thead>
@@ -468,15 +531,12 @@ export default function Clientes() {
             )}
             <div className="mfooter">
               <button className="btn btn-secondary" onClick={() => { setImportModal(false); setCsvPreview([]) }}>Cancelar</button>
-              <button className="btn btn-primary" onClick={doImport} disabled={!csvPreview.length}>
-                <i className="fa fa-file-import" /> Importar {csvPreview.length}
-              </button>
+              <button className="btn btn-primary" onClick={doImport} disabled={!csvPreview.length}><i className="fa fa-file-import" /> Importar {csvPreview.length}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL PREVIEW PRESUPUESTO (solo lectura) */}
       {previewBudget && (
         <BudgetPreviewModal
           budget={previewBudget}

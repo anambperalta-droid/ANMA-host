@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { applyThemeColors } from '../../lib/theme'
+import { TaskFabProvider } from '../../context/TaskFabContext'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import CommandPalette from './CommandPalette'
@@ -36,27 +37,29 @@ export default function AppShell() {
   }, [cmdOpen])
 
   return (
-    <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />
-      {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
-      <div className="main">
-        <Topbar onMenuClick={() => setSideOpen(!sideOpen)} />
-        <div className="content">
-          <Routes>
-            <Route path="/" element={<Historial />} />
-            <Route path="/presupuesto" element={<Presupuesto />} />
-            <Route path="/presupuesto/:id" element={<Presupuesto />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/catalogo" element={<Catalogo />} />
-            <Route path="/proveedores" element={<Proveedores />} />
-            <Route path="/logistica" element={<Logistica />} />
-            <Route path="/mensajes" element={<Mensajes />} />
-            <Route path="/config" element={<Config />} />
-          </Routes>
+    <TaskFabProvider>
+      <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+        <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />
+        {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
+        <div className="main">
+          <Topbar onMenuClick={() => setSideOpen(!sideOpen)} />
+          <div className="content">
+            <Routes>
+              <Route path="/" element={<Historial />} />
+              <Route path="/presupuesto" element={<Presupuesto />} />
+              <Route path="/presupuesto/:id" element={<Presupuesto />} />
+              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/catalogo" element={<Catalogo />} />
+              <Route path="/proveedores" element={<Proveedores />} />
+              <Route path="/logistica" element={<Logistica />} />
+              <Route path="/mensajes" element={<Mensajes />} />
+              <Route path="/config" element={<Config />} />
+            </Routes>
+          </div>
         </div>
+        {cmdOpen && <CommandPalette onClose={() => setCmdOpen(false)} />}
+        <TaskFab />
       </div>
-      {cmdOpen && <CommandPalette onClose={() => setCmdOpen(false)} />}
-      <TaskFab />
-    </div>
+    </TaskFabProvider>
   )
 }

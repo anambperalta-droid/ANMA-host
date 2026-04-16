@@ -42,6 +42,7 @@ export default function Proveedores() {
   }
 
   const supplierProducts = (s) => products.filter(p => Number(p.supplierId) === s.id)
+  const supplierCostTotal = (s) => supplierProducts(s).reduce((sum, p) => sum + (Number(p.cost) || 0), 0)
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
@@ -87,6 +88,13 @@ export default function Proveedores() {
     toast('Nota agregada', 'ok')
   }
 
+  const openWA = (s) => {
+    if (!s.wa) return
+    const num = s.wa.replace(/\D/g, '')
+    const text = `Hola ${s.contact || s.name}, te contacto desde ANMA por el siguiente tema: `
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
+  }
+
   /* ── ESC cierra modales (prioridad: topmost primero) ── */
   useEffect(() => {
     const handleEsc = (e) => {
@@ -129,7 +137,12 @@ export default function Proveedores() {
                 <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
-                  <td><b>{s.name}</b></td><td>{s.contact}</td><td>{s.wa}</td><td>{s.rubro}</td><td>{s.email}</td>
+                  <td>
+                    <div style={{ fontWeight: 800, fontSize: 13 }}>{s.name}</div>
+                    {s.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{s.contact}</div>}
+                  </td>
+                  <td>{s.contact}</td>
+                  <td>{s.wa}</td><td>{s.rubro}</td><td>{s.email}</td>
                   <td><span className="badge b-sent">{supplierProducts(s).length}</span></td>
                   <td><div className="acts" onClick={e => e.stopPropagation()}>
                     <button className="act edit" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
@@ -154,8 +167,8 @@ export default function Proveedores() {
                   {(s.name || '?')[0].toUpperCase()}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.contact}</div>
+                  <div style={{ fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                  {s.contact && <div style={{ fontSize: 11, color: 'var(--txt3)' }}>{s.contact}</div>}
                 </div>
               </div>
               {s.rubro && <span className="badge b-purple" style={{ marginBottom: 6 }}>{s.rubro}</span>}
@@ -194,7 +207,7 @@ export default function Proveedores() {
         </div>
       )}
 
-      {/* FICHA DETALLE CON 4 PESTAÑAS */}
+      {/* FICHA DETALLE CON PESTAÑAS */}
       {detailSupplier && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailSupplier(null) }}>
           <div className="modal" style={{ maxWidth: 820, height: 'min(820px, 92vh)', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }} onClick={e => e.stopPropagation()}>
@@ -206,8 +219,12 @@ export default function Proveedores() {
                     {(detailSupplier.name || '?')[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px', margin: 0 }}>{detailSupplier.name}</h3>
-                    <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 1 }}>{detailSupplier.contact}{detailSupplier.rubro ? ` · ${detailSupplier.rubro}` : ''}</div>
+                    <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailSupplier.name}</h3>
+                    {detailSupplier.contact && (
+                      <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
+                        {detailSupplier.contact}{detailSupplier.rubro ? <span style={{ color: 'var(--txt4)' }}> · {detailSupplier.rubro}</span> : ''}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 5 }}>
@@ -217,7 +234,7 @@ export default function Proveedores() {
               </div>
             </div>
 
-            {/* 4 Pestañas */}
+            {/* Pestañas */}
             <div className="detail-tabs">
               {[['info', 'Información'], ['productos', 'Productos'], ['notas', 'Notas']].map(([k, l]) => (
                 <div key={k} className={`detail-tab ${detailTab === k ? 'active' : ''}`} onClick={() => setDetailTab(k)}>{l}</div>
@@ -230,19 +247,60 @@ export default function Proveedores() {
               {/* TAB: Información */}
               {detailTab === 'info' && (
                 <div>
+                  {/* Contacto activo — links funcionales */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-                    {detailSupplier.wa && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DCFCE7', color: '#16A34A', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}><i className="fa-brands fa-whatsapp" />{detailSupplier.wa}</span>}
-                    {detailSupplier.email && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--blue-lt)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}><i className="fa fa-envelope" />{detailSupplier.email}</span>}
+                    {detailSupplier.wa && (
+                      <a
+                        href="#"
+                        onClick={e => { e.preventDefault(); openWA(detailSupplier) }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DCFCE7', color: '#16A34A', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', cursor: 'pointer', transition: 'opacity .15s' }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                        title="Abrir chat de WhatsApp"
+                      >
+                        <i className="fa-brands fa-whatsapp" />{detailSupplier.wa}
+                      </a>
+                    )}
+                    {detailSupplier.email && (
+                      <a
+                        href={`mailto:${detailSupplier.email}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--blue-lt)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', transition: 'opacity .15s' }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                      >
+                        <i className="fa fa-envelope" />{detailSupplier.email}
+                      </a>
+                    )}
                     {detailSupplier.rubro && <span className="badge b-purple">{detailSupplier.rubro}</span>}
                   </div>
-                  {detailSupplier.notes && (
+
+                  {/* KPI rápido */}
+                  {(() => {
+                    const prods = supplierProducts(detailSupplier)
+                    const costTotal = supplierCostTotal(detailSupplier)
+                    if (prods.length > 0) return (
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{prods.length}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Productos</div>
+                        </div>
+                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(costTotal)}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Costo total catálogo</div>
+                        </div>
+                      </div>
+                    )
+                    return null
+                  })()}
+
+                  {/* Nota general del proveedor */}
+                  {detailSupplier.notes ? (
                     <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: 'var(--txt2)', fontStyle: 'italic', borderLeft: '3px solid #F59E0B' }}>
                       {detailSupplier.notes}
                     </div>
-                  )}
-                  {!detailSupplier.wa && !detailSupplier.email && !detailSupplier.notes && (
-                    <div style={{ textAlign: 'center', padding: 20, color: 'var(--txt3)', fontSize: 12 }}>
-                      <i className="fa fa-circle-info" style={{ marginRight: 5 }} />Sin datos adicionales
+                  ) : (
+                    <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: 'var(--txt4)', fontStyle: 'italic', borderLeft: '3px solid var(--border)' }}>
+                      <i className="fa fa-pencil" style={{ marginRight: 6 }} />Agrega notas sobre condiciones de pago o días de entrega...
                     </div>
                   )}
                 </div>
@@ -277,7 +335,7 @@ export default function Proveedores() {
               {/* TAB: Notas */}
               {detailTab === 'notas' && (
                 <div>
-                  {(detailSupplier.noteHistory || []).length > 0 && (
+                  {(detailSupplier.noteHistory || []).length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12, maxHeight: 280, overflowY: 'auto' }}>
                       {(detailSupplier.noteHistory || []).map((n, i) => (
                         <div key={i} style={{ background: 'var(--surface2)', borderRadius: 8, padding: '10px 12px', borderLeft: '3px solid #F59E0B' }}>
@@ -285,6 +343,11 @@ export default function Proveedores() {
                           <div style={{ fontSize: 9, color: 'var(--txt3)', marginTop: 3 }}><i className="fa fa-clock" style={{ marginRight: 3 }} />{n.date}</div>
                         </div>
                       ))}
+                    </div>
+                  ) : (
+                    <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '16px 14px', marginBottom: 12, textAlign: 'center', color: 'var(--txt4)', fontSize: 12 }}>
+                      <i className="fa fa-note-sticky" style={{ fontSize: 18, display: 'block', marginBottom: 6, opacity: .4 }} />
+                      Agrega notas sobre condiciones de pago o días de entrega...
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 6 }}>
