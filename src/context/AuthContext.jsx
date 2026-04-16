@@ -109,10 +109,15 @@ export function AuthProvider({ children }) {
     setSiteBlocked(false)
   }, [])
 
+  const changePassword = useCallback(async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw new Error(error.message)
+  }, [])
+
   const isGlobalAdmin = isGlobalAdminEmail(user?.email)
 
   return (
-    <Ctx.Provider value={{ authed, loading, user, login, logout, siteBlocked, isGlobalAdmin }}>
+    <Ctx.Provider value={{ authed, loading, user, login, logout, siteBlocked, isGlobalAdmin, changePassword }}>
       {children}
     </Ctx.Provider>
   )

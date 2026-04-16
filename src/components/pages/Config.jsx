@@ -223,10 +223,9 @@ export default function Config() {
 
   const userName = (c.email || '').split('@')[0] || 'Administrador'
 
-  // Tabs que solo ve el admin global (info sensible / acciones de admin).
-  // Los usuarios invitados NO pueden invitar a otros, ni ver credenciales
-  // de Pagos/Integraciones, ni tocar la Cuenta del negocio.
-  const ADMIN_ONLY_TABS = new Set(['pagos', 'integraciones', 'equipo', 'cuenta'])
+  // Solo "Equipo" (invitar usuarios) es exclusivo del admin global.
+  // Pagos, Integraciones y Cuenta los puede ver y editar cualquier usuario autenticado.
+  const ADMIN_ONLY_TABS = new Set(['equipo'])
 
   const allTabs = [
     { id: 'identidad', icon: 'fa-building', label: 'Identidad' },
