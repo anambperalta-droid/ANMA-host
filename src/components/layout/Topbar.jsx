@@ -39,7 +39,21 @@ export default function Topbar({ onMenuClick }) {
         onClick={() => setPanelOpen(o => !o)}
         aria-label="Notas y recordatorios"
         title="Notas y recordatorios"
-        style={{ position: 'relative' }}
+        style={{
+          position: 'relative',
+          background: panelOpen ? '#7C3AED' : '#EDE9FE',
+          color: panelOpen ? '#fff' : '#7C3AED',
+          borderRadius: 10,
+          width: 36,
+          height: 36,
+          fontSize: 15,
+          transition: 'background .2s, color .2s',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
       >
         <i className={`fa ${panelOpen ? 'fa-xmark' : 'fa-clipboard-list'}`} />
         {activeTasks.length > 0 && (

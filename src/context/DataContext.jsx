@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { db, dbW, cfg, wCfg, ensureDefaults } from '../lib/storage'
 
 const Ctx = createContext()
@@ -8,6 +8,23 @@ export function DataProvider({ children }) {
   const refresh = useCallback(() => setTick((t) => t + 1), [])
 
   ensureDefaults()
+
+  useEffect(() => {
+    ;['suppliers', 'products', 'clients', 'budgets'].forEach(key => {
+      const list = db(key, [])
+      const seen = new Set()
+      let changed = false
+      const fixed = list.map(item => {
+        if (!item.id || seen.has(item.id)) {
+          item = { ...item, id: Date.now() + Math.floor(Math.random() * 99991) }
+          changed = true
+        }
+        seen.add(item.id)
+        return item
+      })
+      if (changed) { dbW(key, fixed); console.log(`[ANMA] Deduped IDs for ${key}`) }
+    })
+  }, [])
 
   const get = useCallback((key, fallback = []) => db(key, fallback), [tick])
   const set = useCallback((key, val) => { dbW(key, val); refresh() }, [refresh])
@@ -54,7 +71,7 @@ export function DataProvider({ children }) {
       const i = list.findIndex((x) => x.id === item.id)
       if (i > -1) list[i] = { ...list[i], ...item }
     } else {
-      item.id = Date.now()
+      item.id = Date.now() + Math.floor(Math.random() * 99991)
       list.push(item)
     }
     dbW(key, list)

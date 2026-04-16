@@ -28,7 +28,7 @@ export default function Proveedores() {
   ) : suppliers
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const openEdit = (s) => { setForm(s || { name: '', contact: '', wa: '', rubro: '', email: '', notes: '' }); setModal(true) }
+  const openEdit = (s) => { setForm(s ? { ...s } : { name: '', contact: '', wa: '', rubro: '', email: '', notes: '' }); setModal(true) }
   const save = () => {
     if (!form.name) { toast('Ingresá el nombre del proveedor.', 'er'); return }
     saveEntity('suppliers', form); setModal(false); toast('Proveedor guardado', 'ok')
@@ -258,20 +258,24 @@ export default function Proveedores() {
                         onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                         title="Abrir chat de WhatsApp"
                       >
-                        <i className="fa-brands fa-whatsapp" />{detailSupplier.wa}
+                        <i className="fa-brands fa-whatsapp" /> WA: {detailSupplier.wa}
                       </a>
                     )}
                     {detailSupplier.email && (
                       <a
                         href={`mailto:${detailSupplier.email}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--blue-lt)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', transition: 'opacity .15s' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DBEAFE', color: '#1D4ED8', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', transition: 'opacity .15s' }}
                         onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
                         onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                       >
-                        <i className="fa fa-envelope" />{detailSupplier.email}
+                        <i className="fa fa-envelope" /> Email: {detailSupplier.email}
                       </a>
                     )}
-                    {detailSupplier.rubro && <span className="badge b-purple">{detailSupplier.rubro}</span>}
+                    {detailSupplier.rubro && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#EDE9FE', color: '#7C3AED', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20 }}>
+                        <i className="fa fa-tag" /> Rubro: {detailSupplier.rubro}
+                      </span>
+                    )}
                   </div>
 
                   {/* KPI rápido */}

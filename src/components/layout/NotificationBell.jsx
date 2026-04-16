@@ -173,7 +173,21 @@ export default function NotificationBell() {
         onClick={() => setOpen(o => !o)}
         aria-label="Notificaciones"
         title="Notificaciones"
-        style={{ position: 'relative' }}
+        style={{
+          position: 'relative',
+          background: unreadCount > 0 ? (hasCritical ? '#FEE2E2' : '#FEF3C7') : '#FFF7ED',
+          color: hasCritical ? '#DC2626' : '#D97706',
+          borderRadius: 10,
+          width: 36,
+          height: 36,
+          fontSize: 15,
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background .2s',
+          flexShrink: 0,
+        }}
       >
         <i className="fa fa-bell" />
         {unreadCount > 0 && (

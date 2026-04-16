@@ -49,7 +49,7 @@ export default function Catalogo() {
   if (search) filtered = filtered.filter(p => (p.name || '').toLowerCase().includes(sq))
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const open = (p) => { setForm(p || { name: '', cat: cats[0] || '', cost: '', supplierId: '' }); setModal(true) }
+  const open = (p) => { setForm(p ? { ...p } : { name: '', cat: cats[0] || '', cost: '', supplierId: '' }); setModal(true) }
   const save = () => {
     if (!form.name) { toast('Ingresá el nombre del producto.', 'er'); return }
     saveEntity('products', { ...form, cost: num(form.cost) }); setModal(false); toast('Producto guardado', 'ok')
@@ -227,7 +227,7 @@ export default function Catalogo() {
             <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} producto</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
             <div className="fg"><label>Nombre *</label><input type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" /></div>
             <div className="grid2">
-              <div className="fg"><label>Categoría</label><select value={form.cat} onChange={e => setF('cat', e.target.value)}>{cats.map(cat => <option key={cat}>{cat}</option>)}</select></div>
+              <div className="fg"><label>Categoría</label><select value={form.cat} onChange={e => setF('cat', e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
               <div className="fg"><label>Costo ($) *</label><input type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => setF('cost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" /></div>
             </div>
             <div className="fg"><label>Proveedor</label><select value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}><option value="">Sin asignar</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
@@ -292,7 +292,7 @@ export default function Catalogo() {
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 18px', marginBottom: 16, fontSize: 12, color: 'var(--txt2)' }}>
               <b>Formato:</b> Nombre del producto, Costo (una por línea)
             </div>
-            <div className="fg"><label>Categoría</label><select value={csvCat} onChange={e => setCsvCat(e.target.value)}>{cats.map(cat => <option key={cat}>{cat}</option>)}</select></div>
+            <div className="fg"><label>Categoría</label><select value={csvCat} onChange={e => setCsvCat(e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
             <div className="fg">
               <label>Archivo CSV</label>
               <input ref={csvRef} type="file" accept=".csv,.txt" onChange={handleCsvFile}
@@ -322,7 +322,7 @@ export default function Catalogo() {
           <div className="modal">
             <div className="mh"><h3>Carga masiva de productos</h3><button className="mclose" onClick={() => setBulkModal(false)}><i className="fa fa-xmark" /></button></div>
             <div style={{ fontSize: 12, color: 'var(--txt2)', marginBottom: 14, background: 'var(--surface2)', padding: '10px 14px', borderRadius: 8 }}>Formato: <code>Nombre del producto, precio</code> (una por línea)</div>
-            <div className="fg"><label>Categoría</label><select value={bulkCat} onChange={e => setBulkCat(e.target.value)}>{cats.map(cat => <option key={cat}>{cat}</option>)}</select></div>
+            <div className="fg"><label>Categoría</label><select value={bulkCat} onChange={e => setBulkCat(e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
             <div className="fg"><label>Datos</label><textarea value={bulkData} onChange={e => setBulkData(e.target.value)} rows={8} placeholder={'Taza sublimada, 850\nLapicera metálica, 450'} /></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setBulkModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={doBulk}><i className="fa fa-bolt" /> Importar</button></div>
           </div>
