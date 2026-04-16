@@ -8,7 +8,7 @@ function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
 }
 
-function KpiCard({ label, value, foot, color, icon }) {
+function KpiCard({ label, value, foot, color, icon, delta }) {
   const colors = { brand: 'var(--brand)', blue: 'var(--blue)', green: 'var(--green)', amber: 'var(--amber)' }
   const c = colors[color] || colors.brand
   return (
@@ -20,12 +20,25 @@ function KpiCard({ label, value, foot, color, icon }) {
       <div className="kpi-label">{label}</div>
       <div className="kpi-val">{value}</div>
       <div className="kpi-foot">{foot}</div>
+      {delta !== null && delta !== undefined && (
+        <div style={{ fontSize: 10, fontWeight: 700, marginTop: 3, color: delta >= 0 ? 'var(--green)' : 'var(--red)' }}>
+          {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)}% vs mes ant.
+        </div>
+      )}
     </div>
   )
 }
 
 function BarChart({ data, type = 'income' }) {
   const maxV = Math.max(...data.map(m => m.val), 1)
+  const hasData = data.some(m => m.val > 0)
+  if (!hasData) return (
+    <div style={{ textAlign: 'center', padding: '28px 0 8px', color: 'var(--txt4)', fontSize: 12 }}>
+      <i className="fa fa-chart-bar" style={{ fontSize: 28, opacity: .2, display: 'block', marginBottom: 8 }} />
+      <div style={{ fontWeight: 600, color: 'var(--txt3)' }}>Sin datos aún</div>
+      <div style={{ fontSize: 11, marginTop: 3 }}>Los ingresos cobrados aparecerán acá mes a mes</div>
+    </div>
+  )
   // Monocromático: mismo brand-color para todas las barras, sin gradient
   return (
     <div>
@@ -204,13 +217,15 @@ function StatusDonut({ statuses, budgets }) {
         <text x="45" y="55" textAnchor="middle" fontSize="8" fill="var(--txt3)" fontWeight="600">TOTAL</text>
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-        {statuses.map(s => {
+        {statuses.filter(s => budgets.filter(b => b.status === s.k).length > 0).length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: 8 }}>Sin presupuestos aún</div>
+        ) : statuses.filter(s => budgets.filter(b => b.status === s.k).length > 0).map(s => {
           const n = budgets.filter(b => b.status === s.k).length
           return (
             <div key={s.k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.c, flexShrink: 0 }} />
               <span style={{ fontSize: 12, color: 'var(--txt2)', flex: 1 }}>{s.l}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: n > 0 ? 'var(--txt)' : 'var(--txt4)' }}>{n}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)' }}>{n}</span>
             </div>
           )
         })}
@@ -233,6 +248,7 @@ export default function Historial() {
   const [sortDir, setSortDir] = useState('desc')
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatus, setBulkStatus] = useState('')
+  const [openMenuId, setOpenMenuId] = useState(null)
 
   const budgets = get('budgets')
   const c = config()
@@ -271,6 +287,14 @@ export default function Historial() {
   const mInc = monthBudgets.reduce((s, b) => s + cobrado(b), 0)
   const mGain = monthBudgets.reduce((s, b) => s + ganCobrada(b), 0)
   const convRate = periodBudgets.length ? Math.round(confirmed.length / periodBudgets.length * 100) + '%' : '—'
+
+  // Delta vs mes anterior
+  const prevYM = (() => { const d = new Date(now.getFullYear(), now.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
+  const prevMonthBudgets = budgets.filter(b => b.date?.startsWith(prevYM))
+  const prevInc = prevMonthBudgets.reduce((s, b) => s + cobrado(b), 0)
+  const prevGain = prevMonthBudgets.reduce((s, b) => s + ganCobrada(b), 0)
+  const deltaInc = prevInc > 0 ? Math.round((mInc - prevInc) / prevInc * 100) : null
+  const deltaGain = prevGain > 0 ? Math.round((mGain - prevGain) / prevGain * 100) : null
 
   // Income bars (last N months based on period) — dinero cobrado
   const barMonths = periodMonths || 12
@@ -399,11 +423,20 @@ export default function Historial() {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
         if (resendBudget) { setResendBudget(null); return }
+        setOpenMenuId(null)
       }
     }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
   }, [resendBudget])
+
+  // Cierra menu de 3 puntos al click fuera
+  useEffect(() => {
+    if (!openMenuId) return
+    const h = () => setOpenMenuId(null)
+    document.addEventListener('click', h)
+    return () => document.removeEventListener('click', h)
+  }, [openMenuId])
 
   const handleResend = (b) => setResendBudget(b)
   const handleResendSent = () => { toast('Mensaje copiado / enviado', 'ok'); setResendBudget(null) }
@@ -462,8 +495,8 @@ export default function Historial() {
           ) : (
             <div className="bento sk-fade-in">
               <KpiCard label="Total cobrado" value={fmt(totCobrado)} foot={`${pagados.length} pagos recibidos`} color="brand" icon="fa-dollar-sign" />
-              <KpiCard label="Ingresos del mes" value={fmt(mInc)} foot={`${monthBudgets.length} presupuestos`} color="blue" icon="fa-chart-line" />
-              <KpiCard label="Ganancia del mes" value={fmt(mGain)} foot="del período actual" color="green" icon="fa-coins" />
+              <KpiCard label="Ingresos del mes" value={fmt(mInc)} foot={`${monthBudgets.length} presupuestos`} color="blue" icon="fa-chart-line" delta={deltaInc} />
+              <KpiCard label="Ganancia del mes" value={fmt(mGain)} foot="del período actual" color="green" icon="fa-coins" delta={deltaGain} />
               <KpiCard label="Tasa de conversión" value={convRate} foot={`${confirmed.length} de ${periodBudgets.length} confirmados`} color="amber" icon="fa-funnel" />
 
               <div className="bento-chart bento-wide">
@@ -480,8 +513,8 @@ export default function Historial() {
               </div>
 
               {/* ── Mini-Timeline seguimiento: compacto ── */}
-              <div className="bento-chart" style={{ background: 'var(--panel-grad)', border: 'none', color: '#fff' }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
+              <div className="bento-chart" style={{ background: 'var(--surface2)', border: '1.5px solid var(--brand)', borderColor: 'var(--brand)' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--brand)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <i className="fa fa-fire" />Seguimiento activo
                 </div>
                 {urgentTop3.length ? (
@@ -489,16 +522,16 @@ export default function Historial() {
                     {urgentTop3.map(b => {
                       const urg = urgency(b.days)
                       return (
-                        <div key={b.id} className="mini-seg-item" style={{ borderLeft: `3px solid ${urg.color}` }}>
+                        <div key={b.id} className="mini-seg-item" style={{ borderLeft: `3px solid ${urg.color}`, background: 'var(--surface)' }}>
                           <div className="mini-seg-header">
                             <div className={`seg-light ${urg.cls}`} style={{ width: 28, height: 28, fontSize: 11 }}>
                               <i className={`fa ${urg.icon}`} />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 700, fontSize: 11, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {b.company || b.contact || '—'}
                               </div>
-                              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.45)' }}>
+                              <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
                                 {b.num} · {b.days}d · {fmt(b.total)}
                               </div>
                             </div>
@@ -521,8 +554,8 @@ export default function Historial() {
                     )}
                   </>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: 20, color: 'rgba(255,255,255,.35)', fontSize: 12 }}>
-                    <i className="fa fa-check-circle" style={{ fontSize: 18, marginBottom: 6, display: 'block' }} />
+                  <div style={{ textAlign: 'center', padding: 20, color: 'var(--txt4)', fontSize: 12 }}>
+                    <i className="fa fa-check-circle" style={{ fontSize: 18, marginBottom: 6, display: 'block', color: 'var(--green)' }} />
                     Sin presupuestos pendientes
                   </div>
                 )}
@@ -543,11 +576,36 @@ export default function Historial() {
                           <td>{b.company || b.contact || '—'}</td>
                           <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(b.total)}</td>
                           <td><Badge status={b.status} /></td>
-                          <td>
-                            <div className="acts">
-                              <button className="act edit" onClick={() => editB(b.id)} title="Editar"><i className="fa fa-pen" /></button>
-                              <button className="act wa" onClick={() => copyWA(b)} title="WA"><i className="fa-brands fa-whatsapp" /></button>
-                            </div>
+                          <td style={{ position: 'relative' }}>
+                            <button
+                              className="act"
+                              style={{ width: 30, height: 30 }}
+                              onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === b.id ? null : b.id) }}
+                              title="Acciones"
+                            >
+                              <i className="fa fa-ellipsis-vertical" />
+                            </button>
+                            {openMenuId === b.id && (
+                              <div
+                                style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 24px rgba(0,0,0,.13)' }}
+                                onClick={e => e.stopPropagation()}
+                              >
+                                {[
+                                  { icon: 'fa-pen', label: 'Editar', action: () => { editB(b.id); setOpenMenuId(null) } },
+                                  { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', action: () => { copyWA(b); setOpenMenuId(null) } },
+                                  { icon: 'fa-paper-plane', label: 'Re-enviar', action: () => { handleResend(b); setOpenMenuId(null) } },
+                                ].map((item, idx) => (
+                                  <button key={idx} onClick={item.action}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', border: 'none', background: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)', textAlign: 'left' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                  >
+                                    <i className={`fa ${item.icon}`} style={{ width: 14, color: 'var(--brand)' }} />
+                                    {item.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -652,15 +710,38 @@ export default function Historial() {
         <div className="analysis-grid">
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-chart-pie" style={{ color: 'var(--brand)', marginRight: 6 }} />Métricas globales</span></div>
-            {[['Total presupuestado', fmt(totBudgeted)], ['Total cobrado', fmt(totCobrado)], ['Ganancia cobrada', fmt(totGain)], ['Ticket promedio', fmt(avgTicket)], ['Tasa de conversion', convRate], ['N de presupuestos', periodBudgets.length]].map(([l, v], i) => (
-              <div key={i} className="metric-row"><span className="mr-label">{l}</span><span className="mr-val">{v}</span></div>
+            {[
+              ['Total presupuestado', fmt(totBudgeted), null],
+              ['Total cobrado', fmt(totCobrado), 'Suma de pagos recibidos (totales + señas)'],
+              ['Ganancia cobrada', fmt(totGain), 'Margen cobrado — no descuenta costos de insumos ni logística'],
+              ['Ticket promedio', fmt(avgTicket), null],
+              ['Tasa de conversión', convRate, null],
+              ['N° de presupuestos', periodBudgets.length, null],
+            ].map(([l, v, tip], i) => (
+              <div key={i} className="metric-row">
+                <span className="mr-label">
+                  {l}
+                  {tip && <i className="fa fa-circle-info" title={tip} style={{ marginLeft: 5, color: 'var(--txt4)', fontSize: 10, cursor: 'help' }} />}
+                </span>
+                <span className="mr-val">{v}</span>
+              </div>
             ))}
           </div>
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-trophy" style={{ color: 'var(--amber)', marginRight: 6 }} />Clientes top</span></div>
-            {topClients.length ? topClients.map(([n, v], i) => (
-              <div key={i} className="metric-row"><span className="mr-label">{n}</span><span className="mr-val" style={{ color: 'var(--money)' }}>{fmt(v)}</span></div>
-            )) : <div className="empty" style={{ padding: 20 }}><p>Sin datos</p></div>}
+            {topClients.length ? (() => {
+              const totalTopSales = topClients.reduce((s, [, v]) => s + v, 0) || 1
+              return topClients.map(([n, v], i) => (
+                <div key={i} className="metric-row" style={{ alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800 }}>{i + 1}</div>
+                    <span className="mr-label" style={{ flex: 1, marginBottom: 0 }}>{n}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-xlt)', padding: '1px 6px', borderRadius: 10, flexShrink: 0 }}>{Math.round(v / totalTopSales * 100)}%</span>
+                  </div>
+                  <span className="mr-val" style={{ color: 'var(--money)' }}>{fmt(v)}</span>
+                </div>
+              ))
+            })() : <div className="empty" style={{ padding: 20 }}><p>Sin datos</p></div>}
           </div>
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-funnel" style={{ color: 'var(--green)', marginRight: 6 }} />Conversión por estado</span></div>

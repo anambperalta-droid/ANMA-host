@@ -636,6 +636,30 @@ td b{color:var(--txt);font-weight:600}
 .notif-cta:hover{opacity:.85}
 .notif-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
 
+/* ── Mobile mejorado ── */
+@media(max-width:768px){
+  .bento{grid-template-columns:1fr!important}
+  .bento-wide,.bento-chart{grid-column:1/-1!important}
+  .analysis-grid{grid-template-columns:1fr!important}
+  .tab-bar,.cfg-tabs{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tab-bar::-webkit-scrollbar,.cfg-tabs::-webkit-scrollbar{display:none}
+  .tab-btn{flex-shrink:0}
+  .tbl-card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tbl-card table{min-width:640px}
+  .seg-card{flex-direction:column;gap:8px}
+  .seg-meta{flex-direction:row;justify-content:space-between;width:100%}
+  .period-pills{flex-wrap:wrap}
+  .pill-row{flex-wrap:wrap;gap:6px}
+  .modal{max-width:calc(100vw - 20px)!important}
+  .budget-layout{flex-direction:column}
+  .calc-panel{position:static!important;margin-top:16px;width:100%!important}
+  .grid2,.grid3{grid-template-columns:1fr!important}
+}
+@media(max-width:640px){
+  .topbar{height:56px!important;padding:0 14px!important}
+  .tfab-btn{bottom:72px!important;right:16px!important}
+}
+
 /* ── Theme variants ── */
 :root.theme-logistica{--brand:#0369A1;--brand-dark:#075985;--brand-light:#0EA5E9;--brand-xlt:rgba(3,105,161,.08);--grad:linear-gradient(135deg,#0369A1,#0EA5E9);--panel-grad:linear-gradient(160deg,#0C1445,#1E3A5F,#0369A1)}
 :root.theme-ventas{--brand:#16A34A;--brand-dark:#15803D;--brand-light:#22C55E;--brand-xlt:rgba(22,163,74,.08);--grad:linear-gradient(135deg,#16A34A,#22C55E);--panel-grad:linear-gradient(160deg,#052E16,#14532D,#16A34A)}
