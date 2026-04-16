@@ -67,7 +67,7 @@ export default function TaskFab() {
         onClick={() => setPanelOpen(o => !o)}
         title="Notas y recordatorios"
         style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 500,
+          position: 'fixed', bottom: 36, right: 28, zIndex: 500,
           width: 50, height: 50, borderRadius: 14,
           background: 'var(--grad)', color: '#fff', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -96,7 +96,7 @@ export default function TaskFab() {
       {/* PANEL */}
       {panelOpen && (
         <div ref={panelRef} style={{
-          position: 'fixed', bottom: 84, right: 24, zIndex: 500,
+          position: 'fixed', bottom: 96, right: 28, zIndex: 500,
           width: 340, maxHeight: '72vh',
           background: 'var(--surface)', borderRadius: 16,
           border: '1px solid var(--border)',
