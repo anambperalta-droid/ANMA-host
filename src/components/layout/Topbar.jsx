@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import NotificationBell from './NotificationBell'
 
 const PAGE_NAMES = { '/': 'Historial', '/presupuesto': 'Presupuesto', '/clientes': 'Clientes', '/catalogo': 'Catálogo de Productos', '/proveedores': 'Proveedores', '/logistica': 'Logística', '/mensajes': 'Mensajes WhatsApp', '/config': 'Configuración' }
 
@@ -30,6 +31,7 @@ export default function Topbar({ onMenuClick }) {
         <i className="fa fa-bars" />
       </button>
       <div className="tb-page-title">{title}</div>
+      <NotificationBell />
       <button
         className="tb-btn"
         onClick={toggleTheme}
