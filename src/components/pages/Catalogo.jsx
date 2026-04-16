@@ -3,6 +3,17 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
 
+const CAT_PALETTE = [
+  { bg: '#EDE9FE', color: '#5B21B6' },
+  { bg: '#DBEAFE', color: '#1D4ED8' },
+  { bg: '#D1FAE5', color: '#065F46' },
+  { bg: '#FEF3C7', color: '#92400E' },
+  { bg: '#FCE7F3', color: '#9D174D' },
+  { bg: '#FFEDD5', color: '#9A3412' },
+  { bg: '#E0F2FE', color: '#075985' },
+  { bg: '#F0FDF4', color: '#166534' },
+]
+
 export default function Catalogo() {
   const { get, config, saveEntity, deleteEntity } = useData()
   const toast = useToast()
@@ -21,6 +32,9 @@ export default function Catalogo() {
   const [csvPreview, setCsvPreview] = useState([])
   const [csvCat, setCsvCat] = useState('')
   const csvRef = useRef(null)
+  const [priceUpdateModal, setPriceUpdateModal] = useState(false)
+  const [pricePct, setPricePct] = useState('')
+  const [priceSupplier, setPriceSupplier] = useState('all')
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -54,20 +68,56 @@ export default function Catalogo() {
     setBulkModal(false); setBulkData(''); toast(`${count} productos importados`, 'ok')
   }
   const supplierName = (id) => { const s = suppliers.find(x => x.id === Number(id)); return s?.name || '—' }
+
+  const suggestedPrice = (cost) => Math.round(num(cost) * (1 + margin / 100))
+
+  const catColor = (cat) => {
+    const idx = cats.indexOf(cat)
+    return CAT_PALETTE[(idx < 0 ? 0 : idx) % CAT_PALETTE.length]
+  }
+
+  const marginPct = (p) => {
+    const cost = num(p.cost)
+    if (!cost) return null
+    return Math.round((suggestedPrice(cost) - cost) / cost * 100)
+  }
+
+  const marginColor = (pct) => {
+    if (pct === null) return 'var(--txt3)'
+    if (pct < 20) return '#DC2626'
+    if (pct < 35) return '#D97706'
+    return '#16A34A'
+  }
+
+  const priceUpdatePreview = priceSupplier === 'all'
+    ? products
+    : products.filter(p => String(p.supplierId) === String(priceSupplier))
+
+  const doPriceUpdate = () => {
+    const pct = Number(pricePct)
+    if (!pct) { toast('Ingresá un porcentaje válido', 'er'); return }
+    const factor = 1 + pct / 100
+    priceUpdatePreview.forEach(p => {
+      const newCost = Math.round((Number(p.cost) || 0) * factor)
+      saveEntity('products', { ...p, cost: newCost })
+    })
+    toast(`${priceUpdatePreview.length} productos actualizados (${pct > 0 ? '+' : ''}${pct}%)`, 'ok')
+    setPriceUpdateModal(false); setPricePct(''); setPriceSupplier('all')
+  }
+
   /* ── ESC cierra modales (prioridad: topmost primero) ── */
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
         if (csvModal) { setCsvModal(false); setCsvPreview([]); return }
         if (bulkModal) { setBulkModal(false); return }
+        if (priceUpdateModal) { setPriceUpdateModal(false); return }
         if (modal) { setModal(false); return }
       }
     }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
-  }, [csvModal, bulkModal, modal])
-
-  const suggestedPrice = (cost) => Math.round(num(cost) * (1 + margin / 100))
+  }, [csvModal, bulkModal, priceUpdateModal, modal])
 
   const handleCsvFile = (e) => {
     const file = e.target.files?.[0]
@@ -101,6 +151,9 @@ export default function Catalogo() {
       <div className="ph">
         <div className="ph-left"><h2>Catálogo de Productos</h2><p>Productos, categorías y costos</p></div>
         <div className="ph-right">
+          <button className="btn btn-ghost btn-sm" onClick={() => setPriceUpdateModal(true)}>
+            <i className="fa fa-percent" /> Actualizar precios
+          </button>
           <button className="btn btn-ghost btn-sm" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}><i className="fa fa-file-csv" /> Importar CSV</button>
           <button className="btn btn-secondary btn-sm" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}><i className="fa fa-file-import" /> Carga masiva</button>
           <button className="btn btn-primary btn-sm" onClick={() => open()}><i className="fa fa-plus" /> Agregar producto</button>
@@ -113,23 +166,57 @@ export default function Catalogo() {
       </div>
       <div className="tbl-card">
         <table>
-          <thead><tr><th>Producto</th><th>Categoría</th><th>Proveedor</th><th>Costo ($)</th><th>Precio sugerido ($)</th><th>Acciones</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Proveedor</th>
+              <th>Costo ($)</th>
+              <th>% Margen</th>
+              <th>Precio sugerido ($)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
           <tbody>
             {loading ? [1,2,3,4].map(i => (
-              <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
-            )) : filtered.length ? filtered.map(p => (
-              <tr key={p.id}>
-                <td><b>{p.name}</b></td>
-                <td><span className="badge b-purple">{p.cat}</span></td>
-                <td>{supplierName(p.supplierId)}</td>
-                <td>{fmt(p.cost)}</td>
-                <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
-                <td><div className="acts">
-                  <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
-                  <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>
-                </div></td>
-              </tr>
-            )) : <tr><td colSpan={6}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+              <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
+            )) : filtered.length ? filtered.map(p => {
+              const pct = marginPct(p)
+              const cc = catColor(p.cat)
+              return (
+                <tr key={p.id}>
+                  <td><b>{p.name}</b></td>
+                  <td>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 10px',
+                      borderRadius: 20,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      background: cc.bg,
+                      color: cc.color,
+                      letterSpacing: 0.2,
+                    }}>{p.cat}</span>
+                  </td>
+                  <td>{supplierName(p.supplierId)}</td>
+                  <td>{fmt(p.cost)}</td>
+                  <td>
+                    {pct !== null ? (
+                      <span style={{
+                        fontWeight: 800,
+                        fontSize: 13,
+                        color: marginColor(pct),
+                      }}>{pct}%</span>
+                    ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                  </td>
+                  <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
+                  <td><div className="acts">
+                    <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
+                    <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>
+                  </div></td>
+                </tr>
+              )
+            }) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
           </tbody>
         </table>
       </div>
@@ -145,6 +232,55 @@ export default function Catalogo() {
             </div>
             <div className="fg"><label>Proveedor</label><select value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}><option value="">Sin asignar</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
+          </div>
+        </div>
+      )}
+
+      {priceUpdateModal && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setPriceUpdateModal(false) }}>
+          <div className="modal" style={{ maxWidth: 480 }}>
+            <div className="mh">
+              <h3><i className="fa fa-percent" style={{ marginRight: 8 }} />Actualizar precios masivamente</h3>
+              <button className="mclose" onClick={() => setPriceUpdateModal(false)}><i className="fa fa-xmark" /></button>
+            </div>
+            <div className="fg">
+              <label>Proveedor</label>
+              <select value={priceSupplier} onChange={e => setPriceSupplier(e.target.value)}>
+                <option value="all">Todos los proveedores ({products.length} productos)</option>
+                {suppliers.map(s => {
+                  const cnt = products.filter(p => String(p.supplierId) === String(s.id)).length
+                  return <option key={s.id} value={String(s.id)}>{s.name} ({cnt} productos)</option>
+                })}
+              </select>
+            </div>
+            <div className="fg">
+              <label>% de ajuste (positivo = aumento, negativo = descuento)</label>
+              <input
+                type="number"
+                value={pricePct}
+                onChange={e => setPricePct(e.target.value)}
+                placeholder="Ej: 15 para +15%, -10 para -10%"
+                onFocus={selectOnFocus}
+              />
+            </div>
+            {pricePct && Number(pricePct) !== 0 && priceUpdatePreview.length > 0 && (
+              <div style={{
+                background: Number(pricePct) > 0 ? '#FEF3C7' : '#DBEAFE',
+                border: `1px solid ${Number(pricePct) > 0 ? '#FCD34D' : '#93C5FD'}`,
+                borderRadius: 10, padding: '12px 16px', marginBottom: 8, fontSize: 13,
+              }}>
+                <b>{Number(pricePct) > 0 ? '📈' : '📉'} Se actualizarán {priceUpdatePreview.length} producto{priceUpdatePreview.length !== 1 ? 's' : ''}</b>
+                <div style={{ marginTop: 4, color: 'var(--txt2)' }}>
+                  Los costos se ajustarán un <b>{Number(pricePct) > 0 ? '+' : ''}{pricePct}%</b>. El precio sugerido se recalculará automáticamente.
+                </div>
+              </div>
+            )}
+            <div className="mfooter">
+              <button className="btn btn-secondary" onClick={() => setPriceUpdateModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={doPriceUpdate} disabled={!pricePct || Number(pricePct) === 0 || !priceUpdatePreview.length}>
+                <i className="fa fa-bolt" /> Aplicar ajuste
+              </button>
+            </div>
           </div>
         </div>
       )}
