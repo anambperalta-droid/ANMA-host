@@ -96,6 +96,7 @@ const PERIODS = [
 
 /* ── Seguimiento card with Re-enviar button ── */
 function SeguimientoCard({ b, onEdit, onWA, onResend }) {
+  const { money } = usePrivacy()
   const now = new Date()
   const days = b.date ? Math.floor((now - new Date(b.date)) / 86400000) : 0
   const urg = urgency(days)

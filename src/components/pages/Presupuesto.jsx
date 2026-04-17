@@ -113,6 +113,9 @@ export default function Presupuesto() {
   const products = get('products')
   const marginPct = c.defaultMargin || 40
 
+  /* ── Draft persistence ── */
+  const DRAFT_KEY = 'anma_rg_presup_draft'
+
   useEffect(() => {
     if (id) {
       const b = get('budgets').find(x => x.id === Number(id))
@@ -131,8 +134,27 @@ export default function Presupuesto() {
         setEditId(b.id)
         setMarginBudgetedSaved(typeof b.marginBudgeted === 'number' ? b.marginBudgeted : null)
       }
+    } else {
+      // Restaurar borrador si existe
+      try {
+        const saved = sessionStorage.getItem(DRAFT_KEY)
+        if (saved) {
+          const { f, it } = JSON.parse(saved)
+          if (f) setForm(prev => ({ ...prev, ...f }))
+          if (it?.length) setItems(it)
+        }
+      } catch {}
     }
-  }, [id])
+  }, [id]) // eslint-disable-line
+
+  // Auto-guardar borrador mientras se edita un presupuesto nuevo
+  useEffect(() => {
+    if (id) return
+    const hasSomeData = form.contact || form.company || items.some(i => i.name)
+    if (hasSomeData) {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: items }))
+    }
+  }, [form, items]) // eslint-disable-line
 
   const setF = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -212,6 +234,7 @@ export default function Presupuesto() {
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
     const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
+    sessionStorage.removeItem(DRAFT_KEY)
     toast('Presupuesto guardado', 'ok')
     // ─── Auto-sync a Google Sheets (fire-and-forget) ───
     const gs = getSheetsConfig()
@@ -365,7 +388,7 @@ export default function Presupuesto() {
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph">
         <div className="ph-left"><h2>{editId ? 'Editar presupuesto' : 'Nuevo presupuesto'}</h2><p>Completá los datos para generar el presupuesto</p></div>
-        <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => nav('/')}><i className="fa fa-xmark" /> Descartar</button></div>
+        <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { sessionStorage.removeItem(DRAFT_KEY); nav('/') }}><i className="fa fa-xmark" /> Descartar</button></div>
       </div>
 
       <div className="budget-layout">
@@ -446,7 +469,7 @@ export default function Presupuesto() {
           </BSection>
 
           {/* PRODUCTOS */}
-          <BSection icon="fa-box-open" title="Productos" badge={items.filter(i => i.name).length ? `${items.filter(i => i.name).length} ítems` : null} error={!items.some(i => i.name)} defaultOpen={true}>
+          <BSection icon="fa-box-open" title="Productos" badge={items.filter(i => i.name).length ? `${items.filter(i => i.name).length} ítems` : null} error={!items.some(i => i.name)} defaultOpen={!!id}>
             <div style={{ overflowX: 'auto' }}>
               <table>
                 <thead><tr><th style={{ width: 24 }}></th><th style={{ minWidth: 160 }}>Producto</th><th style={{ width: 65 }}>Cant.</th><th style={{ width: 100 }}>Costo u.</th><th style={{ width: 100 }}>Precio u.</th><th style={{ width: 95 }}>Subtotal</th><th style={{ width: 36 }}></th></tr></thead>
