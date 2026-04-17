@@ -108,6 +108,7 @@ export default function Presupuesto() {
   const [mpLoading, setMpLoading] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [waTouched, setWaTouched] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
 
   const clients = get('clients')
   const products = get('products')
@@ -137,11 +138,13 @@ export default function Presupuesto() {
     } else {
       // Restaurar borrador si existe
       try {
-        const saved = sessionStorage.getItem(DRAFT_KEY)
+        const saved = localStorage.getItem(DRAFT_KEY)
         if (saved) {
           const { f, it } = JSON.parse(saved)
           if (f) setForm(prev => ({ ...prev, ...f }))
           if (it?.length) setItems(it)
+          setDraftRestored(true)
+          toast('Borrador restaurado — tus datos anteriores están cargados', 'ok')
         }
       } catch {}
     }
@@ -152,7 +155,7 @@ export default function Presupuesto() {
     if (id) return
     const hasSomeData = form.contact || form.company || items.some(i => i.name)
     if (hasSomeData) {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: items }))
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: items }))
     }
   }, [form, items]) // eslint-disable-line
 
@@ -234,7 +237,8 @@ export default function Presupuesto() {
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
     const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
-    sessionStorage.removeItem(DRAFT_KEY)
+    setDraftRestored(false)
+    localStorage.removeItem(DRAFT_KEY)
     toast('Presupuesto guardado', 'ok')
     // ─── Auto-sync a Google Sheets (fire-and-forget) ───
     const gs = getSheetsConfig()
@@ -388,8 +392,31 @@ export default function Presupuesto() {
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph">
         <div className="ph-left"><h2>{editId ? 'Editar presupuesto' : 'Nuevo presupuesto'}</h2><p>Completá los datos para generar el presupuesto</p></div>
-        <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { sessionStorage.removeItem(DRAFT_KEY); nav('/') }}><i className="fa fa-xmark" /> Descartar</button></div>
+        <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /> Descartar</button></div>
       </div>
+
+      {draftRestored && !id && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: '#FFFBEB', border: '1.5px solid #FCD34D',
+          borderRadius: 10, padding: '10px 16px', marginBottom: 14,
+          fontSize: 12, color: '#92400E'
+        }}>
+          <i className="fa fa-rotate-left" style={{ color: '#D97706' }} />
+          <span><b>Borrador recuperado.</b> Tus datos anteriores están cargados — podés continuar donde dejaste.</span>
+          <button
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#92400E', cursor: 'pointer', fontSize: 11, fontWeight: 600, textDecoration: 'underline' }}
+            onClick={() => {
+              localStorage.removeItem(DRAFT_KEY)
+              setDraftRestored(false)
+              setForm({ contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '', shipCost: 0, shipCharged: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '', margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0 })
+              setItems([emptyItem()])
+            }}
+          >
+            Limpiar borrador
+          </button>
+        </div>
+      )}
 
       <div className="budget-layout">
         <div>

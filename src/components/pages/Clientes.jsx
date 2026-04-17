@@ -189,6 +189,18 @@ export default function Clientes() {
     return diff
   }
 
+  const clientPayStatus = (c) => {
+    const bs = clientBudgets(c)
+    if (!bs.length) return 'none'
+    const hasPending = bs.some(b => b.payStatus === 'pending' && b.status === 'confirmed')
+    const hasPartial = bs.some(b => b.payStatus === 'partial' && b.status === 'confirmed')
+    const allPaid = bs.filter(b => b.status === 'confirmed').every(b => b.payStatus === 'paid')
+    if (hasPending) return 'pending'
+    if (hasPartial) return 'partial'
+    if (allPaid && bs.some(b => b.status === 'confirmed')) return 'paid'
+    return 'none'
+  }
+
   const addNote = () => {
     if (!newNote.trim() || !detailClient) return
     const existing = detailClient.noteHistory || []
@@ -242,24 +254,49 @@ export default function Clientes() {
       {viewMode === 'table' ? (
         <div className="tbl-card">
           <table>
-            <thead><tr><th>Empresa</th><th>Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Empresa</th><th>Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Últ. pedido</th><th>Acciones</th></tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
-                <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                <tr key={i}><td colSpan={8}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(c => (
                 <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
-                  <td style={{ fontWeight: 800 }}>{c.company}</td>
+                  <td style={{ fontWeight: 800 }}>
+                    {(() => {
+                      const ps = clientPayStatus(c)
+                      const dotColor = ps === 'pending' ? '#DC2626' : ps === 'partial' ? '#D97706' : ps === 'paid' ? '#16A34A' : '#CBD5E1'
+                      const dotTitle = ps === 'pending' ? 'Pago pendiente' : ps === 'partial' ? 'Seña abonada' : ps === 'paid' ? 'Pagado' : 'Sin pedidos activos'
+                      return <span title={dotTitle} style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: dotColor, marginRight: 7, verticalAlign: 'middle', flexShrink: 0 }} />
+                    })()}
+                    {c.company}
+                  </td>
                   <td>{c.contact}</td>
                   <td><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
-                  <td>{c.wa}</td>
+                  <td>
+                    {c.wa ? (
+                      <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ color: '#16A34A', fontWeight: 600, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <i className="fa-brands fa-whatsapp" />{c.wa}
+                      </a>
+                    ) : '—'}
+                  </td>
                   <td>{c.rubro && <span className="badge b-purple">{c.rubro}</span>}</td>
                   <td><span className="badge b-sent">{clientBudgets(c).length}</span></td>
-                  <td><div className="acts" onClick={e => e.stopPropagation()}>
+                  <td style={{ fontSize: 11 }}>
+                    {(() => {
+                      const days = clientLastBudgetDays(c)
+                      if (days === null) return <span style={{ color: 'var(--txt4)' }}>—</span>
+                      const color = days > 90 ? '#DC2626' : days > 30 ? '#D97706' : '#16A34A'
+                      return <span style={{ color, fontWeight: 600 }}>{days === 0 ? 'Hoy' : days === 1 ? 'Ayer' : `hace ${days}d`}</span>
+                    })()}
+                  </td>
+                  <td><div className="acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
                     <button className="act edit" onClick={() => openEdit(c)}><i className="fa fa-pen" /></button>
+                    <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
                     <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
                   </div></td>
                 </tr>
-              )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
+              )) : <tr><td colSpan={8}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
             </tbody>
           </table>
         </div>

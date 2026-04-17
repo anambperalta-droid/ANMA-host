@@ -22,6 +22,7 @@ export default function Proveedores() {
 
   const suppliers = get('suppliers')
   const products = get('products')
+  const budgets = get('budgets')
   const sq = search.toLowerCase()
   const filtered = search ? suppliers.filter(s =>
     (s.name || '').toLowerCase().includes(sq) || (s.contact || '').toLowerCase().includes(sq) || (s.rubro || '').toLowerCase().includes(sq)
@@ -43,6 +44,16 @@ export default function Proveedores() {
 
   const supplierProducts = (s) => products.filter(p => Number(p.supplierId) === s.id)
   const supplierCostTotal = (s) => supplierProducts(s).reduce((sum, p) => sum + (Number(p.cost) || 0), 0)
+
+  const supplierLastActivity = (s) => {
+    const supplierProds = products.filter(p => String(p.supplierId) === String(s.id)).map(p => p.name)
+    if (!supplierProds.length) return null
+    const relevant = budgets
+      .filter(b => b.items?.some(it => supplierProds.includes(it.name)) && b.date)
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+    if (!relevant.length) return null
+    return Math.floor((Date.now() - new Date(relevant[0].date)) / 86400000)
+  }
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
@@ -131,22 +142,40 @@ export default function Proveedores() {
       {viewMode === 'table' ? (
         <div className="tbl-card">
           <table>
-            <thead><tr><th>Nombre</th><th>Contacto</th><th>WhatsApp</th><th>Rubro</th><th>Email</th><th>Productos</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Nombre</th><th>Contacto</th><th>WhatsApp</th><th>Rubro</th><th>Email</th><th>Productos</th><th>Últ. uso</th><th>Acciones</th></tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
-                <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                <tr key={i}><td colSpan={8}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
                   <td style={{ fontWeight: 800 }}>{s.name}</td>
                   <td>{s.contact}</td>
-                  <td>{s.wa}</td><td>{s.rubro}</td><td>{s.email}</td>
+                  <td>
+                    {s.wa ? (
+                      <a href={`https://wa.me/${s.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ color: '#16A34A', fontWeight: 600, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <i className="fa-brands fa-whatsapp" />{s.wa}
+                      </a>
+                    ) : '—'}
+                  </td>
+                  <td>{s.rubro}</td><td>{s.email}</td>
                   <td><span className="badge b-sent">{supplierProducts(s).length}</span></td>
-                  <td><div className="acts" onClick={e => e.stopPropagation()}>
+                  <td style={{ fontSize: 11 }}>
+                    {(() => {
+                      const days = supplierLastActivity(s)
+                      if (days === null) return <span style={{ color: 'var(--txt4)' }}>—</span>
+                      const color = days > 90 ? '#DC2626' : days > 30 ? '#D97706' : '#16A34A'
+                      return <span style={{ color, fontWeight: 600 }}>{days === 0 ? 'Hoy' : days === 1 ? 'Ayer' : `hace ${days}d`}</span>
+                    })()}
+                  </td>
+                  <td><div className="acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
                     <button className="act edit" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
+                    <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
                     <button className="act del" onClick={() => del(s.id)}><i className="fa fa-trash" /></button>
                   </div></td>
                 </tr>
-              )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
+              )) : <tr><td colSpan={8}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
             </tbody>
           </table>
         </div>

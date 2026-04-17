@@ -33,6 +33,7 @@ export default function Catalogo() {
   const [csvCat, setCsvCat] = useState('')
   const csvRef = useRef(null)
   const [priceUpdateModal, setPriceUpdateModal] = useState(false)
+  const [showCostInfo, setShowCostInfo] = useState(false)
   const [pricePct, setPricePct] = useState('')
   const [priceSupplier, setPriceSupplier] = useState('all')
 
@@ -55,7 +56,7 @@ export default function Catalogo() {
   }
   const save = () => {
     if (!form.name) { toast('Ingresá el nombre del producto.', 'er'); return }
-    saveEntity('products', { ...form, cat: form.cat ?? '', cost: num(form.cost) })
+    saveEntity('products', { ...form, cat: form.cat ?? '', cost: num(form.cost), updatedAt: new Date().toISOString().slice(0,10) })
     setModal(false)
     toast('Producto guardado', 'ok')
   }
@@ -176,15 +177,27 @@ export default function Catalogo() {
               <th>Producto</th>
               <th>Categoría</th>
               <th>Proveedor</th>
-              <th>Costo ($)</th>
+              <th>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Costo ($)
+                  <button
+                    title={showCostInfo ? 'Ocultar última actualización' : 'Mostrar última actualización'}
+                    onClick={() => setShowCostInfo(v => !v)}
+                    style={{ background: showCostInfo ? 'var(--brand)' : 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, color: showCostInfo ? '#fff' : 'var(--txt3)', fontSize: 9, padding: '2px 6px', cursor: 'pointer', fontWeight: 700, transition: 'all .2s' }}
+                  >
+                    <i className="fa fa-clock" /> ult. act.
+                  </button>
+                </span>
+              </th>
               <th>% Margen</th>
+              {showCostInfo && <th>Últ. actualización</th>}
               <th>Precio sugerido ($)</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? [1,2,3,4].map(i => (
-              <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
+              <tr key={i}><td colSpan={showCostInfo ? 8 : 7}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
             )) : filtered.length ? filtered.map(p => {
               const pct = marginPct(p)
               const cc = catColor(p.cat)
@@ -214,6 +227,25 @@ export default function Catalogo() {
                       }}>{pct}%</span>
                     ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                   </td>
+                  {showCostInfo && (
+                    <td style={{ fontSize: 11 }}>
+                      {p.updatedAt ? (
+                        <span style={{ color: (() => {
+                          const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000)
+                          return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A'
+                        })(), fontWeight: 600 }}>
+                          {(() => {
+                            const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000)
+                            if (days === 0) return 'Hoy'
+                            if (days === 1) return 'Ayer'
+                            if (days < 30) return `hace ${days}d`
+                            if (days < 365) return `hace ${Math.floor(days/30)}m`
+                            return `hace ${Math.floor(days/365)}a`
+                          })()}
+                        </span>
+                      ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                    </td>
+                  )}
                   <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
                   <td><div className="acts">
                     <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
@@ -221,7 +253,7 @@ export default function Catalogo() {
                   </div></td>
                 </tr>
               )
-            }) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+            }) : <tr><td colSpan={showCostInfo ? 8 : 7}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
           </tbody>
         </table>
       </div>
