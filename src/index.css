@@ -221,6 +221,8 @@ input,select,textarea{font-family:inherit}
 .b-draft{background:var(--surface2);color:var(--txt3);border:1px solid var(--border)}
 .b-purple{background:var(--brand-xlt);color:var(--brand)}
 .b-blue{background:var(--blue-lt);color:var(--blue)}
+.b-amber{background:var(--amber-lt);color:var(--amber)}
+.card-sm{padding:14px}
 
 /* ─── TABLES ─── */
 .tbl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh)}
