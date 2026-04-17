@@ -4,14 +4,14 @@ import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
 
 const CAT_PALETTE = [
-  { bg: '#EDE9FE', color: '#5B21B6' },
-  { bg: '#DBEAFE', color: '#1D4ED8' },
-  { bg: '#D1FAE5', color: '#065F46' },
-  { bg: '#FEF3C7', color: '#92400E' },
-  { bg: '#FCE7F3', color: '#9D174D' },
-  { bg: '#FFEDD5', color: '#9A3412' },
-  { bg: '#E0F2FE', color: '#075985' },
-  { bg: '#F0FDF4', color: '#166534' },
+  { bg: '#F5F3FF', color: '#8B5CF6' },
+  { bg: '#EFF6FF', color: '#60A5FA' },
+  { bg: '#ECFDF5', color: '#34D399' },
+  { bg: '#FFFBEB', color: '#F59E0B' },
+  { bg: '#FDF2F8', color: '#F472B6' },
+  { bg: '#F0FDFA', color: '#2DD4BF' },
+  { bg: '#FFF7ED', color: '#FB923C' },
+  { bg: '#F1F5F9', color: '#94A3B8' },
 ]
 
 export default function Catalogo() {
@@ -50,8 +50,12 @@ export default function Catalogo() {
   if (search) filtered = filtered.filter(p => (p.name || '').toLowerCase().includes(sq))
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const safeCat = (val) => (val && cats.includes(val)) ? val : (cats[0] || '')
   const open = (p) => {
-    setForm(p ? { ...p, cat: p.cat != null ? p.cat : (cats[0] || '') } : { name: '', cat: cats[0] || '', cost: '', supplierId: '' })
+    setForm(p
+      ? { ...p, cat: safeCat(p.cat) }
+      : { name: '', cat: cats[0] || '', cost: '', supplierId: '' }
+    )
     setModal(true)
   }
   const save = () => {
