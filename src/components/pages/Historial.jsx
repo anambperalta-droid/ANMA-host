@@ -9,20 +9,13 @@ function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
 }
 
-function KpiCard({ label, value, foot, color, icon, delta }) {
-  const colors = { brand: 'var(--brand)', blue: 'var(--blue)', green: 'var(--green)', amber: 'var(--amber)' }
-  const c = colors[color] || colors.brand
+function KpiCard({ label, value, delta, isKey }) {
   return (
-    <div className="bento-kpi">
-      <div className="kpi-glow" style={{ background: c }} />
-      <div className="kpi-icon-wrap" style={{ background: c + '1a' }}>
-        <i className={`fa ${icon}`} style={{ color: c, fontSize: 18 }} />
-      </div>
-      <div className="kpi-label">{label}</div>
-      <div className="kpi-val">{value}</div>
-      <div className="kpi-foot">{foot}</div>
+    <div className="bento-kpi" style={isKey ? { borderLeft: '4px solid var(--green)', paddingLeft: 16 } : {}}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>{label}</div>
+      <div style={{ fontSize: 29, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1 }}>{value}</div>
       {delta !== null && delta !== undefined && (
-        <div style={{ fontSize: 10, fontWeight: 700, marginTop: 3, color: delta >= 0 ? 'var(--green)' : 'var(--red)' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, marginTop: 8, color: delta >= 0 ? 'var(--green)' : 'var(--red)' }}>
           {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)}% vs mes ant.
         </div>
       )}
@@ -86,12 +79,12 @@ const TIERS = [
 ]
 
 const PERIODS = [
-  { key: '1m', label: '1 mes', months: 1 },
-  { key: '3m', label: '3 meses', months: 3 },
-  { key: '6m', label: '6 meses', months: 6 },
-  { key: '12m', label: '12 meses', months: 12 },
-  { key: 'all', label: 'Todo', months: 0 },
-  { key: 'custom', label: 'Personalizado', months: -1 },
+  { key: 'thismonth', label: 'Este mes' },
+  { key: 'prevmonth', label: 'Mes anterior' },
+  { key: '3m', label: 'Últimos 3 meses' },
+  { key: '6m', label: 'Últimos 6 meses' },
+  { key: 'year', label: 'Año actual' },
+  { key: 'custom', label: 'Personalizado' },
 ]
 
 /* ── Seguimiento card with Re-enviar button ── */
@@ -275,6 +268,7 @@ export default function Historial() {
   const [loading, setLoading] = useState(true)
   const [resendBudget, setResendBudget] = useState(null)
   const [period, setPeriod] = useState('6m')
+  const [showPeriodDrop, setShowPeriodDrop] = useState(false)
   const [sortKey, setSortKey] = useState('id')
   const [sortDir, setSortDir] = useState('desc')
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -291,20 +285,24 @@ export default function Historial() {
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
   // Period filter
-  const periodMonths = PERIODS.find(p => p.key === period)?.months ?? 6
-  const periodStart = (period !== 'custom' && periodMonths > 0)
-    ? new Date(now.getFullYear(), now.getMonth() - periodMonths, 1)
-    : null
-
+  const prevYM2 = (() => { const d = new Date(now.getFullYear(), now.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
   let periodBudgets
   if (period === 'custom' && customFrom && customTo) {
     const from = new Date(customFrom)
     const to = new Date(customTo + 'T23:59:59')
     periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= from && new Date(b.date) <= to)
-  } else if (period === 'all' || periodMonths === 0) {
-    periodBudgets = budgets
-  } else if (periodStart) {
-    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= periodStart)
+  } else if (period === 'thismonth') {
+    periodBudgets = budgets.filter(b => b.date?.startsWith(ym))
+  } else if (period === 'prevmonth') {
+    periodBudgets = budgets.filter(b => b.date?.startsWith(prevYM2))
+  } else if (period === 'year') {
+    periodBudgets = budgets.filter(b => b.date?.startsWith(String(now.getFullYear())))
+  } else if (period === '3m') {
+    const s = new Date(now.getFullYear(), now.getMonth() - 3, 1)
+    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s)
+  } else if (period === '6m') {
+    const s = new Date(now.getFullYear(), now.getMonth() - 6, 1)
+    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s)
   } else {
     periodBudgets = budgets
   }
@@ -343,7 +341,7 @@ export default function Historial() {
   const deltaGain = prevGain > 0 ? Math.round((mGain - prevGain) / prevGain * 100) : null
 
   // Income bars (last N months based on period) — dinero cobrado
-  const barMonths = periodMonths || 12
+  const barMonths = period === '3m' ? 3 : period === 'year' ? 12 : 6
   const incomeData = []
   for (let i = barMonths - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
@@ -522,30 +520,45 @@ export default function Historial() {
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph">
         <div className="ph-left"><h2>Historial</h2><p>Registro de presupuestos y análisis del negocio</p></div>
-        <div className="ph-right">
-          {/* Period filter */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div className="period-pills">
-              {PERIODS.map(p => (
-                <button key={p.key} className={`pill ${period === p.key ? 'active' : ''}`}
-                  onClick={() => setPeriod(p.key)} style={{ padding: '4px 10px', fontSize: 10 }}>
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            {period === 'custom' && (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 12, color: 'var(--txt3)' }}>De:</span>
-                <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                  style={{ padding: '4px 8px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12, fontFamily: 'inherit' }} />
-                <span style={{ fontSize: 12, color: 'var(--txt3)' }}>Hasta:</span>
-                <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                  style={{ padding: '4px 8px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12, fontFamily: 'inherit' }} />
+        <div className="ph-right" style={{ gap: 8 }}>
+          {/* Period dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowPeriodDrop(d => !d)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', color: 'var(--txt2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+            >
+              <i className="fa fa-calendar" style={{ fontSize: 11, color: 'var(--txt3)' }} />
+              {PERIODS.find(p => p.key === period)?.label || 'Período'}
+              <i className="fa fa-chevron-down" style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 2 }} />
+            </button>
+            {showPeriodDrop && (
+              <div
+                style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 100, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,.12)', minWidth: 180, overflow: 'hidden' }}
+                onMouseLeave={() => setShowPeriodDrop(false)}
+              >
+                {PERIODS.map(p => (
+                  <button key={p.key} onClick={() => { setPeriod(p.key); setShowPeriodDrop(false) }}
+                    style={{ display: 'block', width: '100%', padding: '9px 16px', border: 'none', background: period === p.key ? 'var(--brand-xlt)' : 'transparent', color: period === p.key ? 'var(--brand)' : 'var(--txt2)', fontSize: 12, fontWeight: period === p.key ? 700 : 500, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
+                    onMouseEnter={e => { if (period !== p.key) e.currentTarget.style.background = 'var(--surface2)' }}
+                    onMouseLeave={e => { if (period !== p.key) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
-          <button className="btn btn-secondary btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
-          <button className="btn btn-primary btn-sm" onClick={() => nav('/presupuesto')}><i className="fa fa-plus" /> Nuevo presupuesto</button>
+          {period === 'custom' && (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+                style={{ padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)' }} />
+              <span style={{ fontSize: 11, color: 'var(--txt3)' }}>→</span>
+              <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+                style={{ padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)' }} />
+            </div>
+          )}
+          <button className="btn btn-ghost btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
+          <button className="btn btn-primary btn-sm" onClick={() => nav('/presupuesto')} style={{ background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /> Nuevo presupuesto</button>
         </div>
       </div>
 
@@ -568,14 +581,14 @@ export default function Historial() {
             </div>
           ) : (
             <div className="bento sk-fade-in">
-              <KpiCard label="Total cobrado" value={money(totCobrado)} foot={`${pagados.length} pagos recibidos`} color="brand" icon="fa-dollar-sign" />
-              <KpiCard label="Ingresos del mes" value={money(mInc)} foot={`${monthBudgets.length} presupuestos`} color="blue" icon="fa-chart-line" delta={deltaInc} />
-              <KpiCard label="Ganancia del mes" value={money(mGain)} foot="del período actual" color="green" icon="fa-coins" delta={hidden ? undefined : deltaGain} />
-              <KpiCard label="Tasa de conversión" value={convRate} foot={`${confirmed.length} de ${periodBudgets.length} confirmados`} color="amber" icon="fa-funnel" />
+              <KpiCard label="Ingresos" value={money(totCobrado)} />
+              <KpiCard label="Ventas Mes" value={money(mInc)} delta={deltaInc} />
+              <KpiCard label="Rentabilidad" value={money(mGain)} delta={hidden ? undefined : deltaGain} isKey />
+              <KpiCard label="Conversión" value={convRate} />
 
               <div className="bento-chart bento-wide">
                 <div className="card-header">
-                  <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos confirmados — {PERIODS.find(p => p.key === period)?.label}</span>
+                  <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {PERIODS.find(p => p.key === period)?.label}</span>
                 </div>
                 <BarChart data={incomeData} />
               </div>
