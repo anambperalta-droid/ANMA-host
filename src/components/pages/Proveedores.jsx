@@ -12,6 +12,7 @@ export default function Proveedores() {
   const [detailSupplier, setDetailSupplier] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
+  const [showLastUse, setShowLastUse] = useState(false)
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ name: '', contact: '', wa: '', rubro: '', email: '', notes: '' })
   const [newNote, setNewNote] = useState('')
@@ -142,10 +143,26 @@ export default function Proveedores() {
       {viewMode === 'table' ? (
         <div className="tbl-card">
           <table>
-            <thead><tr><th>Nombre</th><th>Contacto</th><th>WhatsApp</th><th>Rubro</th><th>Email</th><th>Productos</th><th>Últ. uso</th><th>Acciones</th></tr></thead>
+            <thead><tr>
+              <th>Nombre</th><th>Contacto</th><th>WhatsApp</th><th>Rubro</th><th>Email</th>
+              <th>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Productos
+                  <button
+                    title={showLastUse ? 'Ocultar última actividad' : 'Mostrar última actividad'}
+                    onClick={e => { e.stopPropagation(); setShowLastUse(v => !v) }}
+                    style={{ background: showLastUse ? 'var(--brand)' : 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, color: showLastUse ? '#fff' : 'var(--txt3)', fontSize: 9, padding: '2px 6px', cursor: 'pointer', fontWeight: 700, transition: 'all .2s' }}
+                  >
+                    <i className="fa fa-clock" /> últ. uso
+                  </button>
+                </span>
+              </th>
+              {showLastUse && <th>Últ. uso</th>}
+              <th>Acciones</th>
+            </tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
-                <tr key={i}><td colSpan={8}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                <tr key={i}><td colSpan={showLastUse ? 8 : 7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
                   <td style={{ fontWeight: 800 }}>{s.name}</td>
@@ -161,6 +178,7 @@ export default function Proveedores() {
                   </td>
                   <td>{s.rubro}</td><td>{s.email}</td>
                   <td><span className="badge b-sent">{supplierProducts(s).length}</span></td>
+                  {showLastUse && (
                   <td style={{ fontSize: 11 }}>
                     {(() => {
                       const days = supplierLastActivity(s)
@@ -169,13 +187,14 @@ export default function Proveedores() {
                       return <span style={{ color, fontWeight: 600 }}>{days === 0 ? 'Hoy' : days === 1 ? 'Ayer' : `hace ${days}d`}</span>
                     })()}
                   </td>
+                  )}
                   <td><div className="acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
                     <button className="act edit" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
                     <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
                     <button className="act del" onClick={() => del(s.id)}><i className="fa fa-trash" /></button>
                   </div></td>
                 </tr>
-              )) : <tr><td colSpan={8}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
+              )) : <tr><td colSpan={showLastUse ? 8 : 7}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
             </tbody>
           </table>
         </div>
