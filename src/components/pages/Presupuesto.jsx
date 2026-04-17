@@ -309,7 +309,7 @@ export default function Presupuesto() {
     const brandColor = c.brandColor || '#7C3AED'
     const bName = c.businessName || 'ANMA'
     const prodRows = items.filter(i => i.name).map(i =>
-      `<tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right">${fmt(i.qty * i.priceUnit)}</td></tr>`
+      `<tr><td>${i.name}${i.variant ? ' <span style="color:#888;font-size:10px">· ' + i.variant + '</span>' : ''}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right">${fmt(i.qty * i.priceUnit)}</td></tr>`
     ).join('')
     // Vigencia auto-calculada
     const validDays = num(c.budgetValidityDays) || 7
@@ -337,6 +337,7 @@ export default function Presupuesto() {
       th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
       td{padding:6px 9px;border-bottom:1px solid #EEF0F7;font-size:11px}
       tr:last-child td{border-bottom:none}
+      .variant{color:#888;font-size:9.5px;margin-left:4px}
       .totals{margin-top:6px;display:flex;justify-content:flex-end}
       .totals-box{min-width:240px;padding:10px 14px;background:linear-gradient(135deg,${brandColor}0d,${brandColor}1a);border-radius:8px;border:1px solid ${brandColor}33}
       .totals-row{display:flex;justify-content:space-between;padding:2px 0;font-size:11px;color:#555}
@@ -344,6 +345,11 @@ export default function Presupuesto() {
       .totals-row.senia{font-size:11.5px;font-weight:700;color:${brandColor}}
       .note{margin-top:12px;padding:9px 12px;background:#F4F6FD;border-left:3px solid ${brandColor};border-radius:4px;font-size:11px;color:#333}
       .footer{margin-top:14px;padding-top:8px;border-top:1px solid #E5E7F0;font-size:9.5px;color:#999;line-height:1.5}
+      .cobro-block{margin-top:12px;padding:10px 14px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:8px}
+      .cobro-title{font-size:10px;font-weight:700;color:#065F46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+      .cobro-row{display:flex;justify-content:space-between;padding:2px 0;font-size:11px}
+      .cobro-lbl{color:#666;font-weight:500}
+      .cobro-val{font-weight:700;color:#1E1B4B;font-family:monospace}
       .accept-fab{position:fixed;bottom:18px;right:18px;background:#25D366;color:#fff;padding:13px 20px;border-radius:999px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(37,211,102,.4);font-size:12.5px;display:inline-flex;align-items:center;gap:7px}
       .accept-fab:hover{background:#1da851}
       @media print{.accept-fab{display:none}body{padding:18px 22px}}
@@ -352,7 +358,7 @@ export default function Presupuesto() {
       <div class="brand">${c.logo ? '<img src="' + c.logo + '" alt="' + bName + '">' : bName}</div>
       <div class="hd-meta">
         <div class="num">${budgetNum}</div>
-        <div>Fecha: ${new Date().toISOString().slice(0, 10)}</div>
+        <div>Fecha de emisión: ${new Date().toISOString().slice(0, 10)}</div>
         ${form.deliveryDate ? '<div>Entrega: ' + form.deliveryDate + '</div>' : ''}
         <div class="vig">⏱ Válido hasta: ${vigenciaISO}</div>
       </div>
@@ -373,8 +379,24 @@ export default function Presupuesto() {
       ${hasShip ? `<div class="totals-row"><span>Envío</span><span>${fmt(num(form.shipCost))}</span></div>` : ''}
       <div class="totals-row big"><span>Total</span><span>${fmt(calc.total)}</span></div>
       <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(calc.depositAmt)}</span></div>
+      <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(calc.total - calc.depositAmt)}</span></div>
     </div></div>
     ${form.noteCli ? `<div class="note">${form.noteCli}</div>` : ''}
+    ${(() => {
+      const bank = getBankConfig ? getBankConfig() : null
+      const mp = getMPConfig ? getMPConfig() : null
+      const hasCobro = (bank && bank.enabled && (bank.cbu || bank.alias)) || (mp && mp.enabled)
+      if (!hasCobro) return ''
+      return `<div class="cobro-block">
+        <div class="cobro-title">💳 Datos para el pago</div>
+        ${bank && bank.enabled && (bank.cbu || bank.alias) ? `
+          ${bank.cbu ? '<div class="cobro-row"><span class="cobro-lbl">CBU</span><span class="cobro-val">' + bank.cbu + '</span></div>' : ''}
+          ${bank.alias ? '<div class="cobro-row"><span class="cobro-lbl">Alias</span><span class="cobro-val">' + bank.alias + '</span></div>' : ''}
+          ${bank.accountName ? '<div class="cobro-row"><span class="cobro-lbl">Titular</span><span class="cobro-val">' + bank.accountName + '</span></div>' : ''}
+          ${bank.bank ? '<div class="cobro-row"><span class="cobro-lbl">Banco</span><span class="cobro-val">' + bank.bank + '</span></div>' : ''}
+        ` : ''}
+      </div>`
+    })()}
     ${(c.paymentConditions || c.legalNote) ? `<div class="footer">${c.paymentConditions ? '<div>' + c.paymentConditions + '</div>' : ''}${c.legalNote ? '<div style="margin-top:2px">' + c.legalNote + '</div>' : ''}</div>` : ''}
     ${waLink ? `<a class="accept-fab" href="${waLink}" target="_blank" rel="noopener"><span style="font-size:15px">✓</span> Aceptar Presupuesto</a>` : ''}
     </body></html>`
