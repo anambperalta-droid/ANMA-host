@@ -10,6 +10,7 @@ export function DataProvider({ children }) {
   ensureDefaults()
 
   useEffect(() => {
+    let anyChanged = false
     ;['suppliers', 'products', 'clients', 'budgets'].forEach(key => {
       const list = db(key, [])
       const seen = new Set()
@@ -17,13 +18,14 @@ export function DataProvider({ children }) {
       const fixed = list.map(item => {
         if (!item.id || seen.has(item.id)) {
           item = { ...item, id: Date.now() + Math.floor(Math.random() * 99991) }
-          changed = true
+          changed = true; anyChanged = true
         }
         seen.add(item.id)
         return item
       })
-      if (changed) { dbW(key, fixed); console.log(`[ANMA] Deduped IDs for ${key}`) }
+      if (changed) dbW(key, fixed)
     })
+    if (anyChanged) refresh()
   }, [])
 
   useEffect(() => {

@@ -238,7 +238,7 @@ function StatusDonut({ statuses, budgets }) {
 }
 
 export default function Historial() {
-  const { get, config, updateBudgetStatus, deleteBudget } = useData()
+  const { get, config, updateBudgetStatus, deleteBudget, saveBudget } = useData()
   const toast = useToast()
   const nav = useNavigate()
   const [tab, setTab] = useState('resumen')
@@ -393,7 +393,7 @@ export default function Historial() {
   // Top clients
   const byClient = {}
   confirmed.forEach(b => { const k = b.company || b.contact || '—'; byClient[k] = (byClient[k] || 0) + (b.total || 0) })
-  const topClients = Object.entries(byClient).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const topClients = Object.entries(byClient).sort((a, b) => b[1] - a[1]).slice(0, 3)
 
   // Analysis metrics
   const totBudgeted = periodBudgets.reduce((s, b) => s + (b.total || 0), 0)
@@ -412,6 +412,22 @@ export default function Historial() {
     if (confirm2 !== 'ELIMINAR') { toast('Eliminación cancelada', 'in'); return }
     deleteBudget(b.id); toast('Presupuesto eliminado', 'in')
     setSelectedIds(prev => { const n = new Set(prev); n.delete(b.id); return n })
+  }
+  const STATUS_COLORS = {
+    draft:       { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
+    sent:        { bg: '#EFF6FF', color: '#1D4ED8', border: '#93C5FD' },
+    negotiating: { bg: '#FFFBEB', color: '#D97706', border: '#FCD34D' },
+    confirmed:   { bg: '#F0FDF4', color: '#16A34A', border: '#86EFAC' },
+    lost:        { bg: '#FEF2F2', color: '#DC2626', border: '#FCA5A5' },
+  }
+  const PAY_STATUS_COLORS = {
+    pending: { bg: '#FEF2F2', color: '#DC2626', border: '#FCA5A5' },
+    partial: { bg: '#FFFBEB', color: '#D97706', border: '#FCD34D' },
+    paid:    { bg: '#F0FDF4', color: '#16A34A', border: '#86EFAC' },
+  }
+  const handlePayStatusChange = (id, payStatus) => {
+    const b = budgets.find(x => x.id === id)
+    if (b) { saveBudget({ ...b, payStatus }); toast('Pago actualizado', 'ok') }
   }
   const handleStatusChange = (id, status) => { updateBudgetStatus(id, status); toast('Estado actualizado', 'ok') }
   const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -712,12 +728,31 @@ export default function Historial() {
                       <td style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
                       <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600 }}>{money(b.totalGain)}</td>
                       <td>
-                        <select style={{ fontSize: 11, padding: '4px 8px', border: '2px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', background: 'var(--surface)', cursor: 'pointer', outline: 'none' }}
-                          value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
-                          {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                        </select>
+                        {(() => {
+                          const sc = STATUS_COLORS[b.status] || { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' }
+                          return (
+                            <select
+                              style={{ fontSize: 11, padding: '4px 8px', border: `2px solid ${sc.border}`, borderRadius: 8, fontFamily: 'inherit', background: sc.bg, color: sc.color, cursor: 'pointer', outline: 'none', fontWeight: 700 }}
+                              value={b.status}
+                              onChange={e => handleStatusChange(b.id, e.target.value)}
+                            >
+                              {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                            </select>
+                          )
+                        })()}
                       </td>
-                      <td><span className={`badge ${PAY_STATUS_CLS[b.payStatus] || 'b-draft'}`}>{PAY_STATUS_MAP[b.payStatus] || 'Pendiente'}</span></td>
+                      <td>{(() => {
+                        const pc = PAY_STATUS_COLORS[b.payStatus] || PAY_STATUS_COLORS.pending
+                        return (
+                          <select
+                            style={{ fontSize: 11, padding: '4px 8px', border: `2px solid ${pc.border}`, borderRadius: 8, fontFamily: 'inherit', background: pc.bg, color: pc.color, cursor: 'pointer', outline: 'none', fontWeight: 700 }}
+                            value={b.payStatus || 'pending'}
+                            onChange={e => handlePayStatusChange(b.id, e.target.value)}
+                          >
+                            {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          </select>
+                        )
+                      })()}</td>
                       <td>
                         <div className="acts" style={{ gap: 4 }}>
                           <button className="act edit" onClick={() => editB(b.id)} title="Editar"><i className="fa fa-pen" /></button>
@@ -760,12 +795,12 @@ export default function Historial() {
               </div>
             ))}
           </div>
-          <div className="card">
+          <div className="card" style={{ maxHeight: 220, overflow: 'hidden' }}>
             <div className="card-header"><span className="card-title"><i className="fa fa-trophy" style={{ color: 'var(--amber)', marginRight: 6 }} />Clientes top</span></div>
             {topClients.length ? (() => {
               const totalTopSales = topClients.reduce((s, [, v]) => s + v, 0) || 1
               return topClients.map(([n, v], i) => (
-                <div key={i} className="metric-row" style={{ alignItems: 'center' }}>
+                <div key={i} className="metric-row" style={{ alignItems: 'center', padding: '5px 0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
                     <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800 }}>{i + 1}</div>
                     <span className="mr-label" style={{ flex: 1, marginBottom: 0 }}>{n}</span>

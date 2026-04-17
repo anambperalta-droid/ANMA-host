@@ -49,10 +49,15 @@ export default function Catalogo() {
   if (search) filtered = filtered.filter(p => (p.name || '').toLowerCase().includes(sq))
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const open = (p) => { setForm(p ? { ...p } : { name: '', cat: cats[0] || '', cost: '', supplierId: '' }); setModal(true) }
+  const open = (p) => {
+    setForm(p ? { ...p, cat: p.cat != null ? p.cat : (cats[0] || '') } : { name: '', cat: cats[0] || '', cost: '', supplierId: '' })
+    setModal(true)
+  }
   const save = () => {
     if (!form.name) { toast('Ingresá el nombre del producto.', 'er'); return }
-    saveEntity('products', { ...form, cost: num(form.cost) }); setModal(false); toast('Producto guardado', 'ok')
+    saveEntity('products', { ...form, cat: form.cat ?? '', cost: num(form.cost) })
+    setModal(false)
+    toast('Producto guardado', 'ok')
   }
   const del = (id) => { if (window.confirm('¿Eliminar producto?')) { deleteEntity('products', id); toast('Producto eliminado', 'in') } }
   const doBulk = () => {
