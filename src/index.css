@@ -195,17 +195,17 @@ input,select,textarea{font-family:inherit}
 .card-link{font-size:11px;color:var(--acento);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
 
 /* ─── BENTO GRID ─── */
-.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(0,auto);gap:12px;margin-bottom:16px}
-.bento-kpi{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:default;transition:all var(--tr)}
-.bento-kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(0,auto);gap:14px;margin-bottom:20px}
+.bento-kpi{background:var(--surface);border:none;border-radius:16px;padding:24px 24px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);position:relative;overflow:hidden;cursor:default;transition:box-shadow .2s}
+.bento-kpi:hover{box-shadow:0 4px 20px rgba(0,0,0,.10)}
 .kpi-glow{position:absolute;top:-16px;right:-16px;width:70px;height:70px;border-radius:50%;opacity:.08}
 .kpi-icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px}
 .kpi-label{font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
 .kpi-val{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;line-height:1;color:var(--money)!important}
 .kpi-foot{font-size:11px;color:var(--txt3)}
 .bento-wide{grid-column:span 2}
-.bento-chart{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--sh);transition:all var(--tr)}
-.bento-chart:hover{box-shadow:var(--sh-md)}
+.bento-chart{background:var(--surface);border:none;border-radius:16px;padding:28px 24px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);transition:box-shadow .2s}
+.bento-chart:hover{box-shadow:0 4px 20px rgba(0,0,0,.10)}
 .bento-seg{background:var(--panel-grad);border-radius:var(--r-lg);padding:16px;box-shadow:0 8px 32px rgba(30,27,75,.2);color:#fff;overflow-y:auto;max-height:260px}
 .bento-seg::-webkit-scrollbar{width:4px}
 .bento-seg::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:10px}

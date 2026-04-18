@@ -11,21 +11,27 @@ function Badge({ status }) {
 
 function KpiCard({ label, value, delta, isKey }) {
   return (
-    <div className="bento-kpi" style={isKey ? { borderLeft: '4px solid var(--green)', paddingLeft: 20 } : {}}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 29, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1 }}>{value}</div>
+    <div className="bento-kpi" style={isKey ? { borderLeft: '3px solid var(--green)', paddingLeft: 20 } : { paddingLeft: 24 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
         {delta !== null && delta !== undefined && (
-          <span style={{ fontSize: 12, fontWeight: 700, color: delta >= 0 ? 'var(--green)' : 'var(--red)' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? '#F0FDF4' : '#FFF1F2', padding: '1px 6px', borderRadius: 6 }}>
             {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)}%
           </span>
         )}
       </div>
       {delta !== null && delta !== undefined && (
-        <div style={{ fontSize: 9, color: '#9CA3AF', marginTop: 5, letterSpacing: '0.03em' }}>vs. periodo anterior</div>
+        <div style={{ fontSize: 9, color: '#B0B8C9', marginTop: 5, letterSpacing: '0.04em' }}>vs. período anterior</div>
       )}
     </div>
   )
+}
+
+function DashBadge({ status }) {
+  const C = { draft: ['#F8FAFC','#94A3B8'], sent: ['#EFF6FF','#3B82F6'], negotiating: ['#FFFBEB','#D97706'], confirmed: ['#F0FDF4','#16A34A'], lost: ['#FFF1F2','#DC2626'] }
+  const [bg, color] = C[status] || C.draft
+  return <span style={{ display:'inline-block', background: bg, color, fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 20, letterSpacing: '0.02em', whiteSpace:'nowrap' }}>{STATUS_MAP[status] || 'Borrador'}</span>
 }
 
 function BarChart({ data, prevData = [], type = 'income' }) {
@@ -656,14 +662,10 @@ export default function Historial() {
             </div>
           ) : (
             <div className="bento sk-fade-in">
-              <div className="bento-wide" style={{ padding: '12px 20px', background: insightColor + '12', borderRadius: 12, border: `1px solid ${insightColor}30`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <i className={`fa ${insightIcon}`} style={{ fontSize: 16, color: insightColor, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: 'var(--txt)', fontWeight: 500, lineHeight: 1.5 }}>{insightText}</span>
-              </div>
               <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} />
               <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} isKey />
-              <KpiCard label="Ticket Prom." value={avgTicket > 0 ? money(avgTicket) : '—'} />
-              <KpiCard label="Conversión" value={convRate} />
+              <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} />
+              <KpiCard label="Presupuestos" value={String(periodBudgets.length)} />
 
               <div className="bento-chart bento-wide">
                 <div className="card-header">
@@ -679,9 +681,9 @@ export default function Historial() {
               </div>
 
               {/* ── Mini-Timeline seguimiento: compacto ── */}
-              <div className="bento-chart" style={{ background: 'var(--surface2)', border: '1.5px solid var(--brand)', borderColor: 'var(--brand)' }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--brand)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <i className="fa fa-fire" />Seguimiento activo
+              <div className="bento-chart" style={{ background: 'var(--surface2)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  <i className="fa fa-fire" style={{ color: 'var(--brand)' }} />Seguimiento activo
                 </div>
                 {urgentTop3.length ? (
                   <>
@@ -734,14 +736,14 @@ export default function Historial() {
                 </div>
                 {budgets.length ? (
                   <table>
-                    <thead><tr><th>N°</th><th>Cliente</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+                    <thead><tr><th>N°</th><th>Cliente</th><th style={{ textAlign: 'right' }}>Total</th><th>Estado</th><th></th></tr></thead>
                     <tbody>
                       {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => (
                         <tr key={b.id}>
                           <td><b>{b.num || '—'}</b></td>
                           <td>{b.company || b.contact || '—'}</td>
-                          <td style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
-                          <td><Badge status={b.status} /></td>
+                          <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right' }}>{money(b.total)}</td>
+                          <td><DashBadge status={b.status} /></td>
                           <td style={{ position: 'relative' }}>
                             <button
                               className="act"
