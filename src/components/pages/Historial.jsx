@@ -28,9 +28,10 @@ function KpiCard({ label, value, delta, isKey }) {
   )
 }
 
-function BarChart({ data, type = 'income' }) {
-  const maxV = Math.max(...data.map(m => m.val), 1)
+function BarChart({ data, prevData = [], type = 'income' }) {
+  const maxV = Math.max(...data.map(m => m.val), ...prevData.map(m => m.val), 1)
   const hasData = data.some(m => m.val > 0)
+  const hasPrev = prevData.some(m => m.val > 0)
   if (!hasData) return (
     <div style={{ textAlign: 'center', padding: '28px 0 8px', color: 'var(--txt4)', fontSize: 12 }}>
       <i className="fa fa-chart-bar" style={{ fontSize: 28, opacity: .2, display: 'block', marginBottom: 8 }} />
@@ -38,24 +39,30 @@ function BarChart({ data, type = 'income' }) {
       <div style={{ fontSize: 11, marginTop: 3 }}>Los ingresos cobrados aparecerán acá mes a mes</div>
     </div>
   )
-  // Monocromático: mismo brand-color para todas las barras, sin gradient
   return (
     <div>
       <div className="bar-chart" style={{ height: 130 }}>
         {data.map((m, i) => {
           const pct = m.val / maxV
-          // Opacidad plena variable según altura relativa (mín .35, máx 1)
-          const opacity = pct === 0 ? 0.15 : 0.35 + pct * 0.65
+          const prevPct = (prevData[i]?.val || 0) / maxV
           return (
-            <div key={i} className="bc">
+            <div key={i} className="bc" style={{ position: 'relative' }}>
+              {prevPct > 0 && (
+                <div style={{
+                  position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+                  width: '70%', height: Math.max(2, prevPct * 120),
+                  background: 'var(--brand)', opacity: 0.15, borderRadius: '3px 3px 0 0', zIndex: 0
+                }} />
+              )}
               <div
                 className="bb"
                 style={{
                   height: Math.max(4, pct * 120),
                   background: 'var(--brand)',
-                  opacity,
+                  opacity: pct === 0 ? 0.12 : 0.35 + pct * 0.65,
+                  position: 'relative', zIndex: 1,
                 }}
-                title={fmt(m.val)}
+                title={`${fmt(m.val)}${prevData[i]?.val ? ` · Anterior: ${fmt(prevData[i].val)}` : ''}`}
               />
             </div>
           )
@@ -64,6 +71,12 @@ function BarChart({ data, type = 'income' }) {
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         {data.map((m, i) => <div key={i} className="bl" style={{ flex: 1, textAlign: 'center' }}>{m.lbl}</div>)}
       </div>
+      {hasPrev && (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 8, fontSize: 10, color: 'var(--txt4)' }}>
+          <div style={{ width: 10, height: 10, background: 'var(--brand)', opacity: 0.18, borderRadius: 2, flexShrink: 0 }} />
+          <span>Período anterior</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -254,7 +267,7 @@ function StatusDonut({ statuses, budgets }) {
             <div key={s.k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.c, flexShrink: 0 }} />
               <span style={{ fontSize: 12, color: 'var(--txt2)', flex: 1 }}>{s.l}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)' }}>{n}</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', background: 'var(--surface2)', padding: '1px 7px', borderRadius: 8 }}>{n}</span>
             </div>
           )
         })}
@@ -272,7 +285,7 @@ export default function Historial() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [resendBudget, setResendBudget] = useState(null)
-  const [period, setPeriod] = useState('6m')
+  const [period, setPeriod] = useState('thismonth')
   const [showPeriodDrop, setShowPeriodDrop] = useState(false)
   const [sortKey, setSortKey] = useState('id')
   const [sortDir, setSortDir] = useState('desc')
@@ -334,31 +347,84 @@ export default function Historial() {
     return 0
   }
 
-  // KPI calculations — basados en dinero COBRADO
-  const monthBudgets = periodBudgets.filter(b => b.date?.startsWith(ym))
+  // KPI calculations
+  const totBudgeted = periodBudgets.reduce((s, b) => s + (b.total || 0), 0)
   const confirmed = periodBudgets.filter(b => b.status === 'confirmed')
   const pagados = periodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
   const totCobrado = pagados.reduce((s, b) => s + cobrado(b), 0)
-  const mInc = monthBudgets.reduce((s, b) => s + cobrado(b), 0)
-  const mGain = monthBudgets.reduce((s, b) => s + ganCobrada(b), 0)
+  const avgTicket = confirmed.length ? Math.round(totBudgeted / confirmed.length) : 0
   const convRate = periodBudgets.length ? Math.round(confirmed.length / periodBudgets.length * 100) + '%' : '—'
 
-  // Delta vs mes anterior
-  const prevYM = (() => { const d = new Date(now.getFullYear(), now.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
-  const prevMonthBudgets = budgets.filter(b => b.date?.startsWith(prevYM))
-  const prevInc = prevMonthBudgets.reduce((s, b) => s + cobrado(b), 0)
-  const prevGain = prevMonthBudgets.reduce((s, b) => s + ganCobrada(b), 0)
-  const deltaInc = prevInc > 0 ? Math.round((mInc - prevInc) / prevInc * 100) : null
-  const deltaGain = prevGain > 0 ? Math.round((mGain - prevGain) / prevGain * 100) : null
+  // Prev period budgets for delta comparisons
+  let prevPeriodBudgets = []
+  if (period === 'thismonth') {
+    prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(prevYM2))
+  } else if (period === 'prevmonth') {
+    const twoAgo = (() => { const d = new Date(now.getFullYear(), now.getMonth() - 2, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
+    prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(twoAgo))
+  } else if (period === '3m') {
+    const s3 = new Date(now.getFullYear(), now.getMonth() - 6, 1)
+    const e3 = new Date(now.getFullYear(), now.getMonth() - 3, 1)
+    prevPeriodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s3 && new Date(b.date) < e3)
+  } else if (period === '6m') {
+    const s6 = new Date(now.getFullYear(), now.getMonth() - 12, 1)
+    const e6 = new Date(now.getFullYear(), now.getMonth() - 6, 1)
+    prevPeriodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s6 && new Date(b.date) < e6)
+  } else if (period === 'year') {
+    prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(String(now.getFullYear() - 1)))
+  }
+  const prevPagados = prevPeriodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
+  const prevTotBudgeted = prevPeriodBudgets.reduce((s, b) => s + (b.total || 0), 0)
+  const prevTotCobrado = prevPagados.reduce((s, b) => s + cobrado(b), 0)
+  const deltaBrutas = prevTotBudgeted > 0 ? Math.round((totBudgeted - prevTotBudgeted) / prevTotBudgeted * 100) : null
+  const deltaCaja = prevTotCobrado > 0 ? Math.round((totCobrado - prevTotCobrado) / prevTotCobrado * 100) : null
 
-  // Income bars (last N months based on period) — dinero cobrado
+  // Insight banner
+  const insightIcon = deltaBrutas !== null && deltaBrutas > 20 ? 'fa-rocket' : deltaBrutas !== null && deltaBrutas > 0 ? 'fa-chart-line' : deltaBrutas !== null && deltaBrutas < -20 ? 'fa-triangle-exclamation' : deltaBrutas !== null && deltaBrutas < 0 ? 'fa-arrow-trend-down' : convRate !== '—' && parseInt(convRate) >= 60 ? 'fa-star' : periodBudgets.length === 0 ? 'fa-circle-info' : 'fa-chart-bar'
+  const insightColor = deltaBrutas !== null && deltaBrutas > 0 ? 'var(--green)' : deltaBrutas !== null && deltaBrutas < 0 ? 'var(--amber)' : 'var(--brand)'
+  const insightText = periodBudgets.length === 0
+    ? 'Todavía no hay datos para este período. Registrá presupuestos para ver tus métricas.'
+    : deltaBrutas !== null && deltaBrutas > 20
+      ? `Las ventas crecieron un ${deltaBrutas}% respecto al período anterior. ¡Excelente momento!`
+      : deltaBrutas !== null && deltaBrutas > 0
+        ? `Crecimiento del ${deltaBrutas}% en ventas vs. el período anterior. Buen ritmo.`
+        : deltaBrutas !== null && deltaBrutas < -20
+          ? `Las ventas bajaron un ${Math.abs(deltaBrutas)}% vs. el período anterior. Momento de reforzar el seguimiento.`
+          : deltaBrutas !== null && deltaBrutas < 0
+            ? `Leve caída del ${Math.abs(deltaBrutas)}% en ventas respecto al período anterior.`
+            : convRate !== '—' && parseInt(convRate) >= 60
+              ? `Conversión del ${convRate} — cerrás más de la mitad de los presupuestos que enviás.`
+              : `${periodBudgets.length} presupuesto${periodBudgets.length !== 1 ? 's' : ''} en el período · Ticket promedio ${money(avgTicket)} · Conversión ${convRate}`
+
+  // Chart data — weekly (S1-S4) for thismonth/prevmonth, monthly otherwise
   const barMonths = period === '3m' ? 3 : period === 'year' ? 12 : 6
-  const incomeData = []
-  for (let i = barMonths - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    const val = budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + cobrado(b), 0)
-    incomeData.push({ lbl: MONTHS[d.getMonth()], val })
+  const isWeekly = period === 'thismonth' || period === 'prevmonth'
+  let chartData = []
+  let prevChartData = []
+  const wks = [{ lbl: 'S1', f: 1, t: 7 }, { lbl: 'S2', f: 8, t: 14 }, { lbl: 'S3', f: 15, t: 21 }, { lbl: 'S4', f: 22, t: 31 }]
+  if (period === 'thismonth') {
+    const [cy, cmo] = [now.getFullYear(), now.getMonth()]
+    const cymStr = `${cy}-${String(cmo + 1).padStart(2, '0')}`
+    const [py, pmo] = cmo === 0 ? [cy - 1, 11] : [cy, cmo - 1]
+    const pymStr = `${py}-${String(pmo + 1).padStart(2, '0')}`
+    chartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(cymStr)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
+    prevChartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(pymStr)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
+  } else if (period === 'prevmonth') {
+    const pmd = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const pymStr1 = `${pmd.getFullYear()}-${String(pmd.getMonth() + 1).padStart(2, '0')}`
+    const pmd2 = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    const pymStr2 = `${pmd2.getFullYear()}-${String(pmd2.getMonth() + 1).padStart(2, '0')}`
+    chartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(pymStr1)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
+    prevChartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(pymStr2)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
+  } else {
+    for (let i = barMonths - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      chartData.push({ lbl: MONTHS[d.getMonth()], val: budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + cobrado(b), 0) })
+      const pd = new Date(now.getFullYear(), now.getMonth() - i - barMonths, 1)
+      const pkey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`
+      prevChartData.push({ lbl: MONTHS[pd.getMonth()], val: budgets.filter(b => b.date?.startsWith(pkey)).reduce((s, b) => s + cobrado(b), 0) })
+    }
   }
 
   const gainData = []
@@ -433,9 +499,7 @@ export default function Historial() {
   const topClients = Object.entries(byClient).sort((a, b) => b[1] - a[1]).slice(0, 3)
 
   // Analysis metrics
-  const totBudgeted = periodBudgets.reduce((s, b) => s + (b.total || 0), 0)
   const totGain = pagados.reduce((s, b) => s + ganCobrada(b), 0)
-  const avgTicket = pagados.length ? Math.round(totCobrado / pagados.length) : 0
 
   const editB = (id) => nav(`/presupuesto/${id}`)
   const copyWA = (b) => {
@@ -592,16 +656,20 @@ export default function Historial() {
             </div>
           ) : (
             <div className="bento sk-fade-in">
-              <KpiCard label="Ingresos" value={money(totCobrado)} />
-              <KpiCard label="Ventas Mes" value={money(mInc)} delta={deltaInc} />
-              <KpiCard label="Rentabilidad" value={money(mGain)} delta={hidden ? undefined : deltaGain} isKey />
+              <div className="bento-wide" style={{ padding: '12px 20px', background: insightColor + '12', borderRadius: 12, border: `1px solid ${insightColor}30`, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <i className={`fa ${insightIcon}`} style={{ fontSize: 16, color: insightColor, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: 'var(--txt)', fontWeight: 500, lineHeight: 1.5 }}>{insightText}</span>
+              </div>
+              <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} />
+              <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} isKey />
+              <KpiCard label="Ticket Prom." value={avgTicket > 0 ? money(avgTicket) : '—'} />
               <KpiCard label="Conversión" value={convRate} />
 
               <div className="bento-chart bento-wide">
                 <div className="card-header">
-                  <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {PERIODS.find(p => p.key === period)?.label}</span>
+                  <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isWeekly ? 'por semana · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
                 </div>
-                <BarChart data={incomeData} />
+                <BarChart data={chartData} prevData={prevChartData} />
               </div>
 
               {/* ── Estado de presupuestos: Donut compacto ── */}
