@@ -3,31 +3,29 @@ import { useAuth } from '../../context/AuthContext'
 
 const SOLUTIONS = [
   {
-    icon: 'fa-gift',
-    title: 'Presupuestos que convierten',
-    desc: 'Diseñá y enviá propuestas profesionales en segundos, desde cualquier dispositivo.',
+    icon: 'fa-receipt',
+    title: 'Pedidos ágiles',
+    desc: 'Crea presupuestos y cobros en segundos.',
   },
   {
-    icon: 'fa-users',
-    title: 'Relaciones impecables',
-    desc: 'Centralizá el historial de tus clientes y proveedores para una gestión sin errores.',
+    icon: 'fa-boxes-stacked',
+    title: 'Stock inteligente',
+    desc: 'Controla cada unidad y variante al instante.',
   },
   {
-    icon: 'fa-layer-group',
-    title: 'Control total de procesos',
-    desc: 'Supervisá cada etapa de tu operativa y asegurate de que nada se quede en el camino.',
+    icon: 'fa-truck-fast',
+    title: 'Seguimiento total',
+    desc: 'Supervisa cada entrega y asegura la felicidad del cliente.',
   },
   {
     icon: 'fa-chart-line',
-    title: 'Métricas para crecer',
-    desc: 'Visualizá la salud de tu negocio con reportes de rentabilidad e ingresos en tiempo real.',
+    title: 'Resultados claros',
+    desc: 'Visualiza tu rentabilidad y haz crecer tu pasión.',
   },
 ]
 
-const AnmaLogo = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" fill="none" viewBox="0 0 48 46">
-    <path fill="white" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
-  </svg>
+const SparkleIcon = () => (
+  <i className="fa fa-sparkles" style={{ fontSize: 34, color: '#fff' }} />
 )
 
 export default function Login() {
@@ -229,11 +227,10 @@ export default function Login() {
           <div className="lp2-orb lp2-orb3" />
 
           <div className="lp2-hero">
-            <div className="lp2-logo-wrap"><AnmaLogo /></div>
-            <h1 className="lp2-h1">ANMA: <em>El centro de mando</em><br />de tu negocio.</h1>
+            <div className="lp2-logo-wrap"><SparkleIcon /></div>
+            <h1 className="lp2-h1">ANMA: <em>El motor detrás</em><br />de cada regalo.</h1>
             <p className="lp2-sub">
-              Presupuestos, seguimiento y resultados.<br />
-              Toda tu operativa bajo control, en un solo lugar.
+              Toda tu operativa bajo control<br />en una sola plataforma.
             </p>
             <div className="lp2-cards">
               {SOLUTIONS.map((s) => (
