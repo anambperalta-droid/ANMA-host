@@ -85,7 +85,7 @@ export default function Login() {
         .lp2-orb3 { width:180px;height:180px;top:42%;left:8%;
           background:radial-gradient(circle,rgba(167,139,250,.14) 0%,transparent 68%); }
 
-        .lp2-hero { position:relative;z-index:1;text-align:center;max-width:430px;width:100%; }
+        .lp2-hero { position:relative;z-index:1;text-align:center;max-width:560px;width:100%; }
 
         .lp2-logo-wrap {
           width:86px;height:86px;border-radius:22px;
@@ -112,14 +112,14 @@ export default function Login() {
           animation:lp-fade-up .5s ease forwards;animation-delay:.52s;opacity:0;
         }
 
-        .lp2-cards { display:flex;flex-direction:column;gap:0; }
+        .lp2-cards { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
 
         .lp2-card {
-          display:flex;align-items:flex-start;gap:13px;
+          display:flex;flex-direction:column;align-items:flex-start;gap:10px;
           background:rgba(255,255,255,.07);
           backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
           border:1px solid rgba(255,255,255,.11);
-          border-radius:14px;padding:13px 15px;margin-bottom:9px;text-align:left;
+          border-radius:14px;padding:16px;text-align:left;
           transition:transform .22s ease,background .22s ease,border-color .22s ease;
           opacity:0;
         }
@@ -145,8 +145,8 @@ export default function Login() {
           background:rgba(5,150,105,.32);
           box-shadow:0 0 18px rgba(52,211,153,.32);
         }
-        .lp2-card-t { font-size:12.5px;font-weight:700;color:#fff;margin-bottom:3px;letter-spacing:-.15px; }
-        .lp2-card-s { font-size:11px;color:rgba(255,255,255,.48);line-height:1.55; }
+        .lp2-card-t { font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-.15px; }
+        .lp2-card-s { font-size:13px;color:rgba(255,255,255,.52);line-height:1.55; }
 
         /* ── RIGHT ── */
         .lp2-right {
@@ -228,7 +228,7 @@ export default function Login() {
 
           <div className="lp2-hero">
             <div className="lp2-logo-wrap"><SparkleIcon /></div>
-            <h1 className="lp2-h1">ANMA: <em>El motor detrás</em><br />de cada regalo.</h1>
+            <h1 className="lp2-h1">ANMA <em>El motor detrás</em><br />de cada regalo.</h1>
             <p className="lp2-sub">
               Toda tu operativa bajo control<br />en una sola plataforma.
             </p>
