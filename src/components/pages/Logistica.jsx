@@ -12,6 +12,23 @@ const SERVICE_MULTIPLIER = {
 
 const CARRIERS = ['Correo Argentino', 'Andreani', 'OCA', 'Vía Cargo', 'Urbano', 'Loogistica', 'Rapifargo', 'En mano']
 
+const CARRIER_TRACKING = {
+  'Correo Argentino': c => `https://www.correoargentino.com.ar/formularios/e-commerce?id=${c}`,
+  'Andreani':         c => `https://www.andreani.com/#!/rastreoenvios?codigoAndreani=${c}`,
+  'OCA':              c => `https://www.oca.com.ar/rastrear/?numero=${c}`,
+  'Vía Cargo':        c => `https://www.viacargo.com.ar/web/seguimiento?nro=${c}`,
+  'Urbano':           c => `https://www.urbano.com.ar/home/seguimiento/${c}`,
+  'Loogistica':       c => `https://app.loogistica.com/track/${c}`,
+  'Rapifargo':        c => `https://www.rapifargo.com.ar/seguimiento?guia=${c}`,
+}
+
+const getTrackingUrl = (carrier, code) => {
+  if (!code) return null
+  if (code.startsWith('http')) return code
+  const fn = CARRIER_TRACKING[carrier]
+  return fn ? fn(encodeURIComponent(code)) : `https://www.google.com/search?q=${encodeURIComponent(`${carrier || ''} ${code} seguimiento envio`)}`
+}
+
 export default function Logistica() {
   const { get, saveEntity, deleteEntity } = useData()
   const toast = useToast()
@@ -83,6 +100,19 @@ export default function Logistica() {
     return Math.round(base * mult)
   }, [form.city, form.weight, form.service, tariffs])
 
+  // Fecha estimada de llegada (días hábiles de la tarifa + fecha del envío)
+  const estimatedArrival = useMemo(() => {
+    if (!form.city || !form.date) return null
+    const q = form.city.toLowerCase()
+    const t = tariffs.find(x => x.zone.toLowerCase().includes(q) || q.includes(x.zone.toLowerCase()))
+    if (!t || !t.days) return null
+    const d = new Date(form.date); d.setDate(d.getDate() + Number(t.days))
+    return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+  }, [form.city, form.date, tariffs])
+
+  // URL de seguimiento computada según empresa + código
+  const trackingLink = useMemo(() => getTrackingUrl(form.carrier, form.trackingUrl), [form.carrier, form.trackingUrl])
+
   // Ganancia neta del presupuesto descontando el flete (solo si "Incluido en precio")
   const marginImpact = useMemo(() => {
     if (form.payer !== 'Incluido en precio' || !form.budgetId || !form.freight) return null
@@ -97,7 +127,7 @@ export default function Logistica() {
     const phone = bud?.wa || ''
     if (!phone) { toast('El presupuesto no tiene número de WhatsApp cargado.', 'in'); return }
     const num = phone.replace(/\D/g, '')
-    const msg = `Hola ${form.client || ''}! Tu pedido está en camino 🚚\n\nRemito: ${form.remito || '—'}\nServicio: ${form.service}${form.trackingUrl ? `\n\nSeguí tu envío acá:\n${form.trackingUrl}` : ''}\n\nCualquier consulta, estamos a disposición!`
+    const msg = `Hola ${form.client || ''}! Tu pedido está en camino 🚚\n\nRemito: ${form.remito || '—'}\nEmpresa: ${form.carrier || form.service}${trackingLink ? `\n\nSeguí tu envío acá:\n${trackingLink}` : ''}\n\nCualquier consulta, estamos a disposición!`
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
@@ -226,6 +256,9 @@ export default function Logistica() {
                       <td>{statusBadge(s.status)}</td>
                       <td>
                         <div className="acts">
+                          {s.trackingUrl && (
+                            <button className="act" style={{ color: '#3B82F6' }} onClick={() => window.open(getTrackingUrl(s.carrier, s.trackingUrl), '_blank')} title="Ver seguimiento"><i className="fa fa-location-arrow" /></button>
+                          )}
                           <button className="act edit" onClick={() => openShip(s)} title="Editar"><i className="fa fa-pen" /></button>
                           <button className="act del" onClick={() => delShip(s.id)} title="Eliminar"><i className="fa fa-trash" /></button>
                         </div>
@@ -308,7 +341,11 @@ export default function Logistica() {
                   </button>
                 </div>
               )) : (
-                <div style={{ fontSize: 13, color: 'var(--txt3)', padding: 12 }}>Sin tarifas configuradas</div>
+                <div style={{ padding: '16px 12px', textAlign: 'center' }}>
+                  <i className="fa fa-map-location-dot" style={{ fontSize: 24, color: 'var(--txt4)', marginBottom: 8, display: 'block' }} />
+                  <div style={{ fontSize: 13, color: 'var(--txt3)', marginBottom: 10 }}>Sin tarifas configuradas</div>
+                  <div style={{ fontSize: 11, color: 'var(--txt4)' }}>← Usá el formulario de la izquierda para agregar tu primera zona</div>
+                </div>
               )}
             </div>
           </div>
@@ -450,8 +487,15 @@ export default function Logistica() {
                   <datalist id="carriers-list">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
                 </div>
                 <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>URL de seguimiento</label>
-                  <input type="text" value={form.trackingUrl || ''} onChange={e => setF('trackingUrl', e.target.value)} placeholder="https://tracking.correoargentino.com.ar/..." />
+                  <label>N° Seguimiento / URL</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input type="text" value={form.trackingUrl || ''} onChange={e => setF('trackingUrl', e.target.value)} placeholder="Código o URL de tracking…" style={{ flex: 1 }} />
+                    {trackingLink && (
+                      <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0, padding: '0 10px' }} onClick={() => window.open(trackingLink, '_blank')} title="Abrir seguimiento en línea">
+                        <i className="fa fa-arrow-up-right-from-square" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -476,6 +520,12 @@ export default function Logistica() {
                 <label>Dirección de entrega</label>
                 <input type="text" value={form.addr || ''} onChange={e => setF('addr', e.target.value)} placeholder="Av. Colón 1234, B° Centro" />
               </div>
+              {estimatedArrival && (
+                <div style={{ marginTop: 10, background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#065F46', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <i className="fa fa-calendar-check" style={{ color: '#16A34A' }} />
+                  Llegada estimada: <b style={{ textTransform: 'capitalize' }}>{estimatedArrival}</b>
+                </div>
+              )}
             </div>
 
             {/* ── BLOQUE 3: Paquete ── */}
@@ -553,7 +603,7 @@ export default function Logistica() {
 
             <div className="mfooter">
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
-              {form.trackingUrl && (
+              {trackingLink && (
                 <button
                   className="btn btn-secondary"
                   style={{ background: '#25D366', color: '#fff', border: 'none' }}

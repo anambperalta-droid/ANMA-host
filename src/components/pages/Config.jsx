@@ -9,7 +9,16 @@ import { SITES, CURRENT_SITE, sendInvite } from '../../lib/invites'
 
 function ListEditor({ label, items, onAdd, onRemove }) {
   const [val, setVal] = useState('')
-  const add = () => { if (val.trim()) { onAdd(val.trim()); setVal('') } }
+  const [dupErr, setDupErr] = useState(false)
+  const add = () => {
+    if (!val.trim()) return
+    if (items.some(i => i.toLowerCase() === val.trim().toLowerCase())) {
+      setDupErr(true)
+      setTimeout(() => setDupErr(false), 2500)
+      return
+    }
+    onAdd(val.trim()); setVal('')
+  }
   return (
     <div className="card">
       <div className="card-title" style={{ marginBottom: 14 }}>{label}</div>
@@ -20,11 +29,18 @@ function ListEditor({ label, items, onAdd, onRemove }) {
         </div>
       ))}
       <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        <input type="text" value={val} onChange={e => setVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()}
-          style={{ flex: 1, padding: '8px 11px', border: '2px solid var(--border)', borderRadius: 9, fontFamily: 'inherit', fontSize: 13, outline: 'none' }}
+        <input type="text" value={val}
+          onChange={e => { setVal(e.target.value); setDupErr(false) }}
+          onKeyDown={e => e.key === 'Enter' && add()}
+          style={{ flex: 1, padding: '8px 11px', border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`, borderRadius: 9, fontFamily: 'inherit', fontSize: 13, outline: 'none', transition: 'border-color .2s' }}
           placeholder={`Nueva ${label.toLowerCase().replace(/s$/, '')}...`} />
         <button className="btn btn-primary btn-xs" onClick={add}><i className="fa fa-plus" /></button>
       </div>
+      {dupErr && (
+        <div style={{ color: '#DC2626', fontSize: 11, marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <i className="fa fa-triangle-exclamation" /> Ya existe en la lista
+        </div>
+      )}
     </div>
   )
 }
