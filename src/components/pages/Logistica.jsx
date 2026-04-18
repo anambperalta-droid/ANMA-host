@@ -3,6 +3,15 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
 
+const SERVICE_MULTIPLIER = {
+  'Estándar': 1,
+  'Urgente / Express': 1.6,
+  'Puerta a puerta': 1.3,
+  'Entrega en sucursal': 0.85,
+}
+
+const CARRIERS = ['Correo Argentino', 'Andreani', 'OCA', 'Vía Cargo', 'Urbano', 'Loogistica', 'Rapifargo', 'En mano']
+
 export default function Logistica() {
   const { get, saveEntity, deleteEntity } = useData()
   const toast = useToast()
@@ -11,7 +20,7 @@ export default function Logistica() {
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState({})
-  const [tzForm, setTzForm] = useState({ zone: '', ppkg: '', min: '', days: '', notes: '' })
+  const [tzForm, setTzForm] = useState({ zone: '', carrier: '', ppkg: '', min: '', days: '', notes: '' })
   const [calcZone, setCalcZone] = useState('')
   const [calcKg, setCalcKg] = useState('')
 
@@ -43,35 +52,54 @@ export default function Logistica() {
     setForm(s || {
       remito: '', date: new Date().toISOString().slice(0, 10),
       status: 'Preparando', budgetId: '', client: '', city: '', addr: '',
-      bulks: 1, weight: '', service: 'Estándar', freight: 0,
-      payer: 'Mi negocio', notes: ''
+      bulks: 1, weight: '', carrier: '', service: 'Estándar', freight: 0,
+      payer: 'Mi negocio', notes: '', trackingUrl: ''
     })
     setModal(true)
   }
 
-  // Auto-fill desde presupuesto
+  // Auto-fill desde presupuesto — siempre sobreescribe con datos del presupuesto
   const onBudgetChange = (budgetId) => {
-    setF('budgetId', budgetId ? Number(budgetId) : '')
-    if (!budgetId) return
+    if (!budgetId) { setF('budgetId', ''); return }
     const bud = budgets.find(b => b.id === Number(budgetId))
-    if (!bud) return
+    if (!bud) { setF('budgetId', Number(budgetId)); return }
     setForm(f => ({
       ...f,
       budgetId: Number(budgetId),
-      client: f.client || bud.contact || bud.company || '',
-      city:   f.city   || bud.city   || '',
-      addr:   f.addr   || bud.addr   || '',
+      client: bud.contact || bud.company || f.client || '',
+      city:   bud.city   || f.city   || '',
+      addr:   bud.addr   || f.addr   || '',
     }))
   }
 
-  // Sugerencia de flete según ciudad/zona en el modal
+  // Sugerencia de flete según ciudad/zona + multiplicador de servicio
   const fleteEstimado = useMemo(() => {
     if (!form.city || !form.weight) return null
     const q = form.city.toLowerCase()
     const t = tariffs.find(x => x.zone.toLowerCase().includes(q) || q.includes(x.zone.toLowerCase()))
     if (!t) return null
-    return Math.max(t.min || 0, (t.ppkg || 0) * Number(form.weight))
-  }, [form.city, form.weight, tariffs])
+    const base = Math.max(t.min || 0, (t.ppkg || 0) * Number(form.weight))
+    const mult = SERVICE_MULTIPLIER[form.service] || 1
+    return Math.round(base * mult)
+  }, [form.city, form.weight, form.service, tariffs])
+
+  // Ganancia neta del presupuesto descontando el flete (solo si "Incluido en precio")
+  const marginImpact = useMemo(() => {
+    if (form.payer !== 'Incluido en precio' || !form.budgetId || !form.freight) return null
+    const bud = budgets.find(b => b.id === form.budgetId)
+    if (!bud) return null
+    return (bud.totalGain || 0) - (form.freight || 0)
+  }, [form.payer, form.budgetId, form.freight, budgets])
+
+  // Enviar link de seguimiento por WA
+  const sendTrackingWA = () => {
+    const bud = budgets.find(b => b.id === form.budgetId)
+    const phone = bud?.wa || ''
+    if (!phone) { toast('El presupuesto no tiene número de WhatsApp cargado.', 'in'); return }
+    const num = phone.replace(/\D/g, '')
+    const msg = `Hola ${form.client || ''}! Tu pedido está en camino 🚚\n\nRemito: ${form.remito || '—'}\nServicio: ${form.service}${form.trackingUrl ? `\n\nSeguí tu envío acá:\n${form.trackingUrl}` : ''}\n\nCualquier consulta, estamos a disposición!`
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
+  }
 
   const saveShip = () => {
     if (!form.remito && !form.client) { toast('Completá remito o cliente.', 'er'); return }
@@ -85,7 +113,7 @@ export default function Logistica() {
   const addTariff = () => {
     if (!tzForm.zone) { toast('Ingresá la zona.', 'er'); return }
     saveEntity('tariffs', { ...tzForm, ppkg: Number(tzForm.ppkg), min: Number(tzForm.min), days: Number(tzForm.days) })
-    setTzForm({ zone: '', ppkg: '', min: '', days: '', notes: '' })
+    setTzForm({ zone: '', carrier: '', ppkg: '', min: '', days: '', notes: '' })
     toast('Tarifa agregada', 'ok')
   }
   const delTariff = (id) => { deleteEntity('tariffs', id); toast('Tarifa eliminada', 'in') }
@@ -175,7 +203,7 @@ export default function Logistica() {
               <thead>
                 <tr>
                   <th>Remito</th><th>Fecha</th><th>Cliente</th><th>Ciudad</th>
-                  <th>Presupuesto</th><th>Servicio</th><th>Bultos</th><th>Peso</th>
+                  <th>Presupuesto</th><th>Empresa</th><th>Servicio</th><th>Bultos</th><th>Peso</th>
                   <th>Costo</th><th>Paga</th><th>Estado</th><th>Acciones</th>
                 </tr>
               </thead>
@@ -189,6 +217,7 @@ export default function Logistica() {
                       <td>{s.client || '—'}</td>
                       <td>{s.city || '—'}</td>
                       <td>{bud?.num || '—'}</td>
+                      <td>{s.carrier || '—'}</td>
                       <td>{s.service}</td>
                       <td>{s.bulks}</td>
                       <td>{s.weight ? `${s.weight} kg` : '—'}</td>
@@ -205,7 +234,7 @@ export default function Logistica() {
                   )
                 }) : (
                   <tr>
-                    <td colSpan={12}>
+                    <td colSpan={13}>
                       <div className="empty">
                         <div className="ico"><i className="fa fa-truck-fast" /></div>
                         <p>{search || sFilter !== 'all' ? 'Sin resultados para el filtro aplicado' : 'Sin envíos registrados'}</p>
@@ -236,6 +265,11 @@ export default function Logistica() {
                   <input type="text" value={tzForm.zone} onChange={e => setTzForm(f => ({ ...f, zone: e.target.value }))} placeholder="Córdoba Capital" />
                 </div>
                 <div className="fg">
+                  <label>Empresa de envío</label>
+                  <input type="text" list="carriers-list-tz" value={tzForm.carrier || ''} onChange={e => setTzForm(f => ({ ...f, carrier: e.target.value }))} placeholder="Correo Argentino…" autoComplete="off" />
+                  <datalist id="carriers-list-tz">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
+                </div>
+                <div className="fg">
                   <label>Precio por kg ($)</label>
                   <input type="number" value={tzForm.ppkg} onChange={e => setTzForm(f => ({ ...f, ppkg: e.target.value }))} placeholder="0" />
                 </div>
@@ -264,6 +298,7 @@ export default function Logistica() {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>{t.zone}</div>
                     <div style={{ fontSize: 11, color: 'var(--txt3)' }}>
+                      {t.carrier && <span style={{ fontWeight: 600, color: 'var(--txt2)' }}>{t.carrier} · </span>}
                       {fmt(t.ppkg)}/kg · mín {fmt(t.min)} · {t.days} día{t.days !== 1 ? 's' : ''}
                       {t.notes ? ` · ${t.notes}` : ''}
                     </div>
@@ -374,95 +409,141 @@ export default function Logistica() {
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
 
-            <div className="grid2">
-              <div className="fg">
-                <label>Presupuesto asociado</label>
-                <select value={form.budgetId || ''} onChange={e => onBudgetChange(e.target.value)}>
-                  <option value="">Sin asociar</option>
-                  {budgets.map(b => <option key={b.id} value={b.id}>{b.num} — {b.company || b.contact}</option>)}
-                </select>
+            {/* ── BLOQUE 1: Datos del envío ── */}
+            <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10 }}>
+                <i className="fa fa-file-lines" style={{ marginRight: 6, color: 'var(--brand)' }} />Datos del envío
               </div>
-              <div className="fg">
-                <label>N° Remito</label>
-                <input type="text" value={form.remito || ''} onChange={e => setF('remito', e.target.value)} placeholder="VC-001234" />
-              </div>
-              <div className="fg">
-                <label>Fecha</label>
-                <input type="date" value={form.date || ''} onChange={e => setF('date', e.target.value)} />
-              </div>
-              <div className="fg">
-                <label>Estado</label>
-                <select value={form.status || 'Preparando'} onChange={e => setF('status', e.target.value)}>
-                  {statusList.map(s => <option key={s}>{s}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid2">
-              <div className="fg">
-                <label>Cliente</label>
-                <input type="text" value={form.client || ''} onChange={e => setF('client', e.target.value)} placeholder="Nombre del cliente" />
-              </div>
-              <div className="fg">
-                <label>Ciudad destino</label>
-                <input type="text" value={form.city || ''} onChange={e => setF('city', e.target.value)} placeholder="Córdoba Capital" />
-              </div>
-            </div>
-
-            <div className="fg">
-              <label>Dirección de entrega</label>
-              <input type="text" value={form.addr || ''} onChange={e => setF('addr', e.target.value)} placeholder="Av. Colón 1234, B° Centro" />
-            </div>
-
-            <div className="grid3">
-              <div className="fg">
-                <label>Bultos</label>
-                <input type="number" value={form.bulks || 1} onChange={e => setF('bulks', Number(e.target.value))} min="1" />
-              </div>
-              <div className="fg">
-                <label>Peso (kg)</label>
-                <input type="number" value={form.weight || ''} onChange={e => setF('weight', e.target.value)} placeholder="0" step="0.1" />
-              </div>
-              <div className="fg">
-                <label>Servicio</label>
-                <select value={form.service || 'Estándar'} onChange={e => setF('service', e.target.value)}>
-                  <option>Estándar</option>
-                  <option>Urgente / Express</option>
-                  <option>Puerta a puerta</option>
-                  <option>Entrega en sucursal</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Sugerencia de flete */}
-            {fleteEstimado !== null && (
-              <div style={{ background: 'var(--acento-xlt)', border: '1.5px solid var(--acento)', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
-                  <i className="fa fa-calculator" style={{ marginRight: 6, color: 'var(--acento)' }} />
-                  Flete estimado según tarifa
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--acento)' }}>{fmt(fleteEstimado)}</span>
-                  <button className="btn btn-primary btn-sm" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => setF('freight', fleteEstimado)}>
-                    Usar
-                  </button>
+              <div className="grid2">
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>Presupuesto asociado</label>
+                  <select value={form.budgetId || ''} onChange={e => onBudgetChange(e.target.value)}>
+                    <option value="">Sin asociar</option>
+                    {budgets.map(b => <option key={b.id} value={b.id}>{b.num} — {b.company || b.contact}</option>)}
+                  </select>
+                </div>
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>N° Remito</label>
+                  <input type="text" value={form.remito || ''} onChange={e => setF('remito', e.target.value)} placeholder="VC-001234" />
+                </div>
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>Fecha</label>
+                  <input type="date" value={form.date || ''} onChange={e => setF('date', e.target.value)} />
+                </div>
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>Estado</label>
+                  <select value={form.status || 'Preparando'} onChange={e => setF('status', e.target.value)}>
+                    {statusList.map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>Servicio</label>
+                  <select value={form.service || 'Estándar'} onChange={e => setF('service', e.target.value)}>
+                    {Object.keys(SERVICE_MULTIPLIER).map(s => (
+                      <option key={s}>{s}{SERVICE_MULTIPLIER[s] !== 1 ? ` (×${SERVICE_MULTIPLIER[s]})` : ''}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>Empresa de envío</label>
+                  <input type="text" list="carriers-list" value={form.carrier || ''} onChange={e => setF('carrier', e.target.value)} placeholder="Correo Argentino, Andreani…" autoComplete="off" />
+                  <datalist id="carriers-list">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
+                </div>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>URL de seguimiento</label>
+                  <input type="text" value={form.trackingUrl || ''} onChange={e => setF('trackingUrl', e.target.value)} placeholder="https://tracking.correoargentino.com.ar/..." />
                 </div>
               </div>
-            )}
+            </div>
 
-            <div className="grid2">
-              <div className="fg">
-                <label>Costo flete ($)</label>
-                <input type="number" value={form.freight || 0} onChange={e => setF('freight', Number(e.target.value))} />
+            {/* ── BLOQUE 2: Destinatario ── */}
+            <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <i className="fa fa-location-dot" style={{ color: 'var(--brand)' }} />Destinatario
+                {form.budgetId && <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', background: '#F0FDF4', padding: '1px 8px', borderRadius: 10 }}>Auto-completado del presupuesto</span>}
               </div>
-              <div className="fg">
-                <label>¿Quién paga?</label>
-                <select value={form.payer || 'Mi negocio'} onChange={e => setF('payer', e.target.value)}>
-                  <option>Mi negocio</option>
-                  <option>El cliente</option>
-                  <option>Incluido en precio</option>
-                </select>
+              <div className="grid2">
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>Cliente</label>
+                  <input type="text" value={form.client || ''} onChange={e => setF('client', e.target.value)} placeholder="Nombre del cliente" />
+                </div>
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label>Ciudad destino</label>
+                  <input type="text" value={form.city || ''} onChange={e => setF('city', e.target.value)} placeholder="Córdoba Capital" />
+                </div>
               </div>
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label>Dirección de entrega</label>
+                <input type="text" value={form.addr || ''} onChange={e => setF('addr', e.target.value)} placeholder="Av. Colón 1234, B° Centro" />
+              </div>
+            </div>
+
+            {/* ── BLOQUE 3: Paquete ── */}
+            <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10 }}>
+                <i className="fa fa-box" style={{ marginRight: 6, color: 'var(--brand)' }} />Paquete
+              </div>
+              <div className="grid2">
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>Bultos</label>
+                  <input type="number" value={form.bulks || 1} onChange={e => setF('bulks', Number(e.target.value))} min="1" />
+                </div>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>Peso (kg)</label>
+                  <input type="number" value={form.weight || ''} onChange={e => setF('weight', e.target.value)} placeholder="0" step="0.1" />
+                </div>
+              </div>
+            </div>
+
+            {/* ── BLOQUE 4: Finanzas ── */}
+            <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10 }}>
+                <i className="fa fa-dollar-sign" style={{ marginRight: 6, color: 'var(--brand)' }} />Finanzas
+              </div>
+              {fleteEstimado !== null && (
+                <div style={{ background: '#EFF6FF', border: '1.5px solid #93C5FD', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
+                    <i className="fa fa-calculator" style={{ marginRight: 6, color: '#3B82F6' }} />
+                    Flete estimado · <b>{form.service}</b>
+                    {(SERVICE_MULTIPLIER[form.service] || 1) !== 1 && (
+                      <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#3B82F6', background: '#DBEAFE', padding: '1px 6px', borderRadius: 8 }}>
+                        ×{SERVICE_MULTIPLIER[form.service]}
+                      </span>
+                    )}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: '#1D4ED8' }}>{fmt(fleteEstimado)}</span>
+                    <button className="btn btn-primary btn-sm" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => setF('freight', fleteEstimado)}>
+                      Usar
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="grid2">
+                <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
+                  <label>Costo flete ($)</label>
+                  <input type="number" value={form.freight || 0} onChange={e => setF('freight', Number(e.target.value))} />
+                </div>
+                <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
+                  <label>¿Quién paga el flete?</label>
+                  <select value={form.payer || 'Mi negocio'} onChange={e => setF('payer', e.target.value)}>
+                    <option>Mi negocio</option>
+                    <option>El cliente</option>
+                    <option>Incluido en precio</option>
+                  </select>
+                </div>
+              </div>
+              {marginImpact !== null && (
+                <div style={{ background: marginImpact >= 0 ? '#F0FDF4' : '#FFF1F2', border: `1.5px solid ${marginImpact >= 0 ? '#86EFAC' : '#FCA5A5'}`, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
+                    <i className="fa fa-chart-line" style={{ marginRight: 6, color: marginImpact >= 0 ? '#16A34A' : '#DC2626' }} />
+                    Ganancia neta del presupuesto <span style={{ fontSize: 10, color: 'var(--txt3)' }}>(después del flete)</span>
+                  </span>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: marginImpact >= 0 ? '#16A34A' : '#DC2626' }}>
+                    {fmt(marginImpact)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="fg">
@@ -472,6 +553,16 @@ export default function Logistica() {
 
             <div className="mfooter">
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
+              {form.trackingUrl && (
+                <button
+                  className="btn btn-secondary"
+                  style={{ background: '#25D366', color: '#fff', border: 'none' }}
+                  onClick={sendTrackingWA}
+                  title="Enviar link de seguimiento al cliente por WhatsApp"
+                >
+                  <i className="fa-brands fa-whatsapp" /> Enviar seguimiento
+                </button>
+              )}
               <button className="btn btn-primary" onClick={saveShip}>
                 <i className="fa fa-floppy-disk" /> Guardar envío
               </button>

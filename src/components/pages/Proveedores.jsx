@@ -149,15 +149,15 @@ export default function Proveedores() {
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   Productos
                   <button
-                    title={showLastUse ? 'Ocultar última actividad' : 'Mostrar última actividad'}
+                    title={showLastUse ? 'Ocultar último pedido' : 'Mostrar último pedido'}
                     onClick={e => { e.stopPropagation(); setShowLastUse(v => !v) }}
                     style={{ background: showLastUse ? 'var(--brand)' : 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, color: showLastUse ? '#fff' : 'var(--txt3)', fontSize: 9, padding: '2px 6px', cursor: 'pointer', fontWeight: 700, transition: 'all .2s' }}
                   >
-                    <i className="fa fa-clock" /> últ. uso
+                    <i className="fa fa-clock" /> últ. pedido
                   </button>
                 </span>
               </th>
-              {showLastUse && <th>Últ. uso</th>}
+              {showLastUse && <th>Últ. pedido</th>}
               <th>Acciones</th>
             </tr></thead>
             <tbody>

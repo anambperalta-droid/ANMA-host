@@ -25,7 +25,7 @@ const SOLUTIONS = [
 ]
 
 const SparkleIcon = () => (
-  <i className="fa fa-sparkles" style={{ fontSize: 34, color: '#fff' }} />
+  <i className="fa fa-gift" style={{ fontSize: 34, color: '#fff' }} />
 )
 
 export default function Login() {
