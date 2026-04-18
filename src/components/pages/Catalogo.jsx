@@ -283,7 +283,7 @@ export default function Catalogo() {
                   <td style={{ textAlign: 'center' }}>
                     <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} style={{ cursor: 'pointer' }} />
                   </td>
-                  <td><b>{p.name}</b></td>
+                  <td><span style={{ fontWeight: 800 }}>{p.name}</span></td>
                   <td>
                     <span style={{
                       display: 'inline-block',
@@ -372,12 +372,12 @@ export default function Catalogo() {
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           <div className="modal">
             <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} producto</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
-            <div className="fg"><label>Nombre *</label><input type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" /></div>
+            <div className="fg"><label>Nombre *</label><input autoFocus tabIndex={1} type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" /></div>
             <div className="grid2">
-              <div className="fg"><label>Categoría</label><select value={form.cat} onChange={e => setF('cat', e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
-              <div className="fg"><label>Costo ($) *</label><input type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => setF('cost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" /></div>
+              <div className="fg"><label>Categoría</label><select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+              <div className="fg"><label>Costo ($) *</label><input tabIndex={3} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => setF('cost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" /></div>
             </div>
-            <div className="fg"><label>Proveedor</label><select value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}><option value="">Sin asignar</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+            <div className="fg"><label>Proveedor</label><select tabIndex={4} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}><option value="">Sin asignar</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
           </div>
         </div>

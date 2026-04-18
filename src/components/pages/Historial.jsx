@@ -75,7 +75,11 @@ function BarChart({ data, prevData = [], type = 'income' }) {
         })}
       </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        {data.map((m, i) => <div key={i} className="bl" style={{ flex: 1, textAlign: 'center' }}>{m.lbl}</div>)}
+        {data.map((m, i) => (
+          <div key={i} className="bl" style={{ flex: 1, textAlign: 'center', opacity: data.length > 15 ? (Number(m.lbl) % 5 === 0 ? 1 : 0) : 1 }}>
+            {m.lbl}
+          </div>
+        ))}
       </div>
       {hasPrev && (
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 8, fontSize: 10, color: 'var(--txt4)' }}>
@@ -402,26 +406,41 @@ export default function Historial() {
               ? `Conversión del ${convRate} — cerrás más de la mitad de los presupuestos que enviás.`
               : `${periodBudgets.length} presupuesto${periodBudgets.length !== 1 ? 's' : ''} en el período · Ticket promedio ${money(avgTicket)} · Conversión ${convRate}`
 
-  // Chart data — weekly (S1-S4) for thismonth/prevmonth, monthly otherwise
+  // Chart data — daily for thismonth/prevmonth, monthly otherwise
   const barMonths = period === '3m' ? 3 : period === 'year' ? 12 : 6
-  const isWeekly = period === 'thismonth' || period === 'prevmonth'
+  const isDaily = period === 'thismonth' || period === 'prevmonth'
   let chartData = []
   let prevChartData = []
-  const wks = [{ lbl: 'S1', f: 1, t: 7 }, { lbl: 'S2', f: 8, t: 14 }, { lbl: 'S3', f: 15, t: 21 }, { lbl: 'S4', f: 22, t: 31 }]
   if (period === 'thismonth') {
-    const [cy, cmo] = [now.getFullYear(), now.getMonth()]
+    const cy = now.getFullYear(); const cmo = now.getMonth()
     const cymStr = `${cy}-${String(cmo + 1).padStart(2, '0')}`
     const [py, pmo] = cmo === 0 ? [cy - 1, 11] : [cy, cmo - 1]
     const pymStr = `${py}-${String(pmo + 1).padStart(2, '0')}`
-    chartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(cymStr)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
-    prevChartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(pymStr)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
+    const daysInMonth = new Date(cy, cmo + 1, 0).getDate()
+    const daysInPrev = new Date(py, pmo + 1, 0).getDate()
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = String(d).padStart(2, '0')
+      chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${cymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
+    }
+    for (let d = 1; d <= daysInPrev; d++) {
+      const ds = String(d).padStart(2, '0')
+      prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
+    }
   } else if (period === 'prevmonth') {
     const pmd = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const pymStr1 = `${pmd.getFullYear()}-${String(pmd.getMonth() + 1).padStart(2, '0')}`
     const pmd2 = new Date(now.getFullYear(), now.getMonth() - 2, 1)
     const pymStr2 = `${pmd2.getFullYear()}-${String(pmd2.getMonth() + 1).padStart(2, '0')}`
-    chartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(pymStr1)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
-    prevChartData = wks.map(w => ({ lbl: w.lbl, val: budgets.filter(b => { if (!b.date?.startsWith(pymStr2)) return false; const dy = parseInt(b.date.slice(8, 10), 10); return dy >= w.f && dy <= w.t }).reduce((s, b) => s + cobrado(b), 0) }))
+    const daysInMonth = new Date(pmd.getFullYear(), pmd.getMonth() + 1, 0).getDate()
+    const daysInPrev = new Date(pmd2.getFullYear(), pmd2.getMonth() + 1, 0).getDate()
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = String(d).padStart(2, '0')
+      chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr1}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
+    }
+    for (let d = 1; d <= daysInPrev; d++) {
+      const ds = String(d).padStart(2, '0')
+      prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr2}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
+    }
   } else {
     for (let i = barMonths - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
@@ -669,7 +688,7 @@ export default function Historial() {
 
               <div className="bento-chart bento-wide">
                 <div className="card-header">
-                  <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isWeekly ? 'por semana · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
+                  <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
                 </div>
                 <BarChart data={chartData} prevData={prevChartData} />
               </div>
