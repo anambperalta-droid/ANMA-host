@@ -28,10 +28,16 @@ function KpiCard({ label, value, delta, isKey }) {
   )
 }
 
-function DashBadge({ status }) {
-  const C = { draft: ['#F8FAFC','#94A3B8'], sent: ['#EFF6FF','#3B82F6'], negotiating: ['#FFFBEB','#D97706'], confirmed: ['#F0FDF4','#16A34A'], lost: ['#FFF1F2','#DC2626'] }
-  const [bg, color] = C[status] || C.draft
-  return <span style={{ display:'inline-block', background: bg, color, fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 20, letterSpacing: '0.02em', whiteSpace:'nowrap' }}>{STATUS_MAP[status] || 'Borrador'}</span>
+const DOT_STATUS = { draft: '#94A3B8', sent: '#3B82F6', negotiating: '#D97706', confirmed: '#16A34A', lost: '#DC2626' }
+const DOT_PAY = { pending: '#DC2626', partial: '#D97706', paid: '#16A34A' }
+
+function DotBadge({ status }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#374151', fontSize: 12, whiteSpace: 'nowrap', fontWeight: 500 }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: DOT_STATUS[status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
+      {STATUS_MAP[status] || 'Borrador'}
+    </span>
+  )
 }
 
 function BarChart({ data, prevData = [], type = 'income' }) {
@@ -128,7 +134,7 @@ function SeguimientoCard({ b, onEdit, onWA, onResend }) {
       <div className="seg-info">
         <div className="seg-top">
           <span className="seg-num">{b.num}</span>
-          <Badge status={b.status} />
+          <DotBadge status={b.status} />
           <span style={{ fontSize: 11, fontWeight: 600, color: urg.color, background: urg.color + '15', padding: '2px 8px', borderRadius: 12 }}>{urg.label}</span>
         </div>
         <div className="seg-cli"><b>{b.contact || 'Sin contacto'}</b> — {b.company || 'Sin empresa'}</div>
@@ -762,7 +768,7 @@ export default function Historial() {
                           <td><b>{b.num || '—'}</b></td>
                           <td>{b.company || b.contact || '—'}</td>
                           <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right' }}>{money(b.total)}</td>
-                          <td><DashBadge status={b.status} /></td>
+                          <td><DotBadge status={b.status} /></td>
                           <td style={{ position: 'relative' }}>
                             <button
                               className="act"
@@ -810,16 +816,28 @@ export default function Historial() {
       {/* ═══ LISTA ═══ */}
       {tab === 'lista' && (
         <>
-          <div className="pill-row">
-            <div className="search-row" style={{ maxWidth: 300 }}>
+          <style>{`
+            .hist-tbl table{border-collapse:collapse}
+            .hist-tbl th{padding:9px 10px 10px;font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid #F3F4F6;white-space:nowrap;border-right:none}
+            .hist-tbl td{padding:11px 10px;border-bottom:1px solid #F3F4F6;vertical-align:middle;border-right:none}
+            .hist-tbl tr:last-child td{border-bottom:none}
+            .hist-tbl tbody tr:hover td{background:#FAFAFA}
+            .hist-act{color:#D1D5DB;background:none;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s ease}
+            .hist-act:hover{background:none}
+          `}</style>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+            <div className="search-row" style={{ maxWidth: 300, flex: '0 0 auto' }}>
               <i className="fa fa-magnifying-glass" />
               <input type="text" placeholder="Buscar cliente, empresa..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            {['all', 'draft', 'sent', 'negotiating', 'confirmed', 'lost'].map(f => (
-              <div key={f} className={`pill ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-                {f === 'all' ? 'Todos' : STATUS_MAP[f]}
-              </div>
-            ))}
+            <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 8, padding: 2, gap: 1 }}>
+              {['all', 'draft', 'sent', 'negotiating', 'confirmed', 'lost'].map(f => (
+                <button key={f} onClick={() => setFilter(f)}
+                  style={{ padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: filter === f ? 600 : 400, background: filter === f ? '#fff' : 'transparent', color: filter === f ? '#111827' : '#6B7280', boxShadow: filter === f ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
+                  {f === 'all' ? 'Todos' : STATUS_MAP[f]}
+                </button>
+              ))}
+            </div>
           </div>
           {selectedIds.size > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--brand-xlt)', border: '1.5px solid var(--brand)', borderRadius: 10, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -833,7 +851,7 @@ export default function Historial() {
               <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())}><i className="fa fa-xmark" /> Quitar selección</button>
             </div>
           )}
-          <div className="tbl-card">
+          <div className="tbl-card hist-tbl">
             <table>
               <thead><tr>
                 <th style={{ width: 32 }}>
@@ -844,8 +862,8 @@ export default function Historial() {
                 <th>Cliente</th><th>Empresa</th>
                 <th>Entrega</th>
                 <th>Días rest.</th>
-                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
-                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('gain')}>
+                <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('gain')}>
                   Ganancia{sortArrow('gain')}
                   {hidden && <i className="fa fa-eye-slash" style={{ marginLeft: 4, fontSize: 9, color: 'var(--txt4)' }} />}
                 </th>
@@ -866,40 +884,34 @@ export default function Historial() {
                       <td style={{ fontWeight: 700, fontSize: 11, color: overdue ? 'var(--red)' : dDays !== null && dDays <= 3 ? 'var(--amber)' : 'var(--txt3)' }}>
                         {dDays === null ? '—' : overdue ? `⚠ ${dDays <= 0 ? (dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd pasó') : dDays + 'd'}` : `${dDays}d`}
                       </td>
-                      <td style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
-                      <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600 }}>{money(b.totalGain)}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.total)}</td>
+                      <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
                       <td>
-                        {(() => {
-                          const sc = STATUS_COLORS[b.status] || { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' }
-                          return (
-                            <select
-                              style={{ fontSize: 11, padding: '4px 8px', border: `2px solid ${sc.border}`, borderRadius: 8, fontFamily: 'inherit', background: sc.bg, color: sc.color, cursor: 'pointer', outline: 'none', fontWeight: 700 }}
-                              value={b.status}
-                              onChange={e => handleStatusChange(b.id, e.target.value)}
-                            >
-                              {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                            </select>
-                          )
-                        })()}
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
+                          <select style={{ fontSize: 12, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                            value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
+                            {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          </select>
+                        </div>
                       </td>
-                      <td>{(() => {
-                        const pc = PAY_STATUS_COLORS[b.payStatus] || PAY_STATUS_COLORS.pending
-                        return (
-                          <select
-                            style={{ fontSize: 11, padding: '4px 8px', border: `2px solid ${pc.border}`, borderRadius: 8, fontFamily: 'inherit', background: pc.bg, color: pc.color, cursor: 'pointer', outline: 'none', fontWeight: 700 }}
-                            value={b.payStatus || 'pending'}
-                            onChange={e => handlePayStatusChange(b.id, e.target.value)}
-                          >
+                      <td>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: DOT_PAY[b.payStatus] || '#DC2626', flexShrink: 0, display: 'inline-block' }} />
+                          <select style={{ fontSize: 12, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                            value={b.payStatus || 'pending'} onChange={e => handlePayStatusChange(b.id, e.target.value)}>
                             {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                           </select>
-                        )
-                      })()}</td>
+                        </div>
+                      </td>
                       <td>
-                        <div className="acts" style={{ gap: 4 }}>
-                          <button className="act edit" onClick={() => editB(b.id)} title="Editar"><i className="fa fa-pen" /></button>
-                          <button className="act wa" onClick={() => copyWA(b)} title="WA"><i className="fa-brands fa-whatsapp" /></button>
-                          <div style={{ width: 20 }} />
-                          <button className="act del" onClick={() => handleDelete(b)} title="Eliminar (pedirá confirmación)" style={{ background: 'var(--red)15', color: 'var(--red)' }}><i className="fa fa-trash" /></button>
+                        <div className="acts" style={{ gap: 2 }}>
+                          <button className="hist-act" onClick={() => editB(b.id)} title="Editar"
+                            onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-pen" /></button>
+                          <button className="hist-act" onClick={() => copyWA(b)} title="WhatsApp"
+                            onMouseEnter={e => e.currentTarget.style.color = '#25D366'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa-brands fa-whatsapp" /></button>
+                          <button className="hist-act" onClick={() => handleDelete(b)} title="Eliminar"
+                            onMouseEnter={e => e.currentTarget.style.color = '#DC2626'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-trash" /></button>
                         </div>
                       </td>
                     </tr>
@@ -910,7 +922,10 @@ export default function Historial() {
               </tbody>
             </table>
           </div>
-          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--txt3)' }}>{filteredBudgets.length} presupuesto{filteredBudgets.length !== 1 ? 's' : ''}</div>
+          <div style={{ marginTop: 8, fontSize: 11, color: '#9CA3AF', textAlign: 'right', letterSpacing: '.02em' }}>
+            {filteredBudgets.length} resultado{filteredBudgets.length !== 1 ? 's' : ''}
+            {filter !== 'all' && <span style={{ marginLeft: 8, padding: '1px 7px', background: '#F3F4F6', borderRadius: 10, fontWeight: 600, color: '#6B7280' }}>{STATUS_MAP[filter]}</span>}
+          </div>
         </>
       )}
 
