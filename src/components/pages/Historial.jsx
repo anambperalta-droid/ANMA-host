@@ -821,9 +821,11 @@ export default function Historial() {
             .hist-tbl th{padding:9px 10px 10px;font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid #F3F4F6;white-space:nowrap;border-right:none}
             .hist-tbl td{padding:11px 10px;border-bottom:1px solid #F3F4F6;vertical-align:middle;border-right:none}
             .hist-tbl tr:last-child td{border-bottom:none}
-            .hist-tbl tbody tr:hover td{background:#FAFAFA}
-            .hist-act{color:#D1D5DB;background:none;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s ease}
+            .hist-tbl tbody tr:hover td{background:#F9FAFB}
+            .hist-act{color:#D1D5DB;background:none;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s ease,opacity .15s ease}
             .hist-act:hover{background:none}
+            .hist-act i{opacity:.5;transition:opacity .15s ease}
+            .hist-act:hover i{opacity:1}
           `}</style>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
             <div className="search-row" style={{ maxWidth: 300, flex: '0 0 auto' }}>
@@ -881,24 +883,24 @@ export default function Historial() {
                       <td>{b.contact || '—'}</td>
                       <td style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
                       <td>{fmtDate(b.deliveryDate)}</td>
-                      <td style={{ fontWeight: 700, fontSize: 11, color: overdue ? 'var(--red)' : dDays !== null && dDays <= 3 ? 'var(--amber)' : 'var(--txt3)' }}>
-                        {dDays === null ? '—' : overdue ? `⚠ ${dDays <= 0 ? (dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd pasó') : dDays + 'd'}` : `${dDays}d`}
+                      <td style={{ fontWeight: 700, fontSize: 11, color: ['confirmed','lost'].includes(b.status) ? '#9CA3AF' : overdue ? 'var(--red)' : dDays !== null && dDays <= 2 ? 'var(--amber)' : 'var(--txt3)' }}>
+                        {dDays === null || ['confirmed','lost'].includes(b.status) ? '—' : overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd'}` : `${dDays}d`}
                       </td>
                       <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.total)}</td>
                       <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
-                      <td>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
-                          <select style={{ fontSize: 12, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
+                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
                             value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
                             {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                           </select>
                         </div>
                       </td>
-                      <td>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: DOT_PAY[b.payStatus] || '#DC2626', flexShrink: 0, display: 'inline-block' }} />
-                          <select style={{ fontSize: 12, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_PAY[b.payStatus] || '#DC2626', flexShrink: 0, display: 'inline-block' }} />
+                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
                             value={b.payStatus || 'pending'} onChange={e => handlePayStatusChange(b.id, e.target.value)}>
                             {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                           </select>

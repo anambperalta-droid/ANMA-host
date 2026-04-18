@@ -7,9 +7,29 @@ import { applyThemeColors } from '../../lib/theme'
 import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets, APPS_SCRIPT_TEMPLATE } from '../../lib/sheets'
 import { SITES, CURRENT_SITE, sendInvite } from '../../lib/invites'
 
-function ListEditor({ label, items, onAdd, onRemove }) {
+function NewListCreator({ onCreate }) {
+  const [label, setLabel] = useState('')
+  const create = () => { if (label.trim()) { onCreate(label.trim()); setLabel('') } }
+  return (
+    <div style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
+      <i className="fa fa-layer-group" style={{ color: 'var(--brand)', fontSize: 14, flexShrink: 0 }} />
+      <input type="text" value={label}
+        onChange={e => setLabel(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && create()}
+        placeholder="Nombre para la nueva lista (ej: Colores, Regiones, Tamaños...)"
+        style={{ flex: 1, padding: '7px 11px', border: '1.5px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13, outline: 'none', background: 'var(--surface)' }} />
+      <button className="btn btn-primary btn-sm" disabled={!label.trim()} onClick={create}>
+        <i className="fa fa-plus" /> Crear lista
+      </button>
+    </div>
+  )
+}
+
+function ListEditor({ label, items, onAdd, onRemove, onDelete }) {
   const [val, setVal] = useState('')
   const [dupErr, setDupErr] = useState(false)
+  const [showEmoji, setShowEmoji] = useState(false)
+  const EMOJIS = ['🎂','🎁','🎊','🎉','💐','🌟','❤️','🏠','📦','🛍️','👶','💍','🎓','🐾','🌺','✨','🍰','🎈','👑','🎀','💝','🌈','🏆','🤍','💫','🎶','📱','💼','🌙','☀️']
   const add = () => {
     if (!val.trim()) return
     if (items.some(i => i.toLowerCase() === val.trim().toLowerCase())) {
@@ -21,20 +41,44 @@ function ListEditor({ label, items, onAdd, onRemove }) {
   }
   return (
     <div className="card">
-      <div className="card-title" style={{ marginBottom: 14 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <div className="card-title" style={{ margin: 0, flex: 1 }}>{label}</div>
+        <span style={{ fontSize: 10, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>{items.length}</span>
+        {onDelete && <button className="act del" onClick={onDelete} title="Eliminar lista" style={{ flexShrink: 0 }}><i className="fa fa-trash" /></button>}
+      </div>
+      {items.length === 0 && (
+        <div style={{ padding: '8px 0 4px', textAlign: 'center', color: 'var(--txt4)', fontSize: 12 }}>Sin elementos — agregá el primero ↓</div>
+      )}
       {items.map((item, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
           <span>{item}</span>
           <button className="act del" onClick={() => onRemove(i)} style={{ flexShrink: 0 }}><i className="fa fa-xmark" /></button>
         </div>
       ))}
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        <input type="text" value={val}
-          onChange={e => { setVal(e.target.value); setDupErr(false) }}
-          onKeyDown={e => e.key === 'Enter' && add()}
-          style={{ flex: 1, padding: '8px 11px', border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`, borderRadius: 9, fontFamily: 'inherit', fontSize: 13, outline: 'none', transition: 'border-color .2s' }}
-          placeholder={`Nueva ${label.toLowerCase().replace(/s$/, '')}...`} />
-        <button className="btn btn-primary btn-xs" onClick={add}><i className="fa fa-plus" /></button>
+      <div style={{ marginTop: 12, position: 'relative' }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button type="button" onClick={() => setShowEmoji(s => !s)}
+            style={{ padding: '7px 9px', border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`, borderRadius: 9, background: 'var(--surface2)', cursor: 'pointer', fontSize: 15, lineHeight: 1 }}
+            title="Agregar emoji">😊</button>
+          <input type="text" value={val}
+            onChange={e => { setVal(e.target.value); setDupErr(false) }}
+            onKeyDown={e => e.key === 'Enter' && add()}
+            style={{ flex: 1, padding: '8px 11px', border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`, borderRadius: 9, fontFamily: 'inherit', fontSize: 13, outline: 'none', transition: 'border-color .2s' }}
+            placeholder={`Nueva ${label.toLowerCase().replace(/s$/, '')}...`} />
+          <button className="btn btn-primary btn-xs" onClick={add}><i className="fa fa-plus" /></button>
+        </div>
+        {showEmoji && (
+          <div style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 0, zIndex: 60, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 12, padding: 10, boxShadow: '0 8px 24px rgba(0,0,0,.14)', display: 'flex', flexWrap: 'wrap', gap: 3, width: 230 }}>
+            {EMOJIS.map(e => (
+              <button key={e} type="button" onClick={() => { setVal(v => e + ' ' + v); setShowEmoji(false) }}
+                style={{ padding: '3px 5px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, borderRadius: 6, lineHeight: 1 }}
+                onMouseEnter={ev => ev.currentTarget.style.background = 'var(--surface2)'}
+                onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>
+                {e}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {dupErr && (
         <div style={{ color: '#DC2626', fontSize: 11, marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -237,6 +281,22 @@ export default function Config() {
 
   const handleListAdd = (configKey, val) => updateConfig({ [configKey]: [...(c[configKey] || []), val] })
   const handleListRemove = (configKey, idx) => updateConfig({ [configKey]: (c[configKey] || []).filter((_, i) => i !== idx) })
+  const handleCustomListAdd = (key, val) => {
+    const lists = (c.customLists || []).map(cl => cl.key === key ? { ...cl, items: [...(cl.items || []), val] } : cl)
+    updateConfig({ customLists: lists })
+  }
+  const handleCustomListRemove = (key, idx) => {
+    const lists = (c.customLists || []).map(cl => cl.key === key ? { ...cl, items: (cl.items || []).filter((_, i) => i !== idx) } : cl)
+    updateConfig({ customLists: lists })
+  }
+  const handleCreateCustomList = (label) => {
+    const key = `custom_${Date.now()}`
+    updateConfig({ customLists: [...(c.customLists || []), { key, label, items: [] }] })
+  }
+  const handleDeleteCustomList = (key) => {
+    if (!window.confirm('¿Eliminar esta lista y todos sus elementos?')) return
+    updateConfig({ customLists: (c.customLists || []).filter(cl => cl.key !== key) })
+  }
 
   const userName = (c.email || '').split('@')[0] || 'Administrador'
 
@@ -380,6 +440,15 @@ export default function Config() {
           <ListEditor label="Modalidades de entrega" items={c.deliveryModes || []} onAdd={v => handleListAdd('deliveryModes', v)} onRemove={i => handleListRemove('deliveryModes', i)} />
           <ListEditor label="Categorías de productos" items={c.productCats || []} onAdd={v => handleListAdd('productCats', v)} onRemove={i => handleListRemove('productCats', i)} />
           <ListEditor label="Ocasiones habituales" items={c.occasions || []} onAdd={v => handleListAdd('occasions', v)} onRemove={i => handleListRemove('occasions', i)} />
+          {(c.customLists || []).map(cl => (
+            <ListEditor key={cl.key} label={cl.label} items={cl.items || []}
+              onAdd={v => handleCustomListAdd(cl.key, v)}
+              onRemove={i => handleCustomListRemove(cl.key, i)}
+              onDelete={() => handleDeleteCustomList(cl.key)} />
+          ))}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <NewListCreator onCreate={handleCreateCustomList} />
+          </div>
         </div>
       )}
 
