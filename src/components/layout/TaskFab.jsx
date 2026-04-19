@@ -9,7 +9,7 @@ const PRIORITIES = [
 const getPriority = (key) => PRIORITIES.find(p => p.key === key) || PRIORITIES[2]
 
 export default function TaskFab() {
-  const { panelOpen, setPanelOpen, tasks, setTasks, activeTasks } = useTaskFab()
+  const { panelOpen, setPanelOpen, tasks, setTasks, activeTasks, setFocusMode } = useTaskFab()
   const [formOpen, setFormOpen] = useState(false)
   const [desc, setDesc]         = useState('')
   const [priority, setPriority] = useState('today')
@@ -70,8 +70,8 @@ export default function TaskFab() {
         background: 'var(--surface2)', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <i className="fa fa-clipboard-list" style={{ color: 'var(--brand)', fontSize: 14 }} />
-          <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>Notas y recordatorios</span>
+          <i className="fa fa-brain" style={{ color: 'var(--brand)', fontSize: 14 }} />
+          <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>Tareas</span>
           {active.length > 0 && (
             <span style={{
               background: 'var(--brand)', color: '#fff',
@@ -81,18 +81,34 @@ export default function TaskFab() {
             </span>
           )}
         </div>
-        <button
-          onClick={() => { setFormOpen(o => !o) }}
-          title="Nueva nota"
-          style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: formOpen ? 'var(--brand-xlt)' : 'var(--acento-grad)',
-            border: 'none', cursor: 'pointer', fontSize: 11, color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <i className={`fa ${formOpen ? 'fa-xmark' : 'fa-plus'}`} style={{ color: formOpen ? 'var(--brand)' : '#fff' }} />
-        </button>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <button
+            onClick={() => { setFocusMode(true); setPanelOpen(false) }}
+            title="Modo Enfoque — pantalla completa"
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: '#EEF2FF', border: 'none', cursor: 'pointer', fontSize: 11,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5',
+              transition: 'background .15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#312e81'}
+            onMouseLeave={e => e.currentTarget.style.background = '#EEF2FF'}
+          >
+            <i className="fa fa-expand" style={{ pointerEvents: 'none' }} />
+          </button>
+          <button
+            onClick={() => { setFormOpen(o => !o) }}
+            title="Nueva tarea"
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: formOpen ? 'var(--brand-xlt)' : 'var(--acento-grad)',
+              border: 'none', cursor: 'pointer', fontSize: 11, color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <i className={`fa ${formOpen ? 'fa-xmark' : 'fa-plus'}`} style={{ color: formOpen ? 'var(--brand)' : '#fff' }} />
+          </button>
+        </div>
       </div>
 
       {/* Formulario */}

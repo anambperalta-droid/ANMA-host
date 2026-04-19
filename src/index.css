@@ -57,7 +57,7 @@
   --blue-dim: rgba(37,99,235,.12);
   --indigo: #4F46E5;
   --rose: #E11D48;
-  --sw: 240px;
+  --sw: 268px;
   --r: 10px;
   --r-lg: 16px;
   --r-xl: 18px;
@@ -143,11 +143,11 @@ input,select,textarea{font-family:inherit}
 .sb-logo-row{display:flex;align-items:center;gap:10px}
 .sb-logo{width:36px;height:36px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(124,58,237,.35);overflow:hidden}
 .sb-logo img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-.sb-logo-txt .n{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px}
-.sb-logo-txt .s{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px;letter-spacing:.2px}
-.sb-nav{flex:1;padding:10px 8px}
-.sb-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,.22);letter-spacing:1.5px;text-transform:uppercase;padding:12px 10px 4px}
-.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.5);font-size:12px;font-weight:500;transition:all var(--tr);margin-bottom:1px;position:relative;user-select:none}
+.sb-logo-txt .n{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.sb-logo-txt .s{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;letter-spacing:.2px}
+.sb-nav{flex:1;padding:10px 10px}
+.sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:1.2px;text-transform:uppercase;padding:14px 12px 5px}
+.sb-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;transition:all var(--tr);margin-bottom:2px;position:relative;user-select:none}
 .sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
 .sb-item.active{background:linear-gradient(90deg,var(--acento-dim),rgba(255,255,255,.04));color:#fff}
 .sb-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;border-radius:0 2px 2px 0;background:var(--acento-grad)}
@@ -228,7 +228,7 @@ input,select,textarea{font-family:inherit}
 .tbl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh)}
 table{width:100%;border-collapse:collapse}
 thead th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)}
-tbody td{padding:9px 12px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--border);transition:background var(--tr)}
+tbody td{padding:9px 12px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--border);transition:background var(--tr);font-variant-numeric:tabular-nums}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--surface2)}
 td b{color:var(--txt);font-weight:600}
@@ -361,6 +361,7 @@ td b{color:var(--txt);font-weight:600}
 .cp-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px}
 .cp-lbl{color:rgba(255,255,255,.5)}
 .cp-val{font-weight:700;color:#fff}
+.cp-val,.cp-total-val{font-variant-numeric:tabular-nums;font-family:inherit}
 .cp-total-row{padding:10px 0 6px;margin-top:4px;border-top:1px solid rgba(255,255,255,.15)}
 .cp-total-val{font-size:22px;font-weight:800;color:#C4B5FD;letter-spacing:-.5px;line-height:1}
 .cp-actions{margin-top:14px;display:flex;flex-direction:column;gap:6px}

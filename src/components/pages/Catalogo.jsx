@@ -65,7 +65,7 @@ export default function Catalogo() {
   const safeCat = (val) => (val && cats.includes(val)) ? val : (cats[0] || '')
   const open = (p) => {
     setForm(p
-      ? { ...p, cat: safeCat(p.cat) }
+      ? { ...p, cat: p.cat ?? '' }
       : { name: '', cat: cats[0] || '', cost: '', supplierId: '' }
     )
     setModal(true)
@@ -374,7 +374,9 @@ export default function Catalogo() {
             <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} producto</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
             <div className="fg"><label>Nombre *</label><input autoFocus tabIndex={1} type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" /></div>
             <div className="grid2">
-              <div className="fg"><label>Categoría</label><select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+              <div className="fg"><label>Categoría</label><select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}{form.cat && !cats.includes(form.cat) && (
+                  <option value={form.cat}>{form.cat}</option>
+                )}</select></div>
               <div className="fg"><label>Costo ($) *</label><input tabIndex={3} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => setF('cost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" /></div>
             </div>
             <div className="fg"><label>Proveedor</label><select tabIndex={4} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}><option value="">Sin asignar</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>

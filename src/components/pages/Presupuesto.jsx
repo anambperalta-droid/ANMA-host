@@ -532,10 +532,10 @@ export default function Presupuesto() {
                         <i className="fa fa-grip-vertical" />
                       </td>
                       <td><input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" list="prod-suggestions" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
-                      <td><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
-                      <td><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
-                      <td><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
-                      <td style={{ fontWeight: 700, color: 'var(--money)', fontSize: 12 }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
+                      <td><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
+                      <td><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
+                      <td><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
+                      <td style={{ fontWeight: 700, color: 'var(--money)', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
                       <td><button className="act del" onClick={() => removeItem(i)}><i className="fa fa-xmark" /></button></td>
                     </tr>
                   ))}
