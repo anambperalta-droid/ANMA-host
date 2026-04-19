@@ -19,7 +19,7 @@ export default function Topbar({ onMenuClick }) {
   const loc = useLocation()
   const title = PAGE_NAMES[loc.pathname] || 'ANMA'
   const [theme, setTheme] = useState(initialTheme)
-  const { panelOpen, setPanelOpen, activeTasks } = useTaskFab()
+  const { panelOpen, setPanelOpen, activeTasks, focusMode, setFocusMode } = useTaskFab()
   const { hidden, toggle } = usePrivacy()
 
   useEffect(() => {
@@ -35,28 +35,42 @@ export default function Topbar({ onMenuClick }) {
         <i className="fa fa-bars" />
       </button>
       <div style={{ flex: 1 }} />
+
+      {/* Modo Enfoque */}
       <button
-  className="tb-btn"
-  onClick={toggle}
-  title={hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
-  style={{
-    background: hidden ? '#FEE2E2' : 'var(--surface2)',
-    color: hidden ? '#DC2626' : 'var(--txt3)',
-    borderRadius: 10,
-    width: 36,
-    height: 36,
-    fontSize: 14,
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    transition: 'background .2s, color .2s',
-  }}
->
-  <i className={`fa ${hidden ? 'fa-eye-slash' : 'fa-eye'}`} />
-</button>
+        className="tb-btn"
+        onClick={() => setFocusMode(f => !f)}
+        title="Modo Enfoque — oculta el dashboard y te muestra solo tus tareas"
+        style={{
+          background: focusMode ? '#312e81' : '#EEF2FF',
+          color: focusMode ? '#A5B4FC' : '#4F46E5',
+          borderRadius: 10, width: 36, height: 36, fontSize: 14, border: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background .2s, color .2s', flexShrink: 0,
+        }}
+      >
+        <i className="fa fa-brain" />
+      </button>
+
+      {/* Ocultar datos */}
+      <button
+        className="tb-btn"
+        onClick={toggle}
+        title={hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
+        style={{
+          background: hidden ? '#FEE2E2' : 'var(--surface2)',
+          color: hidden ? '#DC2626' : 'var(--txt3)',
+          borderRadius: 10, width: 36, height: 36, fontSize: 14, border: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0, transition: 'background .2s, color .2s',
+        }}
+      >
+        <i className={`fa ${hidden ? 'fa-eye-slash' : 'fa-eye'}`} />
+      </button>
+
       <NotificationBell />
+
+      {/* Notas */}
       <button
         className="tb-btn"
         onClick={() => setPanelOpen(o => !o)}
@@ -66,16 +80,9 @@ export default function Topbar({ onMenuClick }) {
           position: 'relative',
           background: panelOpen ? '#7C3AED' : '#EDE9FE',
           color: panelOpen ? '#fff' : '#7C3AED',
-          borderRadius: 10,
-          width: 36,
-          height: 36,
-          fontSize: 15,
-          transition: 'background .2s, color .2s',
-          border: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
+          borderRadius: 10, width: 36, height: 36, fontSize: 15,
+          transition: 'background .2s, color .2s', border: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}
       >
         <i className={`fa ${panelOpen ? 'fa-xmark' : 'fa-clipboard-list'}`} />
@@ -86,13 +93,14 @@ export default function Topbar({ onMenuClick }) {
             color: '#fff', fontSize: 8, fontWeight: 800,
             width: 14, height: 14, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '1.5px solid var(--surface)',
-            pointerEvents: 'none',
+            border: '1.5px solid var(--surface)', pointerEvents: 'none',
           }}>
             {activeTasks.length > 9 ? '9+' : activeTasks.length}
           </span>
         )}
       </button>
+
+      {/* Tema */}
       <button
         className="tb-btn"
         onClick={toggleTheme}

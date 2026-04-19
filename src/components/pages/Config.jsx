@@ -25,66 +25,84 @@ function NewListCreator({ onCreate }) {
   )
 }
 
-function ListEditor({ label, items, onAdd, onRemove, onDelete }) {
+function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', items, onAdd, onRemove, onDelete }) {
   const [val, setVal] = useState('')
   const [dupErr, setDupErr] = useState(false)
-  const [showEmoji, setShowEmoji] = useState(false)
-  const EMOJIS = ['🎂','🎁','🎊','🎉','💐','🌟','❤️','🏠','📦','🛍️','👶','💍','🎓','🐾','🌺','✨','🍰','🎈','👑','🎀','💝','🌈','🏆','🤍','💫','🎶','📱','💼','🌙','☀️']
   const add = () => {
     if (!val.trim()) return
     if (items.some(i => i.toLowerCase() === val.trim().toLowerCase())) {
-      setDupErr(true)
-      setTimeout(() => setDupErr(false), 2500)
-      return
+      setDupErr(true); setTimeout(() => setDupErr(false), 2500); return
     }
     onAdd(val.trim()); setVal('')
   }
   return (
-    <div className="card">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <div className="card-title" style={{ margin: 0, flex: 1 }}>{label}</div>
-        <span style={{ fontSize: 10, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>{items.length}</span>
-        {onDelete && <button className="act del" onClick={onDelete} title="Eliminar lista" style={{ flexShrink: 0 }}><i className="fa fa-trash" /></button>}
+    <div className="card" style={{ borderTop: `3px solid ${accentColor}`, padding: '16px 18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 9,
+          background: accentColor + '18', color: accentColor,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0,
+        }}>
+          <i className={`fa ${icon}`} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', lineHeight: 1.2 }}>{label}</div>
+          <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 2 }}>
+            {items.length} elemento{items.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+        {onDelete && (
+          <button className="act del" onClick={onDelete} title="Eliminar lista" style={{ flexShrink: 0 }}>
+            <i className="fa fa-trash" />
+          </button>
+        )}
       </div>
       {items.length === 0 && (
-        <div style={{ padding: '8px 0 4px', textAlign: 'center', color: 'var(--txt4)', fontSize: 12 }}>Sin elementos — agregá el primero ↓</div>
-      )}
-      {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-          <span>{item}</span>
-          <button className="act del" onClick={() => onRemove(i)} style={{ flexShrink: 0 }}><i className="fa fa-xmark" /></button>
+        <div style={{ padding: '10px 0 6px', textAlign: 'center', color: 'var(--txt4)', fontSize: 12 }}>
+          Sin elementos — agregá el primero ↓
         </div>
-      ))}
-      <div style={{ marginTop: 12, position: 'relative' }}>
+      )}
+      <div style={{ marginBottom: items.length > 0 ? 8 : 0 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '6px 8px', borderBottom: '1px solid var(--border)', fontSize: 13, gap: 8,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item}</span>
+            </div>
+            <button className="act del" onClick={() => onRemove(i)} style={{ flexShrink: 0 }}>
+              <i className="fa fa-xmark" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 10 }}>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button type="button" onClick={() => setShowEmoji(s => !s)}
-            style={{ padding: '7px 9px', border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`, borderRadius: 9, background: 'var(--surface2)', cursor: 'pointer', fontSize: 15, lineHeight: 1 }}
-            title="Agregar emoji">😊</button>
-          <input type="text" value={val}
+          <input
+            type="text" value={val}
             onChange={e => { setVal(e.target.value); setDupErr(false) }}
             onKeyDown={e => e.key === 'Enter' && add()}
-            style={{ flex: 1, padding: '8px 11px', border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`, borderRadius: 9, fontFamily: 'inherit', fontSize: 13, outline: 'none', transition: 'border-color .2s' }}
-            placeholder={`Nueva ${label.toLowerCase().replace(/s$/, '')}...`} />
-          <button className="btn btn-primary btn-xs" onClick={add}><i className="fa fa-plus" /></button>
+            style={{
+              flex: 1, padding: '8px 11px',
+              border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`,
+              borderRadius: 9, fontFamily: 'inherit', fontSize: 13, outline: 'none',
+              transition: 'border-color .2s', background: 'var(--surface)', color: 'var(--txt)',
+            }}
+            placeholder="Nueva entrada..."
+          />
+          <button className="btn btn-primary btn-xs" onClick={add}
+            style={{ background: accentColor, borderColor: accentColor }}>
+            <i className="fa fa-plus" />
+          </button>
         </div>
-        {showEmoji && (
-          <div style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 0, zIndex: 60, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 12, padding: 10, boxShadow: '0 8px 24px rgba(0,0,0,.14)', display: 'flex', flexWrap: 'wrap', gap: 3, width: 230 }}>
-            {EMOJIS.map(e => (
-              <button key={e} type="button" onClick={() => { setVal(v => e + ' ' + v); setShowEmoji(false) }}
-                style={{ padding: '3px 5px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, borderRadius: 6, lineHeight: 1 }}
-                onMouseEnter={ev => ev.currentTarget.style.background = 'var(--surface2)'}
-                onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>
-                {e}
-              </button>
-            ))}
+        {dupErr && (
+          <div style={{ color: '#DC2626', fontSize: 11, marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <i className="fa fa-triangle-exclamation" /> Ya existe en la lista
           </div>
         )}
       </div>
-      {dupErr && (
-        <div style={{ color: '#DC2626', fontSize: 11, marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <i className="fa fa-triangle-exclamation" /> Ya existe en la lista
-        </div>
-      )}
     </div>
   )
 }
@@ -324,16 +342,50 @@ export default function Config() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
-      <div className="ph">
-        <div className="ph-left"><h2>Configuración</h2><p>Personalizá la app para tu negocio</p></div>
-        <button className="btn btn-primary btn-sm" onClick={saveAll}><i className="fa fa-floppy-disk" /> Guardar cambios</button>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 20, padding: '16px 20px',
+        background: 'linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%)',
+        borderRadius: 16, border: '1.5px solid var(--border)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, background: 'var(--grad)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff',
+          }}>
+            <i className="fa fa-gear" />
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--txt)', lineHeight: 1.2 }}>Configuración</div>
+            <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>Personalizá la app para tu negocio</div>
+          </div>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={saveAll}>
+          <i className="fa fa-floppy-disk" /> Guardar
+        </button>
       </div>
 
-      <div className="cfg-tabs">
+      <div style={{
+        display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 22,
+        padding: 4, background: 'var(--surface2)', borderRadius: 14, border: '1px solid var(--border)',
+        width: 'fit-content', maxWidth: '100%',
+      }}>
         {tabs.map(t => (
-          <div key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            <i className={`fa ${t.icon}`} style={{ marginRight: 6 }} />{t.label}
-          </div>
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              fontSize: 12, fontWeight: tab === t.id ? 700 : 500, fontFamily: 'inherit',
+              background: tab === t.id ? 'var(--brand)' : 'transparent',
+              color: tab === t.id ? '#fff' : 'var(--txt2)',
+              transition: 'all .15s',
+            }}
+          >
+            <i className={`fa ${t.icon}`} style={{ fontSize: 12 }} />
+            {t.label}
+          </button>
         ))}
       </div>
 
@@ -436,16 +488,24 @@ export default function Config() {
       )}
 
       {tab === 'listas' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
-          <ListEditor label="Modalidades de entrega" items={c.deliveryModes || []} onAdd={v => handleListAdd('deliveryModes', v)} onRemove={i => handleListRemove('deliveryModes', i)} />
-          <ListEditor label="Categorías de productos" items={c.productCats || []} onAdd={v => handleListAdd('productCats', v)} onRemove={i => handleListRemove('productCats', i)} />
-          <ListEditor label="Ocasiones habituales" items={c.occasions || []} onAdd={v => handleListAdd('occasions', v)} onRemove={i => handleListRemove('occasions', i)} />
-          {(c.customLists || []).map(cl => (
-            <ListEditor key={cl.key} label={cl.label} items={cl.items || []}
-              onAdd={v => handleCustomListAdd(cl.key, v)}
-              onRemove={i => handleCustomListRemove(cl.key, i)}
-              onDelete={() => handleDeleteCustomList(cl.key)} />
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+          <ListEditor label="Modalidades de entrega" icon="fa-truck" accentColor="#D97706"
+            items={c.deliveryModes || []} onAdd={v => handleListAdd('deliveryModes', v)} onRemove={i => handleListRemove('deliveryModes', i)} />
+          <ListEditor label="Categorías de productos" icon="fa-tag" accentColor="#7C3AED"
+            items={c.productCats || []} onAdd={v => handleListAdd('productCats', v)} onRemove={i => handleListRemove('productCats', i)} />
+          <ListEditor label="Ocasiones" icon="fa-calendar-star" accentColor="#EC4899"
+            items={c.occasions || []} onAdd={v => handleListAdd('occasions', v)} onRemove={i => handleListRemove('occasions', i)} />
+          {(c.customLists || []).map((cl, idx) => {
+            const COLORS = ['#8B5CF6','#06B6D4','#F59E0B','#10B981','#EF4444','#EC4899']
+            return (
+              <ListEditor key={cl.key} label={cl.label} icon="fa-layer-group"
+                accentColor={COLORS[idx % COLORS.length]}
+                items={cl.items || []}
+                onAdd={v => handleCustomListAdd(cl.key, v)}
+                onRemove={i => handleCustomListRemove(cl.key, i)}
+                onDelete={() => handleDeleteCustomList(cl.key)} />
+            )
+          })}
           <div style={{ gridColumn: '1 / -1' }}>
             <NewListCreator onCreate={handleCreateCustomList} />
           </div>
