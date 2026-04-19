@@ -10,16 +10,10 @@ const SERVICE_MULTIPLIER = {
   'Entrega en sucursal': 0.85,
 }
 
-const CARRIERS = ['Correo Argentino', 'Andreani', 'OCA', 'Vía Cargo', 'Urbano', 'Loogistica', 'Rapifargo', 'En mano']
+const CARRIERS = ['Vía Cargo']
 
 const CARRIER_TRACKING = {
-  'Correo Argentino': c => `https://www.correoargentino.com.ar/formularios/e-commerce?id=${c}`,
-  'Andreani':         c => `https://www.andreani.com/#!/rastreoenvios?codigoAndreani=${c}`,
-  'OCA':              c => `https://www.oca.com.ar/rastrear/?numero=${c}`,
-  'Vía Cargo':        c => `https://www.viacargo.com.ar/web/seguimiento?nro=${c}`,
-  'Urbano':           c => `https://www.urbano.com.ar/home/seguimiento/${c}`,
-  'Loogistica':       c => `https://app.loogistica.com/track/${c}`,
-  'Rapifargo':        c => `https://www.rapifargo.com.ar/seguimiento?guia=${c}`,
+  'Vía Cargo': c => `https://www.viacargo.com.ar/web/seguimiento?nro=${c}`,
 }
 
 const getTrackingUrl = (carrier, code) => {

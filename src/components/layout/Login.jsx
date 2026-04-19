@@ -25,7 +25,7 @@ const SOLUTIONS = [
 ]
 
 const SparkleIcon = () => (
-  <i className="fa fa-gift" style={{ fontSize: 34, color: '#fff' }} />
+  <i className="fa fa-gift" style={{ fontSize: 40, color: '#fff' }} />
 )
 
 export default function Login() {
@@ -88,45 +88,45 @@ export default function Login() {
         .lp2-hero { position:relative;z-index:1;text-align:center;max-width:560px;width:100%; }
 
         .lp2-logo-wrap {
-          width:86px;height:86px;border-radius:22px;
+          width:96px;height:96px;border-radius:24px;
           background:rgba(255,255,255,.13);
           backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
           border:1.5px solid rgba(255,255,255,.26);
           display:flex;align-items:center;justify-content:center;
-          margin:0 auto 24px;
+          margin:0 auto 28px;
           animation:lp-logo-in .65s cubic-bezier(.34,1.56,.64,1) forwards,
                     lp-breathe 3.2s ease-in-out 1.2s infinite;
           opacity:0;
         }
 
         .lp2-h1 {
-          font-size:27px;font-weight:800;color:#fff;letter-spacing:-.7px;line-height:1.2;
-          margin-bottom:11px;
+          font-size:33px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.15;
+          margin-bottom:14px;
           animation:lp-fade-up .5s ease forwards;animation-delay:.32s;opacity:0;
         }
         .lp2-h1 em { font-style:normal;color:#c4b5fd; }
 
         .lp2-sub {
-          font-size:13px;color:rgba(255,255,255,.62);line-height:1.65;
-          margin-bottom:30px;font-weight:400;
+          font-size:14.5px;color:rgba(255,255,255,.65);line-height:1.7;
+          margin-bottom:34px;font-weight:400;
           animation:lp-fade-up .5s ease forwards;animation-delay:.52s;opacity:0;
         }
 
-        .lp2-cards { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+        .lp2-cards { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
 
         .lp2-card {
-          display:flex;flex-direction:column;align-items:flex-start;gap:10px;
-          background:rgba(255,255,255,.07);
+          display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+          background:rgba(255,255,255,.08);
           backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-          border:1px solid rgba(255,255,255,.11);
-          border-radius:14px;padding:16px;text-align:left;
+          border:1px solid rgba(255,255,255,.13);
+          border-radius:16px;padding:18px;text-align:left;
           transition:transform .22s ease,background .22s ease,border-color .22s ease;
           opacity:0;
         }
         .lp2-card:hover {
-          transform:translateY(-3px);
-          background:rgba(255,255,255,.12);
-          border-color:rgba(255,255,255,.22);
+          transform:translateY(-4px);
+          background:rgba(255,255,255,.14);
+          border-color:rgba(255,255,255,.24);
         }
         .lp2-card:nth-child(1){animation:lp-slide-in .45s ease forwards;animation-delay:.72s}
         .lp2-card:nth-child(2){animation:lp-slide-in .45s ease forwards;animation-delay:.92s}
@@ -134,40 +134,40 @@ export default function Login() {
         .lp2-card:nth-child(4){animation:lp-slide-in .45s ease forwards;animation-delay:1.32s}
 
         .lp2-card-icon {
-          width:38px;height:38px;border-radius:10px;flex-shrink:0;
+          width:44px;height:44px;border-radius:12px;flex-shrink:0;
           background:rgba(5,150,105,.22);
           border:1px solid rgba(5,150,105,.3);
           display:flex;align-items:center;justify-content:center;
-          font-size:14px;color:#6ee7b7;
+          font-size:17px;color:#6ee7b7;
           transition:background .22s,box-shadow .22s;
         }
         .lp2-card:hover .lp2-card-icon {
-          background:rgba(5,150,105,.32);
-          box-shadow:0 0 18px rgba(52,211,153,.32);
+          background:rgba(5,150,105,.34);
+          box-shadow:0 0 20px rgba(52,211,153,.34);
         }
-        .lp2-card-t { font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-.15px; }
-        .lp2-card-s { font-size:13px;color:rgba(255,255,255,.52);line-height:1.55; }
+        .lp2-card-t { font-size:14.5px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-.2px; }
+        .lp2-card-s { font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.6; }
 
         /* ── RIGHT ── */
         .lp2-right {
-          width:440px;flex-shrink:0;
+          width:460px;flex-shrink:0;
           display:flex;align-items:center;justify-content:center;
-          padding:52px 48px;background:#ffffff;
+          padding:52px 52px;background:#ffffff;
         }
-        .lp2-form-wrap { width:100%;max-width:320px; }
+        .lp2-form-wrap { width:100%;max-width:340px; }
 
-        .lp2-brand { margin-bottom:34px; }
-        .lp2-brand h2 { font-size:22px;font-weight:800;color:#111827;letter-spacing:-.5px;margin-bottom:5px; }
-        .lp2-brand p  { font-size:13px;color:#6b7280; }
+        .lp2-brand { margin-bottom:36px; }
+        .lp2-brand h2 { font-size:26px;font-weight:800;color:#111827;letter-spacing:-.6px;margin-bottom:6px; }
+        .lp2-brand p  { font-size:14px;color:#6b7280; }
 
         .lp2-lbl {
-          display:block;font-size:10px;font-weight:700;color:#374151;
-          margin-bottom:5px;letter-spacing:.7px;text-transform:uppercase;
+          display:block;font-size:10.5px;font-weight:700;color:#374151;
+          margin-bottom:6px;letter-spacing:.7px;text-transform:uppercase;
         }
         .lp2-inp {
-          width:100%;padding:10px 13px;box-sizing:border-box;
-          background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;
-          font-size:13px;color:#111827;outline:none;
+          width:100%;padding:12px 14px;box-sizing:border-box;
+          background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:11px;
+          font-size:14px;color:#111827;outline:none;
           transition:border-color .2s,box-shadow .2s;font-family:'Inter',sans-serif;
         }
         .lp2-inp:focus { border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1); }
@@ -188,9 +188,9 @@ export default function Login() {
         }
 
         .lp2-btn {
-          width:100%;padding:12px;margin-top:4px;
-          background:#059669;color:#fff;border:none;border-radius:10px;
-          font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;
+          width:100%;padding:13px;margin-top:6px;
+          background:#059669;color:#fff;border:none;border-radius:11px;
+          font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;
           box-shadow:0 4px 14px rgba(5,150,105,.28);
           transition:box-shadow .25s,transform .2s,background .2s;
           display:flex;align-items:center;justify-content:center;gap:8px;
@@ -228,7 +228,7 @@ export default function Login() {
 
           <div className="lp2-hero">
             <div className="lp2-logo-wrap"><SparkleIcon /></div>
-            <h1 className="lp2-h1">ANMA <em>El motor detrás</em><br />de cada regalo.</h1>
+            <h1 className="lp2-h1">ANMA <em>El motor detrás</em><br />de cada regalo</h1>
             <p className="lp2-sub">
               Toda tu operativa bajo control<br />en una sola plataforma.
             </p>
