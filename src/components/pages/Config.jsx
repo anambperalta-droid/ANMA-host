@@ -322,11 +322,21 @@ export default function Config() {
   // Pagos, Integraciones y Cuenta los puede ver y editar cualquier usuario autenticado.
   const ADMIN_ONLY_TABS = new Set(['equipo'])
 
+  const FEATURE_FLAGS = [
+    { key: 'costoInterno',      icon: 'fa-eye-slash',    color: '#7C3AED', label: 'Costo interno visible',           desc: 'Muestra la columna de costo en la tabla de productos' },
+    { key: 'margenTabla',       icon: 'fa-percent',      color: '#059669', label: 'Margen % en presupuestos',        desc: 'Muestra el margen de ganancia en cada ítem del presupuesto' },
+    { key: 'descuentoCliente',  icon: 'fa-tag',          color: '#D97706', label: 'Descuento fijo por cliente',      desc: 'Permite asignar un % de descuento personalizado a cada cliente' },
+    { key: 'notasInternas',     icon: 'fa-note-sticky',  color: '#2563EB', label: 'Notas internas en pedidos',       desc: 'Campo privado de notas en cada presupuesto (no aparece en el PDF)' },
+    { key: 'alertaVencimiento', icon: 'fa-clock',        color: '#DC2626', label: 'Alerta de presupuestos vencidos', desc: 'Notifica cuando un presupuesto lleva más de 7 días sin respuesta' },
+    { key: 'stockAvanzado',     icon: 'fa-boxes-stacked',color: '#0891B2', label: 'Stock avanzado por variante',     desc: 'Gestiona stock individual por talle, color u otra variante del producto' },
+  ]
+
   const allTabs = [
     { id: 'identidad', icon: 'fa-building', label: 'Identidad' },
     { id: 'contacto', icon: 'fa-phone', label: 'Contacto' },
     { id: 'comercial', icon: 'fa-dollar-sign', label: 'Comercial' },
     { id: 'listas', icon: 'fa-list', label: 'Listas' },
+    { id: 'modulos', icon: 'fa-sliders', label: 'Módulos' },
     { id: 'pagos', icon: 'fa-credit-card', label: 'Pagos' },
     { id: 'integraciones', icon: 'fa-plug', label: 'Integraciones' },
     { id: 'equipo', icon: 'fa-user-plus', label: 'Equipo' },
@@ -509,6 +519,51 @@ export default function Config() {
           <div style={{ gridColumn: '1 / -1' }}>
             <NewListCreator onCreate={handleCreateCustomList} />
           </div>
+        </div>
+      )}
+
+      {tab === 'modulos' && (
+        <div style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ padding: '12px 16px', background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)', fontSize: 12.5, color: 'var(--txt3)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <i className="fa fa-circle-info" style={{ color: 'var(--brand)', fontSize: 15 }} />
+            Activá o desactivá funciones opcionales. Los cambios aplican <b>solo a tu cuenta</b>, no afectan a otros usuarios.
+          </div>
+          {FEATURE_FLAGS.map(f => {
+            const active = !!(c.features?.[f.key])
+            return (
+              <div key={f.key} onClick={() => updateConfig({ features: { ...(c.features || {}), [f.key]: !active } })} style={{
+                display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
+                padding: '14px 18px', background: 'var(--surface)',
+                border: `1.5px solid ${active ? f.color + '50' : 'var(--border)'}`,
+                borderRadius: 13, transition: 'border-color .2s, background .2s',
+                userSelect: 'none',
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+                  background: active ? f.color + '18' : 'var(--surface2)',
+                  color: active ? f.color : 'var(--txt4)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                  transition: 'background .2s, color .2s',
+                }}>
+                  <i className={`fa ${f.icon}`} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--txt)' }}>{f.label}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--txt3)', marginTop: 3, lineHeight: 1.4 }}>{f.desc}</div>
+                </div>
+                <div style={{
+                  width: 46, height: 26, borderRadius: 13, flexShrink: 0, position: 'relative',
+                  background: active ? f.color : 'var(--border)', transition: 'background .22s',
+                }}>
+                  <span style={{
+                    position: 'absolute', top: 4, left: active ? 24 : 4,
+                    width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                    boxShadow: '0 1px 4px rgba(0,0,0,.25)', transition: 'left .22s',
+                  }} />
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
