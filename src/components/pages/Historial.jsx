@@ -9,20 +9,31 @@ function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
 }
 
-function KpiCard({ label, value, delta, isKey }) {
+function KpiCard({ label, value, delta, isKey, icon = 'fa-chart-line', iconColor = 'var(--brand)' }) {
   return (
-    <div className="bento-kpi" style={isKey ? { borderLeft: '3px solid var(--green)', paddingLeft: 20 } : { paddingLeft: 24 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
-        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+    <div className="bento-kpi" style={{
+      paddingLeft: 22, paddingRight: 18,
+      borderLeft: isKey ? '3px solid #16A34A' : '1.5px solid var(--border)',
+      position: 'relative', overflow: 'hidden',
+      background: isKey ? 'linear-gradient(135deg, var(--surface) 0%, #F0FDF415 100%)' : 'var(--surface)',
+    }}>
+      <div style={{ position: 'absolute', top: -8, right: -8, width: 64, height: 64, borderRadius: '50%', background: iconColor + '0C', pointerEvents: 'none' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, background: iconColor + '18', color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>
+          <i className={`fa ${icon}`} />
+        </div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em', lineHeight: 1.3 }}>{label}</div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: "'Inter',system-ui,sans-serif" }}>{value}</div>
         {delta !== null && delta !== undefined && (
-          <span style={{ fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? '#F0FDF4' : '#FFF1F2', padding: '1px 6px', borderRadius: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? '#DCFCE7' : '#FEE2E2', padding: '2px 7px', borderRadius: 20 }}>
             {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)}%
           </span>
         )}
       </div>
       {delta !== null && delta !== undefined && (
-        <div style={{ fontSize: 9, color: '#B0B8C9', marginTop: 5, letterSpacing: '0.04em' }}>vs. período anterior</div>
+        <div style={{ fontSize: 9, color: '#94A3B8', marginTop: 5, letterSpacing: '0.04em' }}>vs. período anterior</div>
       )}
     </div>
   )
@@ -687,10 +698,18 @@ export default function Historial() {
             </div>
           ) : (
             <div className="bento sk-fade-in">
-              <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} />
-              <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} isKey />
-              <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} />
-              <KpiCard label="Presupuestos" value={String(periodBudgets.length)} />
+              <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} icon="fa-arrow-trend-up" iconColor="#7C3AED" />
+              <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} isKey icon="fa-circle-dollar-to-slot" iconColor="#16A34A" />
+              <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} icon="fa-receipt" iconColor="#D97706" />
+              <KpiCard label="Presupuestos" value={String(periodBudgets.length)} icon="fa-file-invoice" iconColor="#3B82F6" />
+
+              {/* ── Insight banner ── */}
+              <div className="bento-wide" style={{ padding: '11px 18px', borderRadius: 13, background: insightColor + '0F', border: `1.5px solid ${insightColor}28`, display: 'flex', alignItems: 'center', gap: 13 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: insightColor + '18', color: insightColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                  <i className={`fa ${insightIcon}`} />
+                </div>
+                <span style={{ fontSize: 13, color: 'var(--txt2)', lineHeight: 1.55, fontWeight: 500 }}>{insightText}</span>
+              </div>
 
               <div className="bento-chart bento-wide">
                 <div className="card-header">
@@ -765,9 +784,9 @@ export default function Historial() {
                     <tbody>
                       {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => (
                         <tr key={b.id}>
-                          <td><b>{b.num || '—'}</b></td>
+                          <td><span style={{ fontFamily: "'Inter',system-ui,sans-serif", fontWeight: 700, fontSize: 12, color: 'var(--brand)', background: 'var(--brand-xlt)', padding: '2px 8px', borderRadius: 8 }}>{b.num || '—'}</span></td>
                           <td>{b.company || b.contact || '—'}</td>
-                          <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right' }}>{money(b.total)}</td>
+                          <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: "'Inter',system-ui,sans-serif" }}>{money(b.total)}</td>
                           <td><DotBadge status={b.status} /></td>
                           <td style={{ position: 'relative' }}>
                             <button
@@ -817,15 +836,16 @@ export default function Historial() {
       {tab === 'lista' && (
         <>
           <style>{`
-            .hist-tbl table{border-collapse:collapse}
-            .hist-tbl th{padding:9px 10px 10px;font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid #F3F4F6;white-space:nowrap;border-right:none}
-            .hist-tbl td{padding:11px 10px;border-bottom:1px solid #F3F4F6;vertical-align:middle;border-right:none}
+            .hist-tbl table{border-collapse:collapse;width:100%}
+            .hist-tbl th{padding:10px 12px 11px;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid var(--border);white-space:nowrap;border-right:none;background:var(--surface2)}
+            .hist-tbl td{padding:12px 12px;border-bottom:1px solid var(--border);vertical-align:middle;border-right:none;font-size:13px;color:var(--txt)}
             .hist-tbl tr:last-child td{border-bottom:none}
-            .hist-tbl tbody tr:hover td{background:#F9FAFB}
-            .hist-act{color:#D1D5DB;background:none;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s ease,opacity .15s ease}
-            .hist-act:hover{background:none}
-            .hist-act i{opacity:.5;transition:opacity .15s ease}
-            .hist-act:hover i{opacity:1}
+            .hist-tbl tbody tr{transition:background .12s}
+            .hist-tbl tbody tr:hover td{background:var(--brand-xlt)}
+            .hist-act{color:#CBD5E1;background:none;border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s,background .15s}
+            .hist-act:hover{background:var(--surface2)}
+            .hist-act i{font-size:12px}
+            .hist-num{font-weight:700;color:var(--txt);background:var(--surface2);padding:2px 8px;border-radius:8px;font-size:12px;font-family:'Inter',system-ui,sans-serif}
           `}</style>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
             <div className="search-row" style={{ maxWidth: 300, flex: '0 0 auto' }}>
@@ -886,25 +906,19 @@ export default function Historial() {
                       <td style={{ fontWeight: 700, fontSize: 11, color: ['confirmed','lost'].includes(b.status) ? '#9CA3AF' : overdue ? 'var(--red)' : dDays !== null && dDays <= 2 ? 'var(--amber)' : 'var(--txt3)' }}>
                         {dDays === null || ['confirmed','lost'].includes(b.status) ? '—' : overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd'}` : `${dDays}d`}
                       </td>
-                      <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.total)}</td>
-                      <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: "'Inter',system-ui,sans-serif", letterSpacing: '-.01em' }}>{money(b.total)}</td>
+                      <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: "'Inter',system-ui,sans-serif", letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
-                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
-                            value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
-                            {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                          </select>
-                        </div>
+                        <select style={{ fontSize: 11, padding: '4px 10px', border: `1.5px solid ${(DOT_STATUS[b.status] || '#94A3B8') + '55'}`, background: (DOT_STATUS[b.status] || '#94A3B8') + '18', color: DOT_STATUS[b.status] || '#94A3B8', borderRadius: 20, cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 700 }}
+                          value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
+                          {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_PAY[b.payStatus] || '#DC2626', flexShrink: 0, display: 'inline-block' }} />
-                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
-                            value={b.payStatus || 'pending'} onChange={e => handlePayStatusChange(b.id, e.target.value)}>
-                            {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                          </select>
-                        </div>
+                        <select style={{ fontSize: 11, padding: '4px 10px', border: `1.5px solid ${(DOT_PAY[b.payStatus] || '#DC2626') + '55'}`, background: (DOT_PAY[b.payStatus] || '#DC2626') + '18', color: DOT_PAY[b.payStatus] || '#DC2626', borderRadius: 20, cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 700 }}
+                          value={b.payStatus || 'pending'} onChange={e => handlePayStatusChange(b.id, e.target.value)}>
+                          {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
                       </td>
                       <td>
                         <div className="acts" style={{ gap: 2 }}>
