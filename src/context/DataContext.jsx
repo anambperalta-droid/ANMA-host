@@ -77,7 +77,11 @@ export function DataProvider({ children }) {
     const list = db(key, [])
     if (item.id) {
       const i = list.findIndex((x) => x.id === item.id)
-      if (i > -1) list[i] = { ...list[i], ...item }
+      if (i > -1) {
+        list[i] = { ...list[i], ...item }
+      } else {
+        list.push(item) // fallback: item has id but wasn't found — add it
+      }
     } else {
       item.id = Date.now() + Math.floor(Math.random() * 99991)
       list.push(item)
