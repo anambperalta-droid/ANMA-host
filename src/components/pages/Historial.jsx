@@ -13,17 +13,15 @@ function KpiCard({ label, value, delta, isKey }) {
   return (
     <div className="bento-kpi" style={isKey ? { borderLeft: '3px solid var(--green)', paddingLeft: 20 } : { paddingLeft: 24 }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
-        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-        {delta !== null && delta !== undefined && (
+      <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {delta !== null && delta !== undefined ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 7 }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? '#F0FDF4' : '#FFF1F2', padding: '1px 6px', borderRadius: 6 }}>
             {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)}%
           </span>
-        )}
-      </div>
-      {delta !== null && delta !== undefined && (
-        <div style={{ fontSize: 9, color: '#B0B8C9', marginTop: 5, letterSpacing: '0.04em' }}>vs. período anterior</div>
-      )}
+          <span style={{ fontSize: 9, color: '#B0B8C9', letterSpacing: '0.04em' }}>vs. anterior</span>
+        </div>
+      ) : <div style={{ height: 22, marginTop: 7 }} />}
     </div>
   )
 }
@@ -271,8 +269,7 @@ function StatusDonut({ statuses, budgets }) {
             strokeDashoffset={-s.start / 100 * circumference}
             transform="rotate(-90 45 45)" strokeLinecap="round" style={{ transition: 'all .6s ease' }} />
         ))}
-        <text x="45" y="43" textAnchor="middle" fontSize="16" fontWeight="800" fill="var(--txt)">{budgets.length}</text>
-        <text x="45" y="55" textAnchor="middle" fontSize="8" fill="var(--txt3)" fontWeight="600">TOTAL</text>
+        <text x="45" y="50" textAnchor="middle" fontSize="16" fontWeight="800" fill="var(--txt)">{budgets.length}</text>
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
         {statuses.filter(s => budgets.filter(b => b.status === s.k).length > 0).length === 0 ? (
@@ -310,12 +307,14 @@ export default function Historial() {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatus, setBulkStatus] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [carouselSlide, setCarouselSlide] = useState(0)
   const { hidden, money } = usePrivacy()
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [filterLoading, setFilterLoading] = useState(false)
 
   const budgets = get('budgets')
+  const products = get('products')
   const c = config()
   const now = new Date()
 
@@ -370,7 +369,7 @@ export default function Historial() {
   const confirmed = periodBudgets.filter(b => b.status === 'confirmed')
   const pagados = periodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
   const totCobrado = pagados.reduce((s, b) => s + cobrado(b), 0)
-  const avgTicket = confirmed.length ? Math.round(totBudgeted / confirmed.length) : 0
+  const avgTicket = periodBudgets.length ? Math.round(totBudgeted / periodBudgets.length) : 0
   const convRate = periodBudgets.length ? Math.round(confirmed.length / periodBudgets.length * 100) + '%' : '—'
 
   // Prev period budgets for delta comparisons
@@ -526,6 +525,20 @@ export default function Historial() {
     return seguimiento.slice(0, 3)
   }, [seguimiento])
 
+  // Stock crítico para carousel
+  const lowStockProducts = useMemo(() => {
+    return products
+      .filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock)
+      .sort((a, b) => ((a.stock || 0) / (a.minStock || 1)) - ((b.stock || 0) / (b.minStock || 1)))
+      .slice(0, 3)
+  }, [products])
+
+  // Auto-advance carousel cada 7s
+  useEffect(() => {
+    const t = setInterval(() => setCarouselSlide(s => (s + 1) % 2), 7000)
+    return () => clearInterval(t)
+  }, [])
+
   // Top clients
   const byClient = {}
   confirmed.forEach(b => { const k = b.company || b.contact || '—'; byClient[k] = (byClient[k] || 0) + (b.total || 0) })
@@ -670,7 +683,7 @@ export default function Historial() {
         </div>
       </div>
 
-      <div className="tab-bar">
+      <div className="tab-bar" style={{ marginBottom: 20 }}>
         {['resumen', 'lista', 'analisis', 'seguimiento'].map(t => (
           <div key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
             {t === 'resumen' ? 'Resumen' : t === 'lista' ? 'Presupuestos' : t === 'analisis' ? 'Análisis' : `Seguimiento (${seguimiento.length})`}
@@ -684,7 +697,7 @@ export default function Historial() {
           {(loading || filterLoading) ? (
             <div className="bento">
               <div className="sk sk-kpi" /><div className="sk sk-kpi" /><div className="sk sk-kpi" /><div className="sk sk-kpi" />
-              <div className="sk sk-kpi bento-wide" style={{ height: 180 }} />
+              <div className="sk sk-kpi bento-wide" style={{ height: 220 }} />
               <div className="sk sk-kpi bento-wide" style={{ height: 180 }} />
             </div>
           ) : (
@@ -694,66 +707,108 @@ export default function Historial() {
               <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} />
               <KpiCard label="Presupuestos" value={String(periodBudgets.length)} />
 
-              <div className="bento-chart bento-wide">
-                <div className="card-header">
-                  <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
-                </div>
-                <BarChart data={chartData} prevData={prevChartData} />
-              </div>
-
-              {/* ── Estado de presupuestos: Donut compacto ── */}
-              <div className="bento-chart">
-                <div className="card-header"><span className="card-title">Estado de presupuestos</span></div>
-                <StatusDonut statuses={statuses} budgets={periodBudgets} />
-              </div>
-
-              {/* ── Mini-Timeline seguimiento: compacto ── */}
-              <div className="bento-chart" style={{ background: 'var(--surface2)' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                  <i className="fa fa-fire" style={{ color: 'var(--brand)' }} />Seguimiento activo
-                </div>
-                {urgentTop3.length ? (
-                  <>
-                    {urgentTop3.map(b => {
-                      const urg = urgency(b.days)
-                      return (
-                        <div key={b.id} className="mini-seg-item" style={{ borderLeft: `3px solid ${urg.color}`, background: 'var(--surface)' }}>
-                          <div className="mini-seg-header">
-                            <div className={`seg-light ${urg.cls}`} style={{ width: 28, height: 28, fontSize: 11 }}>
-                              <i className={`fa ${urg.icon}`} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {b.company || b.contact || '—'}
-                              </div>
-                              <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
-                                {b.num} · {b.days}d · {money(b.total)}
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: 4 }}>
-                              <button className="mini-seg-btn wa" onClick={() => openWADirect(b)} title="WhatsApp">
-                                <i className="fa-brands fa-whatsapp" />
-                              </button>
-                              <button className="mini-seg-btn resend" onClick={() => handleResend(b)} title="Re-enviar">
-                                <i className="fa fa-paper-plane" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                    {seguimiento.length > 3 && (
-                      <div className="mini-seg-more" onClick={() => setTab('seguimiento')}>
-                        Ver {seguimiento.length - 3} más <i className="fa fa-arrow-right" style={{ marginLeft: 4 }} />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: 20, color: 'var(--txt4)', fontSize: 12 }}>
-                    <i className="fa fa-check-circle" style={{ fontSize: 18, marginBottom: 6, display: 'block', color: 'var(--green)' }} />
-                    Sin presupuestos pendientes
+              {/* ── Bar chart 65% + Panel derecho 35% ── */}
+              <div className="bento-wide" style={{ display: 'flex', gap: 14 }}>
+                <div className="bento-chart" style={{ flex: '0 0 63%', boxSizing: 'border-box' }}>
+                  <div className="card-header">
+                    <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
                   </div>
-                )}
+                  <BarChart data={chartData} prevData={prevChartData} />
+                </div>
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+                  {/* Donut */}
+                  <div className="bento-chart">
+                    <div className="card-header"><span className="card-title">Estado de presupuestos</span></div>
+                    <StatusDonut statuses={statuses} budgets={periodBudgets} />
+                  </div>
+
+                  {/* Carousel: Seguimiento / Alertas de stock */}
+                  <div className="bento-chart" style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <i className={`fa ${carouselSlide === 0 ? 'fa-fire' : 'fa-triangle-exclamation'}`} style={{ color: carouselSlide === 0 ? 'var(--brand)' : 'var(--amber)' }} />
+                        {carouselSlide === 0 ? 'Seguimiento activo' : 'Alertas de stock'}
+                      </div>
+                      <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                        {[0, 1].map(i => (
+                          <button key={i} onClick={() => setCarouselSlide(i)}
+                            style={{ width: 6, height: 6, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
+                              background: carouselSlide === i ? 'var(--brand)' : 'var(--border)', transition: 'background .25s' }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {carouselSlide === 0 && (urgentTop3.length ? (
+                      <>
+                        {urgentTop3.map(b => {
+                          const urg = urgency(b.days)
+                          return (
+                            <div key={b.id} className="mini-seg-item" style={{ borderLeft: `3px solid ${urg.color}`, background: 'var(--surface)' }}>
+                              <div className="mini-seg-header">
+                                <div className={`seg-light ${urg.cls}`} style={{ width: 28, height: 28, fontSize: 11 }}>
+                                  <i className={`fa ${urg.icon}`} />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {b.company || b.contact || '—'}
+                                  </div>
+                                  <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
+                                    {b.num} · {b.days}d · {money(b.total)}
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 4 }}>
+                                  <button className="mini-seg-btn wa" onClick={() => openWADirect(b)} title="WhatsApp">
+                                    <i className="fa-brands fa-whatsapp" />
+                                  </button>
+                                  <button className="mini-seg-btn resend" onClick={() => handleResend(b)} title="Re-enviar">
+                                    <i className="fa fa-paper-plane" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {seguimiento.length > 3 && (
+                          <div className="mini-seg-more" onClick={() => setTab('seguimiento')}>
+                            Ver {seguimiento.length - 3} más <i className="fa fa-arrow-right" style={{ marginLeft: 4 }} />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '18px 0' }}>
+                        <i className="fa fa-circle-check" style={{ fontSize: 24, display: 'block', color: 'var(--green)', marginBottom: 8 }} />
+                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--txt3)' }}>Sin pendientes activos</div>
+                        <button className="btn btn-primary btn-sm" style={{ marginTop: 14, fontSize: 12 }} onClick={() => nav('/presupuesto')}>
+                          <i className="fa fa-plus" /> Nuevo presupuesto
+                        </button>
+                      </div>
+                    ))}
+
+                    {carouselSlide === 1 && (lowStockProducts.length ? lowStockProducts.map(p => (
+                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 7 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                          {p.image
+                            ? <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover' }} />
+                            : <i className="fa fa-box-open" style={{ fontSize: 14, color: '#FB923C' }} />
+                          }
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                          <div style={{ fontSize: 10, color: 'var(--red)', fontWeight: 600 }}>Stock: {p.stock || 0} / mín {p.minStock}</div>
+                        </div>
+                        <span style={{ flexShrink: 0, background: '#FEF2F2', color: 'var(--red)', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>BAJO</span>
+                      </div>
+                    )) : (
+                      <div style={{ textAlign: 'center', padding: '18px 0' }}>
+                        <i className="fa fa-boxes-stacked" style={{ fontSize: 24, display: 'block', color: 'var(--green)', marginBottom: 8 }} />
+                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--txt3)' }}>Stock saludable</div>
+                        <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 4 }}>No hay productos en alerta</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="bento-chart bento-wide">
