@@ -54,12 +54,10 @@ export default function Sidebar({ open, onClose }) {
         {NAV.map((item, i) => {
           if (item.section) return <div key={i} className="sb-sec">{item.section}</div>
           const active = loc.pathname === item.path || (item.path === '/presupuesto' && loc.pathname.startsWith('/presupuesto'))
-          const chip = item.chipKey ? get(item.chipKey).length : null
           return (
             <div key={item.path} className={`sb-item ${active ? 'active' : ''}`} onClick={() => goTo(item.path)}>
               <i className={`fa ${item.icon}`} />
               {item.label}
-              {chip !== null && <span className="sb-chip">{chip}</span>}
             </div>
           )
         })}

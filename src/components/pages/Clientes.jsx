@@ -252,54 +252,73 @@ export default function Clientes() {
       </div>
 
       {viewMode === 'table' ? (
-        <div className="tbl-card">
-          <table>
-            <thead><tr><th>Empresa</th><th>Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Últ. pedido</th><th>Acciones</th></tr></thead>
-            <tbody>
-              {loading ? [1,2,3,4,5].map(i => (
-                <tr key={i}><td colSpan={8}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
-              )) : filtered.length ? filtered.map(c => (
-                <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
-                  <td style={{ fontWeight: 800 }}>
-                    {(() => {
-                      const ps = clientPayStatus(c)
-                      const dotColor = ps === 'pending' ? '#DC2626' : ps === 'partial' ? '#D97706' : ps === 'paid' ? '#16A34A' : '#CBD5E1'
-                      const dotTitle = ps === 'pending' ? 'Pago pendiente' : ps === 'partial' ? 'Seña abonada' : ps === 'paid' ? 'Pagado' : 'Sin pedidos activos'
-                      return <span title={dotTitle} style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: dotColor, marginRight: 7, verticalAlign: 'middle', flexShrink: 0 }} />
-                    })()}
-                    {c.company}
-                  </td>
-                  <td>{c.contact}</td>
-                  <td><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
-                  <td>
-                    {c.wa ? (
-                      <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        style={{ color: '#16A34A', fontWeight: 600, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <i className="fa-brands fa-whatsapp" />{c.wa}
-                      </a>
-                    ) : '—'}
-                  </td>
-                  <td>{c.rubro && <span className="badge b-purple">{c.rubro}</span>}</td>
-                  <td><span className="badge b-sent">{clientBudgets(c).length}</span></td>
-                  <td style={{ fontSize: 11 }}>
-                    {(() => {
-                      const days = clientLastBudgetDays(c)
-                      if (days === null) return <span style={{ color: 'var(--txt4)' }}>—</span>
-                      const color = days > 90 ? '#DC2626' : days > 30 ? '#D97706' : '#16A34A'
-                      return <span style={{ color, fontWeight: 600 }}>{days === 0 ? 'Hoy' : days === 1 ? 'Ayer' : `hace ${days}d`}</span>
-                    })()}
-                  </td>
-                  <td><div className="acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
-                    <button className="act edit" onClick={() => openEdit(c)}><i className="fa fa-pen" /></button>
-                    <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
-                    <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
-                  </div></td>
-                </tr>
-              )) : <tr><td colSpan={8}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <style>{`
+            .cli-tbl table th, .cli-tbl table td { padding-left: 16px; padding-right: 16px; }
+            .cli-acts { opacity: 0.45; transition: opacity .15s; }
+            tr:hover .cli-acts { opacity: 1; }
+          `}</style>
+          <div className="tbl-card cli-tbl">
+            <table>
+              <thead><tr><th>Empresa / Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Últ. pedido</th><th>Acciones</th></tr></thead>
+              <tbody>
+                {loading ? [1,2,3,4,5].map(i => (
+                  <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                )) : filtered.length ? filtered.map(c => (
+                  <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {(() => {
+                          const ps = clientPayStatus(c)
+                          const dotColor = ps === 'pending' ? '#DC2626' : ps === 'partial' ? '#D97706' : ps === 'paid' ? '#16A34A' : '#CBD5E1'
+                          const dotTitle = ps === 'pending' ? 'Pago pendiente' : ps === 'partial' ? 'Seña abonada' : ps === 'paid' ? 'Pagado' : 'Sin pedidos activos'
+                          return <span title={dotTitle} style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                        })()}
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)' }}>{c.company}</div>
+                          {c.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{c.contact}</div>}
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
+                    <td>
+                      {c.wa ? (
+                        <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          title={c.wa}
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none' }}>
+                          <i className="fa-brands fa-whatsapp" />
+                        </a>
+                      ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                    </td>
+                    <td>
+                      {c.rubro ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--txt2)' }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0, display: 'inline-block' }} />
+                          {c.rubro}
+                        </span>
+                      ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                    </td>
+                    <td style={{ fontVariantNumeric: 'tabular-nums', fontSize: 13, fontWeight: 600 }}>{clientBudgets(c).length}</td>
+                    <td style={{ fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>
+                      {(() => {
+                        const days = clientLastBudgetDays(c)
+                        if (days === null) return <span style={{ color: 'var(--txt4)' }}>—</span>
+                        const color = days > 90 ? '#DC2626' : days > 30 ? '#D97706' : '#16A34A'
+                        return <span style={{ color, fontWeight: 600 }}>{days === 0 ? 'Hoy' : days === 1 ? 'Ayer' : `hace ${days}d`}</span>
+                      })()}
+                    </td>
+                    <td><div className="acts cli-acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
+                      <button className="act edit" onClick={() => openEdit(c)}><i className="fa fa-pen" /></button>
+                      <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
+                      <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
+                    </div></td>
+                  </tr>
+                )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 12 }}>
           {loading ? [1,2,3,4,5,6].map(i => (
