@@ -3,6 +3,30 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
 
+const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      const maxDim = 600
+      if (width > maxDim || height > maxDim) {
+        if (width > height) { height = Math.round(height * maxDim / width); width = maxDim }
+        else { width = Math.round(width * maxDim / height); height = maxDim }
+      }
+      canvas.width = width; canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      let q = 0.85
+      let result = canvas.toDataURL('image/jpeg', q)
+      while (result.length > maxBytes && q > 0.2) { q -= 0.1; result = canvas.toDataURL('image/jpeg', q) }
+      resolve(result)
+    }
+    img.src = e.target.result
+  }
+  reader.readAsDataURL(file)
+})
+
 const CAT_PALETTE = [
   { bg: '#F5F3FF', color: '#8B5CF6' },
   { bg: '#EFF6FF', color: '#60A5FA' },
@@ -24,7 +48,7 @@ export default function Catalogo() {
   const [bulkModal, setBulkModal] = useState(false)
   const [csvModal, setCsvModal] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ name: '', cat: '', cost: '', supplierId: '' })
+  const [form, setForm] = useState({ name: '', cat: '', cost: '', supplierId: '', image: '' })
   const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
   const selectOnFocus = (e) => e.target.select()
   const [bulkCat, setBulkCat] = useState('')
@@ -44,6 +68,8 @@ export default function Catalogo() {
   const [bulkSupplierValue, setBulkSupplierValue] = useState('')
   const [catMgmtModal, setCatMgmtModal] = useState(false)
   const [editingCat, setEditingCat] = useState(null)
+  const [viewMode, setViewMode] = useState('table')
+  const imgRef = useRef(null)
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -65,10 +91,18 @@ export default function Catalogo() {
   const safeCat = (val) => (val && cats.includes(val)) ? val : (cats[0] || '')
   const open = (p) => {
     setForm(p
-      ? { ...p, cat: p.cat ?? '' }
-      : { name: '', cat: cats[0] || '', cost: '', supplierId: '' }
+      ? { ...p, cat: p.cat ?? '', image: p.image || '' }
+      : { name: '', cat: cats[0] || '', cost: '', supplierId: '', image: '' }
     )
     setModal(true)
+  }
+
+  const handleImgUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const compressed = await compressImage(file)
+    setF('image', compressed)
+    e.target.value = ''
   }
   const save = () => {
     if (!form.name) { toast('Ingresá el nombre del producto.', 'er'); return }
@@ -229,6 +263,13 @@ export default function Catalogo() {
           </button>
           <button className="btn btn-ghost btn-sm" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}><i className="fa fa-file-csv" /> Importar CSV</button>
           <button className="btn btn-secondary btn-sm" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}><i className="fa fa-file-import" /> Carga masiva</button>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => setViewMode(v => v === 'table' ? 'grid' : 'table')}
+            title={viewMode === 'table' ? 'Vista grilla' : 'Vista tabla'}
+          >
+            <i className={`fa ${viewMode === 'table' ? 'fa-grip' : 'fa-table-list'}`} />
+          </button>
           <button className="btn btn-primary btn-sm" onClick={() => open()}><i className="fa fa-plus" /> Agregar producto</button>
         </div>
       </div>
@@ -244,99 +285,142 @@ export default function Catalogo() {
           <i className="fa fa-sliders" /> Gestionar
         </button>
       </div>
-      <div className="tbl-card">
-        <table>
-          <thead>
-            <tr>
-              <th style={{ width: 36, textAlign: 'center' }}>
-                <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} style={{ cursor: 'pointer' }} />
-              </th>
-              <th>Producto</th>
-              <th>Categoría</th>
-              <th>Proveedor</th>
-              <th>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  Costo ($)
-                  <button
-                    title={showCostInfo ? 'Ocultar última actualización' : 'Mostrar última actualización'}
-                    onClick={() => setShowCostInfo(v => !v)}
-                    style={{ background: showCostInfo ? 'var(--brand)' : 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, color: showCostInfo ? '#fff' : 'var(--txt3)', fontSize: 9, padding: '2px 6px', cursor: 'pointer', fontWeight: 700, transition: 'all .2s' }}
-                  >
-                    <i className="fa fa-clock" /> ult. act.
-                  </button>
-                </span>
-              </th>
-              <th>% Margen</th>
-              {showCostInfo && <th>Últ. actualización</th>}
-              <th>Precio sugerido ($)</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? [1,2,3,4].map(i => (
-              <tr key={i}><td colSpan={showCostInfo ? 9 : 8}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
-            )) : filtered.length ? filtered.map(p => {
-              const pct = marginPct(p)
-              const cc = catColor(p.cat)
-              return (
-                <tr key={p.id}>
-                  <td style={{ textAlign: 'center' }}>
-                    <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} style={{ cursor: 'pointer' }} />
-                  </td>
-                  <td><span style={{ fontWeight: 800 }}>{p.name}</span></td>
-                  <td>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '2px 10px',
-                      borderRadius: 20,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      background: cc.bg,
-                      color: cc.color,
-                      letterSpacing: 0.2,
-                    }}>{p.cat}</span>
-                  </td>
-                  <td>{supplierName(p.supplierId)}</td>
-                  <td>{fmt(p.cost)}</td>
-                  <td>
-                    {pct !== null ? (
-                      <span style={{
-                        fontWeight: 800,
-                        fontSize: 13,
-                        color: marginColor(pct),
-                      }}>{pct}%</span>
-                    ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-                  </td>
-                  {showCostInfo && (
-                    <td style={{ fontSize: 11 }}>
-                      {p.updatedAt ? (
-                        <span style={{ color: (() => {
-                          const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000)
-                          return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A'
-                        })(), fontWeight: 600 }}>
-                          {(() => {
-                            const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000)
-                            if (days === 0) return 'Hoy'
-                            if (days === 1) return 'Ayer'
-                            if (days < 30) return `hace ${days}d`
-                            if (days < 365) return `hace ${Math.floor(days/30)}m`
-                            return `hace ${Math.floor(days/365)}a`
-                          })()}
-                        </span>
+      {viewMode === 'table' ? (
+        <div className="tbl-card">
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: 36, textAlign: 'center' }}>
+                  <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} style={{ cursor: 'pointer' }} />
+                </th>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Proveedor</th>
+                <th>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    Costo ($)
+                    <button
+                      title={showCostInfo ? 'Ocultar última actualización' : 'Mostrar última actualización'}
+                      onClick={() => setShowCostInfo(v => !v)}
+                      style={{ background: showCostInfo ? 'var(--brand)' : 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, color: showCostInfo ? '#fff' : 'var(--txt3)', fontSize: 9, padding: '2px 6px', cursor: 'pointer', fontWeight: 700, transition: 'all .2s' }}
+                    >
+                      <i className="fa fa-clock" /> ult. act.
+                    </button>
+                  </span>
+                </th>
+                <th>% Margen</th>
+                {showCostInfo && <th>Últ. actualización</th>}
+                <th>Precio sugerido ($)</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? [1,2,3,4].map(i => (
+                <tr key={i}><td colSpan={showCostInfo ? 9 : 8}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
+              )) : filtered.length ? filtered.map(p => {
+                const pct = marginPct(p)
+                const cc = catColor(p.cat)
+                return (
+                  <tr key={p.id}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} style={{ cursor: 'pointer' }} />
+                    </td>
+                    <td>
+                      {p.image && <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
+                      <span style={{ fontWeight: 800 }}>{p.name}</span>
+                    </td>
+                    <td>
+                      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: cc.bg, color: cc.color, letterSpacing: 0.2 }}>{p.cat}</span>
+                    </td>
+                    <td>{supplierName(p.supplierId)}</td>
+                    <td>{fmt(p.cost)}</td>
+                    <td>
+                      {pct !== null ? (
+                        <span style={{ fontWeight: 800, fontSize: 13, color: marginColor(pct) }}>{pct}%</span>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                     </td>
-                  )}
-                  <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
-                  <td><div className="acts">
-                    <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
-                    <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>
-                  </div></td>
-                </tr>
-              )
-            }) : <tr><td colSpan={showCostInfo ? 9 : 8}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
-          </tbody>
-        </table>
-      </div>
+                    {showCostInfo && (
+                      <td style={{ fontSize: 11 }}>
+                        {p.updatedAt ? (
+                          <span style={{ color: (() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A' })(), fontWeight: 600 }}>
+                            {(() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); if (days === 0) return 'Hoy'; if (days === 1) return 'Ayer'; if (days < 30) return `hace ${days}d`; if (days < 365) return `hace ${Math.floor(days/30)}m`; return `hace ${Math.floor(days/365)}a` })()}
+                          </span>
+                        ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                      </td>
+                    )}
+                    <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
+                    <td><div className="acts">
+                      <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
+                      <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>
+                    </div></td>
+                  </tr>
+                )
+              }) : <tr><td colSpan={showCostInfo ? 9 : 8}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* ── GRID VIEW ── */
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 14, marginTop: 4 }}>
+          {loading ? [1,2,3,4,5,6].map(i => (
+            <div key={i} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <div className="sk" style={{ height: 130, borderRadius: '10px 10px 0 0' }} />
+              <div style={{ padding: '10px 12px' }}>
+                <div className="sk sk-text" style={{ height: 13, width: '70%', marginBottom: 8 }} />
+                <div className="sk sk-text" style={{ height: 11, width: '45%' }} />
+              </div>
+            </div>
+          )) : filtered.length ? filtered.map(p => {
+            const pct = marginPct(p)
+            const cc = catColor(p.cat)
+            return (
+              <div key={p.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'transform .18s,box-shadow .18s' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--sh-lg)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}
+              >
+                {/* IMAGE */}
+                <div style={{ height: 130, background: cc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                  {p.image
+                    ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <i className="fa fa-box-open" style={{ fontSize: 36, color: cc.color, opacity: .5 }} />
+                  }
+                  <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
+                    style={{ position: 'absolute', top: 8, left: 8, cursor: 'pointer', width: 16, height: 16 }}
+                    onClick={e => e.stopPropagation()} />
+                </div>
+                {/* INFO */}
+                <div style={{ padding: '10px 12px' }}>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.name}>{p.name}</div>
+                  <span style={{ display: 'inline-block', padding: '1px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: cc.bg, color: cc.color, marginBottom: 6 }}>{p.cat || '—'}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 11, color: 'var(--txt3)' }}>{fmt(p.cost)}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</span>
+                  </div>
+                  {pct !== null && <div style={{ fontSize: 10, fontWeight: 700, color: marginColor(pct), marginTop: 2 }}>{pct}% margen</div>}
+                </div>
+                {/* ACTIONS */}
+                <div style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
+                  <button onClick={() => open(p)} style={{ flex: 1, padding: '7px 0', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', transition: 'background .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-xlt)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                    <i className="fa fa-pen" /> Editar
+                  </button>
+                  <div style={{ width: 1, background: 'var(--border)' }} />
+                  <button onClick={() => del(p.id)} style={{ flex: 1, padding: '7px 0', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', transition: 'background .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#FFF1F2'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                    <i className="fa fa-trash" />
+                  </button>
+                </div>
+              </div>
+            )
+          }) : (
+            <div style={{ gridColumn: '1/-1' }}>
+              <div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div>
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedIds.size > 0 && (
         <div style={{
@@ -380,6 +464,28 @@ export default function Catalogo() {
               <div className="fg"><label>Costo ($) *</label><input tabIndex={3} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => setF('cost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" /></div>
             </div>
             <div className="fg"><label>Proveedor</label><select tabIndex={4} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}><option value="">Sin asignar</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+            <div className="fg">
+              <label>Imagen del producto <span style={{ fontWeight: 400, color: 'var(--txt3)' }}>(opcional)</span></label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {form.image
+                  ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} />
+                  : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className="fa fa-image" style={{ color: 'var(--txt4)', fontSize: 20 }} />
+                    </div>
+                }
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <input ref={imgRef} type="file" accept="image/*" onChange={handleImgUpload} style={{ display: 'none' }} />
+                  <button className="btn btn-ghost btn-sm" type="button" onClick={() => imgRef.current?.click()}>
+                    <i className="fa fa-upload" /> {form.image ? 'Cambiar imagen' : 'Subir imagen'}
+                  </button>
+                  {form.image && (
+                    <button className="btn btn-ghost btn-sm" type="button" style={{ color: 'var(--red)' }} onClick={() => setF('image', '')}>
+                      <i className="fa fa-trash" /> Quitar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
           </div>
         </div>

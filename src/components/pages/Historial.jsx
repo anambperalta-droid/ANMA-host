@@ -279,11 +279,13 @@ function StatusDonut({ statuses, budgets }) {
           <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: 8 }}>Sin presupuestos aún</div>
         ) : statuses.filter(s => budgets.filter(b => b.status === s.k).length > 0).map(s => {
           const n = budgets.filter(b => b.status === s.k).length
+          const pct = Math.round(n / total * 100)
           return (
             <div key={s.k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.c, flexShrink: 0 }} />
               <span style={{ fontSize: 12, color: 'var(--txt2)', flex: 1 }}>{s.l}</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', background: 'var(--surface2)', padding: '1px 7px', borderRadius: 8 }}>{n}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: s.c, background: s.c + '15', padding: '1px 5px', borderRadius: 6, flexShrink: 0 }}>{pct}%</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', background: 'var(--surface2)', padding: '1px 7px', borderRadius: 8, flexShrink: 0 }}>{n}</span>
             </div>
           )
         })}
@@ -883,7 +885,7 @@ export default function Historial() {
                       <td>{b.contact || '—'}</td>
                       <td style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
                       <td>{fmtDate(b.deliveryDate)}</td>
-                      <td style={{ fontWeight: 700, fontSize: 11, color: ['confirmed','lost'].includes(b.status) ? '#9CA3AF' : overdue ? 'var(--red)' : dDays !== null && dDays <= 2 ? 'var(--amber)' : 'var(--txt3)' }}>
+                      <td style={{ fontWeight: 700, fontSize: 11, color: ['confirmed','lost'].includes(b.status) ? '#9CA3AF' : overdue ? 'var(--red)' : dDays !== null && dDays <= 2 ? 'var(--amber)' : dDays !== null && dDays > 2 ? 'var(--green)' : 'var(--txt3)' }}>
                         {dDays === null || ['confirmed','lost'].includes(b.status) ? '—' : overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd'}` : `${dDays}d`}
                       </td>
                       <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.total)}</td>
@@ -953,7 +955,7 @@ export default function Historial() {
               </div>
             ))}
           </div>
-          <div className="card" style={{ maxHeight: 220, overflow: 'hidden' }}>
+          <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-trophy" style={{ color: 'var(--amber)', marginRight: 6 }} />Clientes top</span></div>
             {topClients.length ? (() => {
               const totalTopSales = topClients.reduce((s, [, v]) => s + v, 0) || 1

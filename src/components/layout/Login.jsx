@@ -34,7 +34,14 @@ export default function Login() {
   const [showPwd, setShowPwd] = useState(false)
   const [err, setErr] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const { login } = useAuth()
+  const { login, resetPassword } = useAuth()
+
+  // Forgot password state
+  const [forgotModal, setForgotModal] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSending, setResetSending] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetErr, setResetErr] = useState('')
 
   const handleLogin = async () => {
     if (!email || !pass) { setErr('Completá todos los campos.'); return }
@@ -44,6 +51,25 @@ export default function Login() {
   }
 
   const handleKey = (e) => { if (e.key === 'Enter') handleLogin() }
+
+  const openForgot = () => {
+    setResetEmail(email)
+    setResetSent(false)
+    setResetErr('')
+    setForgotModal(true)
+  }
+
+  const handleReset = async () => {
+    if (!resetEmail) { setResetErr('Ingresá tu email.'); return }
+    setResetSending(true); setResetErr('')
+    try {
+      await resetPassword(resetEmail)
+      setResetSent(true)
+    } catch (e) {
+      setResetErr(e.message || 'Error al enviar. Verificá el email.')
+    }
+    setResetSending(false)
+  }
 
   return (
     <>
@@ -181,6 +207,14 @@ export default function Login() {
         }
         .lp2-eye:hover { color:#374151; }
 
+        .lp2-forgot {
+          display:block;text-align:right;font-size:11px;color:#7c3aed;
+          margin-top:5px;background:none;border:none;cursor:pointer;
+          padding:0;font-family:'Inter',sans-serif;text-decoration:none;
+          transition:color .15s;
+        }
+        .lp2-forgot:hover { color:#5b21b6;text-decoration:underline; }
+
         .lp2-err {
           background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;
           color:#dc2626;font-size:12px;padding:9px 12px;margin-bottom:16px;
@@ -207,6 +241,42 @@ export default function Login() {
           margin-top:22px;font-size:11px;color:#9ca3af;
         }
         .lp2-sec i { color:#059669;font-size:11px; }
+
+        /* ── FORGOT MODAL ── */
+        .lp2-modal-bg {
+          position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);
+          display:flex;align-items:center;justify-content:center;padding:20px;
+          backdrop-filter:blur(4px);
+        }
+        .lp2-modal {
+          background:#fff;border-radius:18px;padding:32px 28px;
+          width:100%;max-width:380px;
+          box-shadow:0 24px 64px rgba(0,0,0,.18);
+          animation:lp-fade-up .25s ease both;
+        }
+        .lp2-modal h3 { font-size:18px;font-weight:800;color:#111827;margin:0 0 6px;letter-spacing:-.4px; }
+        .lp2-modal p  { font-size:13px;color:#6b7280;margin:0 0 22px;line-height:1.6; }
+        .lp2-modal-ok {
+          background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;
+          padding:14px;text-align:center;color:#166534;font-size:13px;font-weight:600;line-height:1.6;
+        }
+        .lp2-modal-ok i { color:#16a34a;font-size:18px;display:block;margin-bottom:6px; }
+        .lp2-modal-row { display:flex;gap:8px;margin-top:18px; }
+        .lp2-modal-cancel {
+          flex:1;padding:11px;border:1.5px solid #e5e7eb;border-radius:10px;
+          background:#fff;color:#374151;font-size:14px;font-weight:600;
+          cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s;
+        }
+        .lp2-modal-cancel:hover { background:#f9fafb; }
+        .lp2-modal-send {
+          flex:2;padding:11px;border:none;border-radius:10px;
+          background:#7c3aed;color:#fff;font-size:14px;font-weight:700;
+          cursor:pointer;font-family:'Inter',sans-serif;
+          transition:background .2s,box-shadow .2s;
+          display:flex;align-items:center;justify-content:center;gap:7px;
+        }
+        .lp2-modal-send:hover:not(:disabled) { background:#5b21b6;box-shadow:0 4px 14px rgba(124,58,237,.35); }
+        .lp2-modal-send:disabled { opacity:.6;cursor:not-allowed; }
 
         /* ── RESPONSIVE ── */
         @media(max-width:920px){
@@ -284,6 +354,9 @@ export default function Login() {
                   <i className={`fa ${showPwd ? 'fa-eye-slash' : 'fa-eye'}`} />
                 </button>
               </div>
+              <button className="lp2-forgot" type="button" onClick={openForgot}>
+                ¿Olvidaste tu contraseña?
+              </button>
             </div>
 
             <button className="lp2-btn" onClick={handleLogin} disabled={submitting}>
@@ -300,6 +373,49 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* ── MODAL RECUPERAR CONTRASEÑA ── */}
+      {forgotModal && (
+        <div className="lp2-modal-bg" onClick={e => { if (e.target === e.currentTarget) setForgotModal(false) }}>
+          <div className="lp2-modal">
+            <h3><i className="fa fa-key" style={{ color: '#7c3aed', marginRight: 8, fontSize: 16 }} />Recuperar contraseña</h3>
+            {resetSent ? (
+              <>
+                <div className="lp2-modal-ok">
+                  <i className="fa fa-circle-check" />
+                  Email enviado a <b>{resetEmail}</b>.<br />
+                  Revisá tu bandeja y seguí el enlace para crear una nueva contraseña.
+                </div>
+                <div className="lp2-modal-row">
+                  <button className="lp2-modal-cancel" style={{ flex: 1 }} onClick={() => setForgotModal(false)}>Cerrar</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>Ingresá tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+                <label className="lp2-lbl">Email</label>
+                <input
+                  type="email" className="lp2-inp" placeholder="tu@email.com"
+                  value={resetEmail} onChange={e => setResetEmail(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleReset() }}
+                  autoFocus
+                />
+                {resetErr && (
+                  <div className="lp2-err" style={{ marginTop: 10, marginBottom: 0 }}>
+                    <i className="fa fa-circle-exclamation" /><span>{resetErr}</span>
+                  </div>
+                )}
+                <div className="lp2-modal-row">
+                  <button className="lp2-modal-cancel" onClick={() => setForgotModal(false)}>Cancelar</button>
+                  <button className="lp2-modal-send" onClick={handleReset} disabled={resetSending}>
+                    {resetSending ? <><i className="fa fa-spinner fa-spin" /> Enviando...</> : <><i className="fa fa-paper-plane" /> Enviar enlace</>}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }
