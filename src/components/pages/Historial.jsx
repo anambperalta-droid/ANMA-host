@@ -143,33 +143,6 @@ function SeguimientoCard({ b, onEdit, onWA, onResend }) {
           <i className="fa fa-calendar" style={{ marginRight: 4 }} />Enviado: {fmtDate(b.date)}
           {b.deliveryDate && ` · Entrega: ${fmtDate(b.deliveryDate)}`}
         </div>
-        {b.date && b.deliveryDate && (() => {
-          const sentDate = new Date(b.date)
-          const delivDate = new Date(b.deliveryDate + 'T00:00')
-          const nowD = new Date()
-          const total = delivDate - sentDate
-          const elapsed = nowD - sentDate
-          const progress = total > 0 ? Math.min(100, Math.max(0, (elapsed / total) * 100)) : 50
-          const overdue = progress >= 100
-          return (
-            <div style={{ marginTop: 6, fontSize: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--txt4)', marginBottom: 3 }}>
-                <span>Enviado</span>
-                <span style={{ color: overdue ? 'var(--red)' : 'var(--amber)', fontWeight: 700 }}>Hoy</span>
-                <span>Entrega</span>
-              </div>
-              <div style={{ position: 'relative', height: 6, background: 'var(--surface2)', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, height: '100%',
-                  width: `${progress}%`,
-                  background: overdue ? 'var(--red)' : progress > 70 ? '#EA580C' : 'var(--amber)',
-                  borderRadius: 4,
-                  transition: 'width .5s ease'
-                }} />
-              </div>
-            </div>
-          )
-        })()}
       </div>
       <div className="seg-meta">
         <div className="seg-days">
@@ -263,7 +236,7 @@ function StatusDonut({ statuses, budgets }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-      <svg width="88" height="88" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
+      <svg width="108" height="108" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
         <circle cx="45" cy="45" r={radius} fill="none" stroke="var(--surface2)" strokeWidth="10" />
         {segments.map((s, i) => (
           <circle key={i} cx="45" cy="45" r={radius} fill="none" stroke={s.c} strokeWidth="10"
@@ -537,13 +510,20 @@ export default function Historial() {
     return seguimiento.slice(0, 3)
   }, [seguimiento])
 
-  // Stock crítico para carousel
-  const lowStockProducts = useMemo(() => {
-    return products
-      .filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock)
-      .sort((a, b) => ((a.stock || 0) / (a.minStock || 1)) - ((b.stock || 0) / (b.minStock || 1)))
+  // Próximas entregas para carousel (regalos no maneja stock)
+  const upcomingDeliveries = useMemo(() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    return budgets
+      .filter(b => b.deliveryDate && !['lost', 'cancelled', 'delivered'].includes(b.status))
+      .map(b => {
+        const d = new Date(b.deliveryDate + 'T00:00')
+        const diff = Math.ceil((d - today) / 86400000)
+        return { ...b, daysToDeliv: diff }
+      })
+      .filter(b => b.daysToDeliv >= -1 && b.daysToDeliv <= 14)
+      .sort((a, b) => a.daysToDeliv - b.daysToDeliv)
       .slice(0, 3)
-  }, [products])
+  }, [budgets])
 
   // Auto-advance carousel cada 7s
   useEffect(() => {
@@ -720,8 +700,8 @@ export default function Historial() {
               <KpiCard label="Presupuestos" value={String(periodBudgets.length)} />
 
               {/* ── Bar chart 65% + Panel derecho 35% ── */}
-              <div className="bento-wide" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap' }}>
-                <div className="bento-chart" style={{ flex: '1 1 55%', minWidth: 300, boxSizing: 'border-box' }}>
+              <div className="bento-wide" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <div className="bento-chart" style={{ flex: '1 1 55%', minWidth: 300, boxSizing: 'border-box', alignSelf: 'flex-start' }}>
                   <div className="card-header">
                     <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
                   </div>
@@ -737,12 +717,12 @@ export default function Historial() {
                     <StatusDonut statuses={statuses} budgets={periodBudgets} />
                   </div>
 
-                  {/* Carousel: Seguimiento / Alertas de stock */}
+                  {/* Carousel: Seguimiento / Próximas entregas */}
                   <div className="bento-chart" style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <i className={`fa ${carouselSlide === 0 ? 'fa-fire' : 'fa-triangle-exclamation'}`} style={{ color: carouselSlide === 0 ? 'var(--brand)' : 'var(--amber)' }} />
-                        {carouselSlide === 0 ? 'Seguimiento activo' : 'Alertas de stock'}
+                        <i className={`fa ${carouselSlide === 0 ? 'fa-fire' : 'fa-truck-fast'}`} style={{ color: carouselSlide === 0 ? 'var(--brand)' : 'var(--amber)' }} />
+                        {carouselSlide === 0 ? 'Seguimiento activo' : 'Próximas entregas'}
                       </div>
                       <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                         {[0, 1].map(i => (
@@ -800,25 +780,32 @@ export default function Historial() {
                       </div>
                     ))}
 
-                    {carouselSlide === 1 && (lowStockProducts.length ? lowStockProducts.map(p => (
-                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 7 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                          {p.image
-                            ? <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover' }} />
-                            : <i className="fa fa-box-open" style={{ fontSize: 14, color: '#FB923C' }} />
-                          }
+                    {carouselSlide === 1 && (upcomingDeliveries.length ? upcomingDeliveries.map(b => {
+                      const d = b.daysToDeliv
+                      const lbl = d < 0 ? `Vencida · ${Math.abs(d)}d` : d === 0 ? 'HOY' : d === 1 ? 'Mañana' : `En ${d} días`
+                      const color = d < 0 ? 'var(--red)' : d <= 2 ? '#EA580C' : 'var(--amber)'
+                      const bg = d < 0 ? '#FEF2F2' : d <= 2 ? '#FFF7ED' : '#FEF3C7'
+                      return (
+                        <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: `3px solid ${color}`, marginBottom: 7 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color }}>
+                            <i className="fa fa-truck-fast" style={{ fontSize: 13 }} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {b.company || b.contact || '—'}
+                            </div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
+                              {b.num} · {money(b.total)}
+                            </div>
+                          </div>
+                          <span style={{ flexShrink: 0, background: bg, color, fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase' }}>{lbl}</span>
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                          <div style={{ fontSize: 10, color: 'var(--red)', fontWeight: 600 }}>Stock: {p.stock || 0} / mín {p.minStock}</div>
-                        </div>
-                        <span style={{ flexShrink: 0, background: '#FEF2F2', color: 'var(--red)', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>BAJO</span>
-                      </div>
-                    )) : (
+                      )
+                    }) : (
                       <div style={{ textAlign: 'center', padding: '18px 0' }}>
-                        <i className="fa fa-boxes-stacked" style={{ fontSize: 24, display: 'block', color: 'var(--green)', marginBottom: 8 }} />
-                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--txt3)' }}>Stock saludable</div>
-                        <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 4 }}>No hay productos en alerta</div>
+                        <i className="fa fa-calendar-check" style={{ fontSize: 24, display: 'block', color: 'var(--green)', marginBottom: 8 }} />
+                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--txt3)' }}>Sin entregas próximas</div>
+                        <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 4 }}>No hay pedidos con entrega en los próximos 14 días</div>
                       </div>
                     ))}
                   </div>
