@@ -3,30 +3,38 @@ import { db, dbW, cfg, wCfg, ensureDefaults } from '../lib/storage'
 
 const Ctx = createContext()
 
+// Monotonic unique-ID generator — never collides, even within the same millisecond
+let __idSeed = Date.now()
+const nextId = () => { __idSeed += 1; return __idSeed }
+
 export function DataProvider({ children }) {
   const [tick, setTick] = useState(0)
   const refresh = useCallback(() => setTick((t) => t + 1), [])
 
   ensureDefaults()
 
-  useEffect(() => {
-    let anyChanged = false
+  // Synchronous ID migration — runs before first render so selections/deletes never hit duplicate/missing IDs
+  useState(() => {
     ;['suppliers', 'products', 'clients', 'budgets'].forEach(key => {
       const list = db(key, [])
       const seen = new Set()
       let changed = false
       const fixed = list.map(item => {
         if (!item.id || seen.has(item.id)) {
-          item = { ...item, id: Date.now() + Math.floor(Math.random() * 99991) }
-          changed = true; anyChanged = true
+          item = { ...item, id: nextId() }
+          changed = true
         }
         seen.add(item.id)
         return item
       })
       if (changed) dbW(key, fixed)
     })
-    if (anyChanged) refresh()
-  }, [])
+    // Keep __idSeed above any existing id
+    ;['suppliers', 'products', 'clients', 'budgets'].forEach(key => {
+      db(key, []).forEach(it => { if (typeof it.id === 'number' && it.id >= __idSeed) __idSeed = it.id + 1 })
+    })
+    return true
+  })
 
   useEffect(() => {
     const h = () => refresh()
@@ -83,7 +91,7 @@ export function DataProvider({ children }) {
         list.push(item) // fallback: item has id but wasn't found — add it
       }
     } else {
-      item.id = Date.now() + Math.floor(Math.random() * 99991)
+      item.id = nextId()
       list.push(item)
     }
     dbW(key, list)

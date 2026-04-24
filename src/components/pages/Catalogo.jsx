@@ -149,8 +149,8 @@ export default function Catalogo() {
     ? products
     : products.filter(p => String(p.supplierId) === String(priceSupplier))
 
-  const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
-  const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(p => p.id)))
+  const toggleSelect = (id) => { if (id == null) return; setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n }) }
+  const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(p => p.id).filter(Boolean)))
 
   const doBulkDelete = () => {
     if (!selectedIds.size) return
