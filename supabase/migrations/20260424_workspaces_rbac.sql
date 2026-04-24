@@ -1,23 +1,20 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- ANMA — RBAC Phase 2 — Workspaces + Memberships + Audit + RLS
 -- Apply in Supabase SQL Editor (single transaction).
--- Safe to re-run: uses IF NOT EXISTS + ON CONFLICT.
+-- Safe to re-run: uses IF NOT EXISTS + drop-policy-if-exists + casts.
 -- ═══════════════════════════════════════════════════════════════════
 
 -- ── 1. Tables ──────────────────────────────────────────────────────
 
--- workspaces: one per "customer account". id = owner's auth.users id.
 create table if not exists public.workspaces (
   id uuid primary key references auth.users(id) on delete cascade,
   name text,
   plan text not null default 'solo' check (plan in ('solo','equipo','pro','unlimited')),
-  seats_allowed int not null default 0,  -- operator seats, not counting owner
+  seats_allowed int not null default 0,
   status text not null default 'active' check (status in ('active','paused','cancelled')),
   created_at timestamptz not null default now()
 );
 
--- memberships: link users to workspaces with a role.
--- The owner gets role='owner'. Invited employees get role='operator'.
 create table if not exists public.memberships (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
@@ -32,14 +29,13 @@ create table if not exists public.memberships (
 create index if not exists memberships_user_idx on public.memberships(user_id);
 create index if not exists memberships_ws_idx on public.memberships(workspace_id);
 
--- audit_log: every sensitive write gets a row. Read by owner in UI.
 create table if not exists public.audit_log (
   id bigserial primary key,
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
   actor_user_id uuid references auth.users(id),
   actor_email text,
-  action text not null,        -- 'create' | 'update' | 'delete' | 'status_change' | ...
-  entity text not null,        -- 'budget' | 'client' | 'product' | ...
+  action text not null,
+  entity text not null,
   entity_id text,
   meta jsonb,
   ts timestamptz not null default now()
@@ -47,9 +43,8 @@ create table if not exists public.audit_log (
 
 create index if not exists audit_ws_ts_idx on public.audit_log(workspace_id, ts desc);
 
--- ── 2. Helper functions ────────────────────────────────────────────
+-- ── 2. Helper functions (all return uuid-typed values) ─────────────
 
--- Workspaces the current user belongs to (active memberships).
 create or replace function public.my_workspace_ids()
 returns setof uuid
 language sql stable security definer
@@ -59,7 +54,17 @@ as $$
   where user_id = auth.uid() and status = 'active'
 $$;
 
--- True if current user is a global admin (for cross-workspace /admin panel).
+-- Same list but as text, used to compare against text-typed columns
+-- (e.g. anma_user_data.user_id is stored as text in some schemas).
+create or replace function public.my_workspace_ids_text()
+returns setof text
+language sql stable security definer
+set search_path = public
+as $$
+  select workspace_id::text from public.memberships
+  where user_id = auth.uid() and status = 'active'
+$$;
+
 create or replace function public.is_global_admin()
 returns boolean
 language sql stable security definer
@@ -68,7 +73,6 @@ as $$
   select coalesce((auth.jwt() ->> 'email') = 'ana.mbperalta@gmail.com', false)
 $$;
 
--- Role of current user within a specific workspace.
 create or replace function public.my_role(ws_id uuid)
 returns text
 language sql stable security definer
@@ -80,8 +84,6 @@ as $$
 $$;
 
 -- ── 3. Auto-create workspace + owner membership on first login ─────
--- When a new auth.users row is inserted WITHOUT `invited_to_workspace`
--- metadata, treat them as a new customer: spin up their workspace.
 
 create or replace function public.ensure_workspace_for_new_user()
 returns trigger
@@ -90,23 +92,18 @@ set search_path = public
 as $$
 declare
   v_invited_ws uuid;
+  v_role text;
+  v_invited_by uuid;
 begin
-  -- If invited into someone else's workspace, don't create one.
   v_invited_ws := nullif(new.raw_user_meta_data ->> 'invited_to_workspace', '')::uuid;
+  v_role := coalesce(nullif(new.raw_user_meta_data ->> 'role', ''), 'operator');
+  v_invited_by := nullif(new.raw_user_meta_data ->> 'invited_by_user', '')::uuid;
 
   if v_invited_ws is not null then
-    -- Attach as operator (default role for invited users).
     insert into public.memberships (workspace_id, user_id, role, status, invited_by)
-    values (
-      v_invited_ws,
-      new.id,
-      coalesce(new.raw_user_meta_data ->> 'role', 'operator'),
-      'active',
-      nullif(new.raw_user_meta_data ->> 'invited_by_user', '')::uuid
-    )
+    values (v_invited_ws, new.id, v_role, 'active', v_invited_by)
     on conflict (workspace_id, user_id) do nothing;
   else
-    -- New owner: create their workspace + owner membership.
     insert into public.workspaces (id, name, plan, seats_allowed)
     values (new.id, coalesce(new.raw_user_meta_data ->> 'full_name', new.email), 'solo', 0)
     on conflict (id) do nothing;
@@ -125,7 +122,7 @@ create trigger on_auth_user_created_ws
   after insert on auth.users
   for each row execute function public.ensure_workspace_for_new_user();
 
--- Backfill: create workspace for every existing user who doesn't have one.
+-- Backfill for existing users.
 insert into public.workspaces (id, name, plan, seats_allowed)
 select u.id, coalesce(u.raw_user_meta_data ->> 'full_name', u.email), 'solo', 0
 from auth.users u
@@ -153,9 +150,6 @@ drop policy if exists "ws_update_owner" on public.workspaces;
 create policy "ws_update_owner" on public.workspaces for update
   using (id = auth.uid() or public.is_global_admin())
   with check (id = auth.uid() or public.is_global_admin());
-
--- Only global admin can change plan/seats from the DB (owner should not self-upgrade).
--- This is enforced at column-level via a separate policy in Phase 3 if needed.
 
 -- ── 5. RLS — memberships ───────────────────────────────────────────
 
@@ -189,7 +183,7 @@ create policy "mem_delete_owner" on public.memberships for delete
     or public.is_global_admin()
   );
 
--- ── 6. RLS — audit_log (read-only for owner, insert by anyone in ws) ──
+-- ── 6. RLS — audit_log ─────────────────────────────────────────────
 
 alter table public.audit_log enable row level security;
 
@@ -206,39 +200,67 @@ create policy "audit_insert_member" on public.audit_log for insert
     workspace_id in (select public.my_workspace_ids())
   );
 
--- ── 7. Rewrite anma_user_data RLS to allow operators to read owner's row ──
--- Existing behavior: a user only sees their own row.
--- New behavior: a user sees the row of every workspace they belong to.
--- workspace_id == owner's user_id, so the row is the one with user_id=workspace_id.
+-- ── 7. anma_user_data — RLS type-safe rewrite ──────────────────────
+-- anma_user_data.user_id may be stored as text (legacy) or uuid.
+-- We use the _text variant of the helper for safe comparison regardless.
 
-alter table public.anma_user_data enable row level security;
+do $$
+declare
+  uid_type text;
+begin
+  select data_type into uid_type
+  from information_schema.columns
+  where table_schema='public' and table_name='anma_user_data' and column_name='user_id';
 
-drop policy if exists "aud_select_own" on public.anma_user_data;
-drop policy if exists "aud_insert_own" on public.anma_user_data;
-drop policy if exists "aud_update_own" on public.anma_user_data;
-drop policy if exists "aud_select" on public.anma_user_data;
-drop policy if exists "aud_upsert" on public.anma_user_data;
+  if uid_type is null then
+    raise notice 'anma_user_data table does not exist yet — skipping RLS rewrite';
+    return;
+  end if;
 
-create policy "aud_select" on public.anma_user_data for select
-  using (
-    user_id in (select public.my_workspace_ids())
-    or public.is_global_admin()
-  );
+  execute 'alter table public.anma_user_data enable row level security';
 
-create policy "aud_insert" on public.anma_user_data for insert
-  with check (
-    user_id in (select public.my_workspace_ids())
-  );
+  -- Drop any legacy policies before creating new ones.
+  execute 'drop policy if exists "aud_select_own" on public.anma_user_data';
+  execute 'drop policy if exists "aud_insert_own" on public.anma_user_data';
+  execute 'drop policy if exists "aud_update_own" on public.anma_user_data';
+  execute 'drop policy if exists "aud_select" on public.anma_user_data';
+  execute 'drop policy if exists "aud_insert" on public.anma_user_data';
+  execute 'drop policy if exists "aud_update" on public.anma_user_data';
+  execute 'drop policy if exists "aud_upsert" on public.anma_user_data';
 
-create policy "aud_update" on public.anma_user_data for update
-  using (
-    user_id in (select public.my_workspace_ids())
-  )
-  with check (
-    user_id in (select public.my_workspace_ids())
-  );
+  if uid_type = 'uuid' then
+    execute $p$
+      create policy "aud_select" on public.anma_user_data for select
+        using (user_id in (select public.my_workspace_ids()) or public.is_global_admin())
+    $p$;
+    execute $p$
+      create policy "aud_insert" on public.anma_user_data for insert
+        with check (user_id in (select public.my_workspace_ids()))
+    $p$;
+    execute $p$
+      create policy "aud_update" on public.anma_user_data for update
+        using (user_id in (select public.my_workspace_ids()))
+        with check (user_id in (select public.my_workspace_ids()))
+    $p$;
+  else
+    -- text / varchar comparison
+    execute $p$
+      create policy "aud_select" on public.anma_user_data for select
+        using (user_id in (select public.my_workspace_ids_text()) or public.is_global_admin())
+    $p$;
+    execute $p$
+      create policy "aud_insert" on public.anma_user_data for insert
+        with check (user_id in (select public.my_workspace_ids_text()))
+    $p$;
+    execute $p$
+      create policy "aud_update" on public.anma_user_data for update
+        using (user_id in (select public.my_workspace_ids_text()))
+        with check (user_id in (select public.my_workspace_ids_text()))
+    $p$;
+  end if;
+end $$;
 
--- ── 8. Seat limit helper (used by Edge Function invite-user) ─────────
+-- ── 8. Seat limit helpers ──────────────────────────────────────────
 
 create or replace function public.seats_used(ws_id uuid)
 returns int
@@ -260,9 +282,10 @@ as $$
 $$;
 
 -- ═══════════════════════════════════════════════════════════════════
--- DONE. Next steps after applying this migration:
---   1. (Optional) Set initial seats for existing owners:
---      update public.workspaces set plan='pro', seats_allowed=5 where id='<owner-uuid>';
---   2. Deploy updated invite-user Edge Function (checks seat limit).
---   3. Deploy updated sync.js (resolves workspace_id).
+-- DONE. Next steps:
+--   1. (Optional) set initial seats for owners:
+--      update public.workspaces set plan='pro', seats_allowed=5
+--      where id = (select id from auth.users where lower(email)='owner@example.com');
+--   2. Deploy updated invite-user Edge Function.
+--   3. Deploy updated sync.js.
 -- ═══════════════════════════════════════════════════════════════════
