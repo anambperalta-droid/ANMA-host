@@ -328,8 +328,10 @@ td b{color:var(--txt);font-weight:600}
 .mini-seg-item{background:rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;margin-bottom:6px;transition:background .15s ease}
 .mini-seg-item:hover{background:rgba(255,255,255,.1)}
 .mini-seg-header{display:flex;align-items:center;gap:8px}
-.mini-seg-btn{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s ease}
+.mini-seg-btn{width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s ease}
+.mini-seg-btn.wa{background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.35);color:#16A34A}
 .mini-seg-btn.wa:hover{background:#25D366;color:#fff;border-color:#25D366}
+.mini-seg-btn.resend{background:rgba(124,58,237,.10);border:1px solid rgba(124,58,237,.30);color:var(--acento)}
 .mini-seg-btn.resend:hover{background:var(--acento);color:#fff;border-color:var(--acento)}
 .mini-seg-more{text-align:center;padding:8px;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);cursor:pointer;border-radius:6px;transition:all .15s ease}
 .mini-seg-more:hover{color:#fff;background:rgba(255,255,255,.08)}

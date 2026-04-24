@@ -812,7 +812,7 @@ export default function Historial() {
                 </div>
               </div>
 
-              <div className="bento-chart bento-wide resumen-tbl" style={{ gridColumn: '1 / -1', overflow: 'visible' }}>
+              <div className="bento-chart bento-wide resumen-tbl" style={{ gridColumn: '1 / -1', overflow: 'visible', maxWidth: 'calc(65% - 7px)' }}>
                 <style>{`
                   .resumen-tbl table{width:100%;border-collapse:collapse;table-layout:auto}
                   .resumen-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em}
