@@ -165,7 +165,7 @@ export default function Config() {
   const [invEmail, setInvEmail] = useState('')
   const [invName, setInvName] = useState('')
   const [invSite] = useState(CURRENT_SITE.key)
-  const [invRole, setInvRole] = useState('user')
+  const [invRole, setInvRole] = useState('operator')
   const [invLoading, setInvLoading] = useState(false)
   const [invMsg, setInvMsg] = useState(null)
 
@@ -845,8 +845,8 @@ export default function Config() {
                 disabled={invLoading}
                 style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 13, background: 'var(--surface)', color: 'var(--txt)' }}
               >
-                <option value="admin">Administrador — acceso total</option>
-                <option value="user">Usuario — operación diaria</option>
+                <option value="admin">Administrador — acceso total (ve costos, configuración, equipo)</option>
+                <option value="operator">Operador — operación diaria (pedidos, clientes, logística; sin configuración ni costos)</option>
                 <option value="viewer">Solo lectura — reportes y consulta</option>
               </select>
             </div>

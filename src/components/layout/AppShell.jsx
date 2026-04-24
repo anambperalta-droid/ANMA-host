@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 import { applyThemeColors } from '../../lib/theme'
 import { TaskFabProvider, useTaskFab } from '../../context/TaskFabContext'
 import { PrivacyProvider } from '../../context/PrivacyContext'
@@ -197,6 +198,21 @@ function FocusOverlay() {
   )
 }
 
+function NoAccess() {
+  return (
+    <div style={{ padding: 48, textAlign: 'center', color: 'var(--txt3)' }}>
+      <i className="fa fa-lock" style={{ fontSize: 36, marginBottom: 12, color: 'var(--txt4)' }} />
+      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--txt)', marginBottom: 6 }}>Acceso restringido</div>
+      <div style={{ fontSize: 13 }}>Tu cuenta no tiene permiso para esta sección. Contactá al administrador del workspace.</div>
+    </div>
+  )
+}
+
+function Guard({ perm, children }) {
+  const { can } = useAuth()
+  return can(perm) ? children : <NoAccess />
+}
+
 function AppShellInner() {
   const { config } = useData()
   const { focusMode } = useTaskFab()
@@ -225,15 +241,15 @@ function AppShellInner() {
         <Topbar onMenuClick={() => setSideOpen(!sideOpen)} />
         <div className="content">
           <Routes>
-            <Route path="/" element={<Historial />} />
-            <Route path="/presupuesto" element={<Presupuesto />} />
-            <Route path="/presupuesto/:id" element={<Presupuesto />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/catalogo" element={<Catalogo />} />
-            <Route path="/proveedores" element={<Proveedores />} />
-            <Route path="/logistica" element={<Logistica />} />
-            <Route path="/mensajes" element={<Mensajes />} />
-            <Route path="/config" element={<Config />} />
+            <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />
+            <Route path="/presupuesto" element={<Guard perm="pedido.create"><Presupuesto /></Guard>} />
+            <Route path="/presupuesto/:id" element={<Guard perm="pedido.edit"><Presupuesto /></Guard>} />
+            <Route path="/clientes" element={<Guard perm="cliente.view"><Clientes /></Guard>} />
+            <Route path="/catalogo" element={<Guard perm="catalogo.view"><Catalogo /></Guard>} />
+            <Route path="/proveedores" element={<Guard perm="proveedor.view"><Proveedores /></Guard>} />
+            <Route path="/logistica" element={<Guard perm="logistica.view"><Logistica /></Guard>} />
+            <Route path="/mensajes" element={<Guard perm="mensajes.view"><Mensajes /></Guard>} />
+            <Route path="/config" element={<Guard perm="config.access"><Config /></Guard>} />
           </Routes>
         </div>
       </div>
