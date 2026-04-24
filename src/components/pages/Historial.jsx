@@ -47,11 +47,7 @@ function BarChart({ data, prevData = [], type = 'income' }) {
       <div style={{ fontSize: 11, marginTop: 3 }}>Los ingresos cobrados aparecerán acá mes a mes</div>
     </div>
   )
-  let shown = data.map((m, i) => ({ ...m, prev: prevData[i]?.val || 0 }))
-  const active = shown.filter(m => m.val > 0 || m.prev > 0)
-  if (shown.length > 10 && active.length > 0 && active.length < shown.length * 0.55) {
-    shown = active
-  }
+  const shown = data.map((m, i) => ({ ...m, prev: prevData[i]?.val || 0 }))
   const maxV = Math.max(...shown.map(m => m.val), ...shown.map(m => m.prev), 1)
   const H = 104
   const barMax = 96
@@ -267,7 +263,7 @@ function StatusDonut({ statuses, budgets }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-      <svg width="66" height="66" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
+      <svg width="88" height="88" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
         <circle cx="45" cy="45" r={radius} fill="none" stroke="var(--surface2)" strokeWidth="10" />
         {segments.map((s, i) => (
           <circle key={i} cx="45" cy="45" r={radius} fill="none" stroke={s.c} strokeWidth="10"
