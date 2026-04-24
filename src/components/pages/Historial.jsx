@@ -10,18 +10,19 @@ function Badge({ status }) {
 }
 
 function KpiCard({ label, value, delta, isKey }) {
+  const hasDelta = delta !== null && delta !== undefined
   return (
     <div className="bento-kpi" style={isKey ? { borderLeft: '3px solid var(--green)', paddingLeft: 20 } : { paddingLeft: 24 }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {delta !== null && delta !== undefined ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 7 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? '#F0FDF4' : '#FFF1F2', padding: '1px 6px', borderRadius: 6 }}>
-            {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)}%
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+        {hasDelta && (
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? 'rgba(22,163,74,.10)' : 'rgba(220,38,38,.10)', padding: '2px 7px', borderRadius: 6, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+            {delta >= 0 ? '↑' : '↓'}{Math.abs(delta)}%
           </span>
-          <span style={{ fontSize: 9, color: '#B0B8C9', letterSpacing: '0.04em' }}>vs. anterior</span>
-        </div>
-      ) : <div style={{ height: 22, marginTop: 7 }} />}
+        )}
+      </div>
+      {hasDelta && <div style={{ fontSize: 9, color: '#B0B8C9', letterSpacing: '0.04em', marginTop: 4 }}>vs. período anterior</div>}
     </div>
   )
 }
@@ -726,10 +727,10 @@ export default function Historial() {
                   <BarChart data={chartData} prevData={prevChartData} />
                 </div>
 
-                <div style={{ flex: '1 1 30%', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ flex: '1 1 30%', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {/* Donut */}
-                  <div className="bento-chart">
-                    <div className="card-header"><span className="card-title">Estado de presupuestos</span></div>
+                  <div className="bento-chart" style={{ padding: 14, paddingBottom: 10 }}>
+                    <div className="card-header" style={{ marginBottom: 8 }}><span className="card-title">Estado de presupuestos</span></div>
                     <StatusDonut statuses={statuses} budgets={periodBudgets} />
                   </div>
 

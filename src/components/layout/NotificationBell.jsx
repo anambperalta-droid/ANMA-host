@@ -132,36 +132,9 @@ function buildAlerts(budgets, products) {
       })
     }
 
-    // 🟢 ÉXITO: confirmado en últimas 48h
-    if (b.status === 'confirmed' && sinceDays !== null && sinceDays <= 2) {
-      alerts.push({
-        id: `confirmed-${b.id}`,
-        level: 'success',
-        icon: 'fa-circle-check',
-        title: `Pedido confirmado — ${b.num}`,
-        body: `${cliente} · ${fmt(b.total)}`,
-        cta: 'Ver pedido',
-        route: `/presupuesto/${b.id}`,
-        ts: b.id,
-      })
-    }
-
-    // 🟢 ÉXITO: cobrado en últimas 48h
-    if ((b.payStatus === 'paid' || b.payStatus === 'partial') && sinceDays !== null && sinceDays <= 2) {
-      alerts.push({
-        id: `paid-${b.id}`,
-        level: 'success',
-        icon: 'fa-sack-dollar',
-        title: `${b.payStatus === 'paid' ? 'Pago recibido' : 'Seña recibida'} — ${b.num}`,
-        body: `${cliente} · ${fmt(b.total)}`,
-        cta: 'Ver pedido',
-        route: `/presupuesto/${b.id}`,
-        ts: b.id,
-      })
-    }
   })
 
-  const order = { critical: 0, warning: 1, success: 2 }
+  const order = { critical: 0, warning: 1 }
   alerts.sort((a, b) => order[a.level] - order[b.level] || b.ts - a.ts)
   return alerts
 }
@@ -169,7 +142,6 @@ function buildAlerts(budgets, products) {
 const LEVEL_COLORS = {
   critical: { bg: 'var(--red)', light: '#FEE2E2', text: '#991B1B', border: '#FCA5A5' },
   warning:  { bg: '#F59E0B', light: '#FEF3C7', text: '#92400E', border: '#FCD34D' },
-  success:  { bg: '#10B981', light: '#D1FAE5', text: '#065F46', border: '#6EE7B7' },
 }
 
 export default function NotificationBell() {
@@ -274,21 +246,21 @@ export default function NotificationBell() {
               const isRead = readIds.has(alert.id)
               return (
                 <div key={alert.id} className={`notif-item ${isRead ? 'read' : ''}`}
-                  style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + 'cc' }}>
-                  <div className="notif-item-ico" style={{ background: col.bg + '22', color: col.bg }}>
+                  style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: col.bg + '22', color: col.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0, marginTop: 1 }}>
                     <i className={`fa ${alert.icon}`} />
                   </div>
-                  <div className="notif-item-body">
-                    <div className="notif-item-title" style={{ color: isRead ? 'var(--txt2)' : col.text }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: isRead ? 'var(--txt2)' : col.text, lineHeight: 1.3 }}>
                       {alert.title}
                     </div>
-                    <div className="notif-item-desc">{alert.body}</div>
-                    <button className="notif-cta" style={{ background: col.bg, color: '#fff' }}
-                      onClick={() => handleCTA(alert)}>
-                      {alert.cta} <i className="fa fa-arrow-right" style={{ fontSize: 9, marginLeft: 4 }} />
-                    </button>
+                    <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2, lineHeight: 1.3 }}>{alert.body}</div>
+                    <a onClick={(e) => { e.preventDefault(); handleCTA(alert) }} href="#"
+                      style={{ display: 'inline-block', marginTop: 4, fontSize: 10.5, fontWeight: 600, color: col.bg, textDecoration: 'none', cursor: 'pointer' }}>
+                      {alert.cta} →
+                    </a>
                   </div>
-                  {!isRead && <div className="notif-dot" style={{ background: col.bg }} title="No leída" />}
+                  {!isRead && <div style={{ width: 7, height: 7, borderRadius: '50%', background: col.bg, flexShrink: 0, marginTop: 6 }} title="No leída" />}
                 </div>
               )
             })
