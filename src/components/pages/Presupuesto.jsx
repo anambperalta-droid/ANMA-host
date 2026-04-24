@@ -25,7 +25,7 @@ function BSection({ icon, title, badge, children, defaultOpen = true, error = fa
   return (
     <div className={`bsec ${open ? '' : 'collapsed'} ${error ? 'has-err' : ''}`}>
       <div className="bsec-title" onClick={() => setOpen(!open)}>
-        <div className="bsec-title-left"><i className={`fa ${icon}`} />{title}{badge ? <span className="bsec-badge">{badge}</span> : null}{error ? <i className="fa fa-circle-exclamation" style={{ color: 'var(--red)', fontSize: 11, marginLeft: 4 }} /> : null}</div>
+        <div className="bsec-title-left"><i className={`fa ${icon}`} />{title}{badge ? <span className="bsec-badge">{badge}</span> : null}{error ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 15, height: 15, borderRadius: '50%', background: '#FEE2E2', color: '#DC2626', fontSize: 8, fontWeight: 900, marginLeft: 6, flexShrink: 0 }}>!</span> : null}</div>
         <i className={`fa fa-chevron-${open ? 'up' : 'down'} bsec-ch`} />
       </div>
       <div className="bsec-body">{children}</div>
@@ -60,7 +60,8 @@ function ClientCombo({ clients, value, onSelect, onChange }) {
         onChange={e => { setQ(e.target.value); onChange(e.target.value); setOpen(true) }}
         onFocus={() => setOpen(true)}
         placeholder="Buscar cliente por nombre o empresa..."
-        autoComplete="off" />
+        autoComplete="off"
+        autoFocus />
       {open && filtered.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
@@ -440,6 +441,10 @@ export default function Presupuesto() {
         </div>
       )}
 
+      <style>{`
+        .budget-layout .bsec input, .budget-layout .bsec select, .budget-layout .bsec textarea { border: 1px solid #E2E8F0; }
+        .budget-layout .bsec input:focus, .budget-layout .bsec select:focus, .budget-layout .bsec textarea:focus { border-color: var(--brand); }
+      `}</style>
       <div className="budget-layout">
         <div>
           {/* CLIENTE */}
@@ -547,7 +552,7 @@ export default function Presupuesto() {
           </BSection>
 
           {/* PARÁMETROS */}
-          <BSection icon="fa-sliders" title="Parámetros de precio" badge={`${form.margin || 0}% margen · ${form.deposit || 0}% seña`} defaultOpen={false}>
+          <BSection icon="fa-sliders" title="Parámetros de precio" badge={<span style={{ display: 'inline-flex', gap: 4 }}><span style={{ background: '#F1F5F9', color: '#64748B', borderRadius: 8, padding: '1px 8px', fontSize: 10, fontWeight: 600 }}>{form.margin || 0}% margen</span><span style={{ background: '#F1F5F9', color: '#64748B', borderRadius: 8, padding: '1px 8px', fontSize: 10, fontWeight: 600 }}>{form.deposit || 0}% seña</span></span>} defaultOpen={false}>
             <div className="grid3">
               <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setF('margin', e.target.value)} onBlur={e => { if (e.target.value === '') setF('margin', 0) }} min="0" max="100" /></div>
               <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
@@ -557,7 +562,7 @@ export default function Presupuesto() {
         </div>
 
         {/* PANEL LATERAL */}
-        <div>
+        <div style={{ position: 'sticky', top: 20, alignSelf: 'start' }}>
           <div className="calc-panel">
             <div className="cp-title"><i className="fa fa-calculator" />Resumen</div>
             <div className="cp-row"><span className="cp-lbl">N° Presupuesto</span><span className="cp-val">{budgetNum}</span></div>
@@ -597,35 +602,37 @@ export default function Presupuesto() {
               {mpResult && <div style={{ marginTop: 4, fontSize: 10, wordBreak: 'break-all' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
             </div>
             {(mpCfg.enabled || bankCfg.enabled) ? (
-              <div className="cp-pay-group">
-                <div className="cp-pay-group-lbl"><i className="fa fa-money-check-dollar" /> Métodos de cobro</div>
-                {mpCfg.enabled && (
-                  <button className="cp-pay-btn mp" onClick={generateMP} disabled={mpLoading}>
-                    <div className="pay-btn-ico"><i className="fa fa-credit-card" /></div>
-                    <div className="pay-btn-txt">
-                      <div className="t">{mpLoading ? 'Generando link...' : 'Link Mercado Pago'}</div>
-                      <div className="s">Tarjeta · QR · Dinero en cuenta</div>
-                    </div>
-                  </button>
-                )}
-                {bankCfg.enabled && (
-                  <button className="cp-pay-btn bk" onClick={copyBankInfo}>
-                    <div className="pay-btn-ico"><i className="fa fa-building-columns" /></div>
-                    <div className="pay-btn-txt">
-                      <div className="t">Copiar CBU / Alias</div>
-                      <div className="s">Datos para transferencia bancaria</div>
-                    </div>
-                  </button>
-                )}
-                {bankCfg.enabled && (
-                  <button className="cp-pay-btn bk-wa" onClick={copyBankWithBudget}>
-                    <div className="pay-btn-ico"><i className="fa-brands fa-whatsapp" /></div>
-                    <div className="pay-btn-txt">
-                      <div className="t">WhatsApp + datos bancarios</div>
-                      <div className="s">Mensaje completo con CBU/Alias</div>
-                    </div>
-                  </button>
-                )}
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}><i className="fa fa-money-check-dollar" style={{ marginRight: 4 }} />Cobro</div>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                  {mpCfg.enabled && (
+                    <button onClick={generateMP} disabled={mpLoading}
+                      style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 5, padding: '6px 9px', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 8, color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.14)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.08)'}>
+                      <i className="fa fa-credit-card" style={{ fontSize: 12 }} />
+                      <span>{mpLoading ? 'Generando...' : 'Mercado Pago'}</span>
+                    </button>
+                  )}
+                  {bankCfg.enabled && (
+                    <button onClick={copyBankInfo}
+                      style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 5, padding: '6px 9px', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 8, color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.14)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.08)'}>
+                      <i className="fa fa-building-columns" style={{ fontSize: 12 }} />
+                      <span>Copiar CBU</span>
+                    </button>
+                  )}
+                  {bankCfg.enabled && (
+                    <button onClick={copyBankWithBudget}
+                      style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 5, padding: '6px 9px', background: 'rgba(37,211,102,.12)', border: '1px solid rgba(37,211,102,.25)', borderRadius: 8, color: '#6ee37f', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.12)'}>
+                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 13 }} />
+                      <span>WA + Banco</span>
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="cp-pay-empty">
