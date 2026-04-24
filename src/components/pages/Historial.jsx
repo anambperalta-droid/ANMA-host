@@ -11,18 +11,16 @@ function Badge({ status }) {
 
 function KpiCard({ label, value, delta, isKey }) {
   const hasDelta = delta !== null && delta !== undefined
+  const base = { position: 'relative', padding: '12px 14px 10px' }
   return (
-    <div className="bento-kpi" style={isKey ? { borderLeft: '3px solid var(--green)', paddingLeft: 20 } : { paddingLeft: 24 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-        {hasDelta && (
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? 'rgba(22,163,74,.10)' : 'rgba(220,38,38,.10)', padding: '2px 7px', borderRadius: 6, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-            {delta >= 0 ? '↑' : '↓'}{Math.abs(delta)}%
-          </span>
-        )}
-      </div>
-      {hasDelta && <div style={{ fontSize: 9, color: '#B0B8C9', letterSpacing: '0.04em', marginTop: 4 }}>vs. período anterior</div>}
+    <div className="bento-kpi" style={isKey ? { ...base, borderLeft: '3px solid var(--green)', paddingLeft: 14 } : base}>
+      <div style={{ fontSize: 9.5, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {hasDelta && (
+        <span style={{ position: 'absolute', right: 10, bottom: 8, fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? 'rgba(22,163,74,.10)' : 'rgba(220,38,38,.10)', padding: '2px 7px', borderRadius: 6, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+          {delta >= 0 ? '↑' : '↓'}{Math.abs(delta)}%
+        </span>
+      )}
     </div>
   )
 }
@@ -40,54 +38,61 @@ function DotBadge({ status }) {
 }
 
 function BarChart({ data, prevData = [], type = 'income' }) {
-  const maxV = Math.max(...data.map(m => m.val), ...prevData.map(m => m.val), 1)
   const hasData = data.some(m => m.val > 0)
   const hasPrev = prevData.some(m => m.val > 0)
   if (!hasData) return (
-    <div style={{ textAlign: 'center', padding: '28px 0 8px', color: 'var(--txt4)', fontSize: 12 }}>
-      <i className="fa fa-chart-bar" style={{ fontSize: 28, opacity: .2, display: 'block', marginBottom: 8 }} />
+    <div style={{ textAlign: 'center', padding: '22px 0 6px', color: 'var(--txt4)', fontSize: 12 }}>
+      <i className="fa fa-chart-bar" style={{ fontSize: 26, opacity: .2, display: 'block', marginBottom: 6 }} />
       <div style={{ fontWeight: 600, color: 'var(--txt3)' }}>Sin datos aún</div>
       <div style={{ fontSize: 11, marginTop: 3 }}>Los ingresos cobrados aparecerán acá mes a mes</div>
     </div>
   )
+  let shown = data.map((m, i) => ({ ...m, prev: prevData[i]?.val || 0 }))
+  const active = shown.filter(m => m.val > 0 || m.prev > 0)
+  if (shown.length > 10 && active.length > 0 && active.length < shown.length * 0.55) {
+    shown = active
+  }
+  const maxV = Math.max(...shown.map(m => m.val), ...shown.map(m => m.prev), 1)
+  const H = 104
+  const barMax = 96
   return (
     <div>
-      <div className="bar-chart" style={{ height: 130 }}>
-        {data.map((m, i) => {
+      <div className="bar-chart" style={{ height: H }}>
+        {shown.map((m, i) => {
           const pct = m.val / maxV
-          const prevPct = (prevData[i]?.val || 0) / maxV
+          const prevPct = m.prev / maxV
           return (
             <div key={i} className="bc" style={{ position: 'relative' }}>
               {prevPct > 0 && (
                 <div style={{
                   position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-                  width: '70%', height: Math.max(2, prevPct * 120),
+                  width: '70%', height: Math.max(2, prevPct * barMax),
                   background: 'var(--brand)', opacity: 0.15, borderRadius: '3px 3px 0 0', zIndex: 0
                 }} />
               )}
               <div
                 className="bb"
                 style={{
-                  height: Math.max(4, pct * 120),
+                  height: Math.max(4, pct * barMax),
                   background: 'var(--brand)',
                   opacity: pct === 0 ? 0.12 : 0.35 + pct * 0.65,
                   position: 'relative', zIndex: 1,
                 }}
-                title={`${fmt(m.val)}${prevData[i]?.val ? ` · Anterior: ${fmt(prevData[i].val)}` : ''}`}
+                title={`${fmt(m.val)}${m.prev ? ` · Anterior: ${fmt(m.prev)}` : ''}`}
               />
             </div>
           )
         })}
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        {data.map((m, i) => (
-          <div key={i} className="bl" style={{ flex: 1, textAlign: 'center', opacity: data.length > 15 ? (Number(m.lbl) % 5 === 0 ? 1 : 0) : 1 }}>
+      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+        {shown.map((m, i) => (
+          <div key={i} className="bl" style={{ flex: 1, textAlign: 'center', opacity: shown.length > 15 ? (Number(m.lbl) % 5 === 0 ? 1 : 0) : 1 }}>
             {m.lbl}
           </div>
         ))}
       </div>
       {hasPrev && (
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 8, fontSize: 10, color: 'var(--txt4)' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 10, color: 'var(--txt4)' }}>
           <div style={{ width: 10, height: 10, background: 'var(--brand)', opacity: 0.18, borderRadius: 2, flexShrink: 0 }} />
           <span>Período anterior</span>
         </div>
@@ -262,7 +267,7 @@ function StatusDonut({ statuses, budgets }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-      <svg width="77" height="77" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
+      <svg width="66" height="66" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
         <circle cx="45" cy="45" r={radius} fill="none" stroke="var(--surface2)" strokeWidth="10" />
         {segments.map((s, i) => (
           <circle key={i} cx="45" cy="45" r={radius} fill="none" stroke={s.c} strokeWidth="10"
@@ -729,8 +734,10 @@ export default function Historial() {
 
                 <div style={{ flex: '1 1 30%', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {/* Donut */}
-                  <div className="bento-chart" style={{ padding: 14, paddingBottom: 10 }}>
-                    <div className="card-header" style={{ marginBottom: 8 }}><span className="card-title">Estado de presupuestos</span></div>
+                  <div className="bento-chart" style={{ padding: 12, paddingBottom: 8 }}>
+                    <div className="card-header" style={{ marginBottom: 6 }}>
+                      <span className="card-title"><i className="fa fa-chart-pie" style={{ color: 'var(--brand)', marginRight: 7 }} />Estado de presupuestos</span>
+                    </div>
                     <StatusDonut statuses={statuses} budgets={periodBudgets} />
                   </div>
 
@@ -822,22 +829,32 @@ export default function Historial() {
                 </div>
               </div>
 
-              <div className="bento-chart bento-wide" style={{ gridColumn: '1 / -1', overflow: 'visible' }}>
+              <div className="bento-chart bento-wide resumen-tbl" style={{ gridColumn: '1 / -1', overflow: 'visible' }}>
+                <style>{`
+                  .resumen-tbl table{width:100%;border-collapse:collapse;table-layout:auto}
+                  .resumen-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em}
+                  .resumen-tbl td{padding:8px 10px;font-size:12px;border-top:1px solid #F3F4F6}
+                  .resumen-tbl th.c-num,.resumen-tbl td.c-num{width:70px;font-variant-numeric:tabular-nums}
+                  .resumen-tbl th.c-cli,.resumen-tbl td.c-cli{width:auto;min-width:220px}
+                  .resumen-tbl th.c-tot,.resumen-tbl td.c-tot{width:120px;text-align:right;font-variant-numeric:tabular-nums}
+                  .resumen-tbl th.c-est,.resumen-tbl td.c-est{width:130px}
+                  .resumen-tbl th.c-act,.resumen-tbl td.c-act{width:44px}
+                `}</style>
                 <div className="card-header">
                   <span className="card-title">Últimos presupuestos</span>
                   <span className="card-link" onClick={() => setTab('lista')}>Ver todos <i className="fa fa-arrow-right" /></span>
                 </div>
                 {budgets.length ? (
                   <table>
-                    <thead><tr><th>N°</th><th>Cliente</th><th style={{ textAlign: 'right' }}>Total</th><th>Estado</th><th></th></tr></thead>
+                    <thead><tr><th className="c-num">N°</th><th className="c-cli">Cliente</th><th className="c-tot">Total</th><th className="c-est">Estado</th><th className="c-act"></th></tr></thead>
                     <tbody>
                       {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => (
                         <tr key={b.id}>
-                          <td><b>{b.num || '—'}</b></td>
-                          <td>{b.company || b.contact || '—'}</td>
-                          <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right' }}>{money(b.total)}</td>
-                          <td><DotBadge status={b.status} /></td>
-                          <td style={{ position: 'relative' }}>
+                          <td className="c-num"><b>{b.num || '—'}</b></td>
+                          <td className="c-cli">{b.company || b.contact || '—'}</td>
+                          <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
+                          <td className="c-est"><DotBadge status={b.status} /></td>
+                          <td className="c-act" style={{ position: 'relative' }}>
                             <button
                               className="act"
                               style={{ width: 30, height: 30 }}
