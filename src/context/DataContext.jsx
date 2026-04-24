@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { db, dbW, cfg, wCfg, ensureDefaults } from '../lib/storage'
+import { logAudit } from '../lib/audit'
 
 const Ctx = createContext()
 
@@ -65,12 +66,15 @@ export function DataProvider({ children }) {
     }
     dbW('budgets', bud)
     refresh()
+    logAudit(bData.id ? 'update' : 'create', 'budget', bData.id, { num: bData.num, total: bData.total })
     return bData
   }, [refresh])
 
   const deleteBudget = useCallback((id) => {
+    const existing = db('budgets', []).find(b => b.id === id)
     dbW('budgets', db('budgets', []).filter((b) => b.id !== id))
     refresh()
+    logAudit('delete', 'budget', id, existing ? { num: existing.num, total: existing.total } : null)
   }, [refresh])
 
   const updateBudgetStatus = useCallback((id, status) => {
@@ -78,17 +82,19 @@ export function DataProvider({ children }) {
     const i = bud.findIndex((b) => b.id === id)
     if (i > -1) { bud[i].status = status; dbW('budgets', bud) }
     refresh()
+    logAudit('status_change', 'budget', id, { status })
   }, [refresh])
 
   // CRUD helpers for other entities
   const saveEntity = useCallback((key, item) => {
     const list = db(key, [])
+    const wasExisting = item.id && list.some(x => x.id === item.id)
     if (item.id) {
       const i = list.findIndex((x) => x.id === item.id)
       if (i > -1) {
         list[i] = { ...list[i], ...item }
       } else {
-        list.push(item) // fallback: item has id but wasn't found — add it
+        list.push(item)
       }
     } else {
       item.id = nextId()
@@ -96,12 +102,15 @@ export function DataProvider({ children }) {
     }
     dbW(key, list)
     refresh()
+    logAudit(wasExisting ? 'update' : 'create', key, item.id, { name: item.name || item.title || null })
     return item
   }, [refresh])
 
   const deleteEntity = useCallback((key, id) => {
+    const existing = db(key, []).find(x => x.id === id)
     dbW(key, db(key, []).filter((x) => x.id !== id))
     refresh()
+    logAudit('delete', key, id, existing ? { name: existing.name || existing.title || null } : null)
   }, [refresh])
 
   return (

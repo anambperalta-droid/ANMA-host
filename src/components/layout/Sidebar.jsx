@@ -22,7 +22,7 @@ const NAV = [
 export default function Sidebar({ open, onClose }) {
   const loc = useLocation()
   const nav = useNavigate()
-  const { logout, role, can } = useAuth()
+  const { logout, role, can, isGlobalAdmin } = useAuth()
   const { get, config } = useData()
   const c = config()
   const name = c.businessName || 'ANMA'
@@ -69,6 +69,14 @@ export default function Sidebar({ open, onClose }) {
         })}
         {role === 'owner' && (
           <div className="sb-item" onClick={doBackup}><i className="fa fa-cloud-arrow-down" />Backup</div>
+        )}
+        {isGlobalAdmin && (
+          <>
+            <div className="sb-sec">Super admin</div>
+            <div className={`sb-item ${loc.pathname === '/admin' ? 'active' : ''}`} onClick={() => goTo('/admin')}>
+              <i className="fa fa-shield-halved" />Admin · Workspaces
+            </div>
+          </>
         )}
       </nav>
       <div className="sb-foot">
