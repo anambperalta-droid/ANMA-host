@@ -1,5 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+
+const APP_VERSION = 'v1.4'
+const APP_YEAR = new Date().getFullYear()
+const LS_EMAIL_KEY = 'anma_last_email'
+
+// Mapea mensajes técnicos de Supabase a copy amigable en español.
+function friendlyAuthError(raw) {
+  if (!raw) return ''
+  const m = String(raw).toLowerCase()
+  if (m.includes('invalid login') || m.includes('invalid credentials')) return 'Email o contraseña incorrectos. Probá de nuevo.'
+  if (m.includes('email not confirmed')) return 'Tu email aún no está confirmado. Revisá tu bandeja.'
+  if (m.includes('too many') || m.includes('rate')) return 'Demasiados intentos. Esperá unos minutos y volvé a probar.'
+  if (m.includes('network') || m.includes('failed to fetch')) return 'Sin conexión. Revisá tu internet e intentá de nuevo.'
+  if (m.includes('user not found')) return 'No encontramos una cuenta con ese email.'
+  return raw
+}
 
 const SOLUTIONS = [
   {
@@ -29,12 +45,22 @@ const SparkleIcon = () => (
 )
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => {
+    try { return localStorage.getItem(LS_EMAIL_KEY) || '' } catch { return '' }
+  })
   const [pass, setPass] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [err, setErr] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [capsOn, setCapsOn] = useState(false)
   const { login, resetPassword } = useAuth()
+
+  // Persistir email cada vez que cambia (sólo si tiene formato razonable).
+  useEffect(() => {
+    try {
+      if (email && email.includes('@')) localStorage.setItem(LS_EMAIL_KEY, email)
+    } catch { /* ignorar */ }
+  }, [email])
 
   // Forgot password state
   const [forgotModal, setForgotModal] = useState(false)
@@ -44,13 +70,16 @@ export default function Login() {
   const [resetErr, setResetErr] = useState('')
 
   const handleLogin = async () => {
-    if (!email || !pass) { setErr('Completá todos los campos.'); return }
+    if (!email || !pass) { setErr('Completá email y contraseña para continuar.'); return }
     setSubmitting(true); setErr('')
     const result = await login(email, pass)
-    if (result) { setErr(result); setSubmitting(false) }
+    if (result) { setErr(friendlyAuthError(result)); setSubmitting(false) }
   }
 
-  const handleKey = (e) => { if (e.key === 'Enter') handleLogin() }
+  const handleKey = (e) => {
+    if (typeof e.getModifierState === 'function') setCapsOn(e.getModifierState('CapsLock'))
+    if (e.key === 'Enter') handleLogin()
+  }
 
   const openForgot = () => {
     setResetEmail(email)
@@ -90,6 +119,18 @@ export default function Login() {
           from { opacity:0; transform:translateX(-28px); }
           to   { opacity:1; transform:translateX(0); }
         }
+        @keyframes lp-orb-float-a {
+          0%,100% { transform:translate(0,0) scale(1); }
+          50%     { transform:translate(-22px,18px) scale(1.05); }
+        }
+        @keyframes lp-orb-float-b {
+          0%,100% { transform:translate(0,0) scale(1); }
+          50%     { transform:translate(18px,-14px) scale(1.08); }
+        }
+        @keyframes lp-orb-float-c {
+          0%,100% { transform:translate(0,0) scale(1); }
+          50%     { transform:translate(14px,12px) scale(1.04); }
+        }
 
         .lp2-wrap {
           position:fixed;inset:0;z-index:9999;display:flex;min-height:100vh;
@@ -105,11 +146,17 @@ export default function Login() {
         }
         .lp2-orb { position:absolute;border-radius:50%;pointer-events:none; }
         .lp2-orb1 { width:560px;height:560px;top:-200px;right:-200px;
-          background:radial-gradient(circle,rgba(124,58,237,.28) 0%,transparent 68%); }
+          background:radial-gradient(circle,rgba(124,58,237,.28) 0%,transparent 68%);
+          animation:lp-orb-float-a 18s ease-in-out infinite; }
         .lp2-orb2 { width:320px;height:320px;bottom:-100px;left:-80px;
-          background:radial-gradient(circle,rgba(5,150,105,.18) 0%,transparent 68%); }
+          background:radial-gradient(circle,rgba(5,150,105,.18) 0%,transparent 68%);
+          animation:lp-orb-float-b 22s ease-in-out infinite; }
         .lp2-orb3 { width:180px;height:180px;top:42%;left:8%;
-          background:radial-gradient(circle,rgba(167,139,250,.14) 0%,transparent 68%); }
+          background:radial-gradient(circle,rgba(167,139,250,.14) 0%,transparent 68%);
+          animation:lp-orb-float-c 16s ease-in-out infinite; }
+        @media (prefers-reduced-motion:reduce){
+          .lp2-orb1,.lp2-orb2,.lp2-orb3 { animation:none; }
+        }
 
         .lp2-hero { position:relative;z-index:1;text-align:center;max-width:560px;width:100%; }
 
@@ -242,6 +289,18 @@ export default function Login() {
         }
         .lp2-sec i { color:#059669;font-size:11px; }
 
+        .lp2-caps {
+          display:flex;align-items:center;gap:6px;margin-top:6px;
+          font-size:11px;color:#b45309;font-weight:600;
+        }
+        .lp2-caps i { font-size:11px; }
+
+        .lp2-foot {
+          margin-top:20px;text-align:center;font-size:10.5px;color:#cbd5e1;
+          letter-spacing:.3px;
+        }
+        .lp2-foot b { color:#94a3b8;font-weight:600; }
+
         /* ── FORGOT MODAL ── */
         .lp2-modal-bg {
           position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);
@@ -285,6 +344,7 @@ export default function Login() {
         }
         @media(max-width:480px){
           .lp2-right { padding:28px 20px; }
+          .lp2-cards { grid-template-columns:1fr; }
         }
       `}</style>
 
@@ -312,6 +372,9 @@ export default function Login() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="lp2-foot">
+              ANMA Regalos · <b>{APP_VERSION}</b> · {APP_YEAR}
             </div>
           </div>
         </div>
@@ -350,10 +413,16 @@ export default function Login() {
                   autoComplete="current-password"
                   style={{ paddingRight: 42 }}
                 />
-                <button className="lp2-eye" type="button" onClick={() => setShowPwd(!showPwd)}>
+                <button className="lp2-eye" type="button" onClick={() => setShowPwd(!showPwd)} title={showPwd ? 'Ocultar' : 'Mostrar'}>
                   <i className={`fa ${showPwd ? 'fa-eye-slash' : 'fa-eye'}`} />
                 </button>
               </div>
+              {capsOn && (
+                <div className="lp2-caps">
+                  <i className="fa fa-arrow-up" />
+                  <span>Bloq Mayús está activado</span>
+                </div>
+              )}
               <button className="lp2-forgot" type="button" onClick={openForgot}>
                 ¿Olvidaste tu contraseña?
               </button>
