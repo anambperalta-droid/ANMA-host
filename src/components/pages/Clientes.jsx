@@ -218,18 +218,7 @@ export default function Clientes() {
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
   }
 
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') {
-        if (previewBudget) { setPreviewBudget(null); return }
-        if (modal) { setModal(false); return }
-        if (importModal) { setImportModal(false); setCsvPreview([]); return }
-        if (detailClient) { setDetailClient(null); return }
-      }
-    }
-    window.addEventListener('keydown', handleEsc)
-    return () => window.removeEventListener('keydown', handleEsc)
-  }, [previewBudget, modal, importModal, detailClient])
+  // ESC global se maneja en AppShell
 
   const openDetail = (c) => { setDetailClient(c); setDetailTab('info') }
 
@@ -260,10 +249,10 @@ export default function Clientes() {
           `}</style>
           <div className="tbl-card cli-tbl">
             <table>
-              <thead><tr><th>Empresa / Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Últ. pedido</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Empresa / Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Acciones</th></tr></thead>
               <tbody>
                 {loading ? [1,2,3,4,5].map(i => (
-                  <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                  <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
                 )) : filtered.length ? filtered.map(c => (
                   <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
                     <td>
@@ -299,13 +288,22 @@ export default function Clientes() {
                         </span>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                     </td>
-                    <td style={{ fontVariantNumeric: 'tabular-nums', fontSize: 13, fontWeight: 600 }}>{clientBudgets(c).length}</td>
-                    <td style={{ fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>
+                    <td style={{ fontVariantNumeric: 'tabular-nums' }}>
                       {(() => {
+                        const n = clientBudgets(c).length
                         const days = clientLastBudgetDays(c)
-                        if (days === null) return <span style={{ color: 'var(--txt4)' }}>—</span>
-                        const color = days > 90 ? '#DC2626' : days > 30 ? '#D97706' : '#16A34A'
-                        return <span style={{ color, fontWeight: 600 }}>{days === 0 ? 'Hoy' : days === 1 ? 'Ayer' : `hace ${days}d`}</span>
+                        if (n === 0) return <span style={{ color: 'var(--txt4)', fontSize: 13 }}>—</span>
+                        const color = days === null ? 'var(--txt4)' : days > 90 ? '#DC2626' : days > 30 ? '#D97706' : 'var(--txt3)'
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)' }}>{n}</span>
+                            {days !== null && (
+                              <span style={{ fontSize: 10, color, fontWeight: 500 }} title="Último pedido">
+                                · {days === 0 ? 'hoy' : days === 1 ? 'ayer' : `${days}d`}
+                              </span>
+                            )}
+                          </div>
+                        )
                       })()}
                     </td>
                     <td><div className="acts cli-acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
@@ -314,7 +312,7 @@ export default function Clientes() {
                       <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
                     </div></td>
                   </tr>
-                )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
+                )) : <tr><td colSpan={6}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
               </tbody>
             </table>
           </div>

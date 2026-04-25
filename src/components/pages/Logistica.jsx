@@ -434,7 +434,7 @@ export default function Logistica() {
       {/* ── MODAL ──────────────────────────────────────────────────── */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal modal-lg">
+          <div className="modal modal-xl" onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && (form.remito || form.client)) saveShip() }}>
             <div className="mh">
               <h3>{form.id ? 'Editar envío' : 'Registrar envío'}</h3>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>

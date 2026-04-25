@@ -255,7 +255,7 @@ td b{color:var(--txt);font-weight:600}
 .modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
 .modal{background:var(--surface);border-radius:var(--r-xl);padding:24px 32px;width:calc(100vw - 64px);max-width:1200px;box-shadow:var(--sh-lg);animation:pgIn .2s ease both;margin:auto 0;flex-shrink:0}
 .modal-lg{max-width:1280px}
-.modal-xl{max-width:1360px}
+.modal-xl{max-width:1480px}
 @media (max-width:720px){.modal{width:calc(100vw - 24px);padding:18px 20px}}
 .modal .mh{margin-bottom:14px}
 .modal .fg{margin-bottom:12px}
@@ -573,7 +573,6 @@ td b{color:var(--txt);font-weight:600}
   /* Modals wider proportion */
   .modal{max-width:calc(100vw - 28px);padding:20px}
   .modal-lg,.modal-xl{max-width:calc(100vw - 28px)}
-  .modal .grid2,.modal .grid3{grid-template-columns:1fr}
   /* Tabs horizontal scroll */
   .tabs,.tabs-bar{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
   .tabs::-webkit-scrollbar,.tabs-bar::-webkit-scrollbar{display:none}
@@ -585,6 +584,7 @@ td b{color:var(--txt);font-weight:600}
   .bento{grid-template-columns:1fr;gap:10px}
   .bento-wide,.bento-seg{grid-column:1/-1}
   .grid2,.grid3{grid-template-columns:1fr}
+  .modal .grid2,.modal .grid3{grid-template-columns:1fr}
   .kpis,.kpis-4{grid-template-columns:1fr 1fr}
   .content{padding:14px 12px}
   /* Modals near full-screen but keep rounded */
