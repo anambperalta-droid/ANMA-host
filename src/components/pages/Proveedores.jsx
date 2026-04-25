@@ -14,7 +14,7 @@ export default function Proveedores() {
   const [viewMode, setViewMode] = useState('table')
   const [showLastUse, setShowLastUse] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ name: '', contact: '', wa: '', rubro: '', email: '', notes: '' })
+  const [form, setForm] = useState({ name: '', contact: '', wa: '', rubro: '', email: '', notes: '', cuit: '', ivaCondition: '', paymentTerm: '', cbu: '', leadTime: '' })
   const [newNote, setNewNote] = useState('')
   const fileRef = useRef(null)
   const [csvPreview, setCsvPreview] = useState([])
@@ -32,7 +32,7 @@ export default function Proveedores() {
   ) : suppliers
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const openEdit = (s) => { setForm(s ? { ...s } : { name: '', contact: '', wa: '', rubro: '', email: '', notes: '' }); setModal(true) }
+  const openEdit = (s) => { setForm(s ? { ...s } : { name: '', contact: '', wa: '', rubro: '', email: '', notes: '', cuit: '', ivaCondition: '', paymentTerm: '', cbu: '', leadTime: '' }); setModal(true) }
   const save = () => {
     if (!form.name) { toast('Ingresá el nombre del proveedor.', 'er'); return }
     saveEntity('suppliers', form); setModal(false); toast('Proveedor guardado', 'ok')
@@ -46,7 +46,45 @@ export default function Proveedores() {
   }
 
   const supplierProducts = (s) => products.filter(p => Number(p.supplierId) === s.id)
+
+  /* ── Concentración de compras ── */
+  const concentration = (() => {
+    if (!suppliers.length || !products.length) return null
+    const counts = suppliers.map(s => ({ s, n: supplierProducts(s).length })).filter(x => x.n > 0).sort((a, b) => b.n - a.n)
+    if (!counts.length) return null
+    const total = counts.reduce((sum, x) => sum + x.n, 0)
+    const top = counts[0]
+    const top3 = counts.slice(0, 3).reduce((sum, x) => sum + x.n, 0)
+    return { topName: top.s.name, topPct: (top.n / total) * 100, top3Pct: (top3 / total) * 100, total }
+  })()
   const supplierCostTotal = (s) => supplierProducts(s).reduce((sum, p) => sum + (Number(p.cost) || 0), 0)
+
+  /* ── Score de performance del proveedor (0–100) ── */
+  const supplierScore = (s) => {
+    let score = 50
+    let factors = []
+    if (s.cuit && s.ivaCondition && s.paymentTerm) { score += 10; factors.push('Datos fiscales completos +10') }
+    if (s.leadTime) {
+      const lt = Number(s.leadTime)
+      if (lt > 0 && lt <= 7) { score += 15; factors.push('Lead time excelente +15') }
+      else if (lt <= 15) { score += 5; factors.push('Lead time aceptable +5') }
+      else if (lt > 30) { score -= 10; factors.push('Lead time alto −10') }
+    }
+    const hist = s.priceHistory || []
+    if (hist.length >= 2) {
+      const ups = hist.filter(h => h.prevCost > 0 && h.newCost > h.prevCost)
+      if (ups.length) {
+        const avg = ups.reduce((sum, h) => sum + ((h.newCost - h.prevCost) / h.prevCost) * 100, 0) / ups.length
+        if (avg <= 10) { score += 10; factors.push('Precios estables +10') }
+        else if (avg >= 25) { score -= 10; factors.push('Subas frecuentes −10') }
+      }
+    }
+    const lastDays = supplierLastActivity(s)
+    if (lastDays !== null && lastDays <= 30) { score += 10; factors.push('Activa recientemente +10') }
+    else if (lastDays !== null && lastDays > 90) { score -= 10; factors.push('Sin actividad >90d −10') }
+    score = Math.max(0, Math.min(100, score))
+    return { score, factors }
+  }
 
   const supplierLastActivity = (s) => {
     const supplierProds = products.filter(p => String(p.supplierId) === String(s.id)).map(p => p.name)
@@ -186,11 +224,21 @@ export default function Proveedores() {
         </div>
       </div>
 
+      {concentration && concentration.topPct >= 50 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: concentration.topPct >= 70 ? 'rgba(220,38,38,.08)' : 'rgba(217,119,6,.08)', border: `1px solid ${concentration.topPct >= 70 ? 'rgba(220,38,38,.25)' : 'rgba(217,119,6,.25)'}`, borderRadius: 10, marginBottom: 10, fontSize: 12 }}>
+          <i className="fa fa-triangle-exclamation" style={{ color: concentration.topPct >= 70 ? '#DC2626' : '#D97706', fontSize: 14 }} />
+          <div style={{ flex: 1 }}>
+            <b>Riesgo de concentración:</b> el {concentration.topPct.toFixed(0)}% de tus productos depende de <b>{concentration.topName}</b>.
+            Top 3 proveedores concentran el {concentration.top3Pct.toFixed(0)}%. Considerá diversificar.
+          </div>
+        </div>
+      )}
+
       {viewMode === 'table' ? (
         <div className="tbl-card">
           <table>
             <thead><tr>
-              <th>Nombre</th><th>Contacto</th><th>WhatsApp</th><th>Rubro</th><th>Email</th>
+              <th>Proveedor / Contacto</th><th>WhatsApp</th><th>Rubro</th><th>Email</th>
               <th>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   Productos
@@ -208,19 +256,24 @@ export default function Proveedores() {
             </tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
-                <tr key={i}><td colSpan={showLastUse ? 8 : 7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                <tr key={i}><td colSpan={showLastUse ? 7 : 6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
-                  <td style={{ fontWeight: 800 }}>{s.name}</td>
-                  <td>{s.contact}</td>
+                  <td>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)' }}>{s.name}</div>
+                      {s.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{s.contact}</div>}
+                    </div>
+                  </td>
                   <td>
                     {s.wa ? (
                       <a href={`https://wa.me/${s.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}
-                        style={{ color: '#16A34A', fontWeight: 600, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <i className="fa-brands fa-whatsapp" />{s.wa}
+                        title={s.wa}
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none' }}>
+                        <i className="fa-brands fa-whatsapp" />
                       </a>
-                    ) : '—'}
+                    ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                   </td>
                   <td>{s.rubro}</td><td>{s.email}</td>
                   <td><span className="badge b-sent">{supplierProducts(s).length}</span></td>
@@ -240,7 +293,7 @@ export default function Proveedores() {
                     <button className="act del" onClick={() => del(s.id)}><i className="fa fa-trash" /></button>
                   </div></td>
                 </tr>
-              )) : <tr><td colSpan={showLastUse ? 8 : 7}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
+              )) : <tr><td colSpan={showLastUse ? 7 : 6}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
             </tbody>
           </table>
         </div>
@@ -282,7 +335,7 @@ export default function Proveedores() {
 
       {/* MODAL EDITAR */}
       {modal && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+        <div className="modal-bg open" style={{ zIndex: 250 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           <div className="modal">
             <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} proveedor</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
             <div className="grid2">
@@ -292,6 +345,22 @@ export default function Proveedores() {
               <div className="fg"><label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} /></div>
             </div>
             <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
+            <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Datos fiscales y operativos</div>
+            <div className="grid2">
+              <div className="fg"><label>CUIT</label><input type="text" value={form.cuit} onChange={e => setF('cuit', e.target.value)} placeholder="20-12345678-9" /></div>
+              <div className="fg"><label>Condición IVA</label>
+                <select value={form.ivaCondition} onChange={e => setF('ivaCondition', e.target.value)}>
+                  <option value="">—</option>
+                  <option value="RI">Responsable Inscripto</option>
+                  <option value="MT">Monotributo</option>
+                  <option value="EX">Exento</option>
+                  <option value="CF">Consumidor Final</option>
+                </select>
+              </div>
+              <div className="fg"><label>Plazo de pago (días)</label><input type="number" min="0" value={form.paymentTerm} onChange={e => setF('paymentTerm', e.target.value)} placeholder="30" /></div>
+              <div className="fg"><label>Lead time entrega (días)</label><input type="number" min="0" value={form.leadTime} onChange={e => setF('leadTime', e.target.value)} placeholder="7" /></div>
+            </div>
+            <div className="fg"><label>CBU / Alias</label><input type="text" value={form.cbu} onChange={e => setF('cbu', e.target.value)} placeholder="0000000000000000000000 o ALIAS.PROVEEDOR" /></div>
             <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} /></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
           </div>
@@ -369,23 +438,69 @@ export default function Proveedores() {
                     )}
                   </div>
 
+                  {/* Datos fiscales y operativos */}
+                  {(detailSupplier.cuit || detailSupplier.ivaCondition || detailSupplier.paymentTerm || detailSupplier.leadTime || detailSupplier.cbu) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, marginBottom: 14 }}>
+                      {detailSupplier.cuit && (
+                        <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px' }}>
+                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>CUIT</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{detailSupplier.cuit}</div>
+                        </div>
+                      )}
+                      {detailSupplier.ivaCondition && (
+                        <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px' }}>
+                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Condición IVA</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>
+                            {{ RI: 'Resp. Inscripto', MT: 'Monotributo', EX: 'Exento', CF: 'Consumidor Final' }[detailSupplier.ivaCondition] || detailSupplier.ivaCondition}
+                          </div>
+                        </div>
+                      )}
+                      {detailSupplier.paymentTerm && (
+                        <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px' }}>
+                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Plazo pago</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{detailSupplier.paymentTerm} días</div>
+                        </div>
+                      )}
+                      {detailSupplier.leadTime && (
+                        <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px' }}>
+                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Lead time</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{detailSupplier.leadTime} días</div>
+                        </div>
+                      )}
+                      {detailSupplier.cbu && (
+                        <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px', gridColumn: '1 / -1' }}>
+                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>CBU / Alias</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2, fontFamily: 'monospace', wordBreak: 'break-all' }}>{detailSupplier.cbu}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* KPI rápido */}
                   {(() => {
                     const prods = supplierProducts(detailSupplier)
                     const costTotal = supplierCostTotal(detailSupplier)
-                    if (prods.length > 0) return (
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{prods.length}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Productos</div>
-                        </div>
-                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(costTotal)}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Costo total catálogo</div>
+                    const sc = supplierScore(detailSupplier)
+                    const scoreColor = sc.score >= 75 ? '#16A34A' : sc.score >= 50 ? '#D97706' : '#DC2626'
+                    const scoreLabel = sc.score >= 75 ? 'Excelente' : sc.score >= 50 ? 'Aceptable' : 'A revisar'
+                    return (
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                        {prods.length > 0 && <>
+                          <div style={{ flex: '1 1 100px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{prods.length}</div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Productos</div>
+                          </div>
+                          <div style={{ flex: '1 1 120px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(costTotal)}</div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Costo total</div>
+                          </div>
+                        </>}
+                        <div style={{ flex: '1 1 140px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }} title={sc.factors.join(' · ') || 'Score base'}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: scoreColor }}>{sc.score}<span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600 }}>/100</span></div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Score · {scoreLabel}</div>
                         </div>
                       </div>
                     )
-                    return null
                   })()}
 
                   {/* Nota general del proveedor */}
