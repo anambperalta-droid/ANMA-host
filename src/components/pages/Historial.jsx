@@ -930,6 +930,14 @@ export default function Historial() {
                 {chip.label}
               </button>
             ))}
+            {quickFilter && (
+              <button onClick={() => setQuickFilter('')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--txt3)' }}
+                title="Quitar filtro rápido">
+                <i className="fa fa-xmark" style={{ fontSize: 10 }} />
+                Quitar filtro
+              </button>
+            )}
           </div>
           {selectedIds.size > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--brand-xlt)', border: '1.5px solid var(--brand)', borderRadius: 10, marginBottom: 10, flexWrap: 'wrap' }}>

@@ -300,7 +300,7 @@ export default function Login() {
             <div className="lp2-logo-wrap"><SparkleIcon /></div>
             <h1 className="lp2-h1">ANMA <em>El motor detrás</em><br />de cada regalo</h1>
             <p className="lp2-sub">
-              Toda tu operativa bajo control<br />en una sola plataforma.
+              Toda tu operativa bajo control<br />en una sola plataforma
             </p>
             <div className="lp2-cards">
               {SOLUTIONS.map((s) => (
