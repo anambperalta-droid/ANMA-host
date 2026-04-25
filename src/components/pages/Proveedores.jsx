@@ -20,6 +20,7 @@ export default function Proveedores() {
   const [csvPreview, setCsvPreview] = useState([])
   const [priceModal, setPriceModal] = useState(null)
   const [priceForm, setPriceForm] = useState({ newCost: '', note: '' })
+  const [reorderOpen, setReorderOpen] = useState(false)
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -46,6 +47,28 @@ export default function Proveedores() {
   }
 
   const supplierProducts = (s) => products.filter(p => Number(p.supplierId) === s.id)
+
+  /* ── Re-orden ── */
+  const supplierLowStock = (s) => supplierProducts(s).filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock)
+
+  const allLowStockBySupplier = (() => {
+    const groups = []
+    suppliers.forEach(s => {
+      const items = supplierLowStock(s)
+      if (items.length) groups.push({ s, items })
+    })
+    return groups.sort((a, b) => b.items.length - a.items.length)
+  })()
+
+  const totalLowStock = allLowStockBySupplier.reduce((sum, g) => sum + g.items.length, 0)
+
+  const sendReorderWA = (s, items) => {
+    if (!s.wa) { toast('Esta proveedora no tiene WhatsApp cargado', 'er'); return }
+    const num = s.wa.replace(/\D/g, '')
+    const lines = items.map(p => `• ${p.name} — necesito reponer (stock: ${p.stock || 0}, mín: ${p.minStock})`).join('\n')
+    const text = `Hola ${s.contact || s.name}, te paso pedido de reposición:\n\n${lines}\n\nGracias!`
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
+  }
 
   /* ── Concentración de compras ── */
   const concentration = (() => {
@@ -162,6 +185,46 @@ export default function Proveedores() {
 
   const openDetail = (s) => { setDetailSupplier(s); setDetailTab('info') }
 
+  /* ── Generar link de portal para la proveedora ── */
+  const sharePortalLink = (s) => {
+    if (!s) return
+    const prods = supplierProducts(s)
+    let ownerName = ''
+    let ownerWa = ''
+    try {
+      const cfg = JSON.parse(localStorage.getItem('config') || '{}')
+      ownerName = cfg.companyName || cfg.userName || ''
+      ownerWa = cfg.wa || cfg.phone || ''
+    } catch { /* ignorar */ }
+    const payload = {
+      supplierName: s.name,
+      contact: s.contact || '',
+      paymentTerm: s.paymentTerm || '',
+      leadTime: s.leadTime || '',
+      ownerName,
+      ownerWa,
+      exp: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      products: prods.map(p => ({
+        name: p.name,
+        cost: p.cost,
+        stock: p.stock || 0,
+        minStock: p.minStock || 0,
+        reorder: p.minStock > 0 && (p.stock || 0) <= p.minStock
+      })),
+      priceHistory: (s.priceHistory || []).slice(-12).reverse()
+    }
+    const json = JSON.stringify(payload)
+    const b64 = btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    const url = `${window.location.origin}/portal-proveedor?d=${b64}`
+    if (s.wa) {
+      const waNum = s.wa.replace(/\D/g, '')
+      const text = `Hola ${s.contact || s.name}! Te paso este portal con el resumen de lo que te compro, condiciones acordadas y los productos que necesito reponer:\n\n${url}\n\nVálido por 30 días.`
+      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(text)}`, '_blank')
+    } else {
+      navigator.clipboard.writeText(url).then(() => toast('Link copiado al portapapeles', 'ok'))
+    }
+  }
+
   /* ── Histórico de precios ── */
   const productPriceHistory = (productId) =>
     (detailSupplier?.priceHistory || []).filter(h => String(h.productId) === String(productId))
@@ -223,6 +286,52 @@ export default function Proveedores() {
           <button className={`pill ${viewMode === 'cards' ? 'active' : ''}`} onClick={() => setViewMode('cards')}><i className="fa fa-grip" /></button>
         </div>
       </div>
+
+      {totalLowStock > 0 && (
+        <div style={{ background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.25)', borderRadius: 10, marginBottom: 10, overflow: 'hidden' }}>
+          <div onClick={() => setReorderOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', fontSize: 12 }}>
+            <i className="fa fa-bell" style={{ color: '#DC2626', fontSize: 14 }} />
+            <div style={{ flex: 1 }}>
+              <b style={{ color: '#DC2626' }}>{totalLowStock} producto{totalLowStock !== 1 ? 's' : ''} para re-ordenar</b>
+              <span style={{ color: 'var(--txt3)', marginLeft: 6 }}>
+                · {allLowStockBySupplier.length} proveedora{allLowStockBySupplier.length !== 1 ? 's' : ''} involucrada{allLowStockBySupplier.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <i className={`fa fa-chevron-${reorderOpen ? 'up' : 'down'}`} style={{ color: 'var(--txt3)', fontSize: 11 }} />
+          </div>
+          {reorderOpen && (
+            <div style={{ padding: '0 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {allLowStockBySupplier.map(({ s, items }) => (
+                <div key={s.id} style={{ background: 'var(--surface)', borderRadius: 8, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <div style={{ flex: 1, fontWeight: 700, fontSize: 12, color: 'var(--txt)' }}>
+                      {s.name}
+                      {s.leadTime && <span style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 500, marginLeft: 6 }}>· {s.leadTime}d entrega</span>}
+                    </div>
+                    {s.wa && (
+                      <button onClick={() => sendReorderWA(s, items)}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#16A34A', color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        <i className="fa-brands fa-whatsapp" /> Pedir ahora
+                      </button>
+                    )}
+                    <button onClick={() => openDetail(s)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', color: 'var(--txt2)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Ver ficha
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {items.map(p => (
+                      <span key={p.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(220,38,38,.08)', color: '#DC2626', fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 12 }}>
+                        {p.name} <span style={{ opacity: .7 }}>({p.stock || 0}/{p.minStock})</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {concentration && concentration.topPct >= 50 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: concentration.topPct >= 70 ? 'rgba(220,38,38,.08)' : 'rgba(217,119,6,.08)', border: `1px solid ${concentration.topPct >= 70 ? 'rgba(220,38,38,.25)' : 'rgba(217,119,6,.25)'}`, borderRadius: 10, marginBottom: 10, fontSize: 12 }}>
@@ -388,6 +497,9 @@ export default function Proveedores() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 5 }}>
+                  <button className="btn btn-ghost btn-xs" onClick={() => sharePortalLink(detailSupplier)} title="Genera un link público con resumen para la proveedora">
+                    <i className="fa fa-share-nodes" /> Compartir portal
+                  </button>
                   <button className="btn btn-ghost btn-xs" onClick={() => openEdit(detailSupplier)}><i className="fa fa-pen" /> Editar</button>
                   <button className="mclose" onClick={() => setDetailSupplier(null)}><i className="fa fa-xmark" /></button>
                 </div>

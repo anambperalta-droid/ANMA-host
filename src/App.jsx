@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext'
 import Login from './components/layout/Login'
 import AppShell from './components/layout/AppShell'
 import Bienvenida from './components/pages/Bienvenida'
+import PortalProveedor from './components/pages/PortalProveedor'
 
 function AuthRedirect() {
   const loc = useLocation()
@@ -26,6 +27,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/portal-proveedor" element={<PortalProveedor />} />
       <Route path="/bienvenida" element={<Bienvenida />} />
       <Route path="/login" element={
         hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
