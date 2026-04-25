@@ -183,6 +183,7 @@ export default function Logistica() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
+      <style>{`.ship-modal .grid2{grid-template-columns:1fr!important;gap:0}`}</style>
       <div className="ph">
         <div className="ph-left">
           <h2>Logística</h2>
@@ -434,11 +435,13 @@ export default function Logistica() {
       {/* ── MODAL ──────────────────────────────────────────────────── */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal modal-xl" onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && (form.remito || form.client)) saveShip() }}>
-            <div className="mh">
+          <div className="modal ship-modal" style={{ maxWidth: 600, maxHeight: 'calc(100vh - 48px)', display: 'flex', flexDirection: 'column', padding: 0 }}
+               onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && (form.remito || form.client)) saveShip() }}>
+            <div className="mh" style={{ padding: '18px 22px 12px', borderBottom: '1px solid var(--border)', margin: 0, flexShrink: 0 }}>
               <h3>{form.id ? 'Editar envío' : 'Registrar envío'}</h3>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 22px' }}>
 
             {/* ── BLOQUE 1: Datos del envío ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
@@ -590,12 +593,13 @@ export default function Logistica() {
               )}
             </div>
 
-            <div className="fg">
+            <div className="fg" style={{ marginBottom: 0 }}>
               <label>Notas</label>
               <textarea value={form.notes || ''} onChange={e => setF('notes', e.target.value)} rows={2} placeholder="Observaciones, instrucciones de entrega…" />
             </div>
+            </div>
 
-            <div className="mfooter">
+            <div className="mfooter" style={{ padding: '12px 22px 16px', borderTop: '1px solid var(--border)', margin: 0, flexShrink: 0, background: 'var(--surface)' }}>
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
               {trackingLink && (
                 <button
