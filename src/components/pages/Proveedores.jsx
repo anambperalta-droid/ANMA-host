@@ -18,6 +18,8 @@ export default function Proveedores() {
   const [newNote, setNewNote] = useState('')
   const fileRef = useRef(null)
   const [csvPreview, setCsvPreview] = useState([])
+  const [priceModal, setPriceModal] = useState(null)
+  const [priceForm, setPriceForm] = useState({ newCost: '', note: '' })
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -121,6 +123,50 @@ export default function Proveedores() {
   }, [modal, importModal, detailSupplier])
 
   const openDetail = (s) => { setDetailSupplier(s); setDetailTab('info') }
+
+  /* ── Histórico de precios ── */
+  const productPriceHistory = (productId) =>
+    (detailSupplier?.priceHistory || []).filter(h => String(h.productId) === String(productId))
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+
+  const lastPriceChange = (product) => {
+    const hist = productPriceHistory(product.id)
+    if (!hist.length) return null
+    const last = hist[0]
+    const prev = Number(last.prevCost) || 0
+    const curr = Number(last.newCost) || Number(product.cost) || 0
+    if (!prev) return null
+    const pct = ((curr - prev) / prev) * 100
+    return { pct, date: last.date }
+  }
+
+  const openPriceModal = (product) => {
+    setPriceModal({ product })
+    setPriceForm({ newCost: String(product.cost || ''), note: '' })
+  }
+
+  const savePriceChange = () => {
+    if (!priceModal?.product) return
+    const product = priceModal.product
+    const newCost = Number(priceForm.newCost)
+    if (!newCost || newCost <= 0) { toast('Ingresá un costo válido', 'er'); return }
+    const prevCost = Number(product.cost) || 0
+    if (newCost === prevCost) { toast('El costo es el mismo', 'in'); return }
+    saveEntity('products', { ...product, cost: newCost })
+    const entry = {
+      productId: product.id,
+      productName: product.name,
+      prevCost,
+      newCost,
+      date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      note: priceForm.note.trim()
+    }
+    const history = [...(detailSupplier.priceHistory || []), entry]
+    saveEntity('suppliers', { ...detailSupplier, priceHistory: history })
+    setDetailSupplier({ ...detailSupplier, priceHistory: history })
+    setPriceModal(null); setPriceForm({ newCost: '', note: '' })
+    toast(`Precio actualizado: ${product.name}`, 'ok')
+  }
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
@@ -281,7 +327,7 @@ export default function Proveedores() {
 
             {/* Pestañas */}
             <div className="detail-tabs">
-              {[['info', 'Información'], ['productos', 'Productos'], ['notas', 'Notas']].map(([k, l]) => (
+              {[['info', 'Información'], ['productos', 'Productos'], ['precios', 'Precios'], ['notas', 'Notas']].map(([k, l]) => (
                 <div key={k} className={`detail-tab ${detailTab === k ? 'active' : ''}`} onClick={() => setDetailTab(k)}>{l}</div>
               ))}
             </div>
@@ -381,6 +427,75 @@ export default function Proveedores() {
                 </div>
               )}
 
+              {/* TAB: Precios — histórico por producto */}
+              {detailTab === 'precios' && (
+                <div>
+                  {supplierProducts(detailSupplier).length ? (
+                    <>
+                      <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 8 }}>
+                        <i className="fa fa-circle-info" style={{ marginRight: 4 }} />
+                        Registrá cambios de precio para detectar aumentos y comparar con otros proveedores.
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+                        {supplierProducts(detailSupplier).map(p => {
+                          const change = lastPriceChange(p)
+                          const hist = productPriceHistory(p.id)
+                          return (
+                            <div key={p.id} style={{ background: 'var(--surface2)', borderRadius: 8, padding: '10px 12px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)' }}>{p.name}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 2 }}>
+                                    {hist.length} cambio{hist.length !== 1 ? 's' : ''} registrado{hist.length !== 1 ? 's' : ''}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--money)' }}>{fmt(p.cost)}</div>
+                                  {change && (
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: change.pct > 0 ? '#DC2626' : '#16A34A', marginTop: 2 }}>
+                                      <i className={`fa fa-arrow-${change.pct > 0 ? 'up' : 'down'}`} style={{ marginRight: 3 }} />
+                                      {change.pct > 0 ? '+' : ''}{change.pct.toFixed(1)}%
+                                    </div>
+                                  )}
+                                </div>
+                                <button className="btn btn-ghost btn-xs" onClick={() => openPriceModal(p)} title="Registrar nuevo precio">
+                                  <i className="fa fa-pen-to-square" />
+                                </button>
+                              </div>
+                              {hist.length > 0 && (
+                                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                  {hist.slice(0, 5).map((h, i) => {
+                                    const pct = h.prevCost > 0 ? ((h.newCost - h.prevCost) / h.prevCost) * 100 : 0
+                                    return (
+                                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: 'var(--txt2)' }}>
+                                        <i className="fa fa-clock" style={{ color: 'var(--txt4)' }} />
+                                        <span style={{ color: 'var(--txt3)' }}>{h.date}</span>
+                                        <span>{fmt(h.prevCost)} → <b>{fmt(h.newCost)}</b></span>
+                                        <span style={{ color: pct > 0 ? '#DC2626' : '#16A34A', fontWeight: 700 }}>
+                                          {pct > 0 ? '+' : ''}{pct.toFixed(1)}%
+                                        </span>
+                                        {h.note && <span style={{ color: 'var(--txt4)', fontStyle: 'italic' }}>· {h.note}</span>}
+                                      </div>
+                                    )
+                                  })}
+                                  {hist.length > 5 && (
+                                    <div style={{ fontSize: 10, color: 'var(--txt4)' }}>...y {hist.length - 5} más</div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 24, color: 'var(--txt3)', fontSize: 12 }}>
+                      <i className="fa fa-tag" style={{ marginRight: 5 }} />Asociá productos a este proveedor para llevar histórico de precios.
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* TAB: Notas */}
               {detailTab === 'notas' && (
                 <div>
@@ -407,6 +522,50 @@ export default function Proveedores() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL REGISTRAR NUEVO PRECIO */}
+      {priceModal && (
+        <div className="modal-bg open" style={{ zIndex: 200 }} onClick={e => { if (e.target === e.currentTarget) setPriceModal(null) }}>
+          <div className="modal" style={{ maxWidth: 440 }}>
+            <div className="mh">
+              <h3>Registrar nuevo precio</h3>
+              <button className="mclose" onClick={() => setPriceModal(null)}><i className="fa fa-xmark" /></button>
+            </div>
+            <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 12 }}>
+              <div style={{ fontWeight: 700, color: 'var(--txt)' }}>{priceModal.product.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2 }}>
+                Costo actual: <b style={{ color: 'var(--money)' }}>{fmt(priceModal.product.cost)}</b>
+              </div>
+            </div>
+            <div className="fg">
+              <label>Nuevo costo *</label>
+              <input type="number" min="0" step="0.01" value={priceForm.newCost}
+                onChange={e => setPriceForm(f => ({ ...f, newCost: e.target.value }))}
+                placeholder="0.00" autoFocus />
+              {priceForm.newCost && Number(priceForm.newCost) > 0 && Number(priceModal.product.cost) > 0 && (
+                (() => {
+                  const pct = ((Number(priceForm.newCost) - Number(priceModal.product.cost)) / Number(priceModal.product.cost)) * 100
+                  return (
+                    <div style={{ fontSize: 11, marginTop: 4, color: pct > 0 ? '#DC2626' : pct < 0 ? '#16A34A' : 'var(--txt3)', fontWeight: 700 }}>
+                      Variación: {pct > 0 ? '+' : ''}{pct.toFixed(1)}%
+                    </div>
+                  )
+                })()
+              )}
+            </div>
+            <div className="fg">
+              <label>Nota (opcional)</label>
+              <input type="text" value={priceForm.note}
+                onChange={e => setPriceForm(f => ({ ...f, note: e.target.value }))}
+                placeholder="Ej: aumento por dólar, lista nueva, etc." />
+            </div>
+            <div className="mfooter">
+              <button className="btn btn-secondary" onClick={() => setPriceModal(null)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={savePriceChange}><i className="fa fa-floppy-disk" /> Guardar precio</button>
             </div>
           </div>
         </div>
