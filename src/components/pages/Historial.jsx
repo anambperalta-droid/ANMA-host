@@ -9,17 +9,25 @@ function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
 }
 
-function Sparkline({ data, color = 'var(--brand)' }) {
+function Sparkline({ data, color = 'var(--brand)', height = 32 }) {
   if (!data || data.length < 2) return null
   const max = Math.max(...data, 1)
   const min = Math.min(...data, 0)
   const range = max - min || 1
-  const W = 60, H = 18
+  const W = 100, H = height
   const step = W / (data.length - 1)
-  const points = data.map((v, i) => `${(i * step).toFixed(1)},${(H - ((v - min) / range) * H).toFixed(1)}`).join(' ')
+  const points = data.map((v, i) => `${(i * step).toFixed(1)},${(H - 2 - ((v - min) / range) * (H - 4)).toFixed(1)}`).join(' ')
+  const areaPoints = `0,${H} ${points} ${W},${H}`
   return (
-    <svg width={W} height={H} style={{ position: 'absolute', right: 10, top: 10, opacity: .55 }}>
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H} style={{ display: 'block', marginTop: 8 }}>
+      <defs>
+        <linearGradient id={`spk-grad-${color.replace(/[^a-z0-9]/gi,'')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#spk-grad-${color.replace(/[^a-z0-9]/gi,'')})`} />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
     </svg>
   )
 }
@@ -30,13 +38,15 @@ function KpiCard({ label, value, delta, isKey, sparkData, sparkColor }) {
   return (
     <div className="bento-kpi" style={isKey ? { ...base, borderLeft: '3px solid var(--green)', paddingLeft: 14 } : base}>
       <div style={{ fontSize: 9.5, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+        {hasDelta && (
+          <span style={{ fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? 'rgba(22,163,74,.10)' : 'rgba(220,38,38,.10)', padding: '2px 7px', borderRadius: 6, lineHeight: 1.2, whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {delta >= 0 ? '↑' : '↓'}{Math.abs(delta)}%
+          </span>
+        )}
+      </div>
       {sparkData && <Sparkline data={sparkData} color={sparkColor || 'var(--brand)'} />}
-      {hasDelta && (
-        <span style={{ position: 'absolute', right: 10, bottom: 8, fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? 'rgba(22,163,74,.10)' : 'rgba(220,38,38,.10)', padding: '2px 7px', borderRadius: 6, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-          {delta >= 0 ? '↑' : '↓'}{Math.abs(delta)}%
-        </span>
-      )}
     </div>
   )
 }
@@ -367,6 +377,16 @@ export default function Historial() {
   const [carouselSlide, setCarouselSlide] = useState(0)
   const [quickFilter, setQuickFilter] = useState('')
   const [pendingLossId, setPendingLossId] = useState(null)
+  const [todayCollapsed, setTodayCollapsed] = useState(() => {
+    try { return localStorage.getItem('anma_today_collapsed') === '1' } catch { return false }
+  })
+  const toggleTodayCollapsed = () => {
+    setTodayCollapsed(c => {
+      const next = !c
+      try { localStorage.setItem('anma_today_collapsed', next ? '1' : '0') } catch { /* ignorar */ }
+      return next
+    })
+  }
   const { hidden, money } = usePrivacy()
 
   const drillDownToStatus = (statusKey) => {
@@ -728,6 +748,10 @@ export default function Historial() {
   })
   const applyBulkStatus = () => {
     if (!bulkStatus || !selectedIds.size) return
+    if (bulkStatus === 'lost') {
+      toast('Marcá los presupuestos como "Perdido" uno a uno para registrar el motivo', 'in')
+      return
+    }
     selectedIds.forEach(id => updateBudgetStatus(id, bulkStatus))
     toast(`${selectedIds.size} presupuestos actualizados`, 'ok')
     setSelectedIds(new Set()); setBulkStatus('')
@@ -892,7 +916,22 @@ export default function Historial() {
         <>
           {/* ── MODO HOY: 3 acciones inmediatas ── */}
           {!loading && !filterLoading && (cobrosVencidos.length + entregasHoy.length + aConfirmar.length) > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, marginBottom: 16 }}>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <i className="fa fa-bolt" style={{ color: '#F59E0B', fontSize: 13 }} />
+                <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px', textTransform: 'uppercase', letterSpacing: '.06em' }}>Hoy importa</h3>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 10 }}>
+                  {cobrosVencidos.length + entregasHoy.length + aConfirmar.length}
+                </span>
+                <button onClick={toggleTodayCollapsed}
+                  title={todayCollapsed ? 'Mostrar' : 'Ocultar'}
+                  style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', fontSize: 11, color: 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .15s' }}>
+                  <i className={`fa fa-chevron-${todayCollapsed ? 'down' : 'up'}`} style={{ fontSize: 9 }} />
+                  {todayCollapsed ? 'Mostrar' : 'Ocultar'}
+                </button>
+              </div>
+              {!todayCollapsed && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               {cobrosVencidos.length > 0 && (
                 <div onClick={() => { setQuickFilter('sin_cobrar'); setTab('lista') }}
                   style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(220,38,38,.06), rgba(220,38,38,.02))', border: '1.5px solid rgba(220,38,38,.25)', borderRadius: 14, padding: '14px 16px', transition: 'transform .15s, box-shadow .2s' }}
@@ -946,6 +985,8 @@ export default function Historial() {
                     Enviados hace 3+ días — recordales antes de que se enfríen
                   </div>
                 </div>
+              )}
+            </div>
               )}
             </div>
           )}
