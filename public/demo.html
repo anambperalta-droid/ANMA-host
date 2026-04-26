@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ANMA Regalos — Demo en vivo</title>
+<meta name="description" content="Demo interactivo de ANMA Regalos con datos ficticios. Recorré el dashboard, los pedidos urgentes y las entregas.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'Inter',sans-serif;background:#fdf4ff;color:#1F1338;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+.demo-top{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap}
+.demo-top .info{display:flex;align-items:center;gap:10px}
+.demo-top .badge{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.demo-top .actions{display:flex;gap:8px;align-items:center}
+.demo-top .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;font-family:inherit;border:none;cursor:pointer;transition:transform .15s,background .2s}
+.demo-top .btn-light{background:rgba(255,255,255,.95);color:#db2777}
+.demo-top .btn-light:hover{background:#fff;transform:translateY(-1px)}
+.demo-top .btn-outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)}
+.demo-top .btn-outline:hover{background:rgba(255,255,255,.1)}
+
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 42px)}
+.sb{background:linear-gradient(180deg,#1F1338,#3d0626);color:rgba(255,255,255,.75);padding:18px 14px;border-right:1px solid #fbcfe8}
+.sb-logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:16px;letter-spacing:-.4px;color:#fff;margin-bottom:6px;padding:0 6px}
+.sb-logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.sb-sub{font-size:11px;color:rgba(255,255,255,.45);padding:0 6px;margin-bottom:24px}
+.sb-section{font-size:9.5px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 6px 4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:rgba(255,255,255,.78);margin-bottom:1px;transition:background .15s,color .15s}
+.sb-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.sb-item.active{background:rgba(244,114,182,.22);color:#fff;font-weight:700}
+.sb-item i{width:18px;font-size:13px;color:#f9a8d4}
+.sb-item .chip{margin-left:auto;background:rgba(255,255,255,.1);font-size:10px;padding:1px 7px;border-radius:99px;font-weight:700}
+
+.tb{display:flex;align-items:center;gap:14px;padding:12px 28px;background:#fff;border-bottom:1px solid #f3e8ff}
+.tb-title{font-size:15px;font-weight:800;color:#1F1338}
+.tb-search{flex:1;max-width:380px;display:flex;align-items:center;gap:8px;padding:7px 12px;background:#fdf4ff;border-radius:9px;color:#9D5B8C;font-size:12.5px}
+.tb-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tb-btn{width:34px;height:34px;border-radius:9px;background:#fdf4ff;color:#db2777;display:flex;align-items:center;justify-content:center;font-size:13px;border:none;cursor:pointer;position:relative}
+.tb-btn .dot{position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;background:#dc2626}
+.tb-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12px}
+
+.content{padding:24px 28px;background:#fdf4ff;min-height:100%}
+.page-h{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;gap:14px;flex-wrap:wrap}
+.page-h h1{font-size:24px;font-weight:900;letter-spacing:-.6px;margin:0}
+.page-h p{font-size:13px;color:#9D5B8C;margin:3px 0 0}
+.page-h .btn-add{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;padding:9px 16px;border-radius:9px;font-weight:700;font-size:13px;border:none;cursor:pointer}
+
+.today{margin-bottom:18px}
+.today-h{display:flex;align-items:center;gap:7px;margin-bottom:10px;font-size:11px;font-weight:800;color:#1F1338;text-transform:uppercase;letter-spacing:.6px}
+.today-h .count{background:#fce7f3;color:#9D5B8C;padding:2px 8px;border-radius:10px;font-size:10px;margin-left:auto;font-weight:700}
+.today-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.today-card{background:linear-gradient(135deg,rgba(220,38,38,.06),rgba(220,38,38,.02));border:1.5px solid rgba(220,38,38,.25);border-radius:12px;padding:13px 16px;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.today-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(220,38,38,.12)}
+.today-card.amber{background:linear-gradient(135deg,rgba(217,119,6,.07),rgba(217,119,6,.02));border-color:rgba(217,119,6,.25)}
+.today-card.amber:hover{box-shadow:0 8px 20px rgba(217,119,6,.12)}
+.today-card.pink{background:linear-gradient(135deg,rgba(236,72,153,.06),rgba(236,72,153,.02));border-color:#ec4899}
+.today-card.pink:hover{box-shadow:0 8px 20px rgba(236,72,153,.15)}
+.today-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.today-icon{width:30px;height:30px;border-radius:9px;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
+.today-card.amber .today-icon{background:#d97706}
+.today-card.pink .today-icon{background:linear-gradient(135deg,#ec4899,#a855f7)}
+.today-info{flex:1}
+.today-info .lbl{font-size:9.5px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.5px}
+.today-card.amber .today-info .lbl{color:#d97706}
+.today-card.pink .today-info .lbl{color:#db2777}
+.today-info .v{font-size:17px;font-weight:800;color:#1F1338;line-height:1.1}
+.today-info .v small{font-size:11px;color:#9D5B8C;font-weight:500}
+.today-desc{font-size:11px;color:#6b5b8c;line-height:1.4}
+
+.bento{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:14px 16px}
+.kpi.key{border-left:3px solid #db2777}
+.kpi-l{font-size:9.5px;color:#c4a5d4;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.kpi-vrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.kpi-v{font-size:22px;font-weight:800;letter-spacing:-.6px;color:#1F1338;font-variant-numeric:tabular-nums}
+.kpi-d{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;color:#16a34a;background:rgba(22,163,74,.1)}
+.kpi-d.down{color:#dc2626;background:rgba(220,38,38,.1)}
+.kpi-spark{margin-top:6px}
+
+.bento-wide{grid-column:1/-1;display:grid;grid-template-columns:1.7fr 1fr;gap:12px}
+.card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px}
+.card-h{display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:13px;font-weight:800;color:#1F1338}
+.card-h i{color:#db2777}
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:130px}
+.bar-chart .bc{flex:1;display:flex;justify-content:center}
+.bar-chart .bb{width:100%;max-width:22px;background:#ec4899;opacity:.5;border-radius:4px 4px 0 0;transition:opacity .2s}
+.bar-chart .bb:hover{opacity:.9}
+.bar-labels{display:flex;gap:5px;margin-top:5px}
+.bar-labels .l{flex:1;text-align:center;font-size:10px;color:#c4a5d4;font-weight:600}
+
+.donut-wrap{display:flex;align-items:center;gap:14px}
+.donut-leg{display:flex;flex-direction:column;gap:5px;flex:1}
+.donut-leg-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6b5b8c;cursor:pointer;padding:2px 4px;border-radius:5px;transition:background .15s}
+.donut-leg-row:hover{background:#fdf4ff}
+.donut-leg-row .d{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.donut-leg-row .pct{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:5px}
+.donut-leg-row .n{font-size:11px;font-weight:800;background:#fdf4ff;padding:1px 6px;border-radius:6px;color:#1F1338;margin-left:auto}
+
+.tbl-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px}
+.tbl-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.tbl-h h3{margin:0;font-size:14px;font-weight:800;color:#1F1338}
+.tbl-h a{font-size:12px;font-weight:600;color:#db2777}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:8px 10px;border-bottom:1.5px solid #faf5ff;font-size:10px;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+tbody td{padding:11px 10px;border-bottom:1px solid #fdf4ff;color:#6b5b8c}
+tbody tr:hover td{background:#fdf4ff}
+.tbl-num{font-weight:800;color:#1F1338}
+.tbl-amt{font-weight:700;color:#db2777;font-variant-numeric:tabular-nums;text-align:right}
+.tbl-st{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;font-size:10.5px;font-weight:700}
+.st-confirmed{background:#dcfce7;color:#15803d}
+.st-sent{background:#dbeafe;color:#1d4ed8}
+.st-negotiating{background:#fef3c7;color:#92400e}
+.st-paid{background:#dcfce7;color:#15803d}
+.st-pending{background:#fee2e2;color:#991b1b}
+.st-partial{background:#fef3c7;color:#92400e}
+.st-urgent{background:#fee2e2;color:#dc2626}
+
+.insight-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px;margin-top:18px}
+.insight-h{display:flex;align-items:center;gap:6px;margin-bottom:12px;font-size:13px;font-weight:800;color:#1F1338}
+.insight-h i{color:#f59e0b}
+.insight-h .count{background:#fce7f3;color:#9D5B8C;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:auto}
+.insight-list{display:flex;flex-direction:column;gap:8px}
+.insight{display:flex;gap:11px;padding:11px 13px;border-radius:10px;border:1px solid}
+.insight.success{background:rgba(22,163,74,.06);border-color:rgba(22,163,74,.25)}
+.insight.warning{background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.25)}
+.insight.info{background:#fdf4ff;border-color:#ec4899}
+.insight-icon{width:30px;height:30px;border-radius:8px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+.insight.success .insight-icon{background:#16a34a}
+.insight.warning .insight-icon{background:#dc2626}
+.insight.info .insight-icon{background:linear-gradient(135deg,#ec4899,#a855f7)}
+.insight-body{flex:1;min-width:0}
+.insight-body b{font-size:13px;font-weight:700;color:#1F1338;display:block;margin-bottom:2px}
+.insight-body p{font-size:12px;color:#6b5b8c;margin:0;line-height:1.5}
+
+@media(max-width:920px){
+  .shell{grid-template-columns:1fr}
+  .sb{display:none}
+  .bento{grid-template-columns:1fr 1fr}
+  .bento-wide{grid-template-columns:1fr}
+  .today-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="demo-top">
+  <div class="info">
+    <span class="badge"><i class="fa-solid fa-circle-play"></i> Demo</span>
+    <span><b>Cajas Lúa</b> · Regalos personalizados · Datos ficticios para presentación</span>
+  </div>
+  <div class="actions">
+    <a href="/landing.html" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Volver al sitio</a>
+    <a href="https://anma-host.vercel.app/login" class="btn btn-light"><i class="fa-solid fa-sparkles"></i> Crear cuenta gratis</a>
+  </div>
+</div>
+
+<div class="shell">
+
+  <aside class="sb">
+    <div class="sb-logo">
+      <span class="sb-logo-mark"><i class="fa-solid fa-gift"></i></span>
+      ANMA Regalos
+    </div>
+    <div class="sb-sub">Tu emprendimiento en orden</div>
+
+    <div class="sb-section">Gestión</div>
+    <div class="sb-item active"><i class="fa-solid fa-chart-line"></i> Dashboard <span class="chip">8</span></div>
+    <div class="sb-item"><i class="fa-solid fa-file-invoice-dollar"></i> Presupuesto</div>
+    <div class="sb-item"><i class="fa-solid fa-users"></i> Clientas <span class="chip">42</span></div>
+
+    <div class="sb-section">Catálogo</div>
+    <div class="sb-item"><i class="fa-solid fa-cube"></i> Productos <span class="chip">28</span></div>
+    <div class="sb-item"><i class="fa-solid fa-industry"></i> Proveedores <span class="chip">5</span></div>
+
+    <div class="sb-section">Operación</div>
+    <div class="sb-item"><i class="fa-solid fa-truck-fast"></i> Logística</div>
+    <div class="sb-item"><i class="fa-brands fa-whatsapp"></i> Mensajes WA</div>
+
+    <div class="sb-section">Sistema</div>
+    <div class="sb-item"><i class="fa-solid fa-gear"></i> Configuración</div>
+  </aside>
+
+  <main>
+    <div class="tb">
+      <div class="tb-title">Dashboard</div>
+      <div class="tb-search"><i class="fa-solid fa-magnifying-glass"></i> Buscá pedido, clienta, producto…</div>
+      <div class="tb-actions">
+        <button class="tb-btn"><i class="fa-solid fa-eye"></i></button>
+        <button class="tb-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></button>
+        <button class="tb-btn" style="background:#fce7f3;color:#a855f7"><i class="fa-solid fa-brain"></i></button>
+        <div class="tb-avatar">LM</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-h">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Pedidos, ventas y análisis de tu emprendimiento</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3e8ff;border-radius:9px;padding:8px 14px;font-size:12.5px;color:#6b5b8c;cursor:pointer"><i class="fa-solid fa-calendar"></i> Este mes</button>
+          <button style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3e8ff;border-radius:9px;padding:8px 14px;font-size:12.5px;color:#6b5b8c;cursor:pointer"><i class="fa-solid fa-download"></i> Exportar</button>
+          <button class="btn-add"><i class="fa-solid fa-plus"></i> Nuevo pedido</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:2px;background:#fce7f3;padding:3px;border-radius:9px;margin-bottom:18px;width:fit-content">
+        <span style="padding:6px 14px;background:#fff;border-radius:7px;font-size:12.5px;font-weight:700;color:#1F1338;box-shadow:0 1px 2px rgba(219,39,119,.06)">Resumen</span>
+        <span style="padding:6px 14px;font-size:12.5px;color:#9D5B8C;font-weight:500;cursor:pointer">Pedidos</span>
+        <span style="padding:6px 14px;font-size:12.5px;color:#9D5B8C;font-weight:500;cursor:pointer">Análisis</span>
+        <span style="padding:6px 14px;font-size:12.5px;color:#9D5B8C;font-weight:500;cursor:pointer">Seguimiento (4)</span>
+      </div>
+
+      <div class="today">
+        <div class="today-h">
+          <i class="fa-solid fa-bolt" style="color:#f59e0b"></i> Hoy importa
+          <span class="count">12</span>
+        </div>
+        <div class="today-grid">
+          <div class="today-card">
+            <div class="today-row">
+              <div class="today-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+              <div class="today-info">
+                <div class="lbl">Cobros vencidos</div>
+                <div class="v">3 <small>pedidos</small></div>
+              </div>
+              <i class="fa-solid fa-arrow-right" style="color:#dc2626;font-size:11px"></i>
+            </div>
+            <div class="today-desc"><b style="color:#dc2626;font-variant-numeric:tabular-nums">$ 56.200</b> sin cobrar · entrega ya pasó</div>
+          </div>
+          <div class="today-card amber">
+            <div class="today-row">
+              <div class="today-icon"><i class="fa-solid fa-truck-fast"></i></div>
+              <div class="today-info">
+                <div class="lbl">Entregas hoy</div>
+                <div class="v">5 <small>cajas</small></div>
+              </div>
+              <i class="fa-solid fa-arrow-right" style="color:#d97706;font-size:11px"></i>
+            </div>
+            <div class="today-desc">Sofía Ramos, Estudio Cromo, Carla M. +2</div>
+          </div>
+          <div class="today-card pink">
+            <div class="today-row">
+              <div class="today-icon"><i class="fa-solid fa-comments"></i></div>
+              <div class="today-info">
+                <div class="lbl">A confirmar</div>
+                <div class="v">4 <small>seguimientos</small></div>
+              </div>
+              <i class="fa-solid fa-arrow-right" style="color:#db2777;font-size:11px"></i>
+            </div>
+            <div class="today-desc">Enviados hace 3+ días — recordales antes de que se enfríen</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bento">
+        <div class="kpi">
+          <div class="kpi-l">Ventas Brutas</div>
+          <div class="kpi-vrow"><div class="kpi-v">$ 425.300</div><span class="kpi-d">↑22%</span></div>
+          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,18 8,16 16,14 24,15 32,12 40,11 48,9 56,10 64,7 72,8 80,5 88,4 96,2 100,3" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg>
+        </div>
+        <div class="kpi key">
+          <div class="kpi-l">Ingresos Caja</div>
+          <div class="kpi-vrow"><div class="kpi-v">$ 312.800</div><span class="kpi-d">↑15%</span></div>
+          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,16 8,15 16,12 24,14 32,10 40,9 48,11 56,8 64,7 72,9 80,6 88,4 96,3 100,2" fill="none" stroke="#16a34a" stroke-width="1.2" opacity=".45"/></svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">Ticket Promedio</div>
+          <div class="kpi-vrow"><div class="kpi-v">$ 12.500</div><span class="kpi-d">↑8%</span></div>
+          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,12 8,13 16,11 24,12 32,10 40,11 48,9 56,10 64,8 72,9 80,7 88,8 96,6 100,7" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">Pedidos</div>
+          <div class="kpi-vrow"><div class="kpi-v">34</div></div>
+          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,16 8,14 16,12 24,14 32,11 40,10 48,12 56,9 64,10 72,8 80,7 88,9 96,6 100,7" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg>
+        </div>
+
+        <div class="bento-wide">
+          <div class="card">
+            <div class="card-h"><i class="fa-solid fa-chart-bar"></i> Ingresos cobrados — día a día · Este mes</div>
+            <div class="bar-chart">
+              <div class="bc"><div class="bb" style="height:18%"></div></div>
+              <div class="bc"><div class="bb" style="height:32%"></div></div>
+              <div class="bc"><div class="bb" style="height:12%"></div></div>
+              <div class="bc"><div class="bb" style="height:0%"></div></div>
+              <div class="bc"><div class="bb" style="height:0%"></div></div>
+              <div class="bc"><div class="bb" style="height:45%"></div></div>
+              <div class="bc"><div class="bb" style="height:62%"></div></div>
+              <div class="bc"><div class="bb" style="height:38%"></div></div>
+              <div class="bc"><div class="bb" style="height:24%"></div></div>
+              <div class="bc"><div class="bb" style="height:0%"></div></div>
+              <div class="bc"><div class="bb" style="height:0%"></div></div>
+              <div class="bc"><div class="bb" style="height:78%"></div></div>
+              <div class="bc"><div class="bb" style="height:55%"></div></div>
+              <div class="bc"><div class="bb" style="height:42%"></div></div>
+              <div class="bc"><div class="bb" style="height:88%"></div></div>
+              <div class="bc"><div class="bb" style="height:96%"></div></div>
+              <div class="bc"><div class="bb" style="height:32%"></div></div>
+              <div class="bc"><div class="bb" style="height:0%"></div></div>
+              <div class="bc"><div class="bb" style="height:0%"></div></div>
+              <div class="bc"><div class="bb" style="height:54%"></div></div>
+              <div class="bc"><div class="bb" style="height:68%"></div></div>
+              <div class="bc"><div class="bb" style="height:42%"></div></div>
+              <div class="bc"><div class="bb" style="height:36%"></div></div>
+              <div class="bc"><div class="bb" style="height:75%"></div></div>
+              <div class="bc"><div class="bb" style="height:60%"></div></div>
+            </div>
+            <div class="bar-labels">
+              <span class="l">1</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">5</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">10</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">15</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">20</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">25</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><i class="fa-solid fa-chart-pie"></i> Estado de pedidos</div>
+            <div class="donut-wrap">
+              <svg width="100" height="100" viewBox="0 0 90 90">
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#fdf4ff" stroke-width="10"/>
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#16a34a" stroke-width="10" stroke-dasharray="135 226" stroke-dashoffset="0" transform="rotate(-90 45 45)" stroke-linecap="round"/>
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="55 226" stroke-dashoffset="-135" transform="rotate(-90 45 45)" stroke-linecap="round"/>
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#d97706" stroke-width="10" stroke-dasharray="22 226" stroke-dashoffset="-190" transform="rotate(-90 45 45)" stroke-linecap="round"/>
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#dc2626" stroke-width="10" stroke-dasharray="14 226" stroke-dashoffset="-212" transform="rotate(-90 45 45)" stroke-linecap="round"/>
+                <text x="45" y="50" text-anchor="middle" font-size="16" font-weight="800" fill="#1F1338">34</text>
+              </svg>
+              <div class="donut-leg">
+                <div class="donut-leg-row"><span class="d" style="background:#16a34a"></span>Confirmado <span class="pct" style="color:#16a34a;background:rgba(22,163,74,.12)">60%</span><span class="n">20</span></div>
+                <div class="donut-leg-row"><span class="d" style="background:#3b82f6"></span>Enviado <span class="pct" style="color:#3b82f6;background:rgba(59,130,246,.12)">25%</span><span class="n">9</span></div>
+                <div class="donut-leg-row"><span class="d" style="background:#d97706"></span>Negociando <span class="pct" style="color:#d97706;background:rgba(217,119,6,.12)">9%</span><span class="n">3</span></div>
+                <div class="donut-leg-row"><span class="d" style="background:#dc2626"></span>Perdido <span class="pct" style="color:#dc2626;background:rgba(220,38,38,.12)">6%</span><span class="n">2</span></div>
+              </div>
+            </div>
+            <div style="font-size:9.5px;color:#c4a5d4;text-align:center;margin-top:8px">Click en un estado para filtrar la lista</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-h"><h3>Últimos pedidos</h3><a href="#">Ver todos →</a></div>
+        <table>
+          <thead><tr><th>N°</th><th>Clienta</th><th>Producto</th><th>Entrega</th><th>Estado</th><th>Pago</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>
+            <tr><td class="tbl-num">P-0034</td><td>Sofía Ramos</td><td>Caja Bienvenida × 2</td><td>25/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 13.930</td></tr>
+            <tr><td class="tbl-num">P-0033</td><td>Carla Méndez</td><td>Caja Cumple Personalizada</td><td>HOY</td><td><span class="tbl-st st-urgent">● Urgente</span></td><td><span class="tbl-st st-partial">● Seña</span></td><td class="tbl-amt">$ 22.150</td></tr>
+            <tr><td class="tbl-num">P-0032</td><td>Estudio Norte</td><td>8 cajas corporativas</td><td>26/04</td><td><span class="tbl-st st-sent">● Enviado</span></td><td><span class="tbl-st st-pending">● Pendiente</span></td><td class="tbl-amt">$ 92.000</td></tr>
+            <tr><td class="tbl-num">P-0031</td><td>Lucía Vargas</td><td>Detalle baby</td><td>27/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-partial">● Seña</span></td><td class="tbl-amt">$ 8.450</td></tr>
+            <tr><td class="tbl-num">P-0030</td><td>Florencia Acosta</td><td>Caja Aniversario</td><td>23/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 18.750</td></tr>
+            <tr><td class="tbl-num">P-0029</td><td>Diego Pérez</td><td>Regalo corporativo × 12</td><td>22/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 145.300</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-h"><i class="fa-solid fa-lightbulb"></i> Insights del período <span class="count">3</span></div>
+        <div class="insight-list">
+          <div class="insight success">
+            <div class="insight-icon"><i class="fa-solid fa-rocket"></i></div>
+            <div class="insight-body">
+              <b>Crecimiento fuerte: +22% vs período anterior</b>
+              <p>Estás vendiendo 22% más que el mes pasado. Identificá qué cambió y duplicá esa apuesta.</p>
+            </div>
+          </div>
+          <div class="insight info">
+            <div class="insight-icon"><i class="fa-solid fa-circle-info"></i></div>
+            <div class="insight-body">
+              <b>Estudio Norte es tu clienta más fuerte (34%)</b>
+              <p>Cuidala bien — representa 34% de tus ventas confirmadas en el período.</p>
+            </div>
+          </div>
+          <div class="insight success">
+            <div class="insight-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
+            <div class="insight-body">
+              <b>Ticket promedio creció 8%</b>
+              <p>Pasaste de $11.500 a $12.500. Estás vendiendo cajas más completas — buen up-sell.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:32px 0 16px;color:#9D5B8C;font-size:12px">
+        Esta es una vista demo con datos ficticios · <a href="https://anma-host.vercel.app/login" style="color:#db2777;font-weight:700">Crear cuenta gratis →</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ANMA Regalos — El motor detrás de cada regalo</title>
-<meta name="description" content="ANMA Regalos: gestión completa para emprendimientos de cajas, regalos personalizados y detalles. Pedidos, entregas, mensajes y métricas en un solo lugar.">
-<meta property="og:title" content="ANMA Regalos — El motor detrás de cada regalo">
-<meta property="og:description" content="Pedidos ágiles, seguimiento total y resultados claros para tu emprendimiento de regalos.">
+<title>ANMA Regalos — El motor detrás de tu emprendimiento</title>
+<meta name="description" content="Plataforma de gestión hecha para emprendimientos de regalos personalizados. Pedidos, seguimiento, entregas y métricas — todo coordinado en un solo panel.">
+<meta property="og:title" content="ANMA Regalos — El motor detrás de tu emprendimiento">
+<meta property="og:description" content="Tus pedidos, entregas y mensajes coordinados. Sin Excel ni anotadores. Hecho para marcas de regalo y detalles.">
 <meta property="og:type" content="website">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,173 +16,271 @@
 <style>
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font-family:'Inter',sans-serif;color:#1f1338;background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{margin:0;font-family:'Inter',sans-serif;color:#1F1338;background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:11px;font-weight:700;font-size:15px;cursor:pointer;border:none;font-family:inherit;transition:transform .2s,box-shadow .2s,background .2s}
-.btn-primary{background:#7c3aed;color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.32)}
-.btn-primary:hover{background:#6d28d9;transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.42)}
+.btn-primary{background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;box-shadow:0 4px 14px rgba(219,39,119,.32)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(219,39,119,.42)}
 .btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.3)}
 .btn-ghost:hover{background:rgba(255,255,255,.1)}
-.btn-dark{background:#1f1338;color:#fff}
-.btn-dark:hover{background:#2d1b53}
+.btn-dark{background:#1F1338;color:#fff}
+.btn-dark:hover{background:#2d1b4e;transform:translateY(-2px)}
 .btn-wa{background:#25D366;color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.32)}
 .btn-wa:hover{background:#1eb957;transform:translateY(-2px)}
+
+/* NAV */
 .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #f3e8ff}
 .nav-in{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
 .logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:19px;letter-spacing:-.5px}
-.logo-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#7c3aed,#ec4899);display:flex;align-items:center;justify-content:center;color:#fff}
+.logo-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff}
 .nav-links{display:flex;gap:28px;font-size:14px;font-weight:500;color:#6b5b8c}
-.nav-links a:hover{color:#1f1338}
+.nav-links a:hover{color:#1F1338}
 .nav-cta{display:flex;gap:10px;align-items:center}
 .nav-cta .btn{padding:9px 16px;font-size:13px}
 @media(max-width:780px){.nav-links{display:none}}
-.hero{position:relative;background:linear-gradient(145deg,#1a0636 0%,#2d0a57 25%,#4c1d95 60%,#6d28d9 85%,#7c3aed 100%);color:#fff;padding:96px 0 110px;overflow:hidden}
+
+/* HERO */
+.hero{position:relative;background:radial-gradient(1100px 800px at 15% 12%,#831843 0%,transparent 58%),radial-gradient(900px 700px at 85% 88%,#7c3aed 0%,transparent 55%),linear-gradient(135deg,#1a0220 0%,#3d0626 35%,#6b1741 70%,#2d0a3a 100%);color:#fff;padding:80px 0 100px;overflow:hidden}
 .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;pointer-events:none;filter:blur(40px)}
-.hero::before{width:520px;height:520px;top:-180px;right:-180px;background:radial-gradient(circle,rgba(236,72,153,.45),transparent 70%)}
-.hero::after{width:360px;height:360px;bottom:-140px;left:-90px;background:radial-gradient(circle,rgba(167,139,250,.4),transparent 70%)}
+.hero::before{width:520px;height:520px;top:-180px;right:-180px;background:radial-gradient(circle,rgba(236,72,153,.5),transparent 70%)}
+.hero::after{width:360px;height:360px;bottom:-140px;left:-90px;background:radial-gradient(circle,rgba(168,85,247,.35),transparent 70%)}
 .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:99px;font-size:12px;font-weight:600;color:#fbcfe8;margin-bottom:22px}
 .eyebrow i{font-size:10px}
+.eyebrow .pulse-dot{width:7px;height:7px;border-radius:50%;background:#f472b6;box-shadow:0 0 0 0 rgba(244,114,182,.7);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(244,114,182,.7)}70%{box-shadow:0 0 0 10px rgba(244,114,182,0)}100%{box-shadow:0 0 0 0 rgba(244,114,182,0)}}
 .h1{font-size:54px;line-height:1.05;font-weight:900;letter-spacing:-1.5px;margin:0 0 20px}
-.h1 em{font-style:normal;color:#fbcfe8}
-.lead{font-size:18px;color:rgba(255,255,255,.78);max-width:520px;margin:0 0 30px;line-height:1.6}
-.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:34px}
-.hero-trust{display:flex;align-items:center;gap:18px;font-size:13px;color:rgba(255,255,255,.65);flex-wrap:wrap}
-.hero-trust i{color:#fbcfe8}
-.mock{position:relative;background:#1f1338;border-radius:18px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);transform:rotate(-1.5deg);transition:transform .4s}
+.h1 em{font-style:normal;background:linear-gradient(90deg,#fbcfe8,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:rgba(255,255,255,.78);max-width:540px;margin:0 0 30px;line-height:1.6}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.hero-trust{display:flex;align-items:center;gap:18px;font-size:13px;color:rgba(255,255,255,.65);flex-wrap:wrap;margin-top:10px}
+.hero-trust i{color:#f472b6}
+.mock{position:relative;background:#1F1338;border-radius:18px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);transform:rotate(-1.5deg);transition:transform .4s}
 .mock:hover{transform:rotate(0)}
-.mock-bar{display:flex;gap:6px;margin-bottom:10px}
+.mock-bar{display:flex;gap:6px;margin-bottom:10px;align-items:center}
 .mock-bar span{width:11px;height:11px;border-radius:50%;background:#475569}
 .mock-bar span:first-child{background:#ef4444}
 .mock-bar span:nth-child(2){background:#f59e0b}
 .mock-bar span:nth-child(3){background:#10b981}
-.mock-body{background:#fff;border-radius:10px;padding:22px;color:#1f1338;min-height:340px}
+.mock-bar .url{margin-left:auto;background:#3d2d4e;color:#c4a5d4;font-size:10px;padding:3px 8px;border-radius:6px;font-family:monospace}
+.mock-body{background:#fff;border-radius:10px;padding:22px;color:#1F1338;min-height:340px}
 .mock-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .mock-h b{font-size:15px}
 .mock-h .pill{background:#fce7f3;color:#be185d;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px}
 .mock-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .mock-stat div{background:#faf5ff;border-radius:8px;padding:10px}
-.mock-stat .v{font-size:18px;font-weight:800;color:#1f1338}
-.mock-stat .l{font-size:10px;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px}
-.mock-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #faf5ff;font-size:12px}
+.mock-stat .v{font-size:18px;font-weight:800;color:#1F1338}
+.mock-stat .l{font-size:10px;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px}
+.mock-stat .delta{font-size:9px;color:#16a34a;font-weight:700;display:inline-block;margin-left:4px}
+.mock-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f3e8ff;font-size:12px}
 .mock-row .dot{width:8px;height:8px;border-radius:50%;background:#10b981}
 .mock-row b{flex:1}
-.mock-row .amt{font-weight:700;color:#7c3aed}
-@media(max-width:920px){.hero{padding:64px 0 80px}.hero-grid{grid-template-columns:1fr;gap:40px}.h1{font-size:38px}}
-section{padding:90px 0}
-.eyebrow-dark{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:#faf5ff;color:#7c3aed;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
-.h2{font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1.15;margin:0 0 14px;color:#1f1338}
+.mock-row .amt{font-weight:700;color:#db2777}
+@media(max-width:920px){.hero{padding:54px 0 70px}.hero-grid{grid-template-columns:1fr;gap:40px}.h1{font-size:38px}}
+
+/* SECTIONS */
+section{padding:84px 0}
+.eyebrow-dark{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:#fce7f3;color:#db2777;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.h2{font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1.15;margin:0 0 14px;color:#1F1338}
 .sub{font-size:17px;color:#6b5b8c;max-width:640px;margin:0 0 56px;line-height:1.65}
 .center{text-align:center;margin-left:auto;margin-right:auto}
-.problem{background:#1f1338;color:#fff}
-.problem .h2{color:#fff}
-.problem .sub{color:rgba(255,255,255,.65);margin-bottom:48px}
+
+/* IMPACTO */
+.impact{background:#1F1338;color:#fff;padding:60px 0}
+.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.impact-card{text-align:center}
+.impact-num{font-size:54px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:8px;background:linear-gradient(135deg,#fbcfe8,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
+.impact-lbl{font-size:14px;color:rgba(255,255,255,.85);font-weight:600;margin-bottom:4px}
+.impact-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5}
+@media(max-width:780px){.impact-grid{grid-template-columns:1fr;gap:30px}.impact-num{font-size:42px}}
+
+/* PROBLEMA */
+.problem{background:#fdf4ff}
 .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-.prob-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:26px}
-.prob-card i{color:#f472b6;font-size:22px;margin-bottom:14px}
+.prob-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;transition:transform .2s,border-color .2s}
+.prob-card:hover{transform:translateY(-3px);border-color:#fbcfe8}
+.prob-card i{color:#db2777;font-size:22px;margin-bottom:14px}
 .prob-card h4{font-size:16px;margin:0 0 8px;font-weight:700}
-.prob-card p{font-size:13.5px;color:rgba(255,255,255,.6);margin:0;line-height:1.6}
+.prob-card p{font-size:13.5px;color:#6b5b8c;margin:0;line-height:1.6}
 @media(max-width:780px){.prob-grid{grid-template-columns:1fr}}
-.features{background:linear-gradient(180deg,#faf5ff 0%,#fff 100%)}
+
+/* FEATURES */
 .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
 .feat{background:#fff;border:1px solid #f3e8ff;border-radius:16px;padding:30px;transition:transform .25s,box-shadow .25s,border-color .25s}
-.feat:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(124,58,237,.12);border-color:#7c3aed}
-.feat-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed20,#ec489920);color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:18px}
+.feat:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(219,39,119,.10);border-color:#ec4899}
+.feat-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#ec489920,#a855f720);color:#db2777;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:18px}
 .feat h4{font-size:17px;margin:0 0 8px;font-weight:800;letter-spacing:-.3px}
 .feat p{font-size:14px;color:#6b5b8c;margin:0;line-height:1.65}
 @media(max-width:920px){.feat-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.feat-grid{grid-template-columns:1fr}}
+
+/* COMPARACIÓN */
+.compare{background:#fff}
+.compare-table{max-width:880px;margin:0 auto;background:#fff;border:1px solid #f3e8ff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(219,39,119,.04)}
+.compare-row{display:grid;grid-template-columns:2fr 1fr 1fr;border-bottom:1px solid #faf5ff}
+.compare-row:last-child{border-bottom:none}
+.compare-row.head{background:#1F1338;color:#fff;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.compare-row.head .col{padding:18px 20px}
+.compare-row.head .col-anma{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
+.col{padding:16px 20px;font-size:14px;color:#6b5b8c;display:flex;align-items:center}
+.col-feat{font-weight:600;color:#1F1338}
+.col-yes{color:#16a34a;font-weight:700}
+.col-yes::before{content:"✓ ";font-weight:800}
+.col-no{color:#9D5B8C;font-style:italic}
+.col-anma-cell{background:#fdf4ff;color:#1F1338;font-weight:700}
+@media(max-width:780px){.compare-row{grid-template-columns:1.5fr 1fr 1fr}.col{padding:12px 14px;font-size:12.5px}}
+
+/* COMO FUNCIONA */
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:14px}
-.step{position:relative}
-.step-n{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;font-weight:900;font-size:18px;margin-bottom:16px}
+.step-n{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;background:#1F1338;color:#fff;font-weight:900;font-size:18px;margin-bottom:16px}
 .step h4{font-size:18px;margin:0 0 8px;font-weight:800}
 .step p{font-size:14.5px;color:#6b5b8c;margin:0;line-height:1.65}
 @media(max-width:780px){.how-grid{grid-template-columns:1fr;gap:28px}}
-.para-quien{background:#fff}
+
+/* DEMO BANNER */
+.demo-banner{background:linear-gradient(135deg,#1F1338 0%,#3d0626 50%,#831843 100%);color:#fff;border-radius:24px;padding:54px 60px;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center;position:relative;overflow:hidden;margin:24px 0}
+.demo-banner::before{content:"";position:absolute;top:-100px;right:-100px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(236,72,153,.4),transparent 70%);filter:blur(50px)}
+.demo-banner-content{position:relative;z-index:1}
+.demo-banner h3{font-size:30px;font-weight:900;letter-spacing:-.8px;margin:0 0 12px}
+.demo-banner p{color:rgba(255,255,255,.75);font-size:15px;margin:0 0 22px;line-height:1.65}
+.demo-banner .ctas{display:flex;gap:10px;flex-wrap:wrap}
+.demo-preview{position:relative;z-index:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:18px;backdrop-filter:blur(8px)}
+.demo-preview-head{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.demo-preview-head .play{width:36px;height:36px;border-radius:50%;background:#ec4899;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.demo-preview-head b{font-size:13.5px;color:#fff}
+.demo-preview-head .meta{font-size:11px;color:rgba(255,255,255,.55)}
+.demo-rows{display:flex;flex-direction:column;gap:8px}
+.demo-rows .r{display:flex;justify-content:space-between;font-size:11.5px;color:rgba(255,255,255,.7)}
+.demo-rows .r b{color:#fff;font-weight:600}
+.demo-rows .r .num{font-weight:800;color:#fbcfe8;font-variant-numeric:tabular-nums}
+@media(max-width:920px){.demo-banner{grid-template-columns:1fr;padding:36px 28px}.demo-banner h3{font-size:24px}}
+
+/* PARA QUIEN */
+.para-quien{background:linear-gradient(180deg,#fdf4ff 0%,#fff 100%)}
 .pq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.pq{background:#faf5ff;border:1px solid #f3e8ff;border-radius:14px;padding:22px;text-align:center}
-.pq i{font-size:26px;color:#7c3aed;margin-bottom:12px}
+.pq{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:22px;text-align:center;transition:transform .2s,border-color .2s}
+.pq:hover{transform:translateY(-3px);border-color:#ec4899}
+.pq i{font-size:26px;color:#db2777;margin-bottom:12px}
 .pq h5{font-size:14px;margin:0 0 4px;font-weight:700}
-.pq p{font-size:12px;color:#6b5b8c;margin:0}
+.pq p{font-size:12px;color:#9D5B8C;margin:0}
 @media(max-width:780px){.pq-grid{grid-template-columns:1fr 1fr}}
-.quote-wrap{background:linear-gradient(135deg,#1f1338 0%,#4c1d95 100%);color:#fff;border-radius:24px;padding:60px;text-align:center;position:relative;overflow:hidden}
-.quote-wrap::before{content:"“";position:absolute;top:-30px;left:30px;font-size:240px;color:rgba(236,72,153,.18);font-family:Georgia,serif;line-height:1}
-.quote-wrap blockquote{font-size:24px;line-height:1.5;font-weight:500;max-width:780px;margin:0 auto 26px;position:relative;z-index:1}
-.quote-author{display:flex;align-items:center;justify-content:center;gap:12px;font-size:14px;color:rgba(255,255,255,.7)}
-.quote-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#f472b6);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
-@media(max-width:780px){.quote-wrap{padding:36px 24px}.quote-wrap blockquote{font-size:18px}}
+
+/* TESTIMONIOS */
+.tests-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.test{background:#fff;border:1px solid #f3e8ff;border-radius:16px;padding:26px;display:flex;flex-direction:column}
+.test-stars{color:#fbbf24;font-size:13px;margin-bottom:12px}
+.test-body{font-size:14.5px;color:#1F1338;line-height:1.65;margin:0 0 18px;flex:1}
+.test-author{display:flex;align-items:center;gap:11px;border-top:1px solid #faf5ff;padding-top:14px}
+.test-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.test-meta b{font-size:13px;display:block;color:#1F1338}
+.test-meta span{font-size:11.5px;color:#9D5B8C}
+@media(max-width:780px){.tests-grid{grid-template-columns:1fr}}
+
+/* PRICING */
 .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
 .plan{background:#fff;border:1.5px solid #f3e8ff;border-radius:18px;padding:32px;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
-.plan:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(124,58,237,.12)}
-.plan.featured{border-color:#7c3aed;box-shadow:0 14px 40px rgba(124,58,237,.18);position:relative}
-.plan.featured::before{content:"Más elegido";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:99px;letter-spacing:.5px}
-.plan-name{font-size:14px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.plan-price{font-size:38px;font-weight:900;color:#1f1338;letter-spacing:-1px;margin-bottom:4px}
-.plan-price small{font-size:14px;font-weight:500;color:#6b5b8c}
-.plan-desc{font-size:13px;color:#6b5b8c;margin-bottom:22px;min-height:36px}
+.plan:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(219,39,119,.10)}
+.plan.featured{border-color:#ec4899;box-shadow:0 14px 40px rgba(236,72,153,.18);position:relative}
+.plan.featured::before{content:"Más elegida";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:99px;letter-spacing:.5px}
+.plan-name{font-size:14px;font-weight:700;color:#db2777;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.plan-price{font-size:38px;font-weight:900;color:#1F1338;letter-spacing:-1px;margin-bottom:4px}
+.plan-price small{font-size:14px;font-weight:500;color:#9D5B8C}
+.plan-desc{font-size:13px;color:#9D5B8C;margin-bottom:22px;min-height:36px}
 .plan ul{list-style:none;padding:0;margin:0 0 26px;flex:1}
-.plan li{font-size:13.5px;padding:7px 0;color:#3d2d5e;display:flex;align-items:flex-start;gap:8px}
-.plan li i{color:#7c3aed;font-size:11px;margin-top:5px;flex-shrink:0}
+.plan li{font-size:13.5px;padding:7px 0;color:#1F1338;display:flex;align-items:flex-start;gap:8px}
+.plan li i{color:#db2777;font-size:11px;margin-top:5px;flex-shrink:0}
 .plan .btn{width:100%;justify-content:center}
 @media(max-width:920px){.price-grid{grid-template-columns:1fr}}
+
+/* GARANTÍAS */
+.guarantees{background:#fdf4ff;padding:60px 0}
+.guar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.guar{display:flex;align-items:flex-start;gap:12px;padding:18px;background:#fff;border:1px solid #f3e8ff;border-radius:12px}
+.guar-icon{width:38px;height:38px;border-radius:10px;background:#fce7f3;color:#db2777;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.guar h6{font-size:13px;margin:0 0 3px;font-weight:800;color:#1F1338}
+.guar p{font-size:11.5px;color:#9D5B8C;margin:0;line-height:1.4}
+@media(max-width:780px){.guar-grid{grid-template-columns:1fr 1fr}}
+
+/* FAQ */
 .faq-wrap{max-width:780px;margin:0 auto}
 .faq{border:1px solid #f3e8ff;border-radius:12px;margin-bottom:10px;overflow:hidden;background:#fff}
-.faq summary{padding:18px 22px;font-weight:700;font-size:15px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;color:#1f1338}
+.faq summary{padding:18px 22px;font-weight:700;font-size:15px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;color:#1F1338}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";font-size:22px;color:#7c3aed;font-weight:400}
+.faq summary::after{content:"+";font-size:22px;color:#db2777;font-weight:400}
 .faq[open] summary::after{content:"−"}
-.faq[open] summary{border-bottom:1px solid #f3e8ff}
+.faq[open] summary{border-bottom:1px solid #faf5ff}
 .faq-body{padding:18px 22px;font-size:14px;color:#6b5b8c;line-height:1.7}
-.cta-final{background:linear-gradient(135deg,#1f1338 0%,#4c1d95 50%,#7c3aed 100%);color:#fff;border-radius:24px;padding:64px;text-align:center;position:relative;overflow:hidden}
+
+/* CTA FINAL */
+.cta-final{background:linear-gradient(135deg,#1F1338 0%,#3d0626 50%,#831843 100%);color:#fff;border-radius:24px;padding:64px;text-align:center;position:relative;overflow:hidden}
 .cta-final::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(236,72,153,.4),transparent 70%);filter:blur(40px)}
 .cta-final h2{font-size:36px;font-weight:900;letter-spacing:-1px;margin:0 0 12px;position:relative}
-.cta-final p{font-size:16px;color:rgba(255,255,255,.78);margin:0 0 30px;position:relative}
+.cta-final p{font-size:16px;color:rgba(255,255,255,.7);margin:0 0 30px;position:relative}
 .cta-final-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
 @media(max-width:780px){.cta-final{padding:40px 24px}.cta-final h2{font-size:26px}}
-.contact{background:linear-gradient(180deg,#fff 0%,#faf5ff 100%)}
+
+/* FORM */
+.contact{background:#fdf4ff}
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start}
 .contact-info h3{font-size:24px;font-weight:800;margin:0 0 14px}
 .contact-info p{font-size:15px;color:#6b5b8c;margin:0 0 28px;line-height:1.65}
 .contact-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #f3e8ff}
 .contact-item:first-of-type{border-top:none}
-.contact-item-icon{width:42px;height:42px;border-radius:11px;background:#7c3aed15;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.contact-item .l{font-size:11px;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:2px}
-.contact-item .v{font-size:14.5px;color:#1f1338;font-weight:600}
-.contact-item .v a:hover{color:#7c3aed}
-.form{background:#fff;border:1px solid #f3e8ff;border-radius:18px;padding:32px;box-shadow:0 14px 40px rgba(124,58,237,.06)}
+.contact-item-icon{width:42px;height:42px;border-radius:11px;background:#fce7f3;color:#db2777;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.contact-item .l{font-size:11px;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:2px}
+.contact-item .v{font-size:14.5px;color:#1F1338;font-weight:600}
+.contact-item .v a:hover{color:#db2777}
+.form{background:#fff;border:1px solid #f3e8ff;border-radius:18px;padding:32px;position:relative}
 .form .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.form label{display:block;font-size:11px;font-weight:700;color:#3d2d5e;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
-.form input,.form textarea,.form select{width:100%;padding:12px 14px;border:1.5px solid #f3e8ff;border-radius:10px;font-size:14px;font-family:inherit;color:#1f1338;background:#faf5ff;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
-.form input:focus,.form textarea:focus,.form select:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);background:#fff}
+.form label{display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+.form input,.form textarea,.form select{width:100%;padding:12px 14px;border:1.5px solid #f3e8ff;border-radius:10px;font-size:14px;font-family:inherit;color:#1F1338;background:#fdf4ff;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
+.form input:focus,.form textarea:focus,.form select:focus{border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.1);background:#fff}
 .form .fg{margin-bottom:14px}
 .form textarea{resize:vertical;min-height:90px}
+.form .privacy{font-size:11px;color:#9D5B8C;margin:10px 0 0;line-height:1.5;text-align:center}
+.form .privacy a{color:#db2777;font-weight:600}
+.form .honeypot{position:absolute;left:-9999px;opacity:0;pointer-events:none}
+.form-success{display:none;text-align:center;padding:30px 20px;background:#fdf4ff;border:1.5px solid #fbcfe8;border-radius:12px;color:#831843}
+.form-success.show{display:block}
+.form-success i{font-size:36px;color:#db2777;margin-bottom:8px;display:block}
+.form-success b{font-size:16px;display:block;margin-bottom:4px}
 @media(max-width:920px){.contact-grid{grid-template-columns:1fr;gap:36px}.form .row{grid-template-columns:1fr}}
+
 .fab-wa{position:fixed;bottom:24px;right:24px;width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 24px rgba(37,211,102,.5);z-index:60;transition:transform .25s}
 .fab-wa:hover{transform:scale(1.08)}
-footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
-.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:50px;margin-bottom:40px}
+
+footer{background:#1F1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:50px;margin-bottom:40px}
 .foot-brand .logo{color:#fff}
 .foot-brand p{font-size:13px;margin:14px 0 18px;line-height:1.65;max-width:340px}
 .foot-soc{display:flex;gap:10px}
 .foot-soc a{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;transition:background .2s}
-.foot-soc a:hover{background:linear-gradient(135deg,#7c3aed,#ec4899)}
+.foot-soc a:hover{background:#ec4899}
 .foot-col h6{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1px;margin:0 0 14px}
 .foot-col a{display:block;font-size:13.5px;padding:5px 0;color:rgba(255,255,255,.6);transition:color .2s}
 .foot-col a:hover{color:#fff}
 .foot-bot{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-size:12px;color:rgba(255,255,255,.5)}
-@media(max-width:780px){.foot-grid{grid-template-columns:1fr;gap:30px}}
+.foot-bot .badges{display:flex;gap:14px;align-items:center}
+.foot-bot .badges span{display:inline-flex;align-items:center;gap:5px}
+.foot-bot .badges i{color:#f472b6}
+@media(max-width:780px){.foot-grid{grid-template-columns:1fr 1fr;gap:30px}}
+@media(max-width:480px){.foot-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <header class="nav">
   <div class="wrap nav-in">
-    <a href="#top" class="logo"><span class="logo-mark"><i class="fa-solid fa-gift"></i></span> ANMA Regalos</a>
+    <a href="#top" class="logo">
+      <span class="logo-mark"><i class="fa-solid fa-gift"></i></span>
+      ANMA <span style="color:#db2777;margin-left:-2px">Regalos</span>
+    </a>
     <nav class="nav-links">
       <a href="#features">Funcionalidades</a>
       <a href="#how">Cómo funciona</a>
+      <a href="/demo.html">Demo</a>
       <a href="#pricing">Planes</a>
       <a href="#faq">Preguntas</a>
     </nav>
@@ -195,27 +293,27 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
 <section id="top" class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow"><i class="fa-solid fa-heart"></i> Hecho para emprendimientos de regalos</span>
-      <h1 class="h1">ANMA <em>El motor detrás</em><br>de cada regalo</h1>
-      <p class="lead">La plataforma para emprendimientos de cajas de regalo, detalles personalizados y experiencias para regalar. Pedidos ágiles, seguimiento de cada entrega y mensajes coordinados — todo en un solo lugar.</p>
+      <span class="eyebrow"><span class="pulse-dot"></span> Hecho en Argentina · Para emprendedoras de regalos</span>
+      <h1 class="h1">Tu emprendimiento de regalos,<br>operando como una <em>marca grande</em></h1>
+      <p class="lead">ANMA Regalos centraliza tus pedidos, entregas, mensajes y métricas. Para que dejes de coordinar todo entre WhatsApp, Excel y la cabeza. Vos enfocate en crear; nosotros nos ocupamos del orden.</p>
       <div class="hero-ctas">
-        <a href="#contact" class="btn btn-primary"><i class="fa-solid fa-sparkles"></i> Probar gratis</a>
-        <a href="#features" class="btn btn-ghost"><i class="fa-solid fa-circle-play"></i> Ver funcionalidades</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-primary"><i class="fa-solid fa-sparkles"></i> Probar 14 días gratis</a>
+        <a href="/demo.html" class="btn btn-ghost"><i class="fa-solid fa-circle-play"></i> Ver demo en vivo</a>
       </div>
       <div class="hero-trust">
-        <span><i class="fa-solid fa-heart"></i> Sin tarjeta de crédito</span>
-        <span><i class="fa-solid fa-heart"></i> Listo en minutos</span>
+        <span><i class="fa-solid fa-heart"></i> Sin tarjeta</span>
+        <span><i class="fa-solid fa-heart"></i> Listo en 10 min</span>
         <span><i class="fa-solid fa-heart"></i> Soporte cercano</span>
       </div>
     </div>
     <div class="mock">
-      <div class="mock-bar"><span></span><span></span><span></span></div>
+      <div class="mock-bar"><span></span><span></span><span></span><span class="url">anma-host.vercel.app</span></div>
       <div class="mock-body">
         <div class="mock-h"><b>Seguimiento activo</b><span class="pill">3 urgentes</span></div>
         <div class="mock-stat">
-          <div><div class="v">12</div><div class="l">En curso</div></div>
+          <div><div class="v">12<span class="delta">↑3</span></div><div class="l">En curso</div></div>
           <div><div class="v">5</div><div class="l">Hoy</div></div>
-          <div><div class="v">$420k</div><div class="l">Mes</div></div>
+          <div><div class="v">$420k<span class="delta">↑22%</span></div><div class="l">Mes</div></div>
         </div>
         <div class="mock-row"><span class="dot" style="background:#ef4444"></span><b>Sofía R. · Caja Bienvenida</b><span class="amt">$13.930</span></div>
         <div class="mock-row"><span class="dot" style="background:#f59e0b"></span><b>Carla M. · Caja Cumple</b><span class="amt">$22.150</span></div>
@@ -226,33 +324,106 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
   </div>
 </section>
 
-<section class="problem">
+<section class="impact">
   <div class="wrap">
-    <span class="eyebrow-dark" style="background:rgba(255,255,255,.08);color:#fbcfe8">Sabemos lo que pasa</span>
-    <h2 class="h2">Entre Excel, WhatsApp<br>y la cabeza no llegás</h2>
-    <p class="sub">Tu emprendimiento crece y la operativa se vuelve un caos. Cada pedido es distinto, cada entrega tiene su detalle, y vos terminás copiando y pegando lo mismo todo el día.</p>
-    <div class="prob-grid">
-      <div class="prob-card"><i class="fa-solid fa-spinner"></i><h4>Pedidos que se mezclan</h4><p>Notas en el celu, capturas de WhatsApp y planillas que nadie actualiza. Algo siempre se escapa.</p></div>
-      <div class="prob-card"><i class="fa-solid fa-clock"></i><h4>Entregas que se atrasan</h4><p>Cumpleaños, eventos, fechas patrias. Olvidarse una entrega significa perder un cliente para siempre.</p></div>
-      <div class="prob-card"><i class="fa-solid fa-money-bill-wave"></i><h4>Plata que no sabés dónde está</h4><p>Señas cobradas, saldos pendientes, gastos del mes. ¿Cuánto ganaste realmente este mes? Quién sabe.</p></div>
+    <div style="text-align:center;max-width:680px;margin:0 auto 40px">
+      <h2 class="h2" style="color:#fff;font-size:28px;margin:0 0 8px">Resultados que vas a ver</h2>
+      <p style="color:rgba(255,255,255,.65);font-size:14px;margin:0">Lo que típicamente pasa cuando un emprendimiento de regalos deja Excel y arranca con ANMA.</p>
+    </div>
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-num">−10 hs</div>
+        <div class="impact-lbl">por semana</div>
+        <div class="impact-desc">Menos coordinación manual entre WhatsApp y planillas. Más tiempo para crear y vender.</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-num">+25%</div>
+        <div class="impact-lbl">más pedidos resueltos a tiempo</div>
+        <div class="impact-desc">Alertas de entregas urgentes y stock crítico — nada se cae por olvido.</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-num">0</div>
+        <div class="impact-lbl">pedidos olvidados</div>
+        <div class="impact-desc">Cada pedido tiene su seguimiento, su entrega y su cobro registrados — todo trazable.</div>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="features" class="features">
+<section class="problem">
+  <div class="wrap">
+    <span class="eyebrow-dark">Sabemos lo que pasa</span>
+    <h2 class="h2">Entre Excel, WhatsApp<br>y la cabeza no llegás.</h2>
+    <p class="sub">Tu emprendimiento crece y la operativa se vuelve un caos. Cada pedido es distinto, cada entrega tiene su detalle, y vos terminás copiando y pegando lo mismo todo el día.</p>
+    <div class="prob-grid">
+      <div class="prob-card"><i class="fa-solid fa-spinner"></i><h4>Pedidos que se mezclan</h4><p>Notas en el celu, capturas de WhatsApp, planillas que nadie actualiza. Algo siempre se escapa, justo cuando no podés permitirte el error.</p></div>
+      <div class="prob-card"><i class="fa-solid fa-clock"></i><h4>Entregas que se atrasan</h4><p>Cumpleaños, eventos, fechas patrias. Olvidarse una entrega significa perder un cliente — y la recomendación que venía con él.</p></div>
+      <div class="prob-card"><i class="fa-solid fa-money-bill-wave"></i><h4>Plata que no sabés dónde está</h4><p>Señas cobradas, saldos pendientes, gastos del mes. ¿Cuánto ganaste realmente este mes? Difícil de saber sin datos consolidados.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="features" style="background:#fff">
   <div class="wrap">
     <div style="text-align:center;max-width:700px;margin:0 auto 56px">
       <span class="eyebrow-dark">Funcionalidades</span>
       <h2 class="h2">Todo lo que tu emprendimiento<br>necesita para volar</h2>
-      <p class="sub center">Hecho específicamente para negocios de regalos. No es un Excel disfrazado.</p>
+      <p class="sub center">Hecho específicamente para negocios de regalos. No es un Excel disfrazado — es una herramienta de verdad.</p>
     </div>
     <div class="feat-grid">
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div><h4>Pedidos ágiles</h4><p>Creás presupuestos en segundos con tus productos cargados. Compartilos por WhatsApp y el cliente confirma con un click.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-fire"></i></div><h4>Seguimiento activo</h4><p>Las entregas urgentes siempre arriba. Vencidos, pendientes, próximas — sabés en 5 segundos qué resolver hoy.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-box-open"></i></div><h4>Catálogo prolijo</h4><p>Cajas, detalles, opciones, precios. Tu catálogo siempre actualizado y visible para tu equipo y tus clientes.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-truck-fast"></i></div><h4>Logística sin dolor</h4><p>Tarifas por zona, gestión de envíos y aviso al cliente cuando su regalo está en camino. Profesionalismo que se nota.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-brands fa-whatsapp"></i></div><h4>Plantillas WhatsApp</h4><p>Confirmaciones, recordatorios, agradecimientos. Mensajes consistentes y bien escritos sin tipear lo mismo 50 veces.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-chart-line"></i></div><h4>Resultados claros</h4><p>Ingresos, ganancia real, top de clientes y productos que rinden. Vas a ver tu negocio como nunca antes.</p></div>
+      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div><h4>Pedidos ágiles</h4><p>Creás presupuestos en segundos con tus productos cargados. Compartilos por WhatsApp y la clienta confirma con un click.</p></div>
+      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-fire"></i></div><h4>Seguimiento por urgencia</h4><p>Las entregas urgentes siempre arriba. Vencidos, pendientes, próximos. Sabés en 5 segundos qué resolver hoy.</p></div>
+      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-box-open"></i></div><h4>Catálogo prolijo</h4><p>Cajas, detalles, opciones, precios. Tu catálogo siempre actualizado — vos, tu equipo y tus clientas ven lo mismo.</p></div>
+      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-truck-fast"></i></div><h4>Logística sin dolor</h4><p>Tarifas por zona, tracking de envíos y aviso a tu clienta cuando su regalo está en camino. Profesionalismo que se nota.</p></div>
+      <div class="feat"><div class="feat-icon"><i class="fa-brands fa-whatsapp"></i></div><h4>WhatsApp pre-armado</h4><p>Confirmaciones, recordatorios, agradecimientos. Mensajes consistentes y bien escritos sin tipear lo mismo 50 veces.</p></div>
+      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-chart-line"></i></div><h4>Resultados claros</h4><p>Ingresos, ganancia real, top de clientas y productos que rinden. Vas a ver tu emprendimiento como nunca antes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="compare">
+  <div class="wrap">
+    <div style="text-align:center;max-width:700px;margin:0 auto 40px">
+      <span class="eyebrow-dark">Por qué ANMA</span>
+      <h2 class="h2">Excel hasta acá. ANMA desde acá.</h2>
+      <p class="sub center">Las planillas y el WhatsApp son geniales para empezar. Cuando son 30 pedidos al mes, dejan de funcionar.</p>
+    </div>
+    <div class="compare-table">
+      <div class="compare-row head">
+        <div class="col">Lo que necesitás</div>
+        <div class="col">Excel + WhatsApp</div>
+        <div class="col col-anma">ANMA Regalos</div>
+      </div>
+      <div class="compare-row">
+        <div class="col col-feat">Saber qué urge entregar hoy</div>
+        <div class="col col-no">Tenés que revisar cada chat</div>
+        <div class="col col-anma-cell col-yes">Tablero de urgencia</div>
+      </div>
+      <div class="compare-row">
+        <div class="col col-feat">Stock alertando antes de quedar en cero</div>
+        <div class="col col-no">Te enterás cuando vendiste</div>
+        <div class="col col-anma-cell col-yes">Alertas en tiempo real</div>
+      </div>
+      <div class="compare-row">
+        <div class="col col-feat">Saber cuánto te dejó cada clienta</div>
+        <div class="col col-no">Imposible calcular</div>
+        <div class="col col-anma-cell col-yes">Top clientas en vivo</div>
+      </div>
+      <div class="compare-row">
+        <div class="col col-feat">Operar con tu socia o asistente</div>
+        <div class="col col-no">Un archivo a la vez, conflictos</div>
+        <div class="col col-anma-cell col-yes">Multi-usuaria con roles</div>
+      </div>
+      <div class="compare-row">
+        <div class="col col-feat">Ver todo desde el celu</div>
+        <div class="col col-no">Pésima experiencia</div>
+        <div class="col col-anma-cell col-yes">100% mobile-first</div>
+      </div>
+      <div class="compare-row">
+        <div class="col col-feat">Backup y seguridad</div>
+        <div class="col col-no">Si se pierde, se pierde</div>
+        <div class="col col-anma-cell col-yes">Backup automático</div>
+      </div>
     </div>
   </div>
 </section>
@@ -260,13 +431,45 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
 <section id="how">
   <div class="wrap">
     <div style="text-align:center;max-width:700px;margin:0 auto 32px">
-      <span class="eyebrow-dark">Cómo funciona</span>
-      <h2 class="h2">Empezás hoy.<br>En minutos.</h2>
+      <span class="eyebrow-dark">Cómo empezás</span>
+      <h2 class="h2">Operativa en 10 minutos.<br>Sin instalar nada.</h2>
     </div>
     <div class="how-grid">
-      <div class="step"><div class="step-n">1</div><h4>Te creás cuenta</h4><p>Registro gratis, sin tarjeta. Configurás tu logo, datos y plantillas en menos de 10 minutos. Ya estás operando.</p></div>
+      <div class="step"><div class="step-n">1</div><h4>Te creás cuenta</h4><p>Email + contraseña, listo. Sin tarjeta, sin instalación. Configurás tu logo, datos y plantillas en menos de 10 minutos.</p></div>
       <div class="step"><div class="step-n">2</div><h4>Cargás tu catálogo</h4><p>Tus productos, opciones y precios. Si tenés Excel, lo importás. Si arrancás de cero, te guiamos paso a paso.</p></div>
       <div class="step"><div class="step-n">3</div><h4>Vendés con todo en orden</h4><p>Presupuestás, cobrás señas, despachás y medís. Tu emprendimiento operando como una marca grande.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding:60px 0">
+  <div class="wrap">
+    <div class="demo-banner">
+      <div class="demo-banner-content">
+        <span class="eyebrow" style="background:rgba(255,255,255,.12);color:#fbcfe8;border-color:rgba(255,255,255,.2)"><i class="fa-solid fa-circle-play"></i> Demo interactivo</span>
+        <h3>Probá ANMA Regalos antes de probar ANMA Regalos</h3>
+        <p>Una demo navegable con datos ficticios de un emprendimiento de regalos. Recorré el dashboard, los pedidos urgentes, las entregas — sin crear cuenta.</p>
+        <div class="ctas">
+          <a href="/demo.html" class="btn btn-primary"><i class="fa-solid fa-play"></i> Abrir demo en vivo</a>
+          <a href="https://wa.me/5491100000000?text=Hola%20ANMA%20Regalos%2C%20quiero%20una%20demo%20guiada" target="_blank" class="btn btn-ghost"><i class="fa-brands fa-whatsapp"></i> Demo guiada por video-call</a>
+        </div>
+      </div>
+      <div class="demo-preview">
+        <div class="demo-preview-head">
+          <div class="play"><i class="fa-solid fa-play"></i></div>
+          <div>
+            <b>Demo: "Cajas Lúa" — Regalos personalizados</b>
+            <div class="meta">Datos ficticios · 6 meses simulados</div>
+          </div>
+        </div>
+        <div class="demo-rows">
+          <div class="r"><b>Pedidos del mes</b> <span class="num">34</span></div>
+          <div class="r"><b>Ingresos</b> <span class="num">$425.300</span></div>
+          <div class="r"><b>Entregas hoy</b> <span class="num">5</span></div>
+          <div class="r"><b>Urgentes pendientes</b> <span class="num">3</span></div>
+          <div class="r"><b>Tiempo ahorrado est.</b> <span class="num">11.5 hs</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -281,61 +484,84 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
       <div class="pq"><i class="fa-solid fa-gift"></i><h5>Cajas de regalo</h5><p>Box bienvenida, baby, etc.</p></div>
       <div class="pq"><i class="fa-solid fa-cake-candles"></i><h5>Detalles personalizados</h5><p>Cumples, aniversarios</p></div>
       <div class="pq"><i class="fa-solid fa-building"></i><h5>Regalos corporativos</h5><p>Empresas y eventos</p></div>
-      <div class="pq"><i class="fa-solid fa-heart"></i><h5>Experiencias</h5><p>Detalles únicos</p></div>
+      <div class="pq"><i class="fa-solid fa-heart"></i><h5>Experiencias</h5><p>Detalles únicos a medida</p></div>
     </div>
   </div>
 </section>
 
-<section>
+<section style="background:#fdf4ff">
   <div class="wrap">
-    <div class="quote-wrap">
-      <blockquote>"Tenía 200 pedidos el día de la madre y no sabía por dónde empezar. Con ANMA armé un dashboard claro de qué urge, qué se entrega hoy y qué cobré. Cambió todo."</blockquote>
-      <div class="quote-author">
-        <div class="quote-avatar">L</div>
-        <div><b style="color:#fff">Laura — Cajas Lúa</b><br>Buenos Aires</div>
+    <div style="text-align:center;max-width:700px;margin:0 auto 56px">
+      <span class="eyebrow-dark">Testimonios</span>
+      <h2 class="h2">Emprendedoras que ya operan distinto</h2>
+    </div>
+    <div class="tests-grid">
+      <div class="test">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-body">"Tenía 200 pedidos el día de la madre y no sabía por dónde empezar. Con ANMA armé un dashboard claro de qué urge, qué se entrega hoy y qué cobré. Cambió todo."</p>
+        <div class="test-author">
+          <div class="test-avatar">L</div>
+          <div class="test-meta"><b>Laura Méndez</b><span>Cajas Lúa · CABA</span></div>
+        </div>
+      </div>
+      <div class="test">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-body">"El portal de proveedora me cambió la vida. Le mando un link a mi proveedor y él ve lo que le tengo que pedir, sin tener que escribir 20 mensajes."</p>
+        <div class="test-author">
+          <div class="test-avatar">V</div>
+          <div class="test-meta"><b>Valeria Ortiz</b><span>Detalles & Co · Mendoza</span></div>
+        </div>
+      </div>
+      <div class="test">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-body">"Lo uso para los corporativos: cargo el pedido, mando el presupuesto por WhatsApp con un click y la clienta confirma. Profesional sin tener que ser una Pyme grande."</p>
+        <div class="test-author">
+          <div class="test-avatar">F</div>
+          <div class="test-meta"><b>Florencia Acosta</b><span>Box & Bow · Rosario</span></div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="pricing" class="features">
+<section id="pricing">
   <div class="wrap">
     <div style="text-align:center;max-width:700px;margin:0 auto 56px">
       <span class="eyebrow-dark">Planes</span>
       <h2 class="h2">Simple. Claro. Sin sorpresas.</h2>
-      <p class="sub center">Probá 14 días gratis sin tarjeta. Cuando tu negocio crezca, sumás funciones y operadoras.</p>
+      <p class="sub center">14 días gratis sin tarjeta. Cancelás cuando quieras, sin trámites.</p>
     </div>
     <div class="price-grid">
       <div class="plan">
         <div class="plan-name">Starter</div>
         <div class="plan-price">$ 24.900 <small>/ mes</small></div>
-        <div class="plan-desc">Para emprendimientos que arrancan. Anual: $ 21.900/mes.</div>
+        <div class="plan-desc">Para emprendimientos que arrancan. Pago anual: $ 21.900/mes (15% off).</div>
         <ul>
           <li><i class="fa-solid fa-check"></i> 1 usuaria</li>
           <li><i class="fa-solid fa-check"></i> Pedidos ilimitados</li>
-          <li><i class="fa-solid fa-check"></i> Catálogo y clientes</li>
+          <li><i class="fa-solid fa-check"></i> Catálogo y clientas</li>
           <li><i class="fa-solid fa-check"></i> Soporte por email</li>
           <li><i class="fa-solid fa-check"></i> 14 días gratis sin tarjeta</li>
         </ul>
-        <a href="#contact" class="btn btn-dark">Probar 14 días</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-dark">Probar 14 días</a>
       </div>
       <div class="plan featured">
         <div class="plan-name">Equipo</div>
         <div class="plan-price">$ 39.900 <small>/ mes</small></div>
-        <div class="plan-desc">Para emprendimientos con más de una persona operando. Anual: $ 33.900/mes.</div>
+        <div class="plan-desc">Para emprendimientos con más de una persona operando. Pago anual: $ 33.900/mes.</div>
         <ul>
           <li><i class="fa-solid fa-check"></i> Hasta 3 usuarias</li>
-          <li><i class="fa-solid fa-check"></i> Pedidos ilimitados</li>
+          <li><i class="fa-solid fa-check"></i> Todo lo del Starter</li>
           <li><i class="fa-solid fa-check"></i> Logística y mensajes WhatsApp</li>
           <li><i class="fa-solid fa-check"></i> Tarjetas y mensajes personalizados</li>
           <li><i class="fa-solid fa-check"></i> Soporte prioritario</li>
         </ul>
-        <a href="#contact" class="btn btn-primary">Empezar 14 días gratis</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-primary">Empezar 14 días gratis</a>
       </div>
       <div class="plan">
         <div class="plan-name">Pro</div>
         <div class="plan-price">$ 94.900 <small>/ mes</small></div>
-        <div class="plan-desc">Para marcas con varias operadoras y volumen alto. Anual: $ 79.900/mes.</div>
+        <div class="plan-desc">Para marcas con varias operadoras y volumen alto. Pago anual: $ 79.900/mes.</div>
         <ul>
           <li><i class="fa-solid fa-check"></i> Usuarias ilimitadas</li>
           <li><i class="fa-solid fa-check"></i> Modo campaña (picos sin límite)</li>
@@ -349,6 +575,29 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
   </div>
 </section>
 
+<section class="guarantees">
+  <div class="wrap">
+    <div class="guar-grid">
+      <div class="guar">
+        <div class="guar-icon"><i class="fa-solid fa-lock"></i></div>
+        <div><h6>Datos cifrados E2E</h6><p>SSL y backups automáticos diarios</p></div>
+      </div>
+      <div class="guar">
+        <div class="guar-icon"><i class="fa-solid fa-file-export"></i></div>
+        <div><h6>Tu data es tuya</h6><p>Exportás todo a Excel cuando quieras</p></div>
+      </div>
+      <div class="guar">
+        <div class="guar-icon"><i class="fa-solid fa-ban"></i></div>
+        <div><h6>Sin contratos largos</h6><p>Cancelás cuando quieras, sin trámites</p></div>
+      </div>
+      <div class="guar">
+        <div class="guar-icon"><i class="fa-solid fa-headset"></i></div>
+        <div><h6>Soporte real</h6><p>WhatsApp y email en español</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="faq">
   <div class="wrap">
     <div style="text-align:center;max-width:700px;margin:0 auto 40px">
@@ -356,11 +605,13 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
       <h2 class="h2">Lo que más nos preguntan</h2>
     </div>
     <div class="faq-wrap">
-      <details class="faq" open><summary>¿Necesito instalar algo?</summary><div class="faq-body">No. ANMA Regalos funciona 100% desde el navegador en tu compu o celu.</div></details>
-      <details class="faq"><summary>¿Sirve si tengo poco volumen?</summary><div class="faq-body">Sí. El plan Starter está pensado para arrancar y crece con tu emprendimiento. Probás 14 días gratis sin tarjeta.</div></details>
-      <details class="faq"><summary>¿Puedo importar mis pedidos actuales?</summary><div class="faq-body">Sí, importás clientes y productos desde Excel o CSV. Te ayudamos con la migración inicial.</div></details>
-      <details class="faq"><summary>¿Funciona si soy yo sola?</summary><div class="faq-body">Por supuesto. Está pensado para emprendedoras solas que quieren ordenar y profesionalizar su operativa.</div></details>
-      <details class="faq"><summary>¿Tengo soporte si me trabo?</summary><div class="faq-body">Sí. Soporte por WhatsApp y email en español, en horario comercial argentino.</div></details>
+      <details class="faq" open><summary>¿Necesito instalar algo?</summary><div class="faq-body">No. ANMA Regalos funciona 100% desde el navegador, en tu compu o celu. Sin descargas, sin configuración complicada.</div></details>
+      <details class="faq"><summary>¿Sirve si tengo poco volumen?</summary><div class="faq-body">Sí. El plan Starter está pensado para arrancar y crece con tu emprendimiento. Probás 14 días gratis sin tarjeta — sin compromiso.</div></details>
+      <details class="faq"><summary>¿Puedo importar mis pedidos actuales?</summary><div class="faq-body">Sí. Importás clientas y productos desde Excel o CSV. Si querés, te ayudamos con la migración inicial sin costo extra.</div></details>
+      <details class="faq"><summary>¿Funciona si soy yo sola?</summary><div class="faq-body">Por supuesto. Está pensado especialmente para emprendedoras solas que quieren ordenar y profesionalizar su operativa sin contratar un equipo grande.</div></details>
+      <details class="faq"><summary>¿Tengo soporte si me trabo?</summary><div class="faq-body">Sí. Soporte por WhatsApp y email en español, en horario comercial argentino. Tiempo de respuesta promedio: menos de 4 horas.</div></details>
+      <details class="faq"><summary>¿Y si no me convence?</summary><div class="faq-body">14 días gratis sin tarjeta. Si no te convence, exportás tus datos y listo. Cero contratos, cero compromisos largos.</div></details>
+      <details class="faq"><summary>¿Puedo agendar una demo guiada?</summary><div class="faq-body">Sí. Hacé click en "Demo guiada" y coordinamos un video-call de 20 min donde te muestro la herramienta funcionando con tu caso real. Es gratis y sin compromiso.</div></details>
     </div>
   </div>
 </section>
@@ -369,41 +620,51 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
   <div class="wrap">
     <div class="cta-final" style="margin-bottom:64px">
       <h2>¿Lista para que tu emprendimiento<br>opere como una marca grande?</h2>
-      <p>Probá ANMA Regalos gratis. Sin tarjeta, sin compromisos.</p>
+      <p>Probá ANMA Regalos gratis 14 días. Sin tarjeta, sin compromisos.</p>
       <div class="cta-final-btns">
-        <a href="https://wa.me/5491100000000?text=Hola%20ANMA%20Regalos" target="_blank" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i> Hablar por WhatsApp</a>
-        <a href="https://anma-host.vercel.app/login" class="btn btn-primary"><i class="fa-solid fa-sparkles"></i> Crear cuenta</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-primary"><i class="fa-solid fa-sparkles"></i> Empezar gratis</a>
+        <a href="/demo.html" class="btn btn-ghost"><i class="fa-solid fa-circle-play"></i> Ver demo primero</a>
+        <a href="https://wa.me/5491100000000?text=Hola%20ANMA%20Regalos%2C%20quiero%20una%20demo%20guiada" target="_blank" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i> Hablar con ventas</a>
       </div>
     </div>
 
     <div class="contact-grid">
       <div class="contact-info">
         <h3>O contanos sobre tu emprendimiento</h3>
-        <p>Te respondemos en menos de 24h hábiles. Si querés una demo en vivo, agendámosla en el horario que te quede mejor.</p>
+        <p>Te respondemos en menos de 24h hábiles. Si querés una demo en vivo guiada, agendámosla en el horario que te quede mejor.</p>
         <div class="contact-item"><div class="contact-item-icon"><i class="fa-solid fa-envelope"></i></div><div><div class="l">Email</div><div class="v"><a href="mailto:ana.mbperalta@gmail.com">ana.mbperalta@gmail.com</a></div></div></div>
         <div class="contact-item"><div class="contact-item-icon"><i class="fa-brands fa-whatsapp"></i></div><div><div class="l">WhatsApp</div><div class="v"><a href="https://wa.me/5491100000000" target="_blank">+54 9 11 0000-0000</a></div></div></div>
         <div class="contact-item"><div class="contact-item-icon"><i class="fa-brands fa-instagram"></i></div><div><div class="l">Instagram</div><div class="v"><a href="https://instagram.com/anma.regalos" target="_blank">@anma.regalos</a></div></div></div>
         <div class="contact-item"><div class="contact-item-icon"><i class="fa-solid fa-location-dot"></i></div><div><div class="l">Ubicación</div><div class="v">Buenos Aires, Argentina</div></div></div>
       </div>
 
-      <form class="form" action="mailto:ana.mbperalta@gmail.com" method="POST" enctype="text/plain">
+      <form class="form" id="contact-form" novalidate>
         <div class="row">
-          <div class="fg"><label>Nombre</label><input name="nombre" type="text" placeholder="Tu nombre" required></div>
-          <div class="fg"><label>Email</label><input name="email" type="email" placeholder="tu@email.com" required></div>
+          <div class="fg"><label>Nombre *</label><input name="nombre" type="text" placeholder="Tu nombre" required></div>
+          <div class="fg"><label>Email *</label><input name="email" type="email" placeholder="tu@email.com" required></div>
         </div>
         <div class="fg"><label>Tu emprendimiento</label><input name="empresa" type="text" placeholder="Cómo se llama"></div>
-        <div class="fg"><label>¿Qué necesitás?</label>
-          <select name="interes">
+        <div class="fg"><label>WhatsApp (opcional)</label><input name="wa" type="tel" placeholder="+54 9 11 ..."></div>
+        <div class="fg"><label>¿Qué necesitás? *</label>
+          <select name="interes" required>
+            <option value="">Elegí una opción</option>
             <option>Probar la plataforma</option>
-            <option>Pedir una demo</option>
+            <option>Pedir una demo guiada</option>
             <option>Migrar desde Excel</option>
             <option>Cotizar plan a medida</option>
             <option>Otra consulta</option>
           </select>
         </div>
         <div class="fg"><label>Mensaje</label><textarea name="mensaje" placeholder="Contanos brevemente qué hacés y qué buscás resolver."></textarea></div>
+        <div class="honeypot"><label>No completes este campo</label><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center"><i class="fa-solid fa-paper-plane"></i> Enviar consulta</button>
+        <p class="privacy"><i class="fa-solid fa-lock" style="margin-right:4px;color:#db2777"></i>Tus datos no se comparten con terceros. <a href="#">Política de privacidad</a></p>
       </form>
+      <div class="form-success" id="form-success">
+        <i class="fa-solid fa-circle-check"></i>
+        <b>¡Mensaje enviado!</b>
+        Te respondemos en menos de 24h hábiles.
+      </div>
     </div>
   </div>
 </section>
@@ -415,7 +676,7 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
     <div class="foot-grid">
       <div class="foot-brand">
         <div class="logo" style="color:#fff"><span class="logo-mark"><i class="fa-solid fa-gift"></i></span> ANMA Regalos</div>
-        <p>La plataforma de gestión para emprendimientos de regalos personalizados. Hecha en Argentina, en español.</p>
+        <p>Plataforma de gestión para emprendimientos de regalos personalizados. Hecha en Argentina, en español.</p>
         <div class="foot-soc">
           <a href="https://instagram.com/anma.regalos" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
           <a href="https://wa.me/5491100000000" target="_blank" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
@@ -426,23 +687,59 @@ footer{background:#1f1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
         <h6>Producto</h6>
         <a href="#features">Funcionalidades</a>
         <a href="#how">Cómo funciona</a>
+        <a href="/demo.html">Demo en vivo</a>
         <a href="#pricing">Planes</a>
         <a href="https://anma-host.vercel.app/login">Ingresar</a>
       </div>
       <div class="foot-col">
-        <h6>Empresa</h6>
-        <a href="#contact">Contacto</a>
+        <h6>Recursos</h6>
         <a href="#faq">Preguntas</a>
+        <a href="#contact">Contacto</a>
         <a href="https://anma-hub.vercel.app/landing.html">ANMA Pro</a>
+      </div>
+      <div class="foot-col">
+        <h6>Legal</h6>
+        <a href="#">Términos</a>
+        <a href="#">Privacidad</a>
+        <a href="#">Seguridad</a>
       </div>
     </div>
     <div class="foot-bot">
       <div>© <span id="y"></span> ANMA Regalos · Buenos Aires, Argentina</div>
-      <div>Hecho con <i class="fa-solid fa-heart" style="color:#ec4899"></i> en Argentina</div>
+      <div class="badges">
+        <span><i class="fa-solid fa-shield-halved"></i> SSL</span>
+        <span><i class="fa-solid fa-database"></i> Backups diarios</span>
+        <span><i class="fa-solid fa-heart"></i> Hecho en AR</span>
+      </div>
     </div>
   </div>
 </footer>
 
-<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+<script>
+document.getElementById('y').textContent = new Date().getFullYear();
+(function(){
+  var form = document.getElementById('contact-form');
+  var success = document.getElementById('form-success');
+  if (!form) return;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (form.elements['website'].value) { success.classList.add('show'); form.style.display = 'none'; return; }
+    var d = {
+      nombre: form.elements['nombre'].value.trim(),
+      email: form.elements['email'].value.trim(),
+      empresa: form.elements['empresa'].value.trim(),
+      wa: form.elements['wa'].value.trim(),
+      interes: form.elements['interes'].value,
+      mensaje: form.elements['mensaje'].value.trim(),
+    };
+    if (!d.nombre || !d.email || !d.interes) { alert('Completá nombre, email y motivo de contacto.'); return; }
+    var body = 'Nombre: '+d.nombre+'\nEmail: '+d.email+'\nEmprendimiento: '+d.empresa+'\nWhatsApp: '+d.wa+'\nInterés: '+d.interes+'\n\nMensaje:\n'+d.mensaje;
+    var subject = 'ANMA Regalos — Nueva consulta de '+d.nombre+(d.empresa?' ('+d.empresa+')':'');
+    var mailto = 'mailto:ana.mbperalta@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    window.location.href = mailto;
+    setTimeout(function(){ success.classList.add('show'); form.style.display = 'none'; }, 400);
+  });
+})();
+</script>
 </body>
 </html>
