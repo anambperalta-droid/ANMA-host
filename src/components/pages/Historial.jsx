@@ -9,25 +9,17 @@ function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
 }
 
-function Sparkline({ data, color = 'var(--brand)', height = 32 }) {
+function Sparkline({ data, color = 'var(--brand)', height = 22 }) {
   if (!data || data.length < 2) return null
   const max = Math.max(...data, 1)
   const min = Math.min(...data, 0)
   const range = max - min || 1
   const W = 100, H = height
   const step = W / (data.length - 1)
-  const points = data.map((v, i) => `${(i * step).toFixed(1)},${(H - 2 - ((v - min) / range) * (H - 4)).toFixed(1)}`).join(' ')
-  const areaPoints = `0,${H} ${points} ${W},${H}`
+  const points = data.map((v, i) => `${(i * step).toFixed(1)},${(H - 1 - ((v - min) / range) * (H - 2)).toFixed(1)}`).join(' ')
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H} style={{ display: 'block', marginTop: 8 }}>
-      <defs>
-        <linearGradient id={`spk-grad-${color.replace(/[^a-z0-9]/gi,'')}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.28" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={areaPoints} fill={`url(#spk-grad-${color.replace(/[^a-z0-9]/gi,'')})`} />
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" width="100%" height={H} style={{ display: 'block', marginTop: 6 }}>
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.45" />
     </svg>
   )
 }

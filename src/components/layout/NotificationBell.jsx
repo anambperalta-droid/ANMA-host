@@ -151,10 +151,15 @@ export default function NotificationBell() {
   const [readIds, setReadIds] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]')) } catch { return new Set() }
   })
+  const [dismissedIds, setDismissedIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('anma3_notif_dismissed') || '[]')) } catch { return new Set() }
+  })
 
   const budgets = get('budgets')
   const products = get('products')
-  const alerts = useMemo(() => buildAlerts(budgets, products), [budgets, products])
+  const allAlerts = useMemo(() => buildAlerts(budgets, products), [budgets, products])
+  const alerts = useMemo(() => allAlerts.filter(a => !dismissedIds.has(a.id)), [allAlerts, dismissedIds])
+  const dismissedCount = allAlerts.filter(a => dismissedIds.has(a.id)).length
 
   const unread = alerts.filter(a => !readIds.has(a.id))
   const hasCritical = unread.some(a => a.level === 'critical')
@@ -171,6 +176,17 @@ export default function NotificationBell() {
     setReadIds(newIds)
     localStorage.setItem(NOTIF_KEY, JSON.stringify([...newIds]))
   }, [readIds])
+
+  const dismissAlert = useCallback((id) => {
+    const newIds = new Set([...dismissedIds, id])
+    setDismissedIds(newIds)
+    localStorage.setItem('anma3_notif_dismissed', JSON.stringify([...newIds]))
+  }, [dismissedIds])
+
+  const restoreDismissed = useCallback(() => {
+    setDismissedIds(new Set())
+    localStorage.setItem('anma3_notif_dismissed', '[]')
+  }, [])
 
   const handleCTA = (alert) => {
     markRead(alert.id)
@@ -246,11 +262,11 @@ export default function NotificationBell() {
               const isRead = readIds.has(alert.id)
               return (
                 <div key={alert.id} className={`notif-item ${isRead ? 'read' : ''}`}
-                  style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start', position: 'relative' }}>
                   <div style={{ width: 20, height: 20, borderRadius: 6, background: col.bg + '22', color: col.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0, marginTop: 1 }}>
                     <i className={`fa ${alert.icon}`} />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0, paddingRight: 18 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: isRead ? 'var(--txt2)' : col.text, lineHeight: 1.3 }}>
                       {alert.title}
                     </div>
@@ -260,10 +276,35 @@ export default function NotificationBell() {
                       {alert.cta} →
                     </a>
                   </div>
-                  {!isRead && <div style={{ width: 7, height: 7, borderRadius: '50%', background: col.bg, flexShrink: 0, marginTop: 6 }} title="No leída" />}
+                  {!isRead && <div style={{ position: 'absolute', right: 26, top: 14, width: 7, height: 7, borderRadius: '50%', background: col.bg, flexShrink: 0 }} title="No leída" />}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); dismissAlert(alert.id) }}
+                    title="Descartar (ya está resuelta)"
+                    style={{
+                      position: 'absolute', right: 6, top: 6,
+                      width: 22, height: 22, borderRadius: 6,
+                      background: 'transparent', border: 'none',
+                      color: 'var(--txt4)', cursor: 'pointer', fontSize: 11,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all .15s', fontFamily: 'inherit',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,.06)'; e.currentTarget.style.color = 'var(--txt2)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--txt4)' }}
+                  >
+                    <i className="fa fa-xmark" />
+                  </button>
                 </div>
               )
             })
+          )}
+          {dismissedCount > 0 && (
+            <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', textAlign: 'center', background: 'var(--surface2)' }}>
+              <button onClick={restoreDismissed}
+                style={{ background: 'transparent', border: 'none', color: 'var(--brand)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <i className="fa fa-rotate-left" style={{ fontSize: 10 }} />
+                Restaurar {dismissedCount} descartada{dismissedCount !== 1 ? 's' : ''}
+              </button>
+            </div>
           )}
         </div>
       </div>
