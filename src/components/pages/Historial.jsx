@@ -632,7 +632,7 @@ export default function Historial() {
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>Historial</h2><p>Registro de presupuestos y análisis del negocio</p></div>
+        <div className="ph-left"><h2>Dashboard</h2><p>Pedidos, ventas y análisis de tu negocio</p></div>
         <div className="ph-right" style={{ gap: 8 }}>
           {/* Period dropdown */}
           <div style={{ position: 'relative' }}>

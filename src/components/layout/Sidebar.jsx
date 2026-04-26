@@ -6,7 +6,7 @@ import { useData } from '../../context/DataContext'
 // `ownerOnly: true` = oculto para operator siempre.
 const NAV = [
   { section: 'Gestión' },
-  { path: '/', icon: 'fa-clock-rotate-left', label: 'Historial', chipKey: 'budgets', perm: 'dashboard.view' },
+  { path: '/', icon: 'fa-chart-line', label: 'Dashboard', chipKey: 'budgets', perm: 'dashboard.view' },
   { path: '/presupuesto', icon: 'fa-file-invoice-dollar', label: 'Presupuesto', perm: 'pedido.create' },
   { path: '/clientes', icon: 'fa-users', label: 'Clientes', chipKey: 'clients', perm: 'cliente.view' },
   { section: 'Catálogo' },

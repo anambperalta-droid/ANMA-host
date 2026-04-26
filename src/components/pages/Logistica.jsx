@@ -154,6 +154,47 @@ export default function Logistica() {
   const thisMonth = shipments.filter(s => s.date?.startsWith(nowYM)).length
   const avgCost = shipments.length ? Math.round(totalShipCost / shipments.length) : 0
 
+  // ── SLA / Envíos atrasados ────────────────────────────────────────────
+  const SLA_DEFAULT = 7
+  const daysSince = (iso) => iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 86400000) : 0
+  const isLate = (s) => {
+    if (!['Despachado', 'En tránsito'].includes(s.status)) return false
+    const limit = (() => {
+      if (!s.city) return SLA_DEFAULT
+      const t = tariffs.find(x => x.zone.toLowerCase().includes(s.city.toLowerCase()) || s.city.toLowerCase().includes(x.zone.toLowerCase()))
+      return t?.days ? t.days + 2 : SLA_DEFAULT
+    })()
+    return daysSince(s.date) > limit
+  }
+  const lateShipments = useMemo(() => shipments.filter(isLate), [shipments, tariffs])
+
+  const varianceCount = useMemo(() => {
+    return shipments.filter(s => {
+      if (s.payer !== 'Incluido en precio' || !s.budgetId) return false
+      const bud = budgets.find(b => b.id === s.budgetId)
+      if (!bud) return false
+      const cobrado = Number(bud.shipCost) || 0
+      const real = Number(s.freight) || 0
+      return Math.abs(cobrado - real) > 100
+    }).length
+  }, [shipments, budgets])
+
+  const notifyStatusChange = (shipment, newStatus) => {
+    const bud = budgets.find(b => b.id === shipment.budgetId)
+    const phone = (bud?.wa || '').replace(/\D/g, '')
+    if (!phone) return null
+    const link = getTrackingUrl(shipment.carrier, shipment.trackingUrl)
+    const msgs = {
+      'Despachado': `Hola${shipment.client ? ' ' + shipment.client : ''}! Tu pedido fue despachado 🎁${link ? `\n\nSeguilo acá:\n${link}` : ''}\n\nGracias por tu compra!`,
+      'En tránsito': `Hola${shipment.client ? ' ' + shipment.client : ''}! Tu regalo está en camino 🚚${link ? `\n\nSeguilo acá:\n${link}` : ''}`,
+      'Entregado': `Hola${shipment.client ? ' ' + shipment.client : ''}! Tu pedido fue entregado ✨\n\n¡Gracias! Cualquier comentario, estamos a disposición.`,
+      'Con problema': `Hola${shipment.client ? ' ' + shipment.client : ''}, hubo una novedad con tu envío. Te contacto para resolverlo cuanto antes.`,
+    }
+    const msg = msgs[newStatus]
+    if (!msg) return null
+    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+  }
+
   // Desglose por estado
   const byStatus = useMemo(() => statusList.map(st => ({
     label: st,
@@ -205,6 +246,16 @@ export default function Logistica() {
       {/* ── TAB ENVÍOS ─────────────────────────────────────────────── */}
       {tab === 'envios' && (
         <>
+          {lateShipments.length > 0 && (
+            <div style={{ background: 'rgba(220,38,38,.08)', border: '1.5px solid rgba(220,38,38,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <i className="fa fa-triangle-exclamation" style={{ color: '#DC2626', fontSize: 14 }} />
+              <div style={{ flex: 1, fontSize: 12 }}>
+                <b style={{ color: '#DC2626' }}>{lateShipments.length} envío{lateShipments.length !== 1 ? 's' : ''} atrasado{lateShipments.length !== 1 ? 's' : ''}</b>
+                <span style={{ color: 'var(--txt3)', marginLeft: 6 }}>· Despachado/En tránsito hace más de lo esperado</span>
+              </div>
+              <button className="btn btn-secondary btn-xs" onClick={() => setSFilter('Despachado')}>Ver atrasados</button>
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
             <div className="search-row" style={{ flex: 1, maxWidth: 340 }}>
               <i className="fa fa-magnifying-glass" style={{ color: 'var(--txt3)', fontSize: 13 }} />
@@ -235,10 +286,21 @@ export default function Logistica() {
               <tbody>
                 {filteredShips.length ? filteredShips.map(s => {
                   const bud = budgets.find(b => b.id === s.budgetId)
+                  const late = isLate(s)
+                  const days = daysSince(s.date)
+                  const notifyLink = notifyStatusChange(s, s.status)
                   return (
-                    <tr key={s.id}>
+                    <tr key={s.id} style={late ? { background: 'rgba(220,38,38,.04)' } : undefined}>
                       <td><b>{s.remito || '—'}</b></td>
-                      <td>{s.date}</td>
+                      <td>
+                        {s.date}
+                        {['Despachado', 'En tránsito'].includes(s.status) && days > 0 && (
+                          <div style={{ fontSize: 10, color: late ? '#DC2626' : 'var(--txt3)', fontWeight: late ? 700 : 500, marginTop: 1 }}>
+                            {late && <i className="fa fa-triangle-exclamation" style={{ marginRight: 3 }} />}
+                            hace {days}d{late ? ' · atrasado' : ''}
+                          </div>
+                        )}
+                      </td>
                       <td>{s.client || '—'}</td>
                       <td>{s.city || '—'}</td>
                       <td>{bud?.num || '—'}</td>
@@ -253,6 +315,9 @@ export default function Logistica() {
                         <div className="acts">
                           {s.trackingUrl && (
                             <button className="act" style={{ color: '#3B82F6' }} onClick={() => window.open(getTrackingUrl(s.carrier, s.trackingUrl), '_blank')} title="Ver seguimiento"><i className="fa fa-location-arrow" /></button>
+                          )}
+                          {notifyLink && (
+                            <button className="act" style={{ color: '#16A34A' }} onClick={() => window.open(notifyLink, '_blank')} title="Avisar al cliente por WhatsApp"><i className="fa-brands fa-whatsapp" /></button>
                           )}
                           <button className="act edit" onClick={() => openShip(s)} title="Editar"><i className="fa fa-pen" /></button>
                           <button className="act del" onClick={() => delShip(s.id)} title="Eliminar"><i className="fa fa-trash" /></button>
@@ -379,15 +444,18 @@ export default function Logistica() {
       {tab === 'resumen' && (
         <>
           {/* KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
             {[
-              { label: 'Costo total envíos', val: fmt(totalShipCost), icon: 'fa-dollar-sign' },
-              { label: 'Envíos este mes', val: thisMonth, icon: 'fa-box' },
-              { label: 'Promedio por envío', val: fmt(avgCost), icon: 'fa-chart-line' },
+              { label: 'Costo total envíos', val: fmt(totalShipCost), color: 'var(--money)' },
+              { label: 'Envíos este mes', val: thisMonth, color: 'var(--txt)' },
+              { label: 'Promedio por envío', val: fmt(avgCost), color: 'var(--money)' },
+              { label: 'Atrasados', val: lateShipments.length, color: lateShipments.length > 0 ? '#DC2626' : 'var(--txt)', sub: lateShipments.length > 0 ? 'Despachado/En tránsito > SLA' : 'Todo al día' },
+              { label: 'Desvíos de flete', val: varianceCount, color: varianceCount > 0 ? '#D97706' : 'var(--txt)', sub: varianceCount > 0 ? 'Real ≠ cobrado al cliente' : 'Coincide con lo cobrado' },
             ].map(k => (
               <div key={k.label} className="card" style={{ padding: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{k.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--money)' }}>{k.val}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: k.color }}>{k.val}</div>
+                {k.sub && <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 3 }}>{k.sub}</div>}
               </div>
             ))}
           </div>
