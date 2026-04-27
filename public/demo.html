@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ANMA Regalos — Demo en vivo</title>
-<meta name="description" content="Demo interactivo de ANMA Regalos con datos ficticios. Recorré el dashboard, los pedidos urgentes y las entregas.">
+<meta name="description" content="Demo interactivo de ANMA Regalos con datos ficticios. Explorá todas las secciones del sistema.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -15,9 +15,10 @@ body{margin:0;font-family:'Inter',sans-serif;background:#fdf4ff;color:#1F1338;li
 a{color:inherit;text-decoration:none}
 
 .demo-top{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap}
-.demo-top .info{display:flex;align-items:center;gap:10px}
-.demo-top .badge{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
-.demo-top .actions{display:flex;gap:8px;align-items:center}
+.demo-top .info{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.demo-top .info span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo-top .badge{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;flex-shrink:0}
+.demo-top .actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .demo-top .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;font-family:inherit;border:none;cursor:pointer;transition:transform .15s,background .2s}
 .demo-top .btn-light{background:rgba(255,255,255,.95);color:#db2777}
 .demo-top .btn-light:hover{background:#fff;transform:translateY(-1px)}
@@ -26,7 +27,7 @@ a{color:inherit;text-decoration:none}
 
 .shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 42px)}
 .sb{background:linear-gradient(180deg,#1F1338,#3d0626);color:rgba(255,255,255,.75);padding:18px 14px;border-right:1px solid #fbcfe8}
-.sb-logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:16px;letter-spacing:-.4px;color:#fff;margin-bottom:6px;padding:0 6px}
+.sb-logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;letter-spacing:-.4px;color:#fff;margin-bottom:6px;padding:0 6px}
 .sb-logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
 .sb-sub{font-size:11px;color:rgba(255,255,255,.45);padding:0 6px;margin-bottom:24px}
 .sb-section{font-size:9.5px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 6px 4px}
@@ -34,9 +35,9 @@ a{color:inherit;text-decoration:none}
 .sb-item:hover{background:rgba(255,255,255,.06);color:#fff}
 .sb-item.active{background:rgba(244,114,182,.22);color:#fff;font-weight:700}
 .sb-item i{width:18px;font-size:13px;color:#f9a8d4}
-.sb-item .chip{margin-left:auto;background:rgba(255,255,255,.1);font-size:10px;padding:1px 7px;border-radius:99px;font-weight:700}
 
 .tb{display:flex;align-items:center;gap:14px;padding:12px 28px;background:#fff;border-bottom:1px solid #f3e8ff}
+.tb-burger{display:none;width:34px;height:34px;border:none;background:#fdf4ff;border-radius:9px;cursor:pointer;font-size:14px;color:#9D5B8C}
 .tb-title{font-size:15px;font-weight:800;color:#1F1338}
 .tb-search{flex:1;max-width:380px;display:flex;align-items:center;gap:8px;padding:7px 12px;background:#fdf4ff;border-radius:9px;color:#9D5B8C;font-size:12.5px}
 .tb-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
@@ -45,10 +46,18 @@ a{color:inherit;text-decoration:none}
 .tb-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12px}
 
 .content{padding:24px 28px;background:#fdf4ff;min-height:100%}
+.section{display:none;animation:fadeIn .25s ease both}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .page-h{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;gap:14px;flex-wrap:wrap}
 .page-h h1{font-size:24px;font-weight:900;letter-spacing:-.6px;margin:0}
 .page-h p{font-size:13px;color:#9D5B8C;margin:3px 0 0}
-.page-h .btn-add{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;padding:9px 16px;border-radius:9px;font-weight:700;font-size:13px;border:none;cursor:pointer}
+.page-h .btn-add{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;padding:9px 16px;border-radius:9px;font-weight:700;font-size:13px;border:none;cursor:pointer;font-family:inherit}
+.page-h .btn-2{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3e8ff;border-radius:9px;padding:8px 14px;font-size:12.5px;color:#6b5b8c;cursor:pointer;font-family:inherit}
+
+.tabs{display:flex;gap:2px;background:#fce7f3;padding:3px;border-radius:9px;margin-bottom:18px;width:fit-content}
+.tabs span{padding:6px 14px;font-size:12.5px;color:#9D5B8C;font-weight:500;cursor:pointer;border-radius:7px}
+.tabs span.act{background:#fff;font-weight:700;color:#1F1338;box-shadow:0 1px 2px rgba(219,39,119,.06)}
 
 .today{margin-bottom:18px}
 .today-h{display:flex;align-items:center;gap:7px;margin-bottom:10px;font-size:11px;font-weight:800;color:#1F1338;text-transform:uppercase;letter-spacing:.6px}
@@ -79,7 +88,6 @@ a{color:inherit;text-decoration:none}
 .kpi-vrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .kpi-v{font-size:22px;font-weight:800;letter-spacing:-.6px;color:#1F1338;font-variant-numeric:tabular-nums}
 .kpi-d{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;color:#16a34a;background:rgba(22,163,74,.1)}
-.kpi-d.down{color:#dc2626;background:rgba(220,38,38,.1)}
 .kpi-spark{margin-top:6px}
 
 .bento-wide{grid-column:1/-1;display:grid;grid-template-columns:1.7fr 1fr;gap:12px}
@@ -88,30 +96,28 @@ a{color:inherit;text-decoration:none}
 .card-h i{color:#db2777}
 .bar-chart{display:flex;align-items:flex-end;gap:5px;height:130px}
 .bar-chart .bc{flex:1;display:flex;justify-content:center}
-.bar-chart .bb{width:100%;max-width:22px;background:#ec4899;opacity:.5;border-radius:4px 4px 0 0;transition:opacity .2s}
-.bar-chart .bb:hover{opacity:.9}
+.bar-chart .bb{width:100%;max-width:22px;background:#ec4899;opacity:.5;border-radius:4px 4px 0 0}
 .bar-labels{display:flex;gap:5px;margin-top:5px}
 .bar-labels .l{flex:1;text-align:center;font-size:10px;color:#c4a5d4;font-weight:600}
-
 .donut-wrap{display:flex;align-items:center;gap:14px}
 .donut-leg{display:flex;flex-direction:column;gap:5px;flex:1}
-.donut-leg-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6b5b8c;cursor:pointer;padding:2px 4px;border-radius:5px;transition:background .15s}
+.donut-leg-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6b5b8c;cursor:pointer;padding:2px 4px;border-radius:5px}
 .donut-leg-row:hover{background:#fdf4ff}
 .donut-leg-row .d{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .donut-leg-row .pct{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:5px}
 .donut-leg-row .n{font-size:11px;font-weight:800;background:#fdf4ff;padding:1px 6px;border-radius:6px;color:#1F1338;margin-left:auto}
 
-.tbl-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px}
-.tbl-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.tbl-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px;overflow-x:auto}
+.tbl-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .tbl-h h3{margin:0;font-size:14px;font-weight:800;color:#1F1338}
-.tbl-h a{font-size:12px;font-weight:600;color:#db2777}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{text-align:left;padding:8px 10px;border-bottom:1.5px solid #faf5ff;font-size:10px;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
-tbody td{padding:11px 10px;border-bottom:1px solid #fdf4ff;color:#6b5b8c}
+.tbl-h a,.tbl-h .more{font-size:12px;font-weight:600;color:#db2777;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+thead th{text-align:left;padding:8px 10px;border-bottom:1.5px solid #faf5ff;font-size:10px;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;font-weight:700;white-space:nowrap}
+tbody td{padding:11px 10px;border-bottom:1px solid #fdf4ff;color:#6b5b8c;vertical-align:middle}
 tbody tr:hover td{background:#fdf4ff}
 .tbl-num{font-weight:800;color:#1F1338}
-.tbl-amt{font-weight:700;color:#db2777;font-variant-numeric:tabular-nums;text-align:right}
-.tbl-st{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;font-size:10.5px;font-weight:700}
+.tbl-amt{font-weight:700;color:#db2777;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.tbl-st{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;font-size:10.5px;font-weight:700;white-space:nowrap}
 .st-confirmed{background:#dcfce7;color:#15803d}
 .st-sent{background:#dbeafe;color:#1d4ed8}
 .st-negotiating{background:#fef3c7;color:#92400e}
@@ -119,6 +125,14 @@ tbody tr:hover td{background:#fdf4ff}
 .st-pending{background:#fee2e2;color:#991b1b}
 .st-partial{background:#fef3c7;color:#92400e}
 .st-urgent{background:#fee2e2;color:#dc2626}
+.st-low{background:#fef3c7;color:#92400e}
+.st-ok{background:#dcfce7;color:#15803d}
+.st-out{background:#fee2e2;color:#991b1b}
+.row-act{display:inline-flex;gap:5px}
+.row-act button{width:26px;height:26px;border-radius:6px;border:none;background:#fdf4ff;color:#9D5B8C;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.row-act button:hover{background:#fce7f3;color:#1F1338}
+.row-act button.wa{background:#dcfce7;color:#16a34a}
+.row-act button.del{background:#fee2e2;color:#dc2626}
 
 .insight-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px;margin-top:18px}
 .insight-h{display:flex;align-items:center;gap:6px;margin-bottom:12px;font-size:13px;font-weight:800;color:#1F1338}
@@ -133,16 +147,72 @@ tbody tr:hover td{background:#fdf4ff}
 .insight.success .insight-icon{background:#16a34a}
 .insight.warning .insight-icon{background:#dc2626}
 .insight.info .insight-icon{background:linear-gradient(135deg,#ec4899,#a855f7)}
-.insight-body{flex:1;min-width:0}
 .insight-body b{font-size:13px;font-weight:700;color:#1F1338;display:block;margin-bottom:2px}
 .insight-body p{font-size:12px;color:#6b5b8c;margin:0;line-height:1.5}
 
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+.form-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:18px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:10.5px;color:#9D5B8C;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid #f3e8ff;border-radius:8px;font-size:13px;font-family:inherit;color:#1F1338;background:#fdf4ff;outline:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#ec4899;background:#fff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.calc-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #f3e8ff;font-size:13px;color:#6b5b8c}
+.calc-row b{color:#1F1338;font-weight:700}
+.calc-total{display:flex;justify-content:space-between;padding-top:12px;margin-top:8px;border-top:2px solid #1F1338;font-size:18px;font-weight:800;color:#1F1338}
+.calc-total span:last-child{color:#db2777}
+
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cgrid{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px;transition:transform .15s,box-shadow .2s,border-color .2s}
+.cgrid:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(219,39,119,.08);border-color:#ec4899}
+.cgrid-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cgrid-h .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.cgrid-h b{font-size:13px;color:#1F1338;display:block}
+.cgrid-h span{font-size:11px;color:#9D5B8C}
+.cgrid-meta{font-size:11px;color:#6b5b8c;line-height:1.5;display:flex;flex-direction:column;gap:3px}
+.cgrid-meta i{color:#c4a5d4;width:14px}
+
+.set-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.set-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:18px}
+.set-card h4{margin:0 0 4px;font-size:14px;font-weight:800;color:#1F1338}
+.set-card p{margin:0 0 12px;font-size:12px;color:#9D5B8C}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #faf5ff;font-size:13px}
+.toggle:first-of-type{border-top:none}
+.tg{width:34px;height:20px;background:#e9d5ff;border-radius:99px;position:relative;cursor:pointer;transition:background .2s}
+.tg.on{background:linear-gradient(135deg,#ec4899,#a855f7)}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.tg.on::after{transform:translateX(14px)}
+
+.wa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.wa-card{background:#fff;border:1px solid #f3e8ff;border-radius:14px;padding:16px}
+.wa-card h5{margin:0 0 6px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px;color:#1F1338}
+.wa-card h5 i{color:#16a34a}
+.wa-card .pre{background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:10px 12px;font-size:12px;color:#166534;line-height:1.55;white-space:pre-line}
+.wa-card .meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11px;color:#9D5B8C}
+
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40}
+.sb-ov.show{display:block}
+
 @media(max-width:920px){
   .shell{grid-template-columns:1fr}
-  .sb{display:none}
+  .sb{position:fixed;top:0;left:0;bottom:0;width:240px;transform:translateX(-100%);transition:transform .25s ease;z-index:50;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .sb.open{transform:translateX(0)}
+  .tb-burger{display:flex;align-items:center;justify-content:center}
   .bento{grid-template-columns:1fr 1fr}
   .bento-wide{grid-template-columns:1fr}
   .today-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .grid-3,.set-grid,.wa-grid{grid-template-columns:1fr}
+  .content{padding:18px 16px}
+  .tb{padding:10px 16px}
+  .page-h h1{font-size:20px}
+}
+@media(max-width:520px){
+  .demo-top{padding:8px 14px;font-size:12px}
+  .demo-top .info span:last-child{font-size:11.5px}
+  .demo-top .btn{padding:6px 10px;font-size:11px}
+  .bento{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -151,43 +221,43 @@ tbody tr:hover td{background:#fdf4ff}
 <div class="demo-top">
   <div class="info">
     <span class="badge"><i class="fa-solid fa-circle-play"></i> Demo</span>
-    <span><b>Cajas Lúa</b> · Regalos personalizados · Datos ficticios para presentación</span>
+    <span><b>Cajas Lúa</b> · Regalos personalizados · Datos ficticios</span>
   </div>
   <div class="actions">
-    <a href="/landing.html" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Volver al sitio</a>
-    <a href="https://anma-host.vercel.app/login" class="btn btn-light"><i class="fa-solid fa-sparkles"></i> Crear cuenta gratis</a>
+    <a href="/landing.html" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+    <a href="https://anma-host.vercel.app/login" class="btn btn-light"><i class="fa-solid fa-sparkles"></i> Crear cuenta</a>
   </div>
 </div>
 
+<div class="sb-ov" id="ov"></div>
+
 <div class="shell">
 
-  <aside class="sb">
-    <div class="sb-logo">
-      <span class="sb-logo-mark"><i class="fa-solid fa-gift"></i></span>
-      ANMA Regalos
-    </div>
+  <aside class="sb" id="sb">
+    <div class="sb-logo"><span class="sb-logo-mark"><i class="fa-solid fa-gift"></i></span> ANMA Regalos</div>
     <div class="sb-sub">Tu emprendimiento en orden</div>
 
     <div class="sb-section">Gestión</div>
-    <div class="sb-item active"><i class="fa-solid fa-chart-line"></i> Dashboard <span class="chip">8</span></div>
-    <div class="sb-item"><i class="fa-solid fa-file-invoice-dollar"></i> Presupuesto</div>
-    <div class="sb-item"><i class="fa-solid fa-users"></i> Clientas <span class="chip">42</span></div>
+    <div class="sb-item active" data-sec="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+    <div class="sb-item" data-sec="presupuesto"><i class="fa-solid fa-file-invoice-dollar"></i> Presupuesto</div>
+    <div class="sb-item" data-sec="clientas"><i class="fa-solid fa-users"></i> Clientas</div>
 
     <div class="sb-section">Catálogo</div>
-    <div class="sb-item"><i class="fa-solid fa-cube"></i> Productos <span class="chip">28</span></div>
-    <div class="sb-item"><i class="fa-solid fa-industry"></i> Proveedores <span class="chip">5</span></div>
+    <div class="sb-item" data-sec="productos"><i class="fa-solid fa-cube"></i> Productos</div>
+    <div class="sb-item" data-sec="proveedores"><i class="fa-solid fa-industry"></i> Proveedores</div>
 
     <div class="sb-section">Operación</div>
-    <div class="sb-item"><i class="fa-solid fa-truck-fast"></i> Logística</div>
-    <div class="sb-item"><i class="fa-brands fa-whatsapp"></i> Mensajes WA</div>
+    <div class="sb-item" data-sec="logistica"><i class="fa-solid fa-truck-fast"></i> Logística</div>
+    <div class="sb-item" data-sec="mensajes"><i class="fa-brands fa-whatsapp"></i> Mensajes WA</div>
 
     <div class="sb-section">Sistema</div>
-    <div class="sb-item"><i class="fa-solid fa-gear"></i> Configuración</div>
+    <div class="sb-item" data-sec="config"><i class="fa-solid fa-gear"></i> Configuración</div>
   </aside>
 
   <main>
     <div class="tb">
-      <div class="tb-title">Dashboard</div>
+      <button class="tb-burger" id="burger"><i class="fa-solid fa-bars"></i></button>
+      <div class="tb-title" id="tb-title">Dashboard</div>
       <div class="tb-search"><i class="fa-solid fa-magnifying-glass"></i> Buscá pedido, clienta, producto…</div>
       <div class="tb-actions">
         <button class="tb-btn"><i class="fa-solid fa-eye"></i></button>
@@ -198,188 +268,345 @@ tbody tr:hover td{background:#fdf4ff}
     </div>
 
     <div class="content">
-      <div class="page-h">
-        <div>
-          <h1>Dashboard</h1>
-          <p>Pedidos, ventas y análisis de tu emprendimiento</p>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3e8ff;border-radius:9px;padding:8px 14px;font-size:12.5px;color:#6b5b8c;cursor:pointer"><i class="fa-solid fa-calendar"></i> Este mes</button>
-          <button style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3e8ff;border-radius:9px;padding:8px 14px;font-size:12.5px;color:#6b5b8c;cursor:pointer"><i class="fa-solid fa-download"></i> Exportar</button>
-          <button class="btn-add"><i class="fa-solid fa-plus"></i> Nuevo pedido</button>
-        </div>
-      </div>
 
-      <div style="display:flex;gap:2px;background:#fce7f3;padding:3px;border-radius:9px;margin-bottom:18px;width:fit-content">
-        <span style="padding:6px 14px;background:#fff;border-radius:7px;font-size:12.5px;font-weight:700;color:#1F1338;box-shadow:0 1px 2px rgba(219,39,119,.06)">Resumen</span>
-        <span style="padding:6px 14px;font-size:12.5px;color:#9D5B8C;font-weight:500;cursor:pointer">Pedidos</span>
-        <span style="padding:6px 14px;font-size:12.5px;color:#9D5B8C;font-weight:500;cursor:pointer">Análisis</span>
-        <span style="padding:6px 14px;font-size:12.5px;color:#9D5B8C;font-weight:500;cursor:pointer">Seguimiento (4)</span>
-      </div>
-
-      <div class="today">
-        <div class="today-h">
-          <i class="fa-solid fa-bolt" style="color:#f59e0b"></i> Hoy importa
-          <span class="count">12</span>
+      <!-- DASHBOARD -->
+      <section class="section active" id="sec-dashboard">
+        <div class="page-h">
+          <div><h1>Dashboard</h1><p>Pedidos, ventas y análisis de tu emprendimiento</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-2"><i class="fa-solid fa-calendar"></i> Este mes</button>
+            <button class="btn-2"><i class="fa-solid fa-download"></i> Exportar</button>
+            <button class="btn-add"><i class="fa-solid fa-plus"></i> Nuevo pedido</button>
+          </div>
         </div>
-        <div class="today-grid">
-          <div class="today-card">
-            <div class="today-row">
-              <div class="today-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-              <div class="today-info">
-                <div class="lbl">Cobros vencidos</div>
-                <div class="v">3 <small>pedidos</small></div>
+        <div class="tabs"><span class="act">Resumen</span><span>Pedidos</span><span>Análisis</span><span>Seguimiento (4)</span></div>
+
+        <div class="today">
+          <div class="today-h"><i class="fa-solid fa-bolt" style="color:#f59e0b"></i> Hoy importa <span class="count">12</span></div>
+          <div class="today-grid">
+            <div class="today-card"><div class="today-row"><div class="today-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div><div class="today-info"><div class="lbl">Cobros vencidos</div><div class="v">3 <small>pedidos</small></div></div><i class="fa-solid fa-arrow-right" style="color:#dc2626;font-size:11px"></i></div><div class="today-desc"><b style="color:#dc2626;font-variant-numeric:tabular-nums">$ 56.200</b> sin cobrar · entrega ya pasó</div></div>
+            <div class="today-card amber"><div class="today-row"><div class="today-icon"><i class="fa-solid fa-truck-fast"></i></div><div class="today-info"><div class="lbl">Entregas hoy</div><div class="v">5 <small>cajas</small></div></div><i class="fa-solid fa-arrow-right" style="color:#d97706;font-size:11px"></i></div><div class="today-desc">Sofía Ramos, Estudio Cromo, Carla M. +2</div></div>
+            <div class="today-card pink"><div class="today-row"><div class="today-icon"><i class="fa-solid fa-comments"></i></div><div class="today-info"><div class="lbl">A confirmar</div><div class="v">4 <small>seguimientos</small></div></div><i class="fa-solid fa-arrow-right" style="color:#db2777;font-size:11px"></i></div><div class="today-desc">Enviados hace 3+ días — recordales antes de que se enfríen</div></div>
+          </div>
+        </div>
+
+        <div class="bento">
+          <div class="kpi"><div class="kpi-l">Ventas Brutas</div><div class="kpi-vrow"><div class="kpi-v">$ 425.300</div><span class="kpi-d">↑22%</span></div><svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,18 8,16 16,14 24,15 32,12 40,11 48,9 56,10 64,7 72,8 80,5 88,4 96,2 100,3" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg></div>
+          <div class="kpi key"><div class="kpi-l">Ingresos Caja</div><div class="kpi-vrow"><div class="kpi-v">$ 312.800</div><span class="kpi-d">↑15%</span></div><svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,16 8,15 16,12 24,14 32,10 40,9 48,11 56,8 64,7 72,9 80,6 88,4 96,3 100,2" fill="none" stroke="#16a34a" stroke-width="1.2" opacity=".45"/></svg></div>
+          <div class="kpi"><div class="kpi-l">Ticket Promedio</div><div class="kpi-vrow"><div class="kpi-v">$ 12.500</div><span class="kpi-d">↑8%</span></div><svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,12 8,13 16,11 24,12 32,10 40,11 48,9 56,10 64,8 72,9 80,7 88,8 96,6 100,7" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg></div>
+          <div class="kpi"><div class="kpi-l">Pedidos</div><div class="kpi-vrow"><div class="kpi-v">34</div></div><svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,16 8,14 16,12 24,14 32,11 40,10 48,12 56,9 64,10 72,8 80,7 88,9 96,6 100,7" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg></div>
+
+          <div class="bento-wide">
+            <div class="card">
+              <div class="card-h"><i class="fa-solid fa-chart-bar"></i> Ingresos cobrados — día a día · Este mes</div>
+              <div class="bar-chart">
+                <div class="bc"><div class="bb" style="height:18%"></div></div><div class="bc"><div class="bb" style="height:32%"></div></div><div class="bc"><div class="bb" style="height:12%"></div></div><div class="bc"><div class="bb" style="height:0%"></div></div><div class="bc"><div class="bb" style="height:0%"></div></div><div class="bc"><div class="bb" style="height:45%"></div></div><div class="bc"><div class="bb" style="height:62%"></div></div><div class="bc"><div class="bb" style="height:38%"></div></div><div class="bc"><div class="bb" style="height:24%"></div></div><div class="bc"><div class="bb" style="height:0%"></div></div><div class="bc"><div class="bb" style="height:0%"></div></div><div class="bc"><div class="bb" style="height:78%"></div></div><div class="bc"><div class="bb" style="height:55%"></div></div><div class="bc"><div class="bb" style="height:42%"></div></div><div class="bc"><div class="bb" style="height:88%"></div></div><div class="bc"><div class="bb" style="height:96%"></div></div><div class="bc"><div class="bb" style="height:32%"></div></div><div class="bc"><div class="bb" style="height:0%"></div></div><div class="bc"><div class="bb" style="height:0%"></div></div><div class="bc"><div class="bb" style="height:54%"></div></div><div class="bc"><div class="bb" style="height:68%"></div></div><div class="bc"><div class="bb" style="height:42%"></div></div><div class="bc"><div class="bb" style="height:36%"></div></div><div class="bc"><div class="bb" style="height:75%"></div></div><div class="bc"><div class="bb" style="height:60%"></div></div>
               </div>
-              <i class="fa-solid fa-arrow-right" style="color:#dc2626;font-size:11px"></i>
+              <div class="bar-labels"><span class="l">1</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">5</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">10</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">15</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">20</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">25</span></div>
             </div>
-            <div class="today-desc"><b style="color:#dc2626;font-variant-numeric:tabular-nums">$ 56.200</b> sin cobrar · entrega ya pasó</div>
-          </div>
-          <div class="today-card amber">
-            <div class="today-row">
-              <div class="today-icon"><i class="fa-solid fa-truck-fast"></i></div>
-              <div class="today-info">
-                <div class="lbl">Entregas hoy</div>
-                <div class="v">5 <small>cajas</small></div>
+            <div class="card">
+              <div class="card-h"><i class="fa-solid fa-chart-pie"></i> Estado de pedidos</div>
+              <div class="donut-wrap">
+                <svg width="100" height="100" viewBox="0 0 90 90"><circle cx="45" cy="45" r="36" fill="none" stroke="#fdf4ff" stroke-width="10"/><circle cx="45" cy="45" r="36" fill="none" stroke="#16a34a" stroke-width="10" stroke-dasharray="135 226" stroke-dashoffset="0" transform="rotate(-90 45 45)" stroke-linecap="round"/><circle cx="45" cy="45" r="36" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="55 226" stroke-dashoffset="-135" transform="rotate(-90 45 45)" stroke-linecap="round"/><circle cx="45" cy="45" r="36" fill="none" stroke="#d97706" stroke-width="10" stroke-dasharray="22 226" stroke-dashoffset="-190" transform="rotate(-90 45 45)" stroke-linecap="round"/><circle cx="45" cy="45" r="36" fill="none" stroke="#dc2626" stroke-width="10" stroke-dasharray="14 226" stroke-dashoffset="-212" transform="rotate(-90 45 45)" stroke-linecap="round"/><text x="45" y="50" text-anchor="middle" font-size="16" font-weight="800" fill="#1F1338">34</text></svg>
+                <div class="donut-leg">
+                  <div class="donut-leg-row"><span class="d" style="background:#16a34a"></span>Confirmado <span class="pct" style="color:#16a34a;background:rgba(22,163,74,.12)">60%</span><span class="n">20</span></div>
+                  <div class="donut-leg-row"><span class="d" style="background:#3b82f6"></span>Enviado <span class="pct" style="color:#3b82f6;background:rgba(59,130,246,.12)">25%</span><span class="n">9</span></div>
+                  <div class="donut-leg-row"><span class="d" style="background:#d97706"></span>Negociando <span class="pct" style="color:#d97706;background:rgba(217,119,6,.12)">9%</span><span class="n">3</span></div>
+                  <div class="donut-leg-row"><span class="d" style="background:#dc2626"></span>Perdido <span class="pct" style="color:#dc2626;background:rgba(220,38,38,.12)">6%</span><span class="n">2</span></div>
+                </div>
               </div>
-              <i class="fa-solid fa-arrow-right" style="color:#d97706;font-size:11px"></i>
+              <div style="font-size:9.5px;color:#c4a5d4;text-align:center;margin-top:8px">Click en un estado para filtrar la lista</div>
             </div>
-            <div class="today-desc">Sofía Ramos, Estudio Cromo, Carla M. +2</div>
           </div>
-          <div class="today-card pink">
-            <div class="today-row">
-              <div class="today-icon"><i class="fa-solid fa-comments"></i></div>
-              <div class="today-info">
-                <div class="lbl">A confirmar</div>
-                <div class="v">4 <small>seguimientos</small></div>
+        </div>
+
+        <div class="tbl-card">
+          <div class="tbl-h"><h3>Últimos pedidos</h3><a class="more">Ver todos →</a></div>
+          <table>
+            <thead><tr><th>N°</th><th>Clienta</th><th>Producto</th><th>Entrega</th><th>Estado</th><th>Pago</th><th style="text-align:right">Total</th></tr></thead>
+            <tbody>
+              <tr><td class="tbl-num">P-0034</td><td>Sofía Ramos</td><td>Caja Bienvenida × 2</td><td>27/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 13.930</td></tr>
+              <tr><td class="tbl-num">P-0033</td><td>Carla Méndez</td><td>Caja Cumple Personalizada</td><td>HOY</td><td><span class="tbl-st st-urgent">● Urgente</span></td><td><span class="tbl-st st-partial">● Seña</span></td><td class="tbl-amt">$ 22.150</td></tr>
+              <tr><td class="tbl-num">P-0032</td><td>Estudio Norte</td><td>8 cajas corporativas</td><td>28/04</td><td><span class="tbl-st st-sent">● Enviado</span></td><td><span class="tbl-st st-pending">● Pendiente</span></td><td class="tbl-amt">$ 92.000</td></tr>
+              <tr><td class="tbl-num">P-0031</td><td>Lucía Vargas</td><td>Detalle baby</td><td>29/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-partial">● Seña</span></td><td class="tbl-amt">$ 8.450</td></tr>
+              <tr><td class="tbl-num">P-0030</td><td>Florencia Acosta</td><td>Caja Aniversario</td><td>23/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 18.750</td></tr>
+              <tr><td class="tbl-num">P-0029</td><td>Diego Pérez</td><td>Regalo corporativo × 12</td><td>22/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 145.300</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-h"><i class="fa-solid fa-lightbulb"></i> Insights del período <span class="count">3</span></div>
+          <div class="insight-list">
+            <div class="insight success"><div class="insight-icon"><i class="fa-solid fa-rocket"></i></div><div class="insight-body"><b>Crecimiento fuerte: +22% vs período anterior</b><p>Estás vendiendo 22% más que el mes pasado. Identificá qué cambió y duplicá esa apuesta.</p></div></div>
+            <div class="insight info"><div class="insight-icon"><i class="fa-solid fa-circle-info"></i></div><div class="insight-body"><b>Estudio Norte es tu clienta más fuerte (34%)</b><p>Cuidala bien — representa 34% de tus ventas confirmadas en el período.</p></div></div>
+            <div class="insight success"><div class="insight-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></div><div class="insight-body"><b>Ticket promedio creció 8%</b><p>Pasaste de $11.500 a $12.500. Estás vendiendo cajas más completas — buen up-sell.</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRESUPUESTO -->
+      <section class="section" id="sec-presupuesto">
+        <div class="page-h">
+          <div><h1>Nuevo presupuesto</h1><p>Armá tu pedido y enviálo por WhatsApp en segundos</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-2"><i class="fa-solid fa-download"></i> Vista previa PDF</button><button class="btn-add"><i class="fa-solid fa-floppy-disk"></i> Guardar y enviar</button></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-card">
+            <h4 style="margin:0 0 12px;font-size:14px;font-weight:800;color:#1F1338"><i class="fa-solid fa-user" style="color:#db2777;margin-right:6px"></i>Datos de la clienta</h4>
+            <div class="row2">
+              <div class="fg"><label>Nombre</label><input value="Carla Méndez" /></div>
+              <div class="fg"><label>WhatsApp</label><input value="+54 9 11 4892-1145" /></div>
+            </div>
+            <div class="fg"><label>Ocasión / Motivo</label><input value="Cumpleaños 30 (sorpresa para mejor amiga)" /></div>
+            <div class="fg"><label>Fecha de entrega</label><input value="2026-05-12" type="date" /></div>
+
+            <h4 style="margin:18px 0 12px;font-size:14px;font-weight:800;color:#1F1338"><i class="fa-solid fa-gift" style="color:#db2777;margin-right:6px"></i>Caja personalizada</h4>
+            <div style="border:1px solid #f3e8ff;border-radius:10px;overflow:hidden">
+              <table style="min-width:0">
+                <thead><tr><th>Producto</th><th>Cant.</th><th>P/Unit.</th><th style="text-align:right">Subtotal</th></tr></thead>
+                <tbody>
+                  <tr><td>Caja Cumple Personalizada</td><td>1</td><td>$ 18.500</td><td class="tbl-amt">$ 18.500</td></tr>
+                  <tr><td>Vino Malbec premium</td><td>1</td><td>$ 5.800</td><td class="tbl-amt">$ 5.800</td></tr>
+                  <tr><td>Chocolates artesanales</td><td>2</td><td>$ 2.400</td><td class="tbl-amt">$ 4.800</td></tr>
+                  <tr><td>Tarjeta personalizada</td><td>1</td><td>$ 850</td><td class="tbl-amt">$ 850</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <button style="margin-top:10px;background:#fdf4ff;border:1.5px dashed #ec4899;color:#db2777;padding:9px;border-radius:9px;font-weight:700;font-size:12.5px;cursor:pointer;width:100%;font-family:inherit"><i class="fa-solid fa-plus"></i> Agregar producto a la caja</button>
+
+            <div class="fg" style="margin-top:18px"><label>Mensaje en la tarjeta</label><textarea rows="3">"Para Sofi, en este día tan especial. Que cada momento sea tan único como vos. Te quiero. — Carla 💕"</textarea></div>
+          </div>
+
+          <div>
+            <div class="form-card" style="position:sticky;top:14px">
+              <h4 style="margin:0 0 14px;font-size:14px;font-weight:800;color:#1F1338"><i class="fa-solid fa-calculator" style="color:#db2777;margin-right:6px"></i>Resumen</h4>
+              <div class="calc-row"><span>Subtotal contenido</span><b>$ 29.950</b></div>
+              <div class="calc-row"><span>Envío (CABA)</span><b>$ 2.500</b></div>
+              <div class="calc-row"><span>Envoltorio premium</span><b>$ 1.800</b></div>
+              <div class="calc-total"><span>Total</span><span>$ 34.250</span></div>
+              <div style="background:#fdf4ff;border:1px solid #fbcfe8;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:11.5px;color:#831843">
+                <b style="display:block;margin-bottom:3px">💖 Ganancia estimada: $ 15.420 (45%)</b>
+                Calculado sobre costo de productos + insumos
               </div>
-              <i class="fa-solid fa-arrow-right" style="color:#db2777;font-size:11px"></i>
-            </div>
-            <div class="today-desc">Enviados hace 3+ días — recordales antes de que se enfríen</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bento">
-        <div class="kpi">
-          <div class="kpi-l">Ventas Brutas</div>
-          <div class="kpi-vrow"><div class="kpi-v">$ 425.300</div><span class="kpi-d">↑22%</span></div>
-          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,18 8,16 16,14 24,15 32,12 40,11 48,9 56,10 64,7 72,8 80,5 88,4 96,2 100,3" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg>
-        </div>
-        <div class="kpi key">
-          <div class="kpi-l">Ingresos Caja</div>
-          <div class="kpi-vrow"><div class="kpi-v">$ 312.800</div><span class="kpi-d">↑15%</span></div>
-          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,16 8,15 16,12 24,14 32,10 40,9 48,11 56,8 64,7 72,9 80,6 88,4 96,3 100,2" fill="none" stroke="#16a34a" stroke-width="1.2" opacity=".45"/></svg>
-        </div>
-        <div class="kpi">
-          <div class="kpi-l">Ticket Promedio</div>
-          <div class="kpi-vrow"><div class="kpi-v">$ 12.500</div><span class="kpi-d">↑8%</span></div>
-          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,12 8,13 16,11 24,12 32,10 40,11 48,9 56,10 64,8 72,9 80,7 88,8 96,6 100,7" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg>
-        </div>
-        <div class="kpi">
-          <div class="kpi-l">Pedidos</div>
-          <div class="kpi-vrow"><div class="kpi-v">34</div></div>
-          <svg class="kpi-spark" viewBox="0 0 100 22" preserveAspectRatio="none" width="100%" height="22"><polyline points="0,16 8,14 16,12 24,14 32,11 40,10 48,12 56,9 64,10 72,8 80,7 88,9 96,6 100,7" fill="none" stroke="#ec4899" stroke-width="1.2" opacity=".45"/></svg>
-        </div>
-
-        <div class="bento-wide">
-          <div class="card">
-            <div class="card-h"><i class="fa-solid fa-chart-bar"></i> Ingresos cobrados — día a día · Este mes</div>
-            <div class="bar-chart">
-              <div class="bc"><div class="bb" style="height:18%"></div></div>
-              <div class="bc"><div class="bb" style="height:32%"></div></div>
-              <div class="bc"><div class="bb" style="height:12%"></div></div>
-              <div class="bc"><div class="bb" style="height:0%"></div></div>
-              <div class="bc"><div class="bb" style="height:0%"></div></div>
-              <div class="bc"><div class="bb" style="height:45%"></div></div>
-              <div class="bc"><div class="bb" style="height:62%"></div></div>
-              <div class="bc"><div class="bb" style="height:38%"></div></div>
-              <div class="bc"><div class="bb" style="height:24%"></div></div>
-              <div class="bc"><div class="bb" style="height:0%"></div></div>
-              <div class="bc"><div class="bb" style="height:0%"></div></div>
-              <div class="bc"><div class="bb" style="height:78%"></div></div>
-              <div class="bc"><div class="bb" style="height:55%"></div></div>
-              <div class="bc"><div class="bb" style="height:42%"></div></div>
-              <div class="bc"><div class="bb" style="height:88%"></div></div>
-              <div class="bc"><div class="bb" style="height:96%"></div></div>
-              <div class="bc"><div class="bb" style="height:32%"></div></div>
-              <div class="bc"><div class="bb" style="height:0%"></div></div>
-              <div class="bc"><div class="bb" style="height:0%"></div></div>
-              <div class="bc"><div class="bb" style="height:54%"></div></div>
-              <div class="bc"><div class="bb" style="height:68%"></div></div>
-              <div class="bc"><div class="bb" style="height:42%"></div></div>
-              <div class="bc"><div class="bb" style="height:36%"></div></div>
-              <div class="bc"><div class="bb" style="height:75%"></div></div>
-              <div class="bc"><div class="bb" style="height:60%"></div></div>
-            </div>
-            <div class="bar-labels">
-              <span class="l">1</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">5</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">10</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">15</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">20</span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l"></span><span class="l">25</span>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-h"><i class="fa-solid fa-chart-pie"></i> Estado de pedidos</div>
-            <div class="donut-wrap">
-              <svg width="100" height="100" viewBox="0 0 90 90">
-                <circle cx="45" cy="45" r="36" fill="none" stroke="#fdf4ff" stroke-width="10"/>
-                <circle cx="45" cy="45" r="36" fill="none" stroke="#16a34a" stroke-width="10" stroke-dasharray="135 226" stroke-dashoffset="0" transform="rotate(-90 45 45)" stroke-linecap="round"/>
-                <circle cx="45" cy="45" r="36" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="55 226" stroke-dashoffset="-135" transform="rotate(-90 45 45)" stroke-linecap="round"/>
-                <circle cx="45" cy="45" r="36" fill="none" stroke="#d97706" stroke-width="10" stroke-dasharray="22 226" stroke-dashoffset="-190" transform="rotate(-90 45 45)" stroke-linecap="round"/>
-                <circle cx="45" cy="45" r="36" fill="none" stroke="#dc2626" stroke-width="10" stroke-dasharray="14 226" stroke-dashoffset="-212" transform="rotate(-90 45 45)" stroke-linecap="round"/>
-                <text x="45" y="50" text-anchor="middle" font-size="16" font-weight="800" fill="#1F1338">34</text>
-              </svg>
-              <div class="donut-leg">
-                <div class="donut-leg-row"><span class="d" style="background:#16a34a"></span>Confirmado <span class="pct" style="color:#16a34a;background:rgba(22,163,74,.12)">60%</span><span class="n">20</span></div>
-                <div class="donut-leg-row"><span class="d" style="background:#3b82f6"></span>Enviado <span class="pct" style="color:#3b82f6;background:rgba(59,130,246,.12)">25%</span><span class="n">9</span></div>
-                <div class="donut-leg-row"><span class="d" style="background:#d97706"></span>Negociando <span class="pct" style="color:#d97706;background:rgba(217,119,6,.12)">9%</span><span class="n">3</span></div>
-                <div class="donut-leg-row"><span class="d" style="background:#dc2626"></span>Perdido <span class="pct" style="color:#dc2626;background:rgba(220,38,38,.12)">6%</span><span class="n">2</span></div>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:7px">
+                <button style="background:#16a34a;color:#fff;border:none;padding:11px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fa-brands fa-whatsapp"></i> Enviar por WhatsApp</button>
+                <button style="background:#fff;border:1.5px solid #f3e8ff;color:#6b5b8c;padding:11px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fa-solid fa-copy"></i> Copiar link</button>
               </div>
             </div>
-            <div style="font-size:9.5px;color:#c4a5d4;text-align:center;margin-top:8px">Click en un estado para filtrar la lista</div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="tbl-card">
-        <div class="tbl-h"><h3>Últimos pedidos</h3><a href="#">Ver todos →</a></div>
-        <table>
-          <thead><tr><th>N°</th><th>Clienta</th><th>Producto</th><th>Entrega</th><th>Estado</th><th>Pago</th><th style="text-align:right">Total</th></tr></thead>
-          <tbody>
-            <tr><td class="tbl-num">P-0034</td><td>Sofía Ramos</td><td>Caja Bienvenida × 2</td><td>25/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 13.930</td></tr>
-            <tr><td class="tbl-num">P-0033</td><td>Carla Méndez</td><td>Caja Cumple Personalizada</td><td>HOY</td><td><span class="tbl-st st-urgent">● Urgente</span></td><td><span class="tbl-st st-partial">● Seña</span></td><td class="tbl-amt">$ 22.150</td></tr>
-            <tr><td class="tbl-num">P-0032</td><td>Estudio Norte</td><td>8 cajas corporativas</td><td>26/04</td><td><span class="tbl-st st-sent">● Enviado</span></td><td><span class="tbl-st st-pending">● Pendiente</span></td><td class="tbl-amt">$ 92.000</td></tr>
-            <tr><td class="tbl-num">P-0031</td><td>Lucía Vargas</td><td>Detalle baby</td><td>27/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-partial">● Seña</span></td><td class="tbl-amt">$ 8.450</td></tr>
-            <tr><td class="tbl-num">P-0030</td><td>Florencia Acosta</td><td>Caja Aniversario</td><td>23/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 18.750</td></tr>
-            <tr><td class="tbl-num">P-0029</td><td>Diego Pérez</td><td>Regalo corporativo × 12</td><td>22/04</td><td><span class="tbl-st st-confirmed">● Confirmado</span></td><td><span class="tbl-st st-paid">● Pagado</span></td><td class="tbl-amt">$ 145.300</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- CLIENTAS -->
+      <section class="section" id="sec-clientas">
+        <div class="page-h">
+          <div><h1>Clientas</h1><p>Base de contactos · 42 clientas</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-2"><i class="fa-solid fa-file-import"></i> Importar</button><button class="btn-2"><i class="fa-solid fa-download"></i> Exportar</button><button class="btn-add"><i class="fa-solid fa-plus"></i> Agregar</button></div>
+        </div>
+        <div class="bento" style="grid-template-columns:repeat(4,1fr)">
+          <div class="kpi"><div class="kpi-l">Total clientas</div><div class="kpi-v">42</div></div>
+          <div class="kpi"><div class="kpi-l">Particulares</div><div class="kpi-v" style="color:#db2777">31</div></div>
+          <div class="kpi"><div class="kpi-l">Corporativas</div><div class="kpi-v" style="color:#a855f7">11</div></div>
+          <div class="kpi"><div class="kpi-l">Recurrentes</div><div class="kpi-v" style="color:#16a34a">15</div></div>
+        </div>
+        <div class="tbl-card">
+          <table>
+            <thead><tr><th>Clienta / Empresa</th><th>Tipo</th><th>WhatsApp</th><th>Pedidos</th><th>Total gastado</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr><td><b>Estudio Norte</b><div style="font-size:11px;color:#9D5B8C">Ana Peralta · Corporativo</div></td><td><span class="tbl-st st-confirmed">B2B</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>11</b> · 3d</td><td class="tbl-amt">$ 145.300</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Sofía Ramos</b><div style="font-size:11px;color:#9D5B8C">Particular</div></td><td><span class="tbl-st st-sent">B2C</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>8</b> · HOY</td><td class="tbl-amt">$ 95.420</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Carla Méndez</b><div style="font-size:11px;color:#9D5B8C">Particular</div></td><td><span class="tbl-st st-sent">B2C</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>5</b> · 1d</td><td class="tbl-amt">$ 78.200</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Florencia Acosta</b><div style="font-size:11px;color:#9D5B8C">Box & Bow</div></td><td><span class="tbl-st st-confirmed">B2B</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>4</b> · 4d</td><td class="tbl-amt">$ 64.150</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Lucía Vargas</b><div style="font-size:11px;color:#9D5B8C">Particular</div></td><td><span class="tbl-st st-sent">B2C</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>3</b> · 2d</td><td class="tbl-amt">$ 28.300</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Diego Pérez</b><div style="font-size:11px;color:#9D5B8C">Mayorista 360</div></td><td><span class="tbl-st st-confirmed">B2B</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>2</b> · 5d</td><td class="tbl-amt">$ 145.300</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Valeria Ortiz</b><div style="font-size:11px;color:#9D5B8C">Particular</div></td><td><span class="tbl-st st-sent">B2C</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>2</b> · 8d</td><td class="tbl-amt">$ 19.500</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Martina Gómez</b><div style="font-size:11px;color:#9D5B8C">Diseño Austral</div></td><td><span class="tbl-st st-confirmed">B2B</span></td><td><i class="fa-brands fa-whatsapp" style="color:#16a34a"></i></td><td><b>1</b> · 18d</td><td class="tbl-amt">$ 12.500</td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <div class="insight-card">
-        <div class="insight-h"><i class="fa-solid fa-lightbulb"></i> Insights del período <span class="count">3</span></div>
-        <div class="insight-list">
-          <div class="insight success">
-            <div class="insight-icon"><i class="fa-solid fa-rocket"></i></div>
-            <div class="insight-body">
-              <b>Crecimiento fuerte: +22% vs período anterior</b>
-              <p>Estás vendiendo 22% más que el mes pasado. Identificá qué cambió y duplicá esa apuesta.</p>
-            </div>
+      <!-- PRODUCTOS -->
+      <section class="section" id="sec-productos">
+        <div class="page-h">
+          <div><h1>Productos</h1><p>Catálogo de cajas y detalles · 28 productos · 3 con stock crítico</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-2"><i class="fa-solid fa-file-import"></i> Importar</button><button class="btn-add"><i class="fa-solid fa-plus"></i> Agregar</button></div>
+        </div>
+        <div class="bento">
+          <div class="kpi"><div class="kpi-l">Total productos</div><div class="kpi-v">28</div></div>
+          <div class="kpi"><div class="kpi-l">Stock OK</div><div class="kpi-v" style="color:#16a34a">22</div></div>
+          <div class="kpi"><div class="kpi-l">Stock bajo</div><div class="kpi-v" style="color:#d97706">3</div></div>
+          <div class="kpi"><div class="kpi-l">Sin stock</div><div class="kpi-v" style="color:#dc2626">3</div></div>
+        </div>
+        <div class="tbl-card">
+          <table>
+            <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Precio</th><th>Costo</th><th>Margen</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><b>Caja Bienvenida Baby</b></td><td>Bienvenida</td><td>12 / 5</td><td class="tbl-amt">$ 14.500</td><td>$ 6.200</td><td style="color:#16a34a;font-weight:700">57%</td><td><span class="tbl-st st-ok">● Stock OK</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Caja Cumple Personalizada</b></td><td>Cumpleaños</td><td>8 / 5</td><td class="tbl-amt">$ 18.500</td><td>$ 8.100</td><td style="color:#16a34a;font-weight:700">56%</td><td><span class="tbl-st st-ok">● Stock OK</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Caja Aniversario Premium</b></td><td>Aniversario</td><td>2 / 4</td><td class="tbl-amt">$ 22.000</td><td>$ 9.800</td><td style="color:#d97706;font-weight:700">55%</td><td><span class="tbl-st st-low">⚠ Stock bajo</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Caja Corporativa Standard</b></td><td>Corporativo</td><td>0 / 10</td><td class="tbl-amt">$ 11.500</td><td>$ 5.200</td><td style="color:#dc2626;font-weight:700">55%</td><td><span class="tbl-st st-out">✕ Sin stock</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Detalle Mini (love)</b></td><td>Detalles</td><td>18 / 10</td><td class="tbl-amt">$ 4.500</td><td>$ 1.800</td><td style="color:#16a34a;font-weight:700">60%</td><td><span class="tbl-st st-ok">● Stock OK</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Vino Malbec Premium</b></td><td>Bebidas</td><td>1 / 8</td><td class="tbl-amt">$ 5.800</td><td>$ 2.400</td><td style="color:#dc2626;font-weight:700">59%</td><td><span class="tbl-st st-low">⚠ Stock bajo</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Chocolates Artesanales</b></td><td>Dulces</td><td>32 / 15</td><td class="tbl-amt">$ 2.400</td><td>$ 950</td><td style="color:#16a34a;font-weight:700">60%</td><td><span class="tbl-st st-ok">● Stock OK</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+              <tr><td><b>Vela aromática</b></td><td>Bienestar</td><td>0 / 6</td><td class="tbl-amt">$ 3.200</td><td>$ 1.300</td><td style="color:#dc2626;font-weight:700">59%</td><td><span class="tbl-st st-out">✕ Sin stock</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="del"><i class="fa-solid fa-trash"></i></button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PROVEEDORES -->
+      <section class="section" id="sec-proveedores">
+        <div class="page-h">
+          <div><h1>Proveedores</h1><p>Red de proveedores · 5 activos</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-2"><i class="fa-solid fa-share"></i> Compartir portal</button><button class="btn-add"><i class="fa-solid fa-plus"></i> Agregar</button></div>
+        </div>
+        <div style="background:rgba(220,38,38,.06);border:1.5px solid rgba(220,38,38,.25);border-radius:12px;padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <i class="fa-solid fa-bell" style="color:#dc2626"></i>
+          <div style="flex:1;font-size:12.5px"><b style="color:#dc2626">3 productos para re-ordenar</b> <span style="color:#9D5B8C">· Bodega Andina y Velas Lúa involucradas</span></div>
+          <button style="background:#16a34a;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer"><i class="fa-brands fa-whatsapp"></i> Pedir ahora</button>
+        </div>
+        <div class="grid-3">
+          <div class="cgrid"><div class="cgrid-h"><div class="av">BA</div><div><b>Bodega Andina</b><span>Vinos · Espumantes</span></div></div><div class="cgrid-meta"><span><i class="fa-brands fa-whatsapp"></i>+54 261 4523-9981</span><span><i class="fa-solid fa-clock"></i>Lead time: 7 días</span><span><i class="fa-solid fa-credit-card"></i>30 días</span><span><i class="fa-solid fa-star" style="color:#f59e0b"></i>Score: 9.5/10</span></div><div style="margin-top:10px;display:flex;gap:6px"><span class="tbl-st st-out" style="font-size:10px">1 a re-ordenar</span></div></div>
+          <div class="cgrid"><div class="cgrid-h"><div class="av" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">VL</div><div><b>Velas Lúa</b><span>Velas · Aromas</span></div></div><div class="cgrid-meta"><span><i class="fa-brands fa-whatsapp"></i>+54 11 6789-2345</span><span><i class="fa-solid fa-clock"></i>Lead time: 3 días</span><span><i class="fa-solid fa-credit-card"></i>15 días</span></div><div style="margin-top:10px;display:flex;gap:6px"><span class="tbl-st st-out" style="font-size:10px">2 a re-ordenar</span></div></div>
+          <div class="cgrid"><div class="cgrid-h"><div class="av" style="background:linear-gradient(135deg,#16a34a,#22c55e)">CD</div><div><b>Chocolates Dulce</b><span>Bombones · Tabletas</span></div></div><div class="cgrid-meta"><span><i class="fa-brands fa-whatsapp"></i>+54 11 8845-1290</span><span><i class="fa-solid fa-clock"></i>Lead time: 5 días</span><span><i class="fa-solid fa-credit-card"></i>30 días</span><span><i class="fa-solid fa-leaf" style="color:#16a34a"></i>Cacao orgánico</span></div></div>
+          <div class="cgrid"><div class="cgrid-h"><div class="av" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)">EP</div><div><b>Eco-Pack</b><span>Cajas · Embalaje</span></div></div><div class="cgrid-meta"><span><i class="fa-brands fa-whatsapp"></i>+54 11 3398-7711</span><span><i class="fa-solid fa-clock"></i>Lead time: 2 días</span><span><i class="fa-solid fa-credit-card"></i>Contado</span></div></div>
+          <div class="cgrid"><div class="cgrid-h"><div class="av" style="background:linear-gradient(135deg,#a855f7,#ec4899)">PB</div><div><b>Papelería Bonita</b><span>Tarjetas · Papel</span></div></div><div class="cgrid-meta"><span><i class="fa-brands fa-whatsapp"></i>+54 11 5566-3344</span><span><i class="fa-solid fa-clock"></i>Lead time: 4 días</span><span><i class="fa-solid fa-credit-card"></i>30 días</span></div></div>
+        </div>
+      </section>
+
+      <!-- LOGÍSTICA -->
+      <section class="section" id="sec-logistica">
+        <div class="page-h">
+          <div><h1>Logística</h1><p>Gestión de envíos · entregas · seguimiento</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-add"><i class="fa-solid fa-plus"></i> Registrar envío</button></div>
+        </div>
+        <div style="background:rgba(220,38,38,.08);border:1.5px solid rgba(220,38,38,.3);border-radius:12px;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <i class="fa-solid fa-triangle-exclamation" style="color:#dc2626"></i>
+          <div style="flex:1;font-size:12.5px"><b style="color:#dc2626">1 envío atrasado</b> <span style="color:#9D5B8C">· Despachado hace más de lo esperado</span></div>
+          <button class="btn-2">Ver atrasados</button>
+        </div>
+        <div class="tabs"><span class="act">Envíos registrados</span><span>Tarifas y zonas</span><span>Resumen de costos</span></div>
+        <div class="bento">
+          <div class="kpi"><div class="kpi-l">Costo total</div><div class="kpi-v">$ 64.300</div></div>
+          <div class="kpi"><div class="kpi-l">Envíos este mes</div><div class="kpi-v">22</div></div>
+          <div class="kpi"><div class="kpi-l">Atrasados</div><div class="kpi-v" style="color:#dc2626">1</div><div style="font-size:10px;color:#c4a5d4;margin-top:3px">Despachado/En tránsito > SLA</div></div>
+          <div class="kpi"><div class="kpi-l">Promedio</div><div class="kpi-v">$ 2.920</div></div>
+        </div>
+        <div class="tbl-card">
+          <table>
+            <thead><tr><th>Remito</th><th>Fecha</th><th>Clienta</th><th>Ciudad</th><th>Empresa</th><th>Costo</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr style="background:rgba(220,38,38,.04)"><td><b>VC-001120</b></td><td>22/04<div style="font-size:10px;color:#dc2626;font-weight:700"><i class="fa-solid fa-triangle-exclamation"></i> hace 5d · atrasado</div></td><td>Diego Pérez</td><td>Mendoza</td><td>OCA</td><td class="tbl-amt">$ 6.200</td><td><span class="tbl-st" style="background:#f5f3ff;color:#7c3aed">● En tránsito</span></td><td><div class="row-act"><button><i class="fa-solid fa-location-arrow"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button></div></td></tr>
+              <tr><td><b>VC-001119</b></td><td>HOY<div style="font-size:10px;color:#d97706;font-weight:700">entrega hoy</div></td><td>Sofía Ramos</td><td>CABA</td><td>En mano</td><td class="tbl-amt">$ 0</td><td><span class="tbl-st" style="background:#fef3c7;color:#92400e">● Preparando</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button></div></td></tr>
+              <tr><td><b>VC-001118</b></td><td>HOY</td><td>Carla Méndez</td><td>CABA</td><td>Cadete</td><td class="tbl-amt">$ 2.500</td><td><span class="tbl-st" style="background:#fef3c7;color:#92400e">● Preparando</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button><button class="wa"><i class="fa-brands fa-whatsapp"></i></button></div></td></tr>
+              <tr><td><b>VC-001117</b></td><td>26/04</td><td>Lucía Vargas</td><td>La Plata</td><td>Andreani</td><td class="tbl-amt">$ 4.500</td><td><span class="tbl-st st-confirmed">● Entregado</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button></div></td></tr>
+              <tr><td><b>VC-001116</b></td><td>25/04</td><td>Florencia Acosta</td><td>Rosario</td><td>Andreani</td><td class="tbl-amt">$ 5.200</td><td><span class="tbl-st st-confirmed">● Entregado</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button></div></td></tr>
+              <tr><td><b>VC-001115</b></td><td>24/04</td><td>Estudio Norte</td><td>CABA</td><td>Cadete</td><td class="tbl-amt">$ 3.500</td><td><span class="tbl-st st-confirmed">● Entregado</span></td><td><div class="row-act"><button><i class="fa-solid fa-pen"></i></button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MENSAJES WA -->
+      <section class="section" id="sec-mensajes">
+        <div class="page-h">
+          <div><h1>Mensajes WhatsApp</h1><p>Plantillas pre-armadas para no tipear lo mismo todo el día</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-add"><i class="fa-solid fa-plus"></i> Nueva plantilla</button></div>
+        </div>
+        <div class="wa-grid">
+          <div class="wa-card">
+            <h5><i class="fa-brands fa-whatsapp"></i> Confirmación de pedido</h5>
+            <div class="pre">¡Hola {nombre}! 🎁
+
+Te confirmo tu pedido para {ocasion}:
+
+📦 {producto}
+📅 Entrega: {fecha}
+💝 Total: {total}
+
+Para reservarla, te paso los datos para la seña del 50%:
+🏦 CBU: 0000003100015432109876
+👤 Cajas Lúa - 27-12345678-3
+
+¡Cualquier consulta, por acá! ✨</div>
+            <div class="meta"><span>Última edición: 12/04/26</span><span style="color:#16a34a;font-weight:700">Activa ✓</span></div>
           </div>
-          <div class="insight info">
-            <div class="insight-icon"><i class="fa-solid fa-circle-info"></i></div>
-            <div class="insight-body">
-              <b>Estudio Norte es tu clienta más fuerte (34%)</b>
-              <p>Cuidala bien — representa 34% de tus ventas confirmadas en el período.</p>
-            </div>
+          <div class="wa-card">
+            <h5><i class="fa-brands fa-whatsapp"></i> Pedido despachado</h5>
+            <div class="pre">¡Hola {nombre}! 🚚
+
+Tu regalo para {destinataria} ya salió.
+
+📦 Tracking: {link_tracking}
+🏠 Llega a: {direccion}
+⏰ Llegada estimada: {fecha_estimada}
+
+¡Gracias por confiar en Cajas Lúa! 💖</div>
+            <div class="meta"><span>Última edición: 02/04/26</span><span style="color:#16a34a;font-weight:700">Activa ✓</span></div>
           </div>
-          <div class="insight success">
-            <div class="insight-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
-            <div class="insight-body">
-              <b>Ticket promedio creció 8%</b>
-              <p>Pasaste de $11.500 a $12.500. Estás vendiendo cajas más completas — buen up-sell.</p>
-            </div>
+          <div class="wa-card">
+            <h5><i class="fa-brands fa-whatsapp"></i> Recordatorio entrega próxima</h5>
+            <div class="pre">¡Hola {nombre}! 🌸
+
+Te recuerdo que mañana es la entrega de tu regalo para {destinataria} en {direccion}.
+
+¿Te queda alguna indicación especial para el cadete? Avisame antes de las 10:00.
+
+¡Gracias! 💕</div>
+            <div class="meta"><span>Última edición: 18/03/26</span><span style="color:#16a34a;font-weight:700">Activa ✓</span></div>
+          </div>
+          <div class="wa-card">
+            <h5><i class="fa-brands fa-whatsapp"></i> Post-entrega + reseña</h5>
+            <div class="pre">¡Hola {nombre}! 💕
+
+¿Cómo estuvo todo? Espero que {destinataria} se haya emocionado con su caja.
+
+Si te encantó, ¿me ayudás dejándonos una reseña? Para mí significa muchísimo:
+👉 {link_reseña}
+
+¡Gracias por elegirnos! 🎁✨</div>
+            <div class="meta"><span>Última edición: 28/02/26</span><span style="color:#16a34a;font-weight:700">Activa ✓</span></div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- CONFIGURACIÓN -->
+      <section class="section" id="sec-config">
+        <div class="page-h">
+          <div><h1>Configuración</h1><p>Personalizá tu emprendimiento, branding e integraciones</p></div>
+        </div>
+        <div class="set-grid">
+          <div class="set-card">
+            <h4><i class="fa-solid fa-building" style="color:#db2777;margin-right:6px"></i> Datos del emprendimiento</h4>
+            <p>Información que aparece en presupuestos y comunicaciones</p>
+            <div class="fg"><label>Nombre comercial</label><input value="Cajas Lúa" /></div>
+            <div class="row2"><div class="fg"><label>CUIT</label><input value="27-31524399-3" /></div><div class="fg"><label>Condición IVA</label><input value="Monotributo" /></div></div>
+            <div class="fg"><label>Dirección</label><input value="Av. Cabildo 2456, CABA" /></div>
+          </div>
+          <div class="set-card">
+            <h4><i class="fa-solid fa-palette" style="color:#db2777;margin-right:6px"></i> Branding</h4>
+            <p>Colores y logo que se aplican a tus presupuestos</p>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><div style="width:50px;height:50px;border-radius:10px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900">CL</div><div><div style="font-weight:700;font-size:13px">Logo cargado</div><div style="font-size:11px;color:#9D5B8C">cajas-lua-logo.png</div></div></div>
+            <div class="row2"><div class="fg"><label>Color principal</label><input value="#EC4899" type="color" /></div><div class="fg"><label>Color de acento</label><input value="#A855F7" type="color" /></div></div>
+          </div>
+          <div class="set-card">
+            <h4><i class="fa-solid fa-bell" style="color:#db2777;margin-right:6px"></i> Notificaciones</h4>
+            <p>Cuándo querés recibir alertas</p>
+            <div class="toggle"><span>Cobros vencidos diarios</span><div class="tg on"></div></div>
+            <div class="toggle"><span>Stock crítico (semanal)</span><div class="tg on"></div></div>
+            <div class="toggle"><span>Resumen mensual por email</span><div class="tg on"></div></div>
+            <div class="toggle"><span>Notificaciones push en navegador</span><div class="tg"></div></div>
+          </div>
+          <div class="set-card">
+            <h4><i class="fa-solid fa-users" style="color:#db2777;margin-right:6px"></i> Equipo</h4>
+            <p>Usuarias con acceso al workspace · 2 / 3 (plan Equipo)</p>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #faf5ff"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:11px">LM</div><div style="flex:1;font-size:13px"><b>Laura Méndez</b><div style="font-size:11px;color:#9D5B8C">laura@cajaslua.com</div></div><span class="tbl-st st-confirmed">Owner</span></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #faf5ff"><div style="width:30px;height:30px;border-radius:50%;background:#a855f7;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:11px">VS</div><div style="flex:1;font-size:13px"><b>Valeria Salinas</b><div style="font-size:11px;color:#9D5B8C">valeria@cajaslua.com</div></div><span class="tbl-st st-sent">Operadora</span></div>
+          </div>
+        </div>
+      </section>
 
       <div style="text-align:center;padding:32px 0 16px;color:#9D5B8C;font-size:12px">
         Esta es una vista demo con datos ficticios · <a href="https://anma-host.vercel.app/login" style="color:#db2777;font-weight:700">Crear cuenta gratis →</a>
@@ -387,6 +614,48 @@ tbody tr:hover td{background:#fdf4ff}
     </div>
   </main>
 </div>
+
+<script>
+(function(){
+  var sb = document.getElementById('sb');
+  var ov = document.getElementById('ov');
+  var burger = document.getElementById('burger');
+  var title = document.getElementById('tb-title');
+  var titles = {dashboard:'Dashboard',presupuesto:'Nuevo presupuesto',clientas:'Clientas',productos:'Productos',proveedores:'Proveedores',logistica:'Logística',mensajes:'Mensajes WA',config:'Configuración'};
+
+  document.querySelectorAll('.sb-item').forEach(function(it){
+    it.addEventListener('click', function(){
+      var sec = it.getAttribute('data-sec');
+      if (!sec) return;
+      document.querySelectorAll('.sb-item').forEach(function(x){ x.classList.remove('active') });
+      it.classList.add('active');
+      document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active') });
+      var target = document.getElementById('sec-' + sec);
+      if (target) target.classList.add('active');
+      title.textContent = titles[sec] || 'Dashboard';
+      sb.classList.remove('open');
+      ov.classList.remove('show');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+
+  if (burger) burger.addEventListener('click', function(){ sb.classList.toggle('open'); ov.classList.toggle('show') });
+  if (ov) ov.addEventListener('click', function(){ sb.classList.remove('open'); ov.classList.remove('show') });
+
+  document.querySelectorAll('.tg').forEach(function(t){
+    t.addEventListener('click', function(){ t.classList.toggle('on') });
+  });
+
+  document.querySelectorAll('.tabs').forEach(function(tabs){
+    tabs.querySelectorAll('span').forEach(function(s){
+      s.addEventListener('click', function(){
+        tabs.querySelectorAll('span').forEach(function(x){ x.classList.remove('act') });
+        s.classList.add('act');
+      });
+    });
+  });
+})();
+</script>
 
 </body>
 </html>
