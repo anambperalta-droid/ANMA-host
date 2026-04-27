@@ -183,7 +183,7 @@ section{padding:84px 0}
 .plan{background:#fff;border:1.5px solid #f3e8ff;border-radius:18px;padding:32px;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
 .plan:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(219,39,119,.10)}
 .plan.featured{border-color:#ec4899;box-shadow:0 14px 40px rgba(236,72,153,.18);position:relative}
-.plan.featured::before{content:"Más elegida";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:99px;letter-spacing:.5px}
+.plan.featured::before{content:"Mejor valor";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:99px;letter-spacing:.5px}
 .plan-name{font-size:14px;font-weight:700;color:#db2777;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .plan-price{font-size:38px;font-weight:900;color:#1F1338;letter-spacing:-1px;margin-bottom:4px}
 .plan-price small{font-size:14px;font-weight:500;color:#9D5B8C}
@@ -527,49 +527,36 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:50px 0 30px}
 <section id="pricing">
   <div class="wrap">
     <div style="text-align:center;max-width:700px;margin:0 auto 56px">
-      <span class="eyebrow-dark">Planes</span>
-      <h2 class="h2">Simple. Claro. Sin sorpresas.</h2>
-      <p class="sub center">14 días gratis sin tarjeta. Cancelás cuando quieras, sin trámites.</p>
+      <span class="eyebrow-dark">Precio</span>
+      <h2 class="h2">Simple. Sin sorpresas.</h2>
+      <p class="sub center">Elegí la modalidad que mejor se adapta a tu negocio. Sin contratos ni trámites.</p>
     </div>
-    <div class="price-grid">
+    <div class="price-grid" style="grid-template-columns:repeat(2,1fr);max-width:780px;margin:0 auto">
       <div class="plan">
-        <div class="plan-name">Starter</div>
-        <div class="plan-price">$ 24.900 <small>/ mes</small></div>
-        <div class="plan-desc">Para emprendimientos que arrancan. Pago anual: $ 21.900/mes (15% off).</div>
+        <div class="plan-name">Mensual</div>
+        <div class="plan-price">$ 30.000 <small>/ mes</small></div>
+        <div class="plan-desc">Acceso completo a todas las funciones. Cancelás cuando quieras.</div>
         <ul>
-          <li><i class="fa-solid fa-check"></i> 1 usuaria</li>
-          <li><i class="fa-solid fa-check"></i> Pedidos ilimitados</li>
-          <li><i class="fa-solid fa-check"></i> Catálogo y clientas</li>
-          <li><i class="fa-solid fa-check"></i> Soporte por email</li>
-          <li><i class="fa-solid fa-check"></i> 14 días gratis sin tarjeta</li>
+          <li><i class="fa-solid fa-check"></i> Presupuestos ilimitados</li>
+          <li><i class="fa-solid fa-check"></i> Catálogo, clientas y proveedoras</li>
+          <li><i class="fa-solid fa-check"></i> Seguimiento y métricas</li>
+          <li><i class="fa-solid fa-check"></i> Logística y mensajes WhatsApp</li>
+          <li><i class="fa-solid fa-check"></i> Soporte por WhatsApp y email</li>
         </ul>
-        <a href="https://anma-host.vercel.app/login" class="btn btn-dark">Probar 14 días</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-dark">Empezar ahora</a>
       </div>
       <div class="plan featured">
-        <div class="plan-name">Equipo</div>
-        <div class="plan-price">$ 39.900 <small>/ mes</small></div>
-        <div class="plan-desc">Para emprendimientos con más de una persona operando. Pago anual: $ 33.900/mes.</div>
+        <div class="plan-name">Pago único</div>
+        <div class="plan-price">$ 600.000 <small>una sola vez</small></div>
+        <div class="plan-desc">Pagás una vez y es tuyo para siempre. Sin pagos adicionales.</div>
         <ul>
-          <li><i class="fa-solid fa-check"></i> Hasta 3 usuarias</li>
-          <li><i class="fa-solid fa-check"></i> Todo lo del Starter</li>
-          <li><i class="fa-solid fa-check"></i> Logística y mensajes WhatsApp</li>
-          <li><i class="fa-solid fa-check"></i> Tarjetas y mensajes personalizados</li>
+          <li><i class="fa-solid fa-check"></i> Todo del plan mensual</li>
+          <li><i class="fa-solid fa-check"></i> Actualizaciones incluidas</li>
+          <li><i class="fa-solid fa-check"></i> Configuración personalizada</li>
           <li><i class="fa-solid fa-check"></i> Soporte prioritario</li>
+          <li><i class="fa-solid fa-check"></i> Acceso de por vida</li>
         </ul>
-        <a href="https://anma-host.vercel.app/login" class="btn btn-primary">Empezar 14 días gratis</a>
-      </div>
-      <div class="plan">
-        <div class="plan-name">Pro</div>
-        <div class="plan-price">$ 94.900 <small>/ mes</small></div>
-        <div class="plan-desc">Para marcas con varias operadoras y volumen alto. Pago anual: $ 79.900/mes.</div>
-        <ul>
-          <li><i class="fa-solid fa-check"></i> Usuarias ilimitadas</li>
-          <li><i class="fa-solid fa-check"></i> Modo campaña (picos sin límite)</li>
-          <li><i class="fa-solid fa-check"></i> Roles, auditoría y backups</li>
-          <li><i class="fa-solid fa-check"></i> Branding propio</li>
-          <li><i class="fa-solid fa-check"></i> Onboarding dedicado</li>
-        </ul>
-        <a href="#contact" class="btn btn-dark">Hablar con ventas</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-primary">Obtener acceso total</a>
       </div>
     </div>
   </div>
