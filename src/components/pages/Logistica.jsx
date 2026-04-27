@@ -274,13 +274,13 @@ export default function Logistica() {
             </div>
           </div>
 
-          <div className="tbl-card">
+          <div className="tbl-card logistica-tbl">
             <table>
               <thead>
                 <tr>
-                  <th>Remito</th><th>Fecha</th><th>Cliente</th><th>Ciudad</th>
-                  <th>Presupuesto</th><th>Empresa</th><th>Servicio</th><th>Bultos</th><th>Peso</th>
-                  <th>Costo</th><th>Paga</th><th>Estado</th><th>Acciones</th>
+                  <th>Remito</th><th>Fecha</th><th>Cliente</th><th className="col-hide-mobile">Ciudad</th>
+                  <th className="col-hide-mobile">Presupuesto</th><th>Empresa</th><th className="col-hide-mobile">Servicio</th><th className="col-hide-mobile">Bultos</th><th className="col-hide-mobile">Peso</th>
+                  <th>Costo</th><th className="col-hide-mobile">Paga</th><th>Estado</th><th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -302,14 +302,14 @@ export default function Logistica() {
                         )}
                       </td>
                       <td>{s.client || '—'}</td>
-                      <td>{s.city || '—'}</td>
-                      <td>{bud?.num || '—'}</td>
+                      <td className="col-hide-mobile">{s.city || '—'}</td>
+                      <td className="col-hide-mobile">{bud?.num || '—'}</td>
                       <td>{s.carrier || '—'}</td>
-                      <td>{s.service}</td>
-                      <td>{s.bulks}</td>
-                      <td>{s.weight ? `${s.weight} kg` : '—'}</td>
+                      <td className="col-hide-mobile">{s.service}</td>
+                      <td className="col-hide-mobile">{s.bulks}</td>
+                      <td className="col-hide-mobile">{s.weight ? `${s.weight} kg` : '—'}</td>
                       <td style={{ fontWeight: 700 }}>{fmt(s.freight)}</td>
-                      <td>{s.payer}</td>
+                      <td className="col-hide-mobile">{s.payer}</td>
                       <td>{statusBadge(s.status)}</td>
                       <td>
                         <div className="acts">
@@ -349,7 +349,7 @@ export default function Logistica() {
       {/* ── TAB TARIFAS ────────────────────────────────────────────── */}
       {tab === 'tarifas' && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div className="card">
               <div className="card-header"><span className="card-title">Agregar tarifa / zona</span></div>
               <div className="grid2">
@@ -444,7 +444,7 @@ export default function Logistica() {
       {tab === 'resumen' && (
         <>
           {/* KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+          <div className="kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
             {[
               { label: 'Costo total envíos', val: fmt(totalShipCost), color: 'var(--money)' },
               { label: 'Envíos este mes', val: thisMonth, color: 'var(--txt)' },
@@ -460,7 +460,7 @@ export default function Logistica() {
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {/* Desglose por estado */}
             <div className="card">
               <div className="card-header"><span className="card-title">Desglose por estado</span></div>

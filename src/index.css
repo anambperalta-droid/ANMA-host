@@ -647,16 +647,27 @@ td b{color:var(--txt);font-weight:600}
   .bento{grid-template-columns:1fr!important}
   .bento-wide,.bento-chart{grid-column:1/-1!important}
   .analysis-grid{grid-template-columns:1fr!important}
-  .tab-bar,.cfg-tabs{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tab-bar,.cfg-tabs,.tabs,.tabs-bar{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .tab-bar::-webkit-scrollbar,.cfg-tabs::-webkit-scrollbar{display:none}
   .tab-btn{flex-shrink:0}
+  /* Tables: scroll horizontal */
   .tbl-card{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .tbl-card table{min-width:640px}
+  /* Logística: many columns need more space */
+  .tbl-card.logistica-tbl table{min-width:900px}
+  /* Resumen preview table: override inline maxWidth */
+  .resumen-tbl{max-width:100%!important;width:100%!important}
+  /* Chart bento: stack vertically */
+  .bento-chart-inner{flex-direction:column!important}
+  .bento-chart-inner > *{flex:1 1 100%!important;min-width:0!important;width:100%!important}
   .seg-card{flex-direction:column;gap:8px}
   .seg-meta{flex-direction:row;justify-content:space-between;width:100%}
   .period-pills{flex-wrap:wrap}
   .pill-row{flex-wrap:wrap;gap:6px}
   .modal{max-width:calc(100vw - 20px)!important}
+  /* Modals max-height and scrollable body */
+  .modal{max-height:calc(100dvh - 32px)!important;overflow-y:auto}
+  .modal-body{overflow-y:auto;max-height:calc(100dvh - 160px)}
   .budget-layout{flex-direction:column}
   .calc-panel{position:static!important;margin-top:16px;width:100%!important}
   .grid2,.grid3{grid-template-columns:1fr!important}
@@ -668,16 +679,46 @@ td b{color:var(--txt);font-weight:600}
   .login-right{width:100%!important;padding:20px!important}
   /* KPI cards 2 cols en mobile */
   .kpis,.kpis-4{grid-template-columns:1fr 1fr;gap:10px}
+  /* Análisis grid 1 col */
+  .analysis-grid{grid-template-columns:1fr!important}
   /* Ocultar col menos importantes en tabla */
-  .col-hide-mobile{display:none}
+  .col-hide-mobile{display:none!important}
+  /* Budget detail modal header */
+  .dm-head{flex-wrap:wrap;gap:8px}
+  .dm-head .badge{margin-left:0}
+  /* Ship modal single col */
+  .ship-modal .grid2{grid-template-columns:1fr!important;gap:0}
+  /* Action buttons in ph-right: icon-only at 768 */
+  .ph-btn-txt{display:none}
+  /* Notification drawer full width on phone */
+  .notif-drawer{width:100vw;max-width:100vw}
 }
 @media(max-width:640px){
   .topbar{height:56px!important;padding:0 14px!important}
   .tfab-btn{bottom:72px!important;right:16px!important}
   /* Botones del header más compactos */
-  .ph-right .btn{font-size:11px;padding:5px 8px}
+  .ph-right .btn{font-size:11px;padding:5px 10px;gap:4px}
   .ph-right .period-pills{display:none}
   .ph-left h2{font-size:16px}
+  /* Table cells more compact */
+  td,th{padding:7px 8px!important;font-size:11px!important}
+  /* Insight cards full width */
+  .insight-card{min-width:0!important;max-width:100%!important}
+  /* Modo hoy cards stack */
+  .modo-hoy-grid{grid-template-columns:1fr!important}
+  /* Topbar acts: reduce gap */
+  .tb-acts{gap:4px}
+  .tb-btn{width:32px;height:32px;font-size:13px}
+}
+@media(max-width:400px){
+  .kpis,.kpis-4{grid-template-columns:1fr}
+  .content{padding:12px 10px}
+  .topbar{padding:0 10px!important}
+  .tb-page-title{font-size:13px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bento-kpi{padding:12px}
+  .kpi-val{font-size:20px!important}
+  .modal{padding:14px 12px}
+  .mh h3{font-size:14px}
 }
 
 /* ── Theme variants ── */

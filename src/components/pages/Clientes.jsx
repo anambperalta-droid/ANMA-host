@@ -249,7 +249,7 @@ export default function Clientes() {
           `}</style>
           <div className="tbl-card cli-tbl">
             <table>
-              <thead><tr><th>Empresa / Contacto</th><th>Tipo</th><th>WhatsApp</th><th>Rubro</th><th>Pedidos</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Empresa / Contacto</th><th className="col-hide-mobile">Tipo</th><th>WhatsApp</th><th className="col-hide-mobile">Rubro</th><th>Pedidos</th><th>Acciones</th></tr></thead>
               <tbody>
                 {loading ? [1,2,3,4,5].map(i => (
                   <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
@@ -269,7 +269,7 @@ export default function Clientes() {
                         </div>
                       </div>
                     </td>
-                    <td><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
+                    <td className="col-hide-mobile"><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
                     <td>
                       {c.wa ? (
                         <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
@@ -280,7 +280,7 @@ export default function Clientes() {
                         </a>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                     </td>
-                    <td>
+                    <td className="col-hide-mobile">
                       {c.rubro ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--txt2)' }}>
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0, display: 'inline-block' }} />

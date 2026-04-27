@@ -294,8 +294,8 @@ export default function Catalogo() {
                   <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} style={{ cursor: 'pointer' }} />
                 </th>
                 <th>Producto</th>
-                <th>Categoría</th>
-                <th>Proveedor</th>
+                <th className="col-hide-mobile">Categoría</th>
+                <th className="col-hide-mobile">Proveedor</th>
                 <th>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     Costo ($)
@@ -308,8 +308,8 @@ export default function Catalogo() {
                     </button>
                   </span>
                 </th>
-                <th>% Margen</th>
-                {showCostInfo && <th>Últ. actualización</th>}
+                <th className="col-hide-mobile">% Margen</th>
+                {showCostInfo && <th className="col-hide-mobile">Últ. actualización</th>}
                 <th>Precio sugerido ($)</th>
                 <th>Acciones</th>
               </tr>
@@ -329,18 +329,18 @@ export default function Catalogo() {
                       {p.image && <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
                       <span style={{ fontWeight: 800 }}>{p.name}</span>
                     </td>
-                    <td>
+                    <td className="col-hide-mobile">
                       <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: cc.bg, color: cc.color, letterSpacing: 0.2 }}>{p.cat}</span>
                     </td>
-                    <td>{supplierName(p.supplierId)}</td>
+                    <td className="col-hide-mobile">{supplierName(p.supplierId)}</td>
                     <td>{fmt(p.cost)}</td>
-                    <td>
+                    <td className="col-hide-mobile">
                       {pct !== null ? (
                         <span style={{ fontWeight: 800, fontSize: 13, color: marginColor(pct) }}>{pct}%</span>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                     </td>
                     {showCostInfo && (
-                      <td style={{ fontSize: 11 }}>
+                      <td className="col-hide-mobile" style={{ fontSize: 11 }}>
                         {p.updatedAt ? (
                           <span style={{ color: (() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A' })(), fontWeight: 600 }}>
                             {(() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); if (days === 0) return 'Hoy'; if (days === 1) return 'Ayer'; if (days < 30) return `hace ${days}d`; if (days < 365) return `hace ${Math.floor(days/30)}m`; return `hace ${Math.floor(days/365)}a` })()}

@@ -923,7 +923,7 @@ export default function Historial() {
                 </button>
               </div>
               {!todayCollapsed && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+            <div className="modo-hoy-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               {cobrosVencidos.length > 0 && (
                 <div onClick={() => { setQuickFilter('sin_cobrar'); setTab('lista') }}
                   style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(220,38,38,.06), rgba(220,38,38,.02))', border: '1.5px solid rgba(220,38,38,.25)', borderRadius: 14, padding: '14px 16px', transition: 'transform .15s, box-shadow .2s' }}
@@ -997,8 +997,8 @@ export default function Historial() {
               <KpiCard label="Presupuestos" value={String(periodBudgets.length)} />
 
               {/* ── Bar chart 65% + Panel derecho 35% ── */}
-              <div className="bento-wide" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                <div className="bento-chart" style={{ flex: '1 1 55%', minWidth: 300, boxSizing: 'border-box', alignSelf: 'flex-start' }}>
+              <div className="bento-wide bento-chart-inner" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <div className="bento-chart" style={{ flex: '1 1 55%', minWidth: 280, boxSizing: 'border-box', alignSelf: 'flex-start' }}>
                   <div className="card-header">
                     <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
                   </div>
@@ -1256,16 +1256,16 @@ export default function Historial() {
                   <input type="checkbox" checked={filteredBudgets.length > 0 && filteredBudgets.every(b => selectedIds.has(b.id))} onChange={() => toggleSelectAll(filteredBudgets)} />
                 </th>
                 <th>N°</th>
-                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>Fecha{sortArrow('date')}</th>
-                <th>Cliente</th><th>Empresa</th>
-                <th>Entrega</th>
-                <th>Días rest.</th>
+                <th className="col-hide-mobile" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>Fecha{sortArrow('date')}</th>
+                <th>Cliente</th><th className="col-hide-mobile">Empresa</th>
+                <th className="col-hide-mobile">Entrega</th>
+                <th className="col-hide-mobile">Días rest.</th>
                 <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
-                <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('gain')}>
+                <th className="col-hide-mobile" style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('gain')}>
                   Ganancia{sortArrow('gain')}
                   {hidden && <i className="fa fa-eye-slash" style={{ marginLeft: 4, fontSize: 9, color: 'var(--txt4)' }} />}
                 </th>
-                <th>Estado</th><th>Pago</th><th>Acciones</th>
+                <th>Estado</th><th className="col-hide-mobile">Pago</th><th>Acciones</th>
               </tr></thead>
               <tbody>
                 {filteredBudgets.length ? filteredBudgets.map(b => {
@@ -1275,15 +1275,15 @@ export default function Historial() {
                     <tr key={b.id} className={selectedIds.has(b.id) ? 'selected' : ''} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
                       <td><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
                       <td style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}><b>{b.num || '—'}</b></td>
-                      <td>{fmtDate(b.date)}</td>
+                      <td className="col-hide-mobile">{fmtDate(b.date)}</td>
                       <td>{b.contact || '—'}</td>
-                      <td style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
-                      <td>{fmtDate(b.deliveryDate)}</td>
-                      <td style={{ fontWeight: 700, fontSize: 11, color: ['confirmed','lost'].includes(b.status) ? '#9CA3AF' : overdue ? 'var(--red)' : dDays !== null && dDays <= 2 ? 'var(--amber)' : dDays !== null && dDays > 2 ? 'var(--green)' : 'var(--txt3)' }}>
+                      <td className="col-hide-mobile" style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
+                      <td className="col-hide-mobile">{fmtDate(b.deliveryDate)}</td>
+                      <td className="col-hide-mobile" style={{ fontWeight: 700, fontSize: 11, color: ['confirmed','lost'].includes(b.status) ? '#9CA3AF' : overdue ? 'var(--red)' : dDays !== null && dDays <= 2 ? 'var(--amber)' : dDays !== null && dDays > 2 ? 'var(--green)' : 'var(--txt3)' }}>
                         {dDays === null || ['confirmed','lost'].includes(b.status) ? '—' : overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd'}` : `${dDays}d`}
                       </td>
                       <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.total)}</td>
-                      <td style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
+                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
@@ -1293,7 +1293,7 @@ export default function Historial() {
                           </select>
                         </div>
                       </td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
+                      <td className="col-hide-mobile" style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_PAY[b.payStatus] || '#DC2626', flexShrink: 0, display: 'inline-block' }} />
                           <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
