@@ -4,7 +4,7 @@ import NotificationBell from './NotificationBell'
 import { useTaskFab } from '../../context/TaskFabContext'
 import { usePrivacy } from '../../context/PrivacyContext'
 
-const PAGE_NAMES = { '/': 'Historial', '/presupuesto': 'Presupuesto', '/clientes': 'Clientes', '/catalogo': 'Catálogo de Productos', '/proveedores': 'Proveedores', '/logistica': 'Logística', '/mensajes': 'Mensajes WhatsApp', '/config': 'Configuración' }
+const PAGE_NAMES = { '/': 'Dashboard', '/presupuesto': 'Presupuesto', '/clientes': 'Clientes', '/catalogo': 'Catálogo de Productos', '/proveedores': 'Proveedores', '/logistica': 'Logística', '/mensajes': 'Mensajes WhatsApp', '/config': 'Configuración' }
 
 const THEME_KEY = 'anma_theme'
 
