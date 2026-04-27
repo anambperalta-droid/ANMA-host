@@ -34,6 +34,7 @@ export default function Topbar({ onMenuClick }) {
       <button className="tb-btn tb-btn-menu" onClick={onMenuClick} aria-label="Menú">
         <i className="fa fa-bars" />
       </button>
+      <span className="tb-page-title">{title}</span>
       <div style={{ flex: 1 }} />
 
       {/* Ocultar datos financieros */}
