@@ -595,37 +595,16 @@ export default function Proveedores() {
                   {(() => {
                     const prods = supplierProducts(detailSupplier)
                     const costTotal = supplierCostTotal(detailSupplier)
-                    const sc = supplierScore(detailSupplier)
-                    const scoreColor = sc.score >= 75 ? '#16A34A' : sc.score >= 50 ? '#D97706' : '#DC2626'
-                    const scoreLabel = sc.score >= 75 ? 'Excelente' : sc.score >= 50 ? 'Aceptable' : 'A revisar'
+                    if (!prods.length) return null
                     return (
                       <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                        {prods.length > 0 && <>
-                          <div style={{ flex: '1 1 100px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{prods.length}</div>
-                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Productos</div>
-                          </div>
-                          <div style={{ flex: '1 1 120px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(costTotal)}</div>
-                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Costo total</div>
-                          </div>
-                        </>}
-                        <div style={{ flex: '1 1 180px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px' }} title={sc.factors.join(' · ') || 'Score base'}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Confiabilidad</div>
-                            <div style={{ fontSize: 14, fontWeight: 800, color: scoreColor }}>{sc.score}<span style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 600 }}>/100</span></div>
-                          </div>
-                          <div style={{ height: 6, background: '#E5E7EB', borderRadius: 99, overflow: 'hidden', marginBottom: 4 }}>
-                            <div style={{ height: '100%', width: `${sc.score}%`, background: scoreColor, borderRadius: 99, transition: 'width .5s ease' }} />
-                          </div>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
-                          {sc.factors.length > 0 && (
-                            <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                              {sc.factors.slice(0, 3).map((f, i) => (
-                                <span key={i} style={{ fontSize: 9, color: 'var(--txt3)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '1px 5px' }}>{f}</span>
-                              ))}
-                            </div>
-                          )}
+                        <div style={{ flex: '1 1 100px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{prods.length}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Productos</div>
+                        </div>
+                        <div style={{ flex: '1 1 120px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(costTotal)}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Costo total</div>
                         </div>
                       </div>
                     )

@@ -369,6 +369,7 @@ export default function Historial() {
   const [carouselSlide, setCarouselSlide] = useState(0)
   const [quickFilter, setQuickFilter] = useState('')
   const [pendingLossId, setPendingLossId] = useState(null)
+  const [showLossReason, setShowLossReason] = useState(false)
   const [todayCollapsed, setTodayCollapsed] = useState(() => {
     try { return localStorage.getItem('anma_today_collapsed') === '1' } catch { return false }
   })
@@ -1236,6 +1237,13 @@ export default function Historial() {
                 Quitar filtro
               </button>
             )}
+            <button
+              onClick={() => setShowLossReason(v => !v)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', border: `1.5px solid ${showLossReason ? '#DC2626' : 'var(--border)'}`, background: showLossReason ? '#FEE2E2' : 'transparent', color: showLossReason ? '#DC2626' : 'var(--txt3)', marginLeft: 'auto' }}
+              title={showLossReason ? 'Ocultar motivo de pérdida' : 'Mostrar motivo de pérdida'}>
+              <i className="fa fa-circle-xmark" style={{ fontSize: 10 }} />
+              {showLossReason ? 'Ocultar motivo' : 'Ver motivo pérdida'}
+            </button>
           </div>
           {selectedIds.size > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--brand-xlt)', border: '1.5px solid var(--brand)', borderRadius: 10, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -1297,7 +1305,7 @@ export default function Historial() {
                               value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
                               {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                             </select>
-                            {b.status === 'lost' && b.lossReason && (
+                            {showLossReason && b.status === 'lost' && b.lossReason && (
                               <div style={{ fontSize: 9, color: '#DC2626', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: 6, padding: '1px 6px', marginTop: 3, display: 'inline-block', fontWeight: 700, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.lossReason}>
                                 {b.lossReason}
                               </div>

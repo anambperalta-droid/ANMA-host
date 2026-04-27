@@ -34,6 +34,13 @@ export default function Logistica() {
   const [tzForm, setTzForm] = useState({ zone: '', carrier: '', ppkg: '', min: '', days: '', notes: '' })
   const [calcZone, setCalcZone] = useState('')
   const [calcKg, setCalcKg] = useState('')
+  const [lateAlertDismissed, setLateAlertDismissed] = useState(() => {
+    try { return sessionStorage.getItem('logistica_late_dismissed') === '1' } catch { return false }
+  })
+  const dismissLateAlert = () => {
+    try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
+    setLateAlertDismissed(true)
+  }
 
   const shipments = get('shipments')
   const budgets = get('budgets')
@@ -246,7 +253,7 @@ export default function Logistica() {
       {/* ── TAB ENVÍOS ─────────────────────────────────────────────── */}
       {tab === 'envios' && (
         <>
-          {lateShipments.length > 0 && (
+          {lateShipments.length > 0 && !lateAlertDismissed && (
             <div style={{ background: 'rgba(220,38,38,.08)', border: '1.5px solid rgba(220,38,38,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <i className="fa fa-triangle-exclamation" style={{ color: '#DC2626', fontSize: 14 }} />
               <div style={{ flex: 1, fontSize: 12 }}>
@@ -254,6 +261,7 @@ export default function Logistica() {
                 <span style={{ color: 'var(--txt3)', marginLeft: 6 }}>· Despachado/En tránsito hace más de lo esperado</span>
               </div>
               <button className="btn btn-secondary btn-xs" onClick={() => setSFilter('Despachado')}>Ver atrasados</button>
+              <button onClick={dismissLateAlert} title="Cerrar alerta" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '2px 6px', borderRadius: 4, fontSize: 14, opacity: 0.7 }}><i className="fa fa-xmark" /></button>
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
