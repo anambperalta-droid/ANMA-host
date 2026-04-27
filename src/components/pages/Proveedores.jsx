@@ -610,9 +610,22 @@ export default function Proveedores() {
                             <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Costo total</div>
                           </div>
                         </>}
-                        <div style={{ flex: '1 1 140px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }} title={sc.factors.join(' · ') || 'Score base'}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: scoreColor }}>{sc.score}<span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600 }}>/100</span></div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Score · {scoreLabel}</div>
+                        <div style={{ flex: '1 1 180px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px' }} title={sc.factors.join(' · ') || 'Score base'}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Confiabilidad</div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: scoreColor }}>{sc.score}<span style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 600 }}>/100</span></div>
+                          </div>
+                          <div style={{ height: 6, background: '#E5E7EB', borderRadius: 99, overflow: 'hidden', marginBottom: 4 }}>
+                            <div style={{ height: '100%', width: `${sc.score}%`, background: scoreColor, borderRadius: 99, transition: 'width .5s ease' }} />
+                          </div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
+                          {sc.factors.length > 0 && (
+                            <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                              {sc.factors.slice(0, 3).map((f, i) => (
+                                <span key={i} style={{ fontSize: 9, color: 'var(--txt3)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '1px 5px' }}>{f}</span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
@@ -684,7 +697,7 @@ export default function Proveedores() {
                                   {change && (
                                     <div style={{ fontSize: 10, fontWeight: 700, color: change.pct > 0 ? '#DC2626' : '#16A34A', marginTop: 2 }}>
                                       <i className={`fa fa-arrow-${change.pct > 0 ? 'up' : 'down'}`} style={{ marginRight: 3 }} />
-                                      {change.pct > 0 ? '+' : ''}{change.pct.toFixed(1)}%
+                                      {change.pct > 0 ? '+' : ''}{Number.isInteger(Math.round(change.pct * 10) / 10) ? Math.round(change.pct) : change.pct.toFixed(1)}%
                                     </div>
                                   )}
                                 </div>
@@ -702,7 +715,7 @@ export default function Proveedores() {
                                         <span style={{ color: 'var(--txt3)' }}>{h.date}</span>
                                         <span>{fmt(h.prevCost)} → <b>{fmt(h.newCost)}</b></span>
                                         <span style={{ color: pct > 0 ? '#DC2626' : '#16A34A', fontWeight: 700 }}>
-                                          {pct > 0 ? '+' : ''}{pct.toFixed(1)}%
+                                          {pct > 0 ? '+' : ''}{Number.isInteger(Math.round(pct * 10) / 10) ? Math.round(pct) : pct.toFixed(1)}%
                                         </span>
                                         {h.note && <span style={{ color: 'var(--txt4)', fontStyle: 'italic' }}>· {h.note}</span>}
                                       </div>
@@ -775,13 +788,14 @@ export default function Proveedores() {
               <label>Nuevo costo *</label>
               <input type="number" min="0" step="0.01" value={priceForm.newCost}
                 onChange={e => setPriceForm(f => ({ ...f, newCost: e.target.value }))}
+                onFocus={e => e.target.select()}
                 placeholder="0.00" autoFocus />
               {priceForm.newCost && Number(priceForm.newCost) > 0 && Number(priceModal.product.cost) > 0 && (
                 (() => {
                   const pct = ((Number(priceForm.newCost) - Number(priceModal.product.cost)) / Number(priceModal.product.cost)) * 100
                   return (
                     <div style={{ fontSize: 11, marginTop: 4, color: pct > 0 ? '#DC2626' : pct < 0 ? '#16A34A' : 'var(--txt3)', fontWeight: 700 }}>
-                      Variación: {pct > 0 ? '+' : ''}{pct.toFixed(1)}%
+                      Variación: {pct > 0 ? '+' : ''}{Number.isInteger(Math.round(pct * 10) / 10) ? Math.round(pct) : pct.toFixed(1)}%
                     </div>
                   )
                 })()

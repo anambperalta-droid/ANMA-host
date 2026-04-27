@@ -248,6 +248,13 @@ function AppShellInner() {
     return () => window.removeEventListener('keydown', handler)
   }, [cmdOpen])
 
+  // Seleccionar todo al enfocar cualquier input numérico (evita escribir sobre el 0)
+  useEffect(() => {
+    const numFocus = (e) => { if (e.target.type === 'number') e.target.select() }
+    document.addEventListener('focus', numFocus, true)
+    return () => document.removeEventListener('focus', numFocus, true)
+  }, [])
+
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />

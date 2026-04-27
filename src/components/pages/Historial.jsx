@@ -1257,9 +1257,8 @@ export default function Historial() {
                 </th>
                 <th>N°</th>
                 <th className="col-hide-mobile" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>Fecha{sortArrow('date')}</th>
-                <th>Cliente</th><th className="col-hide-mobile">Empresa</th>
+                <th>Cliente / Empresa</th>
                 <th className="col-hide-mobile">Entrega</th>
-                <th className="col-hide-mobile">Días rest.</th>
                 <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
                 <th className="col-hide-mobile" style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('gain')}>
                   Ganancia{sortArrow('gain')}
@@ -1276,21 +1275,34 @@ export default function Historial() {
                       <td><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
                       <td style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}><b>{b.num || '—'}</b></td>
                       <td className="col-hide-mobile">{fmtDate(b.date)}</td>
-                      <td>{b.contact || '—'}</td>
-                      <td className="col-hide-mobile" style={{ color: 'var(--blue)', cursor: 'pointer' }} onClick={() => { setSearch(b.company || ''); setFilter('all') }}>{b.company || '—'}</td>
-                      <td className="col-hide-mobile">{fmtDate(b.deliveryDate)}</td>
-                      <td className="col-hide-mobile" style={{ fontWeight: 700, fontSize: 11, color: ['confirmed','lost'].includes(b.status) ? '#9CA3AF' : overdue ? 'var(--red)' : dDays !== null && dDays <= 2 ? 'var(--amber)' : dDays !== null && dDays > 2 ? 'var(--green)' : 'var(--txt3)' }}>
-                        {dDays === null || ['confirmed','lost'].includes(b.status) ? '—' : overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd'}` : `${dDays}d`}
+                      <td style={{ maxWidth: 200 }}>
+                        <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.company || b.contact || '—'}</div>
+                        {b.company && b.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.contact}</div>}
                       </td>
-                      <td style={{ fontWeight: 700, color: 'var(--money)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.total)}</td>
-                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : 'var(--money)', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
+                      <td className="col-hide-mobile">
+                        <div style={{ fontSize: 11 }}>{fmtDate(b.deliveryDate) || '—'}</div>
+                        {dDays !== null && !['confirmed','lost'].includes(b.status) && (
+                          <div style={{ fontSize: 10, fontWeight: 700, color: overdue ? 'var(--red)' : dDays <= 2 ? 'var(--amber)' : 'var(--green)', marginTop: 1 }}>
+                            {overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd atrás'}` : `${dDays}d`}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em', fontVariantNumeric: 'tabular-nums' }}>{money(b.total)}</td>
+                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : '#16A34A', fontWeight: 700, textAlign: 'right', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em', fontVariantNumeric: 'tabular-nums' }}>{money(b.totalGain)}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
-                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
-                            value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
-                            {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                          </select>
+                          <div>
+                            <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                              value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
+                              {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                            </select>
+                            {b.status === 'lost' && b.lossReason && (
+                              <div style={{ fontSize: 9, color: '#DC2626', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: 6, padding: '1px 6px', marginTop: 3, display: 'inline-block', fontWeight: 700, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.lossReason}>
+                                {b.lossReason}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="col-hide-mobile" style={{ whiteSpace: 'nowrap' }}>
@@ -1402,6 +1414,66 @@ export default function Historial() {
             <div className="card-header"><span className="card-title"><i className="fa fa-coins" style={{ color: 'var(--amber)', marginRight: 6 }} />Ganancia por mes</span></div>
             <BarChart data={gainData} type="gain" />
           </div>
+
+          {/* ── Análisis de pedidos perdidos ── */}
+          {(() => {
+            const lostBudgets = budgets.filter(b => b.status === 'lost')
+            const lostWithReason = lostBudgets.filter(b => b.lossReason)
+            const lostValue = lostBudgets.reduce((s, b) => s + (b.total || 0), 0)
+            const reasonCount = {}
+            lostWithReason.forEach(b => { reasonCount[b.lossReason] = (reasonCount[b.lossReason] || 0) + 1 })
+            const reasonEntries = Object.entries(reasonCount).sort((a, b) => b[1] - a[1])
+            const maxCount = reasonEntries[0]?.[1] || 1
+            return (
+              <div className="card" style={{ gridColumn: '1 / -1' }}>
+                <div className="card-header" style={{ marginBottom: 14 }}>
+                  <span className="card-title"><i className="fa fa-circle-xmark" style={{ color: '#DC2626', marginRight: 6 }} />Análisis de pedidos perdidos</span>
+                  <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', padding: '2px 10px', borderRadius: 20 }}>
+                      {lostBudgets.length} perdido{lostBudgets.length !== 1 ? 's' : ''}
+                    </span>
+                    {lostValue > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', padding: '2px 10px', borderRadius: 20, fontFamily: 'ui-monospace,SFMono-Regular,monospace' }}>
+                        {money(lostValue)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {reasonEntries.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '24px 16px', color: 'var(--txt4)' }}>
+                    <i className="fa fa-circle-info" style={{ fontSize: 24, marginBottom: 8, display: 'block', opacity: 0.35 }} />
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt3)', marginBottom: 4 }}>Sin motivos registrados aún</div>
+                    <div style={{ fontSize: 11, color: 'var(--txt4)', lineHeight: 1.5 }}>Cuando marcás un presupuesto como "Perdido", podés registrar el motivo para ver patrones acá.</div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+                    {reasonEntries.map(([reason, count], i) => {
+                      const pct = Math.round(count / lostWithReason.length * 100)
+                      const barPct = Math.round(count / maxCount * 100)
+                      return (
+                        <div key={i} style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginBottom: 6, lineHeight: 1.4 }}>{reason}</div>
+                          <div style={{ height: 5, background: '#E5E7EB', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
+                            <div style={{ height: '100%', width: `${barPct}%`, background: '#DC2626', borderRadius: 99, transition: 'width .5s ease' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 11, color: '#DC2626', fontWeight: 700 }}>{pct}%</span>
+                            <span style={{ fontSize: 10, color: 'var(--txt4)', fontWeight: 600 }}>{count} caso{count !== 1 ? 's' : ''}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                {lostBudgets.length > lostWithReason.length && (
+                  <div style={{ marginTop: 10, fontSize: 11, color: 'var(--txt4)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="fa fa-circle-info" style={{ fontSize: 10 }} />
+                    {lostBudgets.length - lostWithReason.length} pedido{lostBudgets.length - lostWithReason.length !== 1 ? 's' : ''} perdido{lostBudgets.length - lostWithReason.length !== 1 ? 's' : ''} sin motivo registrado
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </div>
         </>
       )}
