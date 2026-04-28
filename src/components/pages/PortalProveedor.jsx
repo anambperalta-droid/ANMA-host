@@ -90,12 +90,12 @@ export default function PortalProveedor() {
         .pc:nth-child(2){animation-delay:.06s}.pc:nth-child(3){animation-delay:.12s}
         .pc:nth-child(4){animation-delay:.18s}.pc:nth-child(5){animation-delay:.22s}
         .pc:nth-child(6){animation-delay:.26s}
-        .pp-row:hover{ background:#F5F3FF !important }
+        .pp-row:hover{ background:#FDF2F8 !important }
         .wa-confirm{ transition:transform .15s,box-shadow .2s }
         .wa-confirm:hover{ transform:translateY(-2px);box-shadow:0 12px 28px rgba(22,163,74,.38) }
         .wa-ask{ transition:background .15s,border-color .15s }
-        .wa-ask:hover{ background:#F5F3FF !important;border-color:#C4B5FD !important }
-        .pp-copy:hover{ background:#EDE9FE !important;color:#7C3AED !important }
+        .wa-ask:hover{ background:#FDF2F8 !important;border-color:#F9A8D4 !important }
+        .pp-copy:hover{ background:#FCE7F3 !important;color:#BE185D !important }
       `}</style>
 
       <div style={S.container}>
@@ -199,10 +199,10 @@ export default function PortalProveedor() {
                 {copied ? 'Copiado' : 'Copiar lista'}
               </button>
             </div>
-            <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #EDE9FE' }}>
+            <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #FCE7F3' }}>
               <table style={S.table}>
                 <thead>
-                  <tr style={{ background: '#F5F3FF' }}>
+                  <tr style={{ background: '#FDF2F8' }}>
                     <th style={S.th}>Producto</th>
                     <th style={{ ...S.th, textAlign: 'center', width: 90 }}>Estado</th>
                     <th style={{ ...S.th, textAlign: 'right', width: 130 }}>Precio acordado</th>
@@ -228,8 +228,8 @@ export default function PortalProveedor() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ background: '#F5F3FF', borderTop: '2px solid #EDE9FE' }}>
-                    <td colSpan={2} style={{ padding: '10px 14px', fontSize: 11.5, color: '#7C3AED', fontWeight: 600 }}>
+                  <tr style={{ background: '#FDF2F8', borderTop: '2px solid #FCE7F3' }}>
+                    <td colSpan={2} style={{ padding: '10px 14px', fontSize: 11.5, color: '#BE185D', fontWeight: 600 }}>
                       {products.length} producto{products.length !== 1 ? 's' : ''} · Precios en pesos argentinos
                     </td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
@@ -249,7 +249,7 @@ export default function PortalProveedor() {
           <div style={S.condsGrid}>
             <div style={S.condItem}>
               <div style={S.condIconWrap}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BE185D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={S.condLabel}>Condición de pago</div>
@@ -263,7 +263,7 @@ export default function PortalProveedor() {
             </div>
             <div style={S.condItem}>
               <div style={S.condIconWrap}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BE185D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={S.condLabel}>Plazo de entrega (lead time)</div>
@@ -276,9 +276,9 @@ export default function PortalProveedor() {
               </div>
             </div>
             {data.paymentConditions && data.paymentTerm && (
-              <div style={{ ...S.condItem, gridColumn: '1/-1', borderTop: '1px solid #EDE9FE', paddingTop: 14 }}>
+              <div style={{ ...S.condItem, gridColumn: '1/-1', borderTop: '1px solid #FCE7F3', paddingTop: 14 }}>
                 <div style={S.condIconWrap}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BE185D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={S.condLabel}>Notas de pago</div>
@@ -351,7 +351,7 @@ export default function PortalProveedor() {
                 )}
                 {wa('ask') && (
                   <a href={wa('ask')} target="_blank" rel="noopener noreferrer" className="wa-ask" style={S.btnAsk}>
-                    <WaIcon size={15} color="#7C3AED" />
+                    <WaIcon size={15} color="#BE185D" />
                     Tengo una consulta
                   </a>
                 )}
@@ -368,7 +368,7 @@ export default function PortalProveedor() {
         {/* ── FOOTER ── */}
         <div style={S.foot}>
           <span>Generado con</span>
-          <b style={{ color: '#7C3AED' }}>ANMA Regalos</b>
+          <b style={{ color: '#BE185D' }}>ANMA Regalos</b>
           <span style={S.dot} />
           <span>Solo lectura · Sin registro</span>
           <span style={S.dot} />
@@ -395,7 +395,7 @@ function WaIcon({ size = 16, color = '#fff' }) {
 const S = {
   wrap: {
     minHeight: '100vh',
-    background: '#F4F3FA',
+    background: '#FDF2F8',
     fontFamily: "'Inter',system-ui,-apple-system,sans-serif",
     padding: '20px 14px 48px',
   },
@@ -404,40 +404,40 @@ const S = {
   /* hero */
   hero: {
     position: 'relative',
-    background: 'linear-gradient(135deg, #1E1144 0%, #2D1B69 55%, #3B1578 100%)',
+    background: 'linear-gradient(135deg, #831843 0%, #9D174D 55%, #BE185D 100%)',
     borderRadius: 20,
     padding: '28px 28px 32px',
     marginBottom: 12,
     overflow: 'hidden',
-    boxShadow: '0 16px 48px rgba(30,17,68,.30)',
+    boxShadow: '0 16px 48px rgba(157,23,77,.22)',
   },
   heroCircle: {
     position: 'absolute', top: -50, right: -50,
     width: 200, height: 200, borderRadius: '50%',
-    background: 'rgba(124,58,237,.18)',
+    background: 'rgba(255,255,255,.08)',
     pointerEvents: 'none',
   },
   heroBadge: {
     display: 'inline-flex', alignItems: 'center',
-    background: 'rgba(255,255,255,.1)', backdropFilter: 'blur(8px)',
-    color: 'rgba(255,255,255,.75)', fontSize: 10.5, fontWeight: 700,
+    background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(8px)',
+    color: 'rgba(255,255,255,.85)', fontSize: 10.5, fontWeight: 700,
     letterSpacing: '1px', textTransform: 'uppercase',
     padding: '4px 12px', borderRadius: 20, marginBottom: 12,
-    border: '1px solid rgba(255,255,255,.12)',
+    border: '1px solid rgba(255,255,255,.18)',
   },
   heroTitle: {
     margin: '0 0 10px', fontSize: 26, fontWeight: 800,
     color: '#fff', letterSpacing: '-.5px', lineHeight: 1.2,
   },
   heroSub: {
-    margin: '0 0 18px', fontSize: 14, color: 'rgba(255,255,255,.78)',
+    margin: '0 0 18px', fontSize: 14, color: 'rgba(255,255,255,.82)',
     lineHeight: 1.6,
   },
   heroChips: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   chip: {
     display: 'inline-flex', alignItems: 'center', gap: 6,
-    background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)',
-    color: 'rgba(255,255,255,.85)', fontSize: 11.5, fontWeight: 600,
+    background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.25)',
+    color: 'rgba(255,255,255,.90)', fontSize: 11.5, fontWeight: 600,
     padding: '5px 11px', borderRadius: 20, backdropFilter: 'blur(6px)',
   },
 
@@ -478,7 +478,7 @@ const S = {
   /* card genérica */
   card: {
     background: '#fff',
-    border: '1px solid #EDE9FE',
+    border: '1px solid #FCE7F3',
     borderRadius: 16, padding: '20px 22px',
     marginBottom: 12,
     boxShadow: '0 2px 12px rgba(0,0,0,.04)',
@@ -489,8 +489,8 @@ const S = {
   /* copy btn */
   copyBtn: {
     display: 'inline-flex', alignItems: 'center', gap: 5,
-    background: '#F5F3FF', border: '1px solid #DDD6FE',
-    color: '#7C3AED', fontSize: 11.5, fontWeight: 700,
+    background: '#FDF2F8', border: '1px solid #FBCFE8',
+    color: '#BE185D', fontSize: 11.5, fontWeight: 700,
     padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
     fontFamily: 'inherit', flexShrink: 0, transition: 'all .15s',
   },
@@ -499,10 +499,10 @@ const S = {
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 360 },
   th: {
     textAlign: 'left', padding: '10px 14px',
-    fontSize: 10, color: '#7C3AED', fontWeight: 800,
+    fontSize: 10, color: '#BE185D', fontWeight: 800,
     textTransform: 'uppercase', letterSpacing: '.7px',
   },
-  tr:   { borderBottom: '1px solid #F5F3FF', transition: 'background .12s' },
+  tr:   { borderBottom: '1px solid #FDF2F8', transition: 'background .12s' },
   td:   { padding: '12px 14px', verticalAlign: 'middle' },
   badgeOk: {
     display: 'inline-block', background: '#F0FDF4', color: '#16A34A',
@@ -520,7 +520,7 @@ const S = {
   condItem: { display: 'flex', alignItems: 'flex-start', gap: 14 },
   condIconWrap: {
     width: 34, height: 34, borderRadius: 10,
-    background: '#F5F3FF', border: '1px solid #EDE9FE',
+    background: '#FDF2F8', border: '1px solid #FCE7F3',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,
   },
@@ -538,7 +538,7 @@ const S = {
   /* CTA */
   ctaCard: {
     background: '#fff',
-    border: '1.5px solid #EDE9FE',
+    border: '1.5px solid #FCE7F3',
     borderRadius: 16, padding: '24px 22px',
     marginBottom: 12,
     boxShadow: '0 4px 20px rgba(124,58,237,.08)',
@@ -556,8 +556,8 @@ const S = {
   },
   btnAsk: {
     flex: '1 1 160px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    background: '#F5F3FF', border: '1.5px solid #DDD6FE',
-    color: '#7C3AED', padding: '13px 18px', borderRadius: 13,
+    background: '#FDF2F8', border: '1.5px solid #FBCFE8',
+    color: '#BE185D', padding: '13px 18px', borderRadius: 13,
     textDecoration: 'none', fontWeight: 700, fontSize: 13.5,
   },
   ctaTip: {
@@ -574,7 +574,7 @@ const S = {
     gap: 8, flexWrap: 'wrap', padding: '10px 0 4px',
   },
   dot: { width: 3, height: 3, borderRadius: '50%', background: '#D1D5DB', display: 'inline-block' },
-  footLink: { color: '#7C3AED', textDecoration: 'none', fontWeight: 600 },
+  footLink: { color: '#BE185D', textDecoration: 'none', fontWeight: 600 },
 
   /* error / loading */
   fullCenter: {
@@ -585,11 +585,11 @@ const S = {
     maxWidth: 400, textAlign: 'center', background: '#fff',
     padding: '36px 28px', borderRadius: 18,
     boxShadow: '0 8px 32px rgba(0,0,0,.07)',
-    border: '1px solid #EDE9FE',
+    border: '1px solid #FCE7F3',
   },
   spinner: {
     width: 30, height: 30, borderRadius: '50%',
-    border: '3px solid #EDE9FE', borderTopColor: '#7C3AED',
+    border: '3px solid #FCE7F3', borderTopColor: '#BE185D',
     animation: 'pp-spin 1s linear infinite',
   },
 }

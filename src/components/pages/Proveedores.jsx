@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
-import { fmt } from '../../lib/storage'
+import { fmt, cfg } from '../../lib/storage'
 
 export default function Proveedores() {
   const { get, saveEntity, deleteEntity } = useData()
@@ -197,13 +197,9 @@ export default function Proveedores() {
   const sharePortalLink = (s) => {
     if (!s) return
     const prods = supplierProducts(s)
-    let ownerName = ''
-    let ownerWa = ''
-    try {
-      const cfg = JSON.parse(localStorage.getItem('config') || '{}')
-      ownerName = cfg.companyName || cfg.userName || ''
-      ownerWa = cfg.wa || cfg.phone || ''
-    } catch { /* ignorar */ }
+    const appCfg = cfg()
+    const ownerName = appCfg.businessName || ''
+    const ownerWa   = appCfg.contactWA || appCfg.businessWA || appCfg.ownerWA || ''
     const payload = {
       supplierName: s.name,
       contact: s.contact || '',
