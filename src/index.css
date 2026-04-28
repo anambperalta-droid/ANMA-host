@@ -656,7 +656,7 @@ td b{color:var(--txt);font-weight:600}
   /* Logística: many columns need more space */
   .tbl-card.logistica-tbl table{min-width:900px}
   /* Resumen preview table: override inline maxWidth */
-  .resumen-tbl{max-width:100%!important;width:100%!important}
+  .resumen-tbl{max-width:100%!important;width:100%!important;overflow-x:auto!important}
   /* Chart bento: stack vertically */
   .bento-chart-inner{flex-direction:column!important}
   .bento-chart-inner > *{flex:1 1 100%!important;min-width:0!important;width:100%!important}

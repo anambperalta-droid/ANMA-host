@@ -1184,8 +1184,9 @@ export default function Historial() {
       {tab === 'lista' && (
         <>
           <style>{`
-            .hist-tbl{overflow-x:auto}
+            .hist-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
             .hist-tbl table{border-collapse:collapse;min-width:860px}
+            @media(max-width:640px){.hist-tbl table{min-width:520px}}
             .hist-tbl th{padding:9px 10px 10px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid #F3F4F6;white-space:nowrap;background:var(--surface2)}
             .hist-tbl td{padding:11px 10px;border-bottom:1px solid #F3F4F6;vertical-align:middle;background:var(--surface)}
             .hist-tbl tr:last-child td{border-bottom:none}
