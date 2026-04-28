@@ -307,6 +307,7 @@ export default function Presupuesto() {
   }, [previewHtml])
 
   const buildPdfHtml = () => {
+    const fmtD = iso => { if (!iso) return ''; const p = String(iso).slice(0,10).split('-'); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : iso }
     const brandColor = c.brandColor || '#7C3AED'
     const bName = c.businessName || 'ANMA'
     const prodRows = items.filter(i => i.name).map(i =>
@@ -359,9 +360,9 @@ export default function Presupuesto() {
       <div class="brand">${c.logo ? '<img src="' + c.logo + '" alt="' + bName + '">' : bName}</div>
       <div class="hd-meta">
         <div class="num">${budgetNum}</div>
-        <div>Fecha de emisión: ${new Date().toISOString().slice(0, 10)}</div>
-        ${form.deliveryDate ? '<div>Entrega: ' + form.deliveryDate + '</div>' : ''}
-        <div class="vig">⏱ Válido hasta: ${vigenciaISO}</div>
+        <div>Fecha de emisión: ${fmtD(new Date().toISOString().slice(0, 10))}</div>
+        ${form.deliveryDate ? '<div>Entrega: ' + fmtD(form.deliveryDate) + '</div>' : ''}
+        <div class="vig">⏱ Válido hasta: ${fmtD(vigenciaISO)}</div>
       </div>
     </div>
     <div class="client-row">
@@ -503,9 +504,12 @@ export default function Presupuesto() {
               </div>
               <div className="fg"><label>Estado</label>
                 <select value={form.status} onChange={e => setF('status', e.target.value)}>
-                  <option value="draft">Borrador</option><option value="sent">Enviado</option>
-                  <option value="negotiating">Negociando</option><option value="confirmed">Confirmado</option>
-                  <option value="lost">Perdido</option>
+                  <option value="draft">Borrador</option>
+                  <option value="sent">Enviado al cliente</option>
+                  <option value="confirmed">Confirmado</option>
+                  <option value="inprogress">En preparación</option>
+                  <option value="delivered">Entregado</option>
+                  <option value="cancelled">Cancelado</option>
                 </select>
               </div>
               <div className="fg"><label>Estado de pago</label>

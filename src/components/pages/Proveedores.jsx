@@ -447,7 +447,7 @@ export default function Proveedores() {
 
       {/* MODAL EDITAR */}
       {modal && (
-        <div className="modal-bg open" style={{ zIndex: 250 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+        <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           <div className="modal" onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && form.name && form.name.trim()) save() }}>
             <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} proveedor</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
             <div className="grid2">
@@ -751,7 +751,7 @@ export default function Proveedores() {
 
       {/* MODAL REGISTRAR NUEVO PRECIO */}
       {priceModal && (
-        <div className="modal-bg open" style={{ zIndex: 200 }} onClick={e => { if (e.target === e.currentTarget) setPriceModal(null) }}>
+        <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) setPriceModal(null) }}>
           <div className="modal" style={{ maxWidth: 440 }}>
             <div className="mh">
               <h3>Registrar nuevo precio</h3>

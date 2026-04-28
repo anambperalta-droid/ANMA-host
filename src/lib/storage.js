@@ -97,16 +97,24 @@ export const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oc
 export const STATUS_MAP = {
   draft: 'Borrador',
   sent: 'Enviado',
-  negotiating: 'Negociando',
   confirmed: 'Confirmado',
+  inprogress: 'En preparación',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
+  // legacy keys kept for backward compat
+  negotiating: 'Negociando',
   lost: 'Perdido',
 }
 
 export const STATUS_CLS = {
   draft: 'b-draft',
   sent: 'b-sent',
-  negotiating: 'b-negotiating',
   confirmed: 'b-confirmed',
+  inprogress: 'b-negotiating',
+  delivered: 'b-confirmed',
+  cancelled: 'b-lost',
+  // legacy
+  negotiating: 'b-negotiating',
   lost: 'b-lost',
 }
 
