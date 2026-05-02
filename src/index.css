@@ -721,6 +721,54 @@ td b{color:var(--txt);font-weight:600}
   .mh h3{font-size:14px}
 }
 
+/* ═══ BOTTOM NAV (mobile only) ═══ */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(64px + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  box-shadow:0 -4px 20px rgba(0,0,0,.07);
+  z-index:500;
+  align-items:center;
+  justify-content:space-around;
+}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1;height:100%;
+  background:none;border:none;cursor:pointer;
+  color:var(--txt3);
+  font-family:inherit;padding:0;
+  transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+  min-height:44px;
+}
+.bn-item i{font-size:19px;line-height:1;transition:transform .15s}
+.bn-item span{font-size:10px;font-weight:700;letter-spacing:.01em;margin-top:2px}
+.bn-item.active{color:var(--brand)}
+.bn-item.active i{transform:scale(1.1)}
+.bn-fab{
+  display:flex;align-items:center;justify-content:center;
+  width:52px;height:52px;border-radius:16px;
+  background:var(--grad);
+  border:none;cursor:pointer;
+  box-shadow:0 6px 24px rgba(0,0,0,.2);
+  color:#fff;font-size:20px;
+  flex-shrink:0;
+  margin-bottom:6px;
+  transition:transform .15s,box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-fab:active{transform:scale(.93);box-shadow:0 3px 10px rgba(0,0,0,.15)}
+
+@media(max-width:768px){
+  .bottom-nav{display:flex}
+  .content{padding-bottom:calc(72px + env(safe-area-inset-bottom))!important}
+  .tfab-btn{bottom:calc(68px + env(safe-area-inset-bottom) + 12px)!important;right:16px!important}
+  .fab-panel{bottom:calc(68px + env(safe-area-inset-bottom) + 62px)!important}
+}
+
 /* ── Theme variants ── */
 :root.theme-logistica{--brand:#0369A1;--brand-dark:#075985;--brand-light:#0EA5E9;--brand-xlt:rgba(3,105,161,.08);--grad:linear-gradient(135deg,#0369A1,#0EA5E9);--panel-grad:linear-gradient(160deg,#0C1445,#1E3A5F,#0369A1)}
 :root.theme-ventas{--brand:#16A34A;--brand-dark:#15803D;--brand-light:#22C55E;--brand-xlt:rgba(22,163,74,.08);--grad:linear-gradient(135deg,#16A34A,#22C55E);--panel-grad:linear-gradient(160deg,#052E16,#14532D,#16A34A)}
