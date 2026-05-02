@@ -131,6 +131,13 @@ export default function Config() {
   const [validity, setValidity] = useState(c.validity || 15)
   const [conds, setConds] = useState(c.paymentConditions || '')
   const [legal, setLegal] = useState(c.legalNote || '')
+  const [ivaEnabled, setIvaEnabled] = useState(c.ivaEnabled === true)
+  const [ivaRate, setIvaRate] = useState(c.ivaRate ?? 21)
+  const [otrosImp, setOtrosImp] = useState(c.otrosImpuestosRate ?? 0)
+  const [cuit, setCuit] = useState(c.cuit || '')
+  const [ptoVenta, setPtoVenta] = useState(c.ptoVenta || '')
+  const [razonSocial, setRazonSocial] = useState(c.razonSocial || '')
+  const [condIva, setCondIva] = useState(c.condIva || 'Responsable Inscripto')
   const [mpEnabled, setMpEnabled] = useState(c.mpEnabled !== false)
   const [mpToken, setMpToken] = useState(c.mpToken || '')
   const [mpPubkey, setMpPubkey] = useState(c.mpPubkey || '')
@@ -208,6 +215,8 @@ export default function Config() {
       contactEmail: cEmail, contactWA: cWA, contactIG: cIG, contactWeb: cWeb, address: cAddr,
       currency, numberFormat, budgetPrefix: prefix, defaultMargin: Number(defMargin), defaultDeposit: Number(defDeposit), validity: Number(validity),
       paymentConditions: conds, legalNote: legal,
+      ivaEnabled, ivaRate: Number(ivaRate), otrosImpuestosRate: Number(otrosImp),
+      cuit, ptoVenta, razonSocial, condIva,
     })
     applyThemeColors(bcolor, acolor)
     toast('Configuración guardada', 'ok')
@@ -295,6 +304,42 @@ export default function Config() {
     const data = { budgets: get('budgets'), clients: get('clients'), products: get('products'), suppliers: get('suppliers'), tariffs: get('tariffs'), shipments: get('shipments'), waTemplates: get('waTemplates'), cfg: config() }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `ANMA_backup_${new Date().toISOString().slice(0, 10)}.json`; a.click()
+  }
+
+  const doImport = (e) => {
+    const file = e.target.files?.[0]; if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result)
+        if (!window.confirm('Esto va a SOBRESCRIBIR los datos actuales con el backup. ¿Confirmás?')) return
+        Object.entries(data).forEach(([k, v]) => {
+          if (k === 'cfg') updateConfig(v)
+          else updateConfig({ [k]: v })
+        })
+        const arrayKeys = ['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates']
+        arrayKeys.forEach(k => { if (data[k]) localStorage.setItem('anma3_u_' + (JSON.parse(localStorage.getItem('anma3_currentUserId') || '""')) + '_' + k, JSON.stringify(data[k])) })
+        toast('Backup importado', 'ok')
+        setTimeout(() => window.location.reload(), 800)
+      } catch (err) {
+        toast('Error al importar: ' + err.message, 'err')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  const [snapshots, setSnapshots] = useState([])
+  const loadSnapshots = async () => {
+    const { listSnapshots } = await import('../../lib/safeBackup')
+    setSnapshots(await listSnapshots())
+  }
+  const doRestoreSnap = async (ts) => {
+    if (!window.confirm('Esto va a restaurar el snapshot automático. Los datos actuales serán reemplazados. ¿Confirmás?')) return
+    const { restoreSnapshot } = await import('../../lib/safeBackup')
+    const ok = await restoreSnapshot(ts)
+    if (ok) { toast('Snapshot restaurado', 'ok'); setTimeout(() => window.location.reload(), 800) }
+    else toast('No se pudo restaurar', 'err')
   }
 
   const handleListAdd = (configKey, val) => updateConfig({ [configKey]: [...(c[configKey] || []), val] })
@@ -494,6 +539,35 @@ export default function Config() {
           </div>
           <div className="fg"><label>Condiciones de pago</label><textarea value={conds} onChange={e => setConds(e.target.value)} rows={3} /></div>
           <div className="fg"><label>Nota legal</label><textarea value={legal} onChange={e => setLegal(e.target.value)} rows={2} /></div>
+
+          {/* ── Régimen de Transparencia Fiscal (Ley 27.743) ── */}
+          <div style={{ marginTop: 16, padding: 14, background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 13, marginBottom: 8, cursor: 'pointer' }}>
+              <input type="checkbox" checked={ivaEnabled} onChange={e => setIvaEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
+              <i className="fa fa-file-invoice-dollar" style={{ color: 'var(--brand)' }} />
+              Mostrar IVA en presupuesto / factura
+            </label>
+            <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 10, marginLeft: 26 }}>
+              Régimen de Transparencia Fiscal al Consumidor — Ley 27.743 (Argentina)
+            </div>
+            {ivaEnabled && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
+                <div className="fg"><label>Razón social</label><input type="text" value={razonSocial} onChange={e => setRazonSocial(e.target.value)} placeholder="Tu Empresa SRL" /></div>
+                <div className="fg"><label>CUIT</label><input type="text" value={cuit} onChange={e => setCuit(e.target.value)} placeholder="20-12345678-9" /></div>
+                <div className="fg"><label>Cond. frente al IVA</label>
+                  <select value={condIva} onChange={e => setCondIva(e.target.value)}>
+                    <option>Responsable Inscripto</option>
+                    <option>Monotributista</option>
+                    <option>Exento</option>
+                    <option>Consumidor Final</option>
+                  </select>
+                </div>
+                <div className="fg"><label>Pto. Venta</label><input type="text" value={ptoVenta} onChange={e => setPtoVenta(e.target.value)} placeholder="00001" /></div>
+                <div className="fg"><label>Alícuota IVA (%)</label><input type="number" value={ivaRate} onChange={e => setIvaRate(e.target.value)} /></div>
+                <div className="fg"><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} /></div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -898,6 +972,22 @@ export default function Config() {
             ))}
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button className="btn btn-secondary btn-sm" onClick={doBackup}><i className="fa fa-cloud-arrow-down" /> Exportar backup JSON</button>
+              <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                <i className="fa fa-upload" /> Importar backup JSON
+                <input type="file" accept="application/json" onChange={doImport} style={{ display: 'none' }} />
+              </label>
+              <button className="btn btn-secondary btn-sm" onClick={loadSnapshots}><i className="fa fa-clock-rotate-left" /> Ver snapshots automáticos</button>
+              {snapshots.length > 0 && (
+                <div style={{ marginTop: 8, padding: 10, background: 'var(--surface2)', borderRadius: 8, fontSize: 11, maxHeight: 200, overflowY: 'auto' }}>
+                  <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--txt2)' }}>Snapshots disponibles ({snapshots.length}):</div>
+                  {snapshots.map(s => (
+                    <div key={s.ts} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                      <span>{new Date(s.ts).toLocaleString('es-AR')} <span style={{ color: 'var(--txt3)' }}>· {s.keys} keys</span></span>
+                      <button className="btn btn-primary" style={{ padding: '3px 8px', fontSize: 10 }} onClick={() => doRestoreSnap(s.ts)}>Restaurar</button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <button className="btn btn-danger btn-sm" onClick={clearAll}><i className="fa fa-trash" /> Limpiar todos los datos</button>
             </div>
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)' }}>

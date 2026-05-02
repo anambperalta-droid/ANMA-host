@@ -352,6 +352,10 @@ export default function Presupuesto() {
       .cobro-row{display:flex;justify-content:space-between;padding:2px 0;font-size:11px}
       .cobro-lbl{color:#666;font-weight:500}
       .cobro-val{font-weight:700;color:#1E1B4B;font-family:monospace}
+      .iva-box{margin-top:10px;padding:10px 14px;background:#FAFBFD;border:1px solid #E5E7F0;border-radius:6px;font-size:10.5px;color:#374151}
+      .iva-title{font-weight:700;margin-bottom:5px;font-size:10px;color:#1E1B4B;text-transform:uppercase;letter-spacing:.3px}
+      .iva-row{display:flex;justify-content:space-between;padding:1.5px 0}
+      .iva-row span:last-child{font-family:monospace;font-weight:600}
       .accept-fab{position:fixed;bottom:18px;right:18px;background:#25D366;color:#fff;padding:13px 20px;border-radius:999px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(37,211,102,.4);font-size:12.5px;display:inline-flex;align-items:center;gap:7px}
       .accept-fab:hover{background:#1da851}
       @media print{.accept-fab{display:none}body{padding:18px 22px}}
@@ -360,6 +364,10 @@ export default function Presupuesto() {
       <div class="brand">${c.logo ? '<img src="' + c.logo + '" alt="' + bName + '">' : bName}</div>
       <div class="hd-meta">
         <div class="num">${budgetNum}</div>
+        ${c.razonSocial ? '<div style="font-weight:600">' + c.razonSocial + '</div>' : ''}
+        ${c.cuit ? '<div>CUIT: ' + c.cuit + '</div>' : ''}
+        ${c.ptoVenta ? '<div>Pto. Venta: ' + c.ptoVenta + '</div>' : ''}
+        ${c.condIva && c.ivaEnabled ? '<div>' + c.condIva + '</div>' : ''}
         <div>Fecha de emisión: ${fmtD(new Date().toISOString().slice(0, 10))}</div>
         ${form.deliveryDate ? '<div>Entrega: ' + fmtD(form.deliveryDate) + '</div>' : ''}
         <div class="vig">⏱ Válido hasta: ${fmtD(vigenciaISO)}</div>
@@ -383,6 +391,18 @@ export default function Presupuesto() {
       <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(calc.depositAmt)}</span></div>
       <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(calc.total - calc.depositAmt)}</span></div>
     </div></div>
+    ${c.ivaEnabled ? (() => {
+      const total = calc.total
+      const ivaR = (Number(c.ivaRate) || 21) / 100
+      const otrosR = (Number(c.otrosImpuestosRate) || 0) / 100
+      const ivaContenido = total - (total / (1 + ivaR))
+      const otrosImpAmt = total * otrosR
+      return `<div class="iva-box">
+        <div class="iva-title">Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)</div>
+        <div class="iva-row"><span>IVA Contenido (${(ivaR*100).toFixed(0)}%)</span><span>${fmt(ivaContenido)}</span></div>
+        ${otrosR > 0 ? `<div class="iva-row"><span>Otros Impuestos Nacionales Indirectos</span><span>${fmt(otrosImpAmt)}</span></div>` : ''}
+      </div>`
+    })() : ''}
     ${form.noteCli ? `<div class="note">${form.noteCli}</div>` : ''}
     ${(() => {
       const bank = getBankConfig ? getBankConfig() : null

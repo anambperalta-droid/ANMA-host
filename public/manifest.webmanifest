@@ -1,0 +1,20 @@
+{
+  "name": "ANMA Regalos — Gestión de Negocios",
+  "short_name": "ANMA Regalos",
+  "description": "Pedidos, clientes y catálogo para tu negocio de regalos",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1C0A15",
+  "theme_color": "#DB2777",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Nuevo pedido", "url": "/presupuesto", "icons": [{ "src": "/favicon.svg", "sizes": "any" }] },
+    { "name": "Dashboard",    "url": "/",            "icons": [{ "src": "/favicon.svg", "sizes": "any" }] }
+  ]
+}
