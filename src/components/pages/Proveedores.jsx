@@ -32,6 +32,23 @@ export default function Proveedores() {
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
+  // Auto-fix: rubro/email invertidos (one-time migration)
+  useEffect(() => {
+    const list = get('suppliers') || []
+    const looksLikeEmail = (v) => typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+    let fixedCount = 0
+    list.forEach(s => {
+      // rubro tiene email y email no es email → swap
+      if (looksLikeEmail(s.rubro) && !looksLikeEmail(s.email)) {
+        const tmp = s.rubro
+        saveEntity('suppliers', { ...s, rubro: s.email || '', email: tmp })
+        fixedCount++
+      }
+    })
+    if (fixedCount > 0) toast(`Se corrigieron ${fixedCount} proveedor${fixedCount !== 1 ? 'es' : ''} con rubro/email invertidos`, 'ok')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const suppliers = get('suppliers')
   const products = get('products')
   const budgets = get('budgets')
@@ -468,9 +485,20 @@ export default function Proveedores() {
               <div className="fg"><label>Nombre *</label><input type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Proveedor S.A." /></div>
               <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} /></div>
               <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} /></div>
-              <div className="fg"><label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} /></div>
+              <div className="fg">
+                <label>Rubro <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(ej: Electrónica, Textil, Alimentos)</span></label>
+                <input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Categoría / industria" />
+                {form.rubro && form.rubro.includes('@') && (
+                  <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 3, fontWeight: 600 }}>
+                    ⚠ Esto parece un email — usá el campo "Email" debajo
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
+            <div className="fg">
+              <label>Email <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(contacto@empresa.com)</span></label>
+              <input type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="contacto@proveedor.com" />
+            </div>
             <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Datos fiscales y operativos</div>
             <div className="grid2">
               <div className="fg"><label>CUIT</label><input type="text" value={form.cuit} onChange={e => setF('cuit', e.target.value)} placeholder="20-12345678-9" /></div>
