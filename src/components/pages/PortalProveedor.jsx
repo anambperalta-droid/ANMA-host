@@ -2,16 +2,35 @@ import { useEffect, useState, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 
 /**
- * Portal público de proveedor — v2
- * Diseño sobrio-profesional con acento de color.
- * Sin auth. Datos via ?d=BASE64
+ * Portal público de proveedor — v3
+ * Diseño sobrio profesional. Color toma el brandColor del cliente.
+ * Sin auth. Datos via ?d=BASE64 (payload corto v2 con keys abreviadas).
  */
+
+/* hex → variantes derivadas del brand */
+function hexToRgb(hex) {
+  const h = (hex || '#7C3AED').replace('#', '')
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16)
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
+}
+function mix(hex, target, ratio) {
+  const a = hexToRgb(hex), b = hexToRgb(target)
+  const r = Math.round(a.r + (b.r - a.r) * ratio)
+  const g = Math.round(a.g + (b.g - a.g) * ratio)
+  const bl = Math.round(a.b + (b.b - a.b) * ratio)
+  return `rgb(${r},${g},${bl})`
+}
+function alpha(hex, a) {
+  const { r, g, b } = hexToRgb(hex)
+  return `rgba(${r},${g},${b},${a})`
+}
+
 export default function PortalProveedor() {
   const loc = useLocation()
-  const [data, setData]       = useState(null)
-  const [error, setError]     = useState('')
+  const [data, setData] = useState(null)
+  const [error, setError] = useState('')
   const [confirmed, setConfirmed] = useState(false)
-  const [copied, setCopied]   = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     try {
@@ -19,12 +38,32 @@ export default function PortalProveedor() {
       const d = p.get('d')
       if (!d) { setError('Link inválido o vencido.'); return }
       const json = decodeURIComponent(escape(atob(d.replace(/-/g, '+').replace(/_/g, '/'))))
-      const parsed = JSON.parse(json)
-      if (parsed.exp && Date.now() > parsed.exp) {
+      const raw = JSON.parse(json)
+
+      // Normaliza payload v2 (keys cortas) y v1 (keys largas — backward compat)
+      const norm = {
+        supplierName: raw.s || raw.supplierName || '',
+        contact:      raw.c || raw.contact || '',
+        paymentTerm:  raw.pt || raw.paymentTerm || '',
+        leadTime:     raw.lt || raw.leadTime || '',
+        ownerName:    raw.o || raw.ownerName || '',
+        ownerWa:      raw.w || raw.ownerWa || '',
+        brandColor:   raw.bc || raw.brandColor || '#1E293B',
+        introCopy:    raw.cp || raw.portalIntroCopy || '',
+        exp:          raw.e || raw.exp || 0,
+        products:     (raw.p || raw.products || []).map(pr => ({
+          name:     pr.n  || pr.name || '',
+          cost:     pr.c ?? pr.cost ?? 0,
+          stock:    pr.st ?? pr.stock ?? 0,
+          minStock: pr.m  ?? pr.minStock ?? 0,
+          reorder:  pr.r === 1 || pr.reorder === true,
+        })),
+      }
+      if (norm.exp && Date.now() > norm.exp) {
         setError('Este enlace venció. Pedile a tu cliente que genere uno nuevo.')
         return
       }
-      setData(parsed)
+      setData(norm)
     } catch {
       setError('No se pudo abrir el enlace. Verificá que esté completo.')
     }
@@ -32,23 +71,23 @@ export default function PortalProveedor() {
 
   const fmt = n => '$ ' + Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
-  const products     = data?.products || []
-  const reorder      = useMemo(() => products.filter(p => p.reorder), [products])
-  const totalValue   = useMemo(() => products.reduce((s, p) => s + (Number(p.cost) || 0), 0), [products])
+  const products = data?.products || []
+  const reorder = useMemo(() => products.filter(p => p.reorder), [products])
+  const totalUnits = useMemo(() => products.reduce((s, p) => s + Math.max(1, p.stock || 0), 0), [products])
+  const totalValue = useMemo(() => products.reduce((s, p) => s + (Number(p.cost) || 0) * Math.max(1, p.stock || 0), 0), [products])
   const reorderTotal = useMemo(() =>
     reorder.reduce((s, p) => s + (Number(p.cost) || 0) * Math.max(1, (p.minStock || 0) - (p.stock || 0)), 0),
     [reorder])
 
-  const expDate  = data?.exp ? new Date(data.exp).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' }) : null
+  const expDate = data?.exp ? new Date(data.exp).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' }) : null
   const daysLeft = data?.exp ? Math.max(0, Math.ceil((data.exp - Date.now()) / 86400000)) : null
 
   const buildMsg = type => {
     const owner = data?.ownerName || 'tu cliente'
-    const biz   = data?.ownerBusiness ? ` (${data.ownerBusiness})` : ''
-    const lista  = products.slice(0, 4).map(p => p.name).join(', ') + (products.length > 4 ? ` y ${products.length - 4} más` : '')
-    if (type === 'confirm') return encodeURIComponent(`Hola ${owner}${biz}! Revisé el portal y confirmo disponibilidad para: ${lista}. Podemos avanzar.`)
-    if (type === 'ask')     return encodeURIComponent(`Hola ${owner}${biz}! Revisé el portal del pedido y tengo una consulta antes de confirmar.`)
-    if (type === 'urgent')  return encodeURIComponent(`Hola ${owner}${biz}! Vi el aviso de re-orden para: ${reorder.map(p => p.name).join(', ')}. Confirmo disponibilidad.`)
+    const lista = products.slice(0, 4).map(p => p.name).join(', ') + (products.length > 4 ? ` y ${products.length - 4} más` : '')
+    if (type === 'confirm') return encodeURIComponent(`Hola ${owner}! Revisé el portal y confirmo disponibilidad para: ${lista}. Podemos avanzar.`)
+    if (type === 'ask')     return encodeURIComponent(`Hola ${owner}! Revisé el portal del pedido y tengo una consulta antes de confirmar.`)
+    if (type === 'urgent')  return encodeURIComponent(`Hola ${owner}! Vi el aviso de re-orden para: ${reorder.map(p => p.name).join(', ')}. Confirmo disponibilidad.`)
     return ''
   }
   const wa = type => data?.ownerWa
@@ -56,10 +95,16 @@ export default function PortalProveedor() {
     : null
 
   const copyAllProducts = () => {
-    const lines = products.map(p => `• ${p.name} — ${fmt(p.cost)}${p.reorder ? ' (RE-ORDEN)' : ''}`).join('\n')
-    const txt = `Pedido · ${data?.ownerName || 'cliente'}:\n\n${lines}\n\nTotal: ${fmt(totalValue)}`
+    const lines = products.map(p => `• ${p.name} ${p.stock ? `(${p.stock} u.)` : ''} — ${fmt(p.cost)}${p.reorder ? ' [RE-ORDEN]' : ''}`).join('\n')
+    const txt = `Pedido · ${data?.ownerName || 'cliente'}:\n\n${lines}\n\nTotal estimado: ${fmt(totalValue)}`
     navigator.clipboard?.writeText(txt).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2200) })
   }
+
+  // Brand-driven palette (sobrio, derivado del color del cliente)
+  const brand = data?.brandColor || '#1E293B'
+  const brandDark = mix(brand, '#000000', 0.25)
+  const brandSoft = alpha(brand, 0.08)
+  const brandLine = alpha(brand, 0.18)
 
   /* ── Error ── */
   if (error) return (
@@ -84,36 +129,42 @@ export default function PortalProveedor() {
   return (
     <div style={S.wrap}>
       <style>{`
-        @keyframes pp-in  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
-        @keyframes pp-spin{ to{transform:rotate(360deg)} }
-        .pc{ animation:pp-in .32s ease both }
-        .pc:nth-child(2){animation-delay:.06s}.pc:nth-child(3){animation-delay:.12s}
-        .pc:nth-child(4){animation-delay:.18s}.pc:nth-child(5){animation-delay:.22s}
-        .pc:nth-child(6){animation-delay:.26s}
-        .pp-row:hover{ background:#FDF2F8 !important }
-        .wa-confirm{ transition:transform .15s,box-shadow .2s }
-        .wa-confirm:hover{ transform:translateY(-2px);box-shadow:0 12px 28px rgba(22,163,74,.38) }
-        .wa-ask{ transition:background .15s,border-color .15s }
-        .wa-ask:hover{ background:#FDF2F8 !important;border-color:#F9A8D4 !important }
-        .pp-copy:hover{ background:#FCE7F3 !important;color:#BE185D !important }
+        @keyframes pp-in   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+        @keyframes pp-spin { to{transform:rotate(360deg)} }
+        .pc{ animation:pp-in .28s ease both }
+        .pc:nth-child(2){animation-delay:.05s}.pc:nth-child(3){animation-delay:.10s}
+        .pc:nth-child(4){animation-delay:.15s}.pc:nth-child(5){animation-delay:.20s}
+        .pp-row:hover{ background:${brandSoft} !important }
+        .wa-confirm{ transition:transform .15s, box-shadow .2s }
+        .wa-confirm:hover{ transform:translateY(-1px); box-shadow:0 10px 24px rgba(22,163,74,.32) }
+        .wa-ask:hover{ background:${brandSoft} !important; border-color:${brandLine} !important }
+        .pp-copy:hover{ background:${brandSoft} !important; color:${brandDark} !important; border-color:${brandLine} !important }
       `}</style>
 
       <div style={S.container}>
 
-        {/* ── HERO ── */}
-        <div className="pc" style={S.hero}>
-          {/* decorative circle */}
-          <div style={S.heroCircle} />
+        {/* ── HERO sobrio ── */}
+        <div className="pc" style={{
+          ...S.hero,
+          background: `linear-gradient(135deg, #111827 0%, #1F2937 50%, ${brandDark} 100%)`,
+          boxShadow: `0 12px 36px ${alpha(brand, 0.18)}`,
+        }}>
+          <div style={{
+            ...S.heroAccentBar,
+            background: `linear-gradient(90deg, ${brand}, ${alpha(brand, 0.4)})`,
+          }} />
           <div style={{ position: 'relative' }}>
             <div style={S.heroBadge}>
-              {data.ownerBusiness || 'Portal de pedido'}
+              {data.ownerName ? data.ownerName : 'Portal de pedido'}
             </div>
             <h1 style={S.heroTitle}>
               Hola, {data.contact || data.supplierName}
             </h1>
             <p style={S.heroSub}>
-              <b style={{ color: '#E9D5FF' }}>{data.ownerName}</b> te compartió el detalle de los
-              productos que necesita. Revisá precios, condiciones y confirmá tu disponibilidad.
+              {data.introCopy
+                ? data.introCopy
+                : <>{data.ownerName ? <b style={{ color: '#fff' }}>{data.ownerName}</b> : 'Te'} te compartió el detalle de productos para esta operación. Revisá precios, cantidades, condiciones y confirmá disponibilidad.</>
+              }
             </p>
             <div style={S.heroChips}>
               {expDate && (
@@ -133,24 +184,24 @@ export default function PortalProveedor() {
               {products.length > 0 && (
                 <div style={S.chip}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-                  {products.length} producto{products.length !== 1 ? 's' : ''} · Total {fmt(totalValue)}
+                  {products.length} producto{products.length !== 1 ? 's' : ''} · {totalUnits} u.
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* ── URGENTE ── */}
+        {/* ── URGENTE re-orden ── */}
         {reorder.length > 0 && (
           <div className="pc" style={S.urgentCard}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
               <div style={S.urgentBadge}>RE-ORDEN</div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: '#7C2D12', lineHeight: 1.3 }}>
-                  {reorder.length} producto{reorder.length !== 1 ? 's' : ''} requieren reposición urgente
+                  {reorder.length} producto{reorder.length !== 1 ? 's' : ''} requieren reposición
                 </div>
                 <div style={{ fontSize: 12, color: '#9A3412', marginTop: 3, lineHeight: 1.5 }}>
-                  Stock por debajo del mínimo. Confirmá disponibilidad y plazo a la brevedad.
+                  Stock por debajo del mínimo. Confirmá disponibilidad y plazo.
                 </div>
               </div>
             </div>
@@ -160,7 +211,7 @@ export default function PortalProveedor() {
                   <div style={{ flex: 1 }}>
                     <span style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
                     <span style={{ fontSize: 11, color: '#9A3412', marginLeft: 8 }}>
-                      Stock {p.stock || 0} — mínimo {p.minStock} — faltan {Math.max(1, (p.minStock || 0) - (p.stock || 0))} u.
+                      Stock {p.stock || 0} u · mínimo {p.minStock} u · faltan {Math.max(1, (p.minStock || 0) - (p.stock || 0))} u
                     </span>
                   </div>
                   <span style={{ fontWeight: 700, fontSize: 13, color: '#B91C1C', whiteSpace: 'nowrap' }}>{fmt(p.cost)}/u</span>
@@ -183,13 +234,13 @@ export default function PortalProveedor() {
 
         {/* ── PRODUCTOS ── */}
         {products.length > 0 && (
-          <div className="pc" style={S.card}>
+          <div className="pc" style={{ ...S.card, borderColor: brandLine }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
               <div>
                 <div style={S.cardTitle}>Detalle del pedido</div>
-                <div style={S.cardSub}>Productos y precios acordados para esta operación</div>
+                <div style={S.cardSub}>Productos, cantidades y precios acordados</div>
               </div>
-              <button onClick={copyAllProducts} className="pp-copy" style={S.copyBtn}>
+              <button onClick={copyAllProducts} className="pp-copy" style={{ ...S.copyBtn, background: brandSoft, borderColor: brandLine, color: brandDark }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   {copied
                     ? <polyline points="20 6 9 17 4 12" />
@@ -199,40 +250,50 @@ export default function PortalProveedor() {
                 {copied ? 'Copiado' : 'Copiar lista'}
               </button>
             </div>
-            <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #FCE7F3' }}>
+            <div style={{ overflowX: 'auto', borderRadius: 10, border: `1px solid ${brandLine}` }}>
               <table style={S.table}>
                 <thead>
-                  <tr style={{ background: '#FDF2F8' }}>
-                    <th style={S.th}>Producto</th>
-                    <th style={{ ...S.th, textAlign: 'center', width: 90 }}>Estado</th>
-                    <th style={{ ...S.th, textAlign: 'right', width: 130 }}>Precio acordado</th>
+                  <tr style={{ background: brandSoft }}>
+                    <th style={{ ...S.th, color: brandDark }}>Producto</th>
+                    <th style={{ ...S.th, color: brandDark, textAlign: 'center', width: 80 }}>Cantidad</th>
+                    <th style={{ ...S.th, color: brandDark, textAlign: 'center', width: 90 }}>Estado</th>
+                    <th style={{ ...S.th, color: brandDark, textAlign: 'right', width: 110 }}>Precio u.</th>
+                    <th style={{ ...S.th, color: brandDark, textAlign: 'right', width: 110 }}>Subtotal</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((p, i) => (
-                    <tr key={i} className="pp-row" style={{ ...S.tr, background: i % 2 === 0 ? '#fff' : '#FAFAFA' }}>
-                      <td style={S.td}>
-                        <span style={{ fontWeight: 600, color: '#111827', fontSize: 13.5 }}>{p.name}</span>
-                        {p.cat && <span style={{ fontSize: 10.5, color: '#9CA3AF', marginLeft: 8 }}>{p.cat}</span>}
-                      </td>
-                      <td style={{ ...S.td, textAlign: 'center' }}>
-                        {p.reorder
-                          ? <span style={S.badgeWarn}>Reponer</span>
-                          : <span style={S.badgeOk}>Activo</span>
-                        }
-                      </td>
-                      <td style={{ ...S.td, textAlign: 'right', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums', fontSize: 14 }}>
-                        {fmt(p.cost)}
-                      </td>
-                    </tr>
-                  ))}
+                  {products.map((p, i) => {
+                    const qty = Math.max(1, p.stock || 0)
+                    return (
+                      <tr key={i} className="pp-row" style={{ ...S.tr, background: i % 2 === 0 ? '#fff' : '#FAFAFA' }}>
+                        <td style={S.td}>
+                          <span style={{ fontWeight: 600, color: '#111827', fontSize: 13.5 }}>{p.name}</span>
+                        </td>
+                        <td style={{ ...S.td, textAlign: 'center', fontWeight: 700, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
+                          {qty} <span style={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 500 }}>u</span>
+                        </td>
+                        <td style={{ ...S.td, textAlign: 'center' }}>
+                          {p.reorder
+                            ? <span style={S.badgeWarn}>Reponer</span>
+                            : <span style={S.badgeOk}>Activo</span>
+                          }
+                        </td>
+                        <td style={{ ...S.td, textAlign: 'right', color: '#374151', fontVariantNumeric: 'tabular-nums', fontSize: 13 }}>
+                          {fmt(p.cost)}
+                        </td>
+                        <td style={{ ...S.td, textAlign: 'right', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums', fontSize: 13.5 }}>
+                          {fmt(p.cost * qty)}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
                 <tfoot>
-                  <tr style={{ background: '#FDF2F8', borderTop: '2px solid #FCE7F3' }}>
-                    <td colSpan={2} style={{ padding: '10px 14px', fontSize: 11.5, color: '#BE185D', fontWeight: 600 }}>
-                      {products.length} producto{products.length !== 1 ? 's' : ''} · Precios en pesos argentinos
+                  <tr style={{ background: brandSoft, borderTop: `2px solid ${brandLine}` }}>
+                    <td colSpan={3} style={{ padding: '10px 14px', fontSize: 11.5, color: brandDark, fontWeight: 600 }}>
+                      {products.length} producto{products.length !== 1 ? 's' : ''} · {totalUnits} u. · ARS
                     </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
+                    <td colSpan={2} style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
                       {fmt(totalValue)}
                     </td>
                   </tr>
@@ -243,27 +304,27 @@ export default function PortalProveedor() {
         )}
 
         {/* ── CONDICIONES ── */}
-        <div className="pc" style={S.card}>
+        <div className="pc" style={{ ...S.card, borderColor: brandLine }}>
           <div style={S.cardTitle}>Condiciones del pedido</div>
           <div style={S.cardSub}>Plazos y forma de pago para esta operación</div>
           <div style={S.condsGrid}>
             <div style={S.condItem}>
-              <div style={S.condIconWrap}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BE185D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <div style={{ ...S.condIconWrap, background: brandSoft, borderColor: brandLine }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={brandDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={S.condLabel}>Condición de pago</div>
                 <div style={S.condValue}>
                   {data.paymentTerm
                     ? <><b style={{ color: '#111827' }}>{data.paymentTerm}</b> <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>días</span></>
-                    : <span style={{ color: '#9CA3AF' }}>{data.paymentConditions || 'A coordinar'}</span>
+                    : <span style={{ color: '#9CA3AF' }}>A coordinar</span>
                   }
                 </div>
               </div>
             </div>
             <div style={S.condItem}>
-              <div style={S.condIconWrap}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BE185D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div style={{ ...S.condIconWrap, background: brandSoft, borderColor: brandLine }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={brandDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={S.condLabel}>Plazo de entrega (lead time)</div>
@@ -275,51 +336,11 @@ export default function PortalProveedor() {
                 </div>
               </div>
             </div>
-            {data.paymentConditions && data.paymentTerm && (
-              <div style={{ ...S.condItem, gridColumn: '1/-1', borderTop: '1px solid #FCE7F3', paddingTop: 14 }}>
-                <div style={S.condIconWrap}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BE185D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={S.condLabel}>Notas de pago</div>
-                  <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.55, marginTop: 3 }}>{data.paymentConditions}</div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* ── HISTORIAL DE PRECIOS ── */}
-        {(data.priceHistory || []).length > 0 && (
-          <div className="pc" style={S.card}>
-            <div style={S.cardTitle}>Historial de precios</div>
-            <div style={S.cardSub}>Variaciones registradas para referencia de ambas partes</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 14 }}>
-              {data.priceHistory.slice(0, 6).map((h, i) => {
-                const pct = h.prevCost > 0 ? ((h.newCost - h.prevCost) / h.prevCost) * 100 : 0
-                const up  = pct > 0
-                return (
-                  <div key={i} style={S.histRow}>
-                    <span style={{ fontSize: 11, color: '#9CA3AF', minWidth: 72, fontVariantNumeric: 'tabular-nums' }}>{h.date}</span>
-                    <span style={{ flex: 1, fontSize: 12.5, fontWeight: 500, color: '#374151', minWidth: 80 }}>{h.productName}</span>
-                    <span style={{ fontSize: 12, color: '#6B7280', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                      {fmt(h.prevCost)} → <b style={{ color: '#111827' }}>{fmt(h.newCost)}</b>
-                    </span>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6, whiteSpace: 'nowrap',
-                      color: up ? '#DC2626' : '#16A34A',
-                      background: up ? '#FEF2F2' : '#F0FDF4',
-                    }}>
-                      {pct > 0 ? '+' : ''}{pct.toFixed(1)}%
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
         {/* ── CTA CONFIRMACIÓN ── */}
-        <div className="pc" style={S.ctaCard}>
+        <div className="pc" style={{ ...S.ctaCard, borderColor: brandLine, boxShadow: `0 4px 18px ${alpha(brand, 0.08)}` }}>
           {confirmed ? (
             <div style={{ textAlign: 'center', padding: '8px 0' }}>
               <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
@@ -350,8 +371,9 @@ export default function PortalProveedor() {
                   </button>
                 )}
                 {wa('ask') && (
-                  <a href={wa('ask')} target="_blank" rel="noopener noreferrer" className="wa-ask" style={S.btnAsk}>
-                    <WaIcon size={15} color="#BE185D" />
+                  <a href={wa('ask')} target="_blank" rel="noopener noreferrer" className="wa-ask"
+                    style={{ ...S.btnAsk, background: brandSoft, borderColor: brandLine, color: brandDark }}>
+                    <WaIcon size={15} color={brandDark} />
                     Tengo una consulta
                   </a>
                 )}
@@ -359,7 +381,6 @@ export default function PortalProveedor() {
               <div style={S.ctaTip}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: .6 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 Tu respuesta va directo a {data.ownerName || 'tu cliente'} por WhatsApp.
-                No almacenamos tu número ni lo compartimos con terceros.
               </div>
             </>
           )}
@@ -368,13 +389,9 @@ export default function PortalProveedor() {
         {/* ── FOOTER ── */}
         <div style={S.foot}>
           <span>Generado con</span>
-          <b style={{ color: '#BE185D' }}>ANMA Regalos</b>
+          <b style={{ color: brandDark }}>{data.ownerName || 'ANMA'}</b>
           <span style={S.dot} />
           <span>Solo lectura · Sin registro</span>
-          <span style={S.dot} />
-          <a href="https://anma-host.vercel.app" target="_blank" rel="noopener noreferrer" style={S.footLink}>
-            ¿Querés algo así para tu negocio?
-          </a>
         </div>
 
       </div>
@@ -391,86 +408,81 @@ function WaIcon({ size = 16, color = '#fff' }) {
   )
 }
 
-/* ── STYLES ── */
+/* ── STYLES (sobrios, neutrales — el color viene del cliente vía brand) ── */
 const S = {
   wrap: {
     minHeight: '100vh',
-    background: '#FDF2F8',
+    background: '#F8FAFC',
     fontFamily: "'Inter',system-ui,-apple-system,sans-serif",
     padding: '20px 14px 48px',
   },
   container: { maxWidth: 680, margin: '0 auto' },
 
-  /* hero */
+  /* hero — gris carbón con acento del brand */
   hero: {
     position: 'relative',
-    background: 'linear-gradient(135deg, #831843 0%, #9D174D 55%, #BE185D 100%)',
-    borderRadius: 20,
-    padding: '28px 28px 32px',
+    borderRadius: 18,
+    padding: '28px 28px 30px',
     marginBottom: 12,
     overflow: 'hidden',
-    boxShadow: '0 16px 48px rgba(157,23,77,.22)',
   },
-  heroCircle: {
-    position: 'absolute', top: -50, right: -50,
-    width: 200, height: 200, borderRadius: '50%',
-    background: 'rgba(255,255,255,.08)',
+  heroAccentBar: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 3,
     pointerEvents: 'none',
   },
   heroBadge: {
     display: 'inline-flex', alignItems: 'center',
-    background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(8px)',
+    background: 'rgba(255,255,255,.1)', backdropFilter: 'blur(8px)',
     color: 'rgba(255,255,255,.85)', fontSize: 10.5, fontWeight: 700,
     letterSpacing: '1px', textTransform: 'uppercase',
-    padding: '4px 12px', borderRadius: 20, marginBottom: 12,
-    border: '1px solid rgba(255,255,255,.18)',
+    padding: '4px 12px', borderRadius: 6, marginBottom: 14,
+    border: '1px solid rgba(255,255,255,.14)',
   },
   heroTitle: {
     margin: '0 0 10px', fontSize: 26, fontWeight: 800,
     color: '#fff', letterSpacing: '-.5px', lineHeight: 1.2,
   },
   heroSub: {
-    margin: '0 0 18px', fontSize: 14, color: 'rgba(255,255,255,.82)',
+    margin: '0 0 18px', fontSize: 14, color: 'rgba(255,255,255,.78)',
     lineHeight: 1.6,
   },
   heroChips: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   chip: {
     display: 'inline-flex', alignItems: 'center', gap: 6,
-    background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.25)',
-    color: 'rgba(255,255,255,.90)', fontSize: 11.5, fontWeight: 600,
-    padding: '5px 11px', borderRadius: 20, backdropFilter: 'blur(6px)',
+    background: 'rgba(255,255,255,.10)', border: '1px solid rgba(255,255,255,.18)',
+    color: 'rgba(255,255,255,.88)', fontSize: 11.5, fontWeight: 600,
+    padding: '5px 11px', borderRadius: 6, backdropFilter: 'blur(6px)',
   },
 
   /* urgente */
   urgentCard: {
     background: '#FFF7ED',
     border: '1.5px solid #FED7AA',
-    borderRadius: 16, padding: '18px 20px',
+    borderRadius: 14, padding: '18px 20px',
     marginBottom: 12,
-    boxShadow: '0 4px 16px rgba(220,38,38,.08)',
   },
   urgentBadge: {
     background: '#DC2626', color: '#fff',
     fontSize: 10, fontWeight: 800, letterSpacing: '.8px',
-    padding: '4px 10px', borderRadius: 8,
+    padding: '4px 10px', borderRadius: 6,
     flexShrink: 0, height: 'fit-content',
   },
   urgentRow: {
     display: 'flex', alignItems: 'center', gap: 8,
     padding: '9px 12px', background: '#FEF2F2',
-    borderRadius: 10, border: '1px solid #FECACA',
+    borderRadius: 8, border: '1px solid #FECACA',
     fontSize: 13, color: '#1C1917',
   },
   urgentTotal: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: '10px 14px', background: '#FFF', border: '1px solid #FED7AA',
-    borderRadius: 10, marginBottom: 14,
+    borderRadius: 8, marginBottom: 14,
   },
   btnUrgent: {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     width: '100%', boxSizing: 'border-box',
     background: 'linear-gradient(135deg,#DC2626,#B91C1C)',
-    color: '#fff', padding: '13px 20px', borderRadius: 12,
+    color: '#fff', padding: '13px 20px', borderRadius: 10,
     textDecoration: 'none', fontWeight: 700, fontSize: 14,
     boxShadow: '0 6px 18px rgba(220,38,38,.30)',
   },
@@ -478,10 +490,10 @@ const S = {
   /* card genérica */
   card: {
     background: '#fff',
-    border: '1px solid #FCE7F3',
-    borderRadius: 16, padding: '20px 22px',
+    border: '1px solid #E5E7EB',
+    borderRadius: 14, padding: '20px 22px',
     marginBottom: 12,
-    boxShadow: '0 2px 12px rgba(0,0,0,.04)',
+    boxShadow: '0 1px 3px rgba(0,0,0,.03)',
   },
   cardTitle: { fontSize: 15, fontWeight: 800, color: '#111827', letterSpacing: '-.2px', marginBottom: 3 },
   cardSub:   { fontSize: 12, color: '#9CA3AF', marginBottom: 0 },
@@ -489,59 +501,51 @@ const S = {
   /* copy btn */
   copyBtn: {
     display: 'inline-flex', alignItems: 'center', gap: 5,
-    background: '#FDF2F8', border: '1px solid #FBCFE8',
-    color: '#BE185D', fontSize: 11.5, fontWeight: 700,
+    border: '1px solid #E5E7EB',
+    background: '#F9FAFB', color: '#374151',
+    fontSize: 11.5, fontWeight: 700,
     padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
     fontFamily: 'inherit', flexShrink: 0, transition: 'all .15s',
   },
 
   /* table */
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 360 },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 480 },
   th: {
     textAlign: 'left', padding: '10px 14px',
-    fontSize: 10, color: '#BE185D', fontWeight: 800,
+    fontSize: 10, fontWeight: 800,
     textTransform: 'uppercase', letterSpacing: '.7px',
   },
-  tr:   { borderBottom: '1px solid #FDF2F8', transition: 'background .12s' },
-  td:   { padding: '12px 14px', verticalAlign: 'middle' },
+  tr: { borderBottom: '1px solid #F3F4F6', transition: 'background .12s' },
+  td: { padding: '12px 14px', verticalAlign: 'middle' },
   badgeOk: {
     display: 'inline-block', background: '#F0FDF4', color: '#16A34A',
     fontSize: 10.5, fontWeight: 700, letterSpacing: '.3px',
-    padding: '3px 9px', borderRadius: 20,
+    padding: '3px 9px', borderRadius: 6,
   },
   badgeWarn: {
     display: 'inline-block', background: '#FEF2F2', color: '#DC2626',
     fontSize: 10.5, fontWeight: 700, letterSpacing: '.3px',
-    padding: '3px 9px', borderRadius: 20,
+    padding: '3px 9px', borderRadius: 6,
   },
 
   /* condiciones */
   condsGrid: { display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 },
   condItem: { display: 'flex', alignItems: 'flex-start', gap: 14 },
   condIconWrap: {
-    width: 34, height: 34, borderRadius: 10,
-    background: '#FDF2F8', border: '1px solid #FCE7F3',
+    width: 34, height: 34, borderRadius: 8,
+    border: '1px solid #E5E7EB',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,
   },
   condLabel: { fontSize: 10.5, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 },
   condValue: { fontSize: 16, fontWeight: 700, color: '#374151', lineHeight: 1.3 },
 
-  /* historial */
-  histRow: {
-    display: 'flex', alignItems: 'center', gap: 10,
-    padding: '8px 12px', background: '#FAFAFA',
-    border: '1px solid #F3F4F6', borderRadius: 9,
-    flexWrap: 'wrap',
-  },
-
   /* CTA */
   ctaCard: {
     background: '#fff',
-    border: '1.5px solid #FCE7F3',
-    borderRadius: 16, padding: '24px 22px',
+    border: '1.5px solid #E5E7EB',
+    borderRadius: 14, padding: '24px 22px',
     marginBottom: 12,
-    boxShadow: '0 4px 20px rgba(124,58,237,.08)',
   },
   ctaTitle: { fontSize: 18, fontWeight: 800, color: '#111827', letterSpacing: '-.3px', marginBottom: 8 },
   ctaSub:   { fontSize: 13.5, color: '#6B7280', lineHeight: 1.6, marginBottom: 0 },
@@ -549,21 +553,21 @@ const S = {
   btnConfirm: {
     flex: '1 1 200px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9,
     background: 'linear-gradient(135deg,#16A34A,#15803D)',
-    color: '#fff', padding: '14px 22px', borderRadius: 13,
+    color: '#fff', padding: '14px 22px', borderRadius: 10,
     textDecoration: 'none', fontWeight: 700, fontSize: 14.5,
     boxShadow: '0 6px 20px rgba(22,163,74,.28)',
     border: 'none', cursor: 'pointer', fontFamily: 'inherit',
   },
   btnAsk: {
     flex: '1 1 160px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    background: '#FDF2F8', border: '1.5px solid #FBCFE8',
-    color: '#BE185D', padding: '13px 18px', borderRadius: 13,
+    border: '1.5px solid #E5E7EB',
+    padding: '13px 18px', borderRadius: 10,
     textDecoration: 'none', fontWeight: 700, fontSize: 13.5,
   },
   ctaTip: {
     display: 'flex', alignItems: 'flex-start', gap: 7,
     fontSize: 11.5, color: '#9CA3AF', lineHeight: 1.5,
-    background: '#FAFAFA', padding: '9px 13px', borderRadius: 9,
+    background: '#F9FAFB', padding: '9px 13px', borderRadius: 8,
     border: '1px solid #F3F4F6',
   },
 
@@ -574,22 +578,21 @@ const S = {
     gap: 8, flexWrap: 'wrap', padding: '10px 0 4px',
   },
   dot: { width: 3, height: 3, borderRadius: '50%', background: '#D1D5DB', display: 'inline-block' },
-  footLink: { color: '#BE185D', textDecoration: 'none', fontWeight: 600 },
 
   /* error / loading */
   fullCenter: {
     minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: 20, fontFamily: "'Inter',sans-serif", background: '#F4F3FA',
+    padding: 20, fontFamily: "'Inter',sans-serif", background: '#F8FAFC',
   },
   msgCard: {
     maxWidth: 400, textAlign: 'center', background: '#fff',
-    padding: '36px 28px', borderRadius: 18,
+    padding: '36px 28px', borderRadius: 16,
     boxShadow: '0 8px 32px rgba(0,0,0,.07)',
-    border: '1px solid #FCE7F3',
+    border: '1px solid #E5E7EB',
   },
   spinner: {
     width: 30, height: 30, borderRadius: '50%',
-    border: '3px solid #FCE7F3', borderTopColor: '#BE185D',
+    border: '3px solid #E5E7EB', borderTopColor: '#1F2937',
     animation: 'pp-spin 1s linear infinite',
   },
 }

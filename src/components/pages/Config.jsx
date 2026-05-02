@@ -138,6 +138,8 @@ export default function Config() {
   const [ptoVenta, setPtoVenta] = useState(c.ptoVenta || '')
   const [razonSocial, setRazonSocial] = useState(c.razonSocial || '')
   const [condIva, setCondIva] = useState(c.condIva || 'Responsable Inscripto')
+  const [portalIntroCopy, setPortalIntroCopy] = useState(c.portalIntroCopy || '')
+  const [portalShareMsg, setPortalShareMsg] = useState(c.portalShareMsg || '')
   const [mpEnabled, setMpEnabled] = useState(c.mpEnabled !== false)
   const [mpToken, setMpToken] = useState(c.mpToken || '')
   const [mpPubkey, setMpPubkey] = useState(c.mpPubkey || '')
@@ -217,6 +219,7 @@ export default function Config() {
       paymentConditions: conds, legalNote: legal,
       ivaEnabled, ivaRate: Number(ivaRate), otrosImpuestosRate: Number(otrosImp),
       cuit, ptoVenta, razonSocial, condIva,
+      portalIntroCopy, portalShareMsg,
     })
     applyThemeColors(bcolor, acolor)
     toast('Configuración guardada', 'ok')
@@ -567,6 +570,30 @@ export default function Config() {
                 <div className="fg"><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} /></div>
               </div>
             )}
+          </div>
+
+          {/* ── Portal Proveedor: textos editables ── */}
+          <div style={{ marginTop: 16, padding: 14, background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+              <i className="fa fa-share-nodes" style={{ color: 'var(--brand)' }} />
+              Portal Proveedor — textos personalizables
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 10 }}>
+              Acá editás lo que dice el portal y el mensaje de WhatsApp. Si los dejás vacíos, se usan los textos por defecto.
+            </div>
+            <div className="fg">
+              <label>Mensaje principal del portal (debajo del saludo)</label>
+              <textarea value={portalIntroCopy} onChange={e => setPortalIntroCopy(e.target.value)} rows={2}
+                placeholder="Ej: Te compartimos el detalle de productos que necesitamos. Revisá precios, condiciones y confirmá disponibilidad." />
+            </div>
+            <div className="fg">
+              <label>Mensaje de WhatsApp al compartir el link</label>
+              <textarea value={portalShareMsg} onChange={e => setPortalShareMsg(e.target.value)} rows={3}
+                placeholder="Hola {contacto}! Te paso el portal con el resumen del pedido y los productos que necesito. Tiene los precios acordados, las condiciones y un botón para confirmar." />
+              <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 4 }}>
+                Variables disponibles: <code>{'{contacto}'}</code>, <code>{'{proveedor}'}</code>, <code>{'{empresa}'}</code>, <code>{'{link}'}</code>, <code>{'{cant}'}</code>
+              </div>
+            </div>
           </div>
         </div>
       )}

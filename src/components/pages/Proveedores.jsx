@@ -200,29 +200,47 @@ export default function Proveedores() {
     const appCfg = cfg()
     const ownerName = appCfg.businessName || ''
     const ownerWa   = appCfg.contactWA || appCfg.businessWA || appCfg.ownerWA || ''
+    const brandColor = appCfg.brandColor || '#7C3AED'
+
+    // Payload con keys cortas (50%+ menos URL)
     const payload = {
-      supplierName: s.name,
-      contact: s.contact || '',
-      paymentTerm: s.paymentTerm || '',
-      leadTime: s.leadTime || '',
-      ownerName,
-      ownerWa,
-      exp: Date.now() + 30 * 24 * 60 * 60 * 1000,
-      products: prods.map(p => ({
-        name: p.name,
-        cost: p.cost,
-        stock: p.stock || 0,
-        minStock: p.minStock || 0,
-        reorder: p.minStock > 0 && (p.stock || 0) <= p.minStock
-      })),
-      priceHistory: (s.priceHistory || []).slice(-12).reverse()
+      v: 2, // versión
+      s: s.name,
+      e: Date.now() + 30 * 86400000,
+      p: prods.map(pp => {
+        const o = { n: pp.name, c: Number(pp.cost) || 0 }
+        if (pp.stock)    o.st = pp.stock
+        if (pp.minStock) o.m  = pp.minStock
+        if (pp.minStock > 0 && (pp.stock || 0) <= pp.minStock) o.r = 1
+        return o
+      }),
     }
+    if (s.contact)     payload.c  = s.contact
+    if (s.paymentTerm) payload.pt = s.paymentTerm
+    if (s.leadTime)    payload.lt = s.leadTime
+    if (ownerName)     payload.o  = ownerName
+    if (ownerWa)       payload.w  = ownerWa
+    if (brandColor)    payload.bc = brandColor
+    if (appCfg.portalIntroCopy) payload.cp = appCfg.portalIntroCopy
+
     const json = JSON.stringify(payload)
     const b64 = btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
     const url = `${window.location.origin}/portal-proveedor?d=${b64}`
+
+    // Mensaje WA personalizable
+    const tpl = appCfg.portalShareMsg ||
+      'Hola {contacto}! Te paso el portal con el resumen del pedido y los productos que necesito. Tiene los precios acordados, las condiciones y un botón para confirmar disponibilidad.'
+    const text = tpl
+      .replace(/\{contacto\}/g, s.contact || s.name)
+      .replace(/\{proveedor\}/g, s.name)
+      .replace(/\{empresa\}/g,  ownerName)
+      .replace(/\{cant\}/g, prods.length)
+      .replace(/\{link\}/g, url)
+      + (tpl.includes('{link}') ? '' : `\n\n${url}`)
+      + '\n\nVálido por 30 días.'
+
     if (s.wa) {
       const waNum = s.wa.replace(/\D/g, '')
-      const text = `Hola ${s.contact || s.name}! Te paso este portal con el resumen de lo que te compro, condiciones acordadas y los productos que necesito reponer:\n\n${url}\n\nVálido por 30 días.`
       window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(text)}`, '_blank')
     } else {
       navigator.clipboard.writeText(url).then(() => toast('Link copiado al portapapeles', 'ok'))
