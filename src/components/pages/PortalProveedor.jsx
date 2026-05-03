@@ -255,8 +255,7 @@ export default function PortalProveedor() {
                 <thead>
                   <tr style={{ background: brandSoft }}>
                     <th style={{ ...S.th, color: brandDark }}>Producto</th>
-                    <th style={{ ...S.th, color: brandDark, textAlign: 'center', width: 80 }}>Cantidad</th>
-                    <th style={{ ...S.th, color: brandDark, textAlign: 'center', width: 90 }}>Estado</th>
+                    <th style={{ ...S.th, color: brandDark, textAlign: 'center', width: 90 }}>Cantidad (u.)</th>
                     <th style={{ ...S.th, color: brandDark, textAlign: 'right', width: 110 }}>Precio u.</th>
                     <th style={{ ...S.th, color: brandDark, textAlign: 'right', width: 110 }}>Subtotal</th>
                   </tr>
@@ -270,13 +269,7 @@ export default function PortalProveedor() {
                           <span style={{ fontWeight: 600, color: '#111827', fontSize: 13.5 }}>{p.name}</span>
                         </td>
                         <td style={{ ...S.td, textAlign: 'center', fontWeight: 700, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                          {qty} <span style={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 500 }}>u</span>
-                        </td>
-                        <td style={{ ...S.td, textAlign: 'center' }}>
-                          {p.reorder
-                            ? <span style={S.badgeWarn}>Reponer</span>
-                            : <span style={S.badgeOk}>Activo</span>
-                          }
+                          {qty}
                         </td>
                         <td style={{ ...S.td, textAlign: 'right', color: '#374151', fontVariantNumeric: 'tabular-nums', fontSize: 13 }}>
                           {fmt(p.cost)}
@@ -290,7 +283,7 @@ export default function PortalProveedor() {
                 </tbody>
                 <tfoot>
                   <tr style={{ background: brandSoft, borderTop: `2px solid ${brandLine}` }}>
-                    <td colSpan={3} style={{ padding: '10px 14px', fontSize: 11.5, color: brandDark, fontWeight: 600 }}>
+                    <td colSpan={2} style={{ padding: '10px 14px', fontSize: 11.5, color: brandDark, fontWeight: 600 }}>
                       {products.length} producto{products.length !== 1 ? 's' : ''} · {totalUnits} u. · ARS
                     </td>
                     <td colSpan={2} style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
