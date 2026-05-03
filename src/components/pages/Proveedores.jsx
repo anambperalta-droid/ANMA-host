@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
-import { fmt, cfg } from '../../lib/storage'
+import { fmt, cfg, db, dbW } from '../../lib/storage'
 
 export default function Proveedores() {
   const { get, saveEntity, deleteEntity } = useData()
@@ -32,20 +32,81 @@ export default function Proveedores() {
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
-  // Auto-fix: rubro/email invertidos (one-time migration)
+  // Auto-fix: dedupe + corrige rubro/email invertidos (one-time migration, idempotente)
   useEffect(() => {
     const list = get('suppliers') || []
+    if (list.length === 0) return
     const looksLikeEmail = (v) => typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
-    let fixedCount = 0
+    const sigOf = (s) => `${(s.name||'').trim().toLowerCase()}|${(s.contact||'').trim().toLowerCase()}|${(s.wa||'').replace(/\D/g,'')}`
+
+    // 1) Dedupe: agrupa por firma (name+contact+wa), conserva la "mejor" versión
+    const groups = {}
     list.forEach(s => {
-      // rubro tiene email y email no es email → swap
-      if (looksLikeEmail(s.rubro) && !looksLikeEmail(s.email)) {
-        const tmp = s.rubro
-        saveEntity('suppliers', { ...s, rubro: s.email || '', email: tmp })
-        fixedCount++
+      const k = sigOf(s)
+      if (!groups[k]) groups[k] = []
+      groups[k].push(s)
+    })
+
+    let dedupedList = []
+    let dupesRemoved = 0
+    let swapsApplied = 0
+
+    Object.values(groups).forEach(grp => {
+      if (grp.length === 1) {
+        // único — solo aplica swap si corresponde
+        const s = grp[0]
+        if (looksLikeEmail(s.rubro) && !looksLikeEmail(s.email)) {
+          dedupedList.push({ ...s, rubro: s.email || '', email: s.rubro })
+          swapsApplied++
+        } else {
+          dedupedList.push(s)
+        }
+      } else {
+        // duplicados — elegir el "mejor" (rubro no es email) o el más completo
+        const ranked = grp.slice().sort((a, b) => {
+          const aBad = looksLikeEmail(a.rubro) ? 1 : 0
+          const bBad = looksLikeEmail(b.rubro) ? 1 : 0
+          if (aBad !== bBad) return aBad - bBad
+          // más datos = mejor
+          const aFill = Object.values(a).filter(Boolean).length
+          const bFill = Object.values(b).filter(Boolean).length
+          return bFill - aFill
+        })
+        const best = ranked[0]
+        // si el "mejor" todavía tiene rubro como email, intentar consolidar con un duplicado que tenga rubro válido
+        let merged = { ...best }
+        if (looksLikeEmail(merged.rubro)) {
+          const withRubro = grp.find(x => x !== best && !looksLikeEmail(x.rubro) && x.rubro)
+          if (withRubro) merged.rubro = withRubro.rubro
+          else if (looksLikeEmail(merged.rubro) && !looksLikeEmail(merged.email)) {
+            const t = merged.rubro; merged.rubro = merged.email || ''; merged.email = t
+            swapsApplied++
+          }
+        }
+        // consolidar email si falta
+        if (!merged.email) {
+          const withEmail = grp.find(x => looksLikeEmail(x.email))
+          if (withEmail) merged.email = withEmail.email
+        }
+        dedupedList.push(merged)
+        dupesRemoved += grp.length - 1
       }
     })
-    if (fixedCount > 0) toast(`Se corrigieron ${fixedCount} proveedor${fixedCount !== 1 ? 'es' : ''} con rubro/email invertidos`, 'ok')
+
+    if (dupesRemoved > 0 || swapsApplied > 0) {
+      // Bulk replace en storage (preservar ids existentes para no romper relaciones)
+      const finalList = dedupedList.map((s, i) => ({
+        ...s,
+        id: s.id || (Date.now() + i),
+      }))
+      dbW('suppliers', finalList)
+      // forzar refresh del DataContext
+      setTimeout(() => window.location.reload(), 600)
+      const msgs = []
+      if (dupesRemoved > 0) msgs.push(`${dupesRemoved} duplicado${dupesRemoved !== 1 ? 's' : ''} eliminado${dupesRemoved !== 1 ? 's' : ''}`)
+      if (swapsApplied > 0) msgs.push(`${swapsApplied} con rubro/email corregido${swapsApplied !== 1 ? 's' : ''}`)
+      toast(`Proveedores reparados: ${msgs.join(' · ')}`, 'ok')
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
