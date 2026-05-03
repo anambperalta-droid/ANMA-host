@@ -109,7 +109,7 @@ function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', ite
 
 export default function Config() {
   const { get, config, updateConfig } = useData()
-  const { logout, changePassword, isGlobalAdmin } = useAuth()
+  const { logout, changePassword, isGlobalAdmin, role } = useAuth()
   const toast = useToast()
   const [tab, setTab] = useState('identidad')
   const c = config()
@@ -366,9 +366,9 @@ export default function Config() {
 
   const userName = (c.email || '').split('@')[0] || 'Administrador'
 
-  // Solo "Equipo" (invitar usuarios) es exclusivo del admin global.
-  // Pagos, Integraciones y Cuenta los puede ver y editar cualquier usuario autenticado.
-  const ADMIN_ONLY_TABS = new Set(['equipo'])
+  // "Equipo" visible para owners del workspace y global admin.
+  // Operators/viewers no pueden invitar colaboradores.
+  const canManageTeam = isGlobalAdmin || role === 'owner'
 
   const FEATURE_FLAGS = [
     { key: 'costoInterno',      icon: 'fa-eye-slash',    color: '#7C3AED', label: 'Costo interno visible',           desc: 'Muestra la columna de costo en la tabla de productos' },
@@ -390,13 +390,11 @@ export default function Config() {
     { id: 'equipo', icon: 'fa-user-plus', label: 'Equipo' },
     { id: 'cuenta', icon: 'fa-shield-halved', label: 'Cuenta' },
   ]
-  const tabs = isGlobalAdmin ? allTabs : allTabs.filter(t => !ADMIN_ONLY_TABS.has(t.id))
+  const tabs = allTabs.filter(t => t.id !== 'equipo' || canManageTeam)
 
-  // Si un no-admin está parado en una tab sensible (por URL vieja o state
-  // residual), lo reubicamos en 'identidad' en el próximo render.
   useEffect(() => {
-    if (!isGlobalAdmin && ADMIN_ONLY_TABS.has(tab)) setTab('identidad')
-  }, [isGlobalAdmin, tab])
+    if (!canManageTeam && tab === 'equipo') setTab('identidad')
+  }, [canManageTeam, tab])
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
@@ -860,25 +858,45 @@ export default function Config() {
       )}
 
       {tab === 'equipo' && (
-        <div style={{ display: 'grid', gap: 16, maxWidth: 720 }}>
+        <div style={{ display: 'grid', gap: 16, maxWidth: 560 }}>
+          {/* Cómo funciona */}
+          <div style={{ padding: '14px 18px', borderRadius: 14, background: 'var(--surface2)', border: '1.5px solid var(--border)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+            <div style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>💡</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 4 }}>¿Cómo funciona?</div>
+              <div style={{ fontSize: 12, color: 'var(--txt3)', lineHeight: 1.7 }}>
+                Ingresá el email de tu colaborador y elegí qué puede hacer. Le llega un correo con un link para activar su cuenta. Listo.
+              </div>
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[
+                  { icon: 'fa-user-shield', color: '#7C3AED', label: 'Administrador', desc: 'Ve todo: costos, configuración y equipo' },
+                  { icon: 'fa-user-gear',   color: '#0891B2', label: 'Operador',       desc: 'Pedidos, clientes y logística. Sin configuración ni costos' },
+                  { icon: 'fa-eye',         color: '#6B7280', label: 'Solo lectura',   desc: 'Consulta y reportes, sin poder editar nada' },
+                ].map(r => (
+                  <div key={r.label} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: r.color + '18', color: r.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
+                      <i className={`fa ${r.icon}`} />
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'var(--txt2)' }}>
+                      <b style={{ color: 'var(--txt)' }}>{r.label}</b> — {r.desc}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Formulario */}
           <div className="card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18 }}>
-                <i className="fa fa-user-plus" />
-              </div>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)' }}>Invitar nuevo usuario</div>
-                <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>Enviá un email con link mágico para que se sume al sitio elegido</div>
-              </div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--txt)', marginBottom: 16 }}>
+              <i className="fa fa-user-plus" style={{ color: 'var(--brand)', marginRight: 8 }} />
+              Invitar colaborador
             </div>
 
             {invMsg && (
               <div style={{
-                padding: '10px 14px',
-                borderRadius: 10,
-                marginBottom: 14,
-                fontSize: 12,
-                fontWeight: 600,
+                padding: '10px 14px', borderRadius: 10, marginBottom: 14,
+                fontSize: 12, fontWeight: 600,
                 background: invMsg.type === 'ok' ? 'rgba(16,185,129,.1)' : 'var(--red-lt)',
                 border: `1.5px solid ${invMsg.type === 'ok' ? '#10B981' : '#FCA5A5'}`,
                 color: invMsg.type === 'ok' ? '#047857' : 'var(--red)',
@@ -889,98 +907,68 @@ export default function Config() {
               </div>
             )}
 
-            <div style={{
-              padding: 14, borderRadius: 12, marginBottom: 14,
-              border: `2px solid ${CURRENT_SITE.color}`,
-              background: `${CURRENT_SITE.color}12`,
-              display: 'flex', alignItems: 'center', gap: 12,
-            }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                background: CURRENT_SITE.color, color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 16, flexShrink: 0,
-              }}>
-                <i className={`fa ${CURRENT_SITE.icon}`} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{CURRENT_SITE.label}</div>
-                <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>El usuario recibirá acceso a este sitio</div>
-              </div>
-              <i className="fa fa-circle-check" style={{ color: CURRENT_SITE.color, fontSize: 16 }} />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-              <div className="fg">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div className="fg" style={{ marginBottom: 0 }}>
                 <label className="f-lbl">Email <span style={{ color: 'var(--red)' }}>*</span></label>
-                <input
-                  type="email"
-                  className="f-inp"
-                  placeholder="persona@empresa.com"
-                  value={invEmail}
-                  onChange={(e) => setInvEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendInviteHandler()}
-                  disabled={invLoading}
-                  style={{ padding: '9px 12px', fontSize: 13 }}
-                />
+                <input type="email" className="f-inp" placeholder="persona@empresa.com"
+                  value={invEmail} onChange={e => setInvEmail(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && sendInviteHandler()}
+                  disabled={invLoading} style={{ padding: '9px 12px', fontSize: 13 }} />
               </div>
-              <div className="fg">
-                <label className="f-lbl">Nombre completo</label>
-                <input
-                  type="text"
-                  className="f-inp"
-                  placeholder="Juan Pérez"
-                  value={invName}
-                  onChange={(e) => setInvName(e.target.value)}
-                  disabled={invLoading}
-                  style={{ padding: '9px 12px', fontSize: 13 }}
-                />
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label className="f-lbl">Nombre</label>
+                <input type="text" className="f-inp" placeholder="Juan Pérez"
+                  value={invName} onChange={e => setInvName(e.target.value)}
+                  disabled={invLoading} style={{ padding: '9px 12px', fontSize: 13 }} />
               </div>
             </div>
 
             <div className="fg" style={{ marginBottom: 16 }}>
-              <label className="f-lbl">Rol en el sitio</label>
-              <select
-                value={invRole}
-                onChange={(e) => setInvRole(e.target.value)}
-                disabled={invLoading}
-                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 13, background: 'var(--surface)', color: 'var(--txt)' }}
-              >
-                <option value="admin">Administrador — acceso total (ve costos, configuración, equipo)</option>
-                <option value="operator">Operador — operación diaria (pedidos, clientes, logística; sin configuración ni costos)</option>
-                <option value="viewer">Solo lectura — reportes y consulta</option>
+              <label className="f-lbl">¿Qué puede hacer?</label>
+              <select value={invRole} onChange={e => setInvRole(e.target.value)} disabled={invLoading}
+                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 13, background: 'var(--surface)', color: 'var(--txt)' }}>
+                <option value="admin">Administrador — acceso total</option>
+                <option value="operator">Operador — operación diaria sin configuración</option>
+                <option value="viewer">Solo lectura — consulta sin editar</option>
               </select>
             </div>
 
-            <button
-              className="btn btn-primary"
-              onClick={sendInviteHandler}
+            <button className="btn btn-primary" onClick={sendInviteHandler}
               disabled={invLoading || !invEmail}
-              style={{ width: '100%', padding: 11, fontSize: 13, fontWeight: 700 }}
-            >
-              {invLoading ? (
-                <><i className="fa fa-spinner fa-spin" /> Enviando invitación...</>
-              ) : (
-                <><i className="fa fa-paper-plane" /> Enviar invitación</>
-              )}
+              style={{ width: '100%', padding: 11, fontSize: 13, fontWeight: 700 }}>
+              {invLoading
+                ? <><i className="fa fa-spinner fa-spin" /> Enviando...</>
+                : <><i className="fa fa-paper-plane" /> Enviar invitación por email</>}
             </button>
-          </div>
-
-          <div className="card" style={{ background: 'var(--surface2)' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <i className="fa fa-shield-halved" style={{ color: 'var(--brand)' }} />
-              Seguridad
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--txt3)', lineHeight: 1.6 }}>
-              Las invitaciones se envían a través de una Edge Function de Supabase que usa el <b>service_role key</b> solo del lado del servidor.
-              Las URLs de destino están whitelist en la función y en el Dashboard de Supabase — si intentás invitar a un dominio no autorizado, el pedido es rechazado.
-            </div>
           </div>
         </div>
       )}
 
       {tab === 'cuenta' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, maxWidth: 700 }}>
+        <div style={{ display: 'grid', gap: 20, maxWidth: 700 }}>
+          {/* ── Colaboradores (solo para owners) ── */}
+          {canManageTeam && (
+            <div style={{
+              padding: '14px 18px', borderRadius: 14,
+              background: 'linear-gradient(135deg, var(--brand)10, var(--surface2))',
+              border: '1.5px solid var(--brand)30',
+              display: 'flex', alignItems: 'center', gap: 14,
+            }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, flexShrink: 0 }}>
+                <i className="fa fa-users" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--txt)' }}>Colaboradores</div>
+                <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
+                  Invitá a tu equipo para que acceda a la app con su propio usuario y contraseña.
+                </div>
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={() => setTab('equipo')} style={{ flexShrink: 0, fontWeight: 700 }}>
+                <i className="fa fa-user-plus" /> Agregar usuario
+              </button>
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
               <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff' }}>{(userName[0] || 'A').toUpperCase()}</div>
@@ -1021,6 +1009,7 @@ export default function Config() {
               <button className="btn btn-ghost btn-sm" onClick={logout}><i className="fa fa-right-from-bracket" /> Cerrar sesión</button>
             </div>
           </div>
+          </div>{/* cierra grid 2 columnas */}
         </div>
       )}
     </div>
