@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
-import { fmt, cfg, db, dbW } from '../../lib/storage'
+import { fmt, cfg } from '../../lib/storage'
 
 export default function Proveedores() {
-  const { get, saveEntity, deleteEntity } = useData()
+  const { get, set, saveEntity, deleteEntity } = useData()
   const toast = useToast()
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
@@ -33,9 +33,17 @@ export default function Proveedores() {
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
   // Auto-fix: dedupe + corrige rubro/email invertidos (one-time migration, idempotente)
+  // SEGURO: usa `set` de DataContext (tiene userId correcto), sin reload ni dbW directo
   useEffect(() => {
+    // Idempotencia: si ya corrió para este usuario, salir
+    try {
+      const ranKey = 'anma_prov_mig_v3'
+      if (localStorage.getItem(ranKey) === 'done') return
+    } catch { /* ignorar */ }
+
     const list = get('suppliers') || []
     if (list.length === 0) return
+
     const looksLikeEmail = (v) => typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
     const sigOf = (s) => `${(s.name||'').trim().toLowerCase()}|${(s.contact||'').trim().toLowerCase()}|${(s.wa||'').replace(/\D/g,'')}`
 
@@ -43,7 +51,7 @@ export default function Proveedores() {
     const groups = {}
     list.forEach(s => {
       const k = sigOf(s)
-      if (!groups[k]) groups[k] = []
+      if (!groups[k]) groups[k] = []   // sin ||= para compatibilidad con browsers viejos
       groups[k].push(s)
     })
 
@@ -53,7 +61,6 @@ export default function Proveedores() {
 
     Object.values(groups).forEach(grp => {
       if (grp.length === 1) {
-        // único — solo aplica swap si corresponde
         const s = grp[0]
         if (looksLikeEmail(s.rubro) && !looksLikeEmail(s.email)) {
           dedupedList.push({ ...s, rubro: s.email || '', email: s.rubro })
@@ -62,28 +69,24 @@ export default function Proveedores() {
           dedupedList.push(s)
         }
       } else {
-        // duplicados — elegir el "mejor" (rubro no es email) o el más completo
         const ranked = grp.slice().sort((a, b) => {
           const aBad = looksLikeEmail(a.rubro) ? 1 : 0
           const bBad = looksLikeEmail(b.rubro) ? 1 : 0
           if (aBad !== bBad) return aBad - bBad
-          // más datos = mejor
           const aFill = Object.values(a).filter(Boolean).length
           const bFill = Object.values(b).filter(Boolean).length
           return bFill - aFill
         })
         const best = ranked[0]
-        // si el "mejor" todavía tiene rubro como email, intentar consolidar con un duplicado que tenga rubro válido
         let merged = { ...best }
         if (looksLikeEmail(merged.rubro)) {
           const withRubro = grp.find(x => x !== best && !looksLikeEmail(x.rubro) && x.rubro)
           if (withRubro) merged.rubro = withRubro.rubro
-          else if (looksLikeEmail(merged.rubro) && !looksLikeEmail(merged.email)) {
-            const t = merged.rubro; merged.rubro = merged.email || ''; merged.email = t
+          else if (!looksLikeEmail(merged.email)) {
+            const tmp = merged.rubro; merged.rubro = merged.email || ''; merged.email = tmp
             swapsApplied++
           }
         }
-        // consolidar email si falta
         if (!merged.email) {
           const withEmail = grp.find(x => looksLikeEmail(x.email))
           if (withEmail) merged.email = withEmail.email
@@ -93,15 +96,16 @@ export default function Proveedores() {
       }
     })
 
+    // Marcar como ejecutado ANTES de escribir (evita bucles si algo falla a mitad)
+    try { localStorage.setItem('anma_prov_mig_v3', 'done') } catch { /* ignorar */ }
+
     if (dupesRemoved > 0 || swapsApplied > 0) {
-      // Bulk replace en storage (preservar ids existentes para no romper relaciones)
       const finalList = dedupedList.map((s, i) => ({
         ...s,
         id: s.id || (Date.now() + i),
       }))
-      dbW('suppliers', finalList)
-      // forzar refresh del DataContext
-      setTimeout(() => window.location.reload(), 600)
+      // set() viene de DataContext → usa el userId correcto → llama refresh() internamente
+      set('suppliers', finalList)
       const msgs = []
       if (dupesRemoved > 0) msgs.push(`${dupesRemoved} duplicado${dupesRemoved !== 1 ? 's' : ''} eliminado${dupesRemoved !== 1 ? 's' : ''}`)
       if (swapsApplied > 0) msgs.push(`${swapsApplied} con rubro/email corregido${swapsApplied !== 1 ? 's' : ''}`)
