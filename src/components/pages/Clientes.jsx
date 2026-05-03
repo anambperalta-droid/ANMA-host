@@ -149,12 +149,36 @@ export default function Clientes() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'clientes.csv'; a.click()
   }
 
+  /* ── Parsear vCard .vcf ── */
+  const parseVcf = (text) => {
+    const cards = text.split(/END:VCARD/i).filter(s => s.includes('BEGIN:VCARD'))
+    return cards.map(card => {
+      const get = (field) => {
+        const m = card.match(new RegExp(`^${field}[^:]*:(.+)$`, 'mi'))
+        return m ? m[1].replace(/\\n/g, ' ').replace(/\r/g, '').trim() : ''
+      }
+      const fnRaw = get('FN') || get('N').split(';').filter(Boolean).join(' ')
+      const telRaw = get('TEL') || ''
+      const emailRaw = get('EMAIL') || ''
+      const orgRaw = get('ORG') || ''
+      const tel = telRaw.replace(/[\s\-\(\)]/g, '').replace(/^\+54/, '').replace(/^54/, '')
+      return { company: orgRaw || fnRaw, contact: fnRaw, wa: tel, email: emailRaw, rubro: '', notes: '' }
+    }).filter(c => c.company || c.contact)
+  }
+
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
     reader.onload = (ev) => {
-      const lines = ev.target.result.split('\n').filter(l => l.trim())
+      const content = ev.target.result
+      // Detectar si es .vcf
+      if (file.name.endsWith('.vcf') || content.includes('BEGIN:VCARD')) {
+        setCsvPreview(parseVcf(content))
+        return
+      }
+      // CSV
+      const lines = content.split('\n').filter(l => l.trim())
       const header = lines[0].toLowerCase()
       const startIdx = header.includes('empresa') || header.includes('company') ? 1 : 0
       const parsed = []
@@ -166,7 +190,7 @@ export default function Clientes() {
       }
       setCsvPreview(parsed)
     }
-    reader.readAsText(file)
+    reader.readAsText(file, 'UTF-8')
   }
 
   const doImport = () => {
@@ -555,13 +579,20 @@ export default function Clientes() {
       {importModal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
           <div className="modal" style={{ maxWidth: 680 }}>
-            <div className="mh"><h3>Importar clientes desde CSV</h3><button className="mclose" onClick={() => { setImportModal(false); setCsvPreview([]) }}><i className="fa fa-xmark" /></button></div>
-            <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 11, color: 'var(--txt2)' }}>
-              <b>Formato:</b> Empresa, Contacto, WhatsApp, Email, Rubro, Notas
+            <div className="mh"><h3>Importar contactos</h3><button className="mclose" onClick={() => { setImportModal(false); setCsvPreview([]) }}><i className="fa fa-xmark" /></button></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+              <div style={{ padding: '10px 13px', borderRadius: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.2)', fontSize: 11, color: 'var(--txt2)' }}>
+                <div style={{ fontWeight: 700, color: 'var(--txt)', marginBottom: 4 }}><i className="fa-brands fa-whatsapp" style={{ color: '#25D366', marginRight: 5 }} />Desde WhatsApp / Teléfono</div>
+                <div>Exportá tus contactos como <b>.vcf</b> desde el teléfono y subí el archivo acá. Se importan nombre, celular y email automáticamente.</div>
+              </div>
+              <div style={{ padding: '10px 13px', borderRadius: 10, background: 'var(--surface2)', border: '1px solid var(--border)', fontSize: 11, color: 'var(--txt2)' }}>
+                <div style={{ fontWeight: 700, color: 'var(--txt)', marginBottom: 4 }}><i className="fa fa-file-csv" style={{ color: '#0F9D58', marginRight: 5 }} />Desde planilla CSV</div>
+                <div><b>Columnas:</b> Empresa, Contacto, WhatsApp, Email, Rubro, Notas</div>
+              </div>
             </div>
             <div className="fg">
-              <label>Archivo CSV</label>
-              <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleFileSelect}
+              <label>Seleccioná archivo (.vcf de contactos o .csv)</label>
+              <input ref={fileRef} type="file" accept=".csv,.txt,.vcf" onChange={handleFileSelect}
                 style={{ padding: '8px 12px', border: '1.5px dashed var(--border)', borderRadius: 8, width: '100%', cursor: 'pointer', fontSize: 12 }} />
             </div>
             {csvPreview.length > 0 && (

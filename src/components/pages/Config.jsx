@@ -170,6 +170,43 @@ export default function Config() {
   const [gsShowScript, setGsShowScript] = useState(false)
   const [gsBulkLoading, setGsBulkLoading] = useState(false)
 
+  /* ── Email (Resend) ── */
+  const [resendKey, setResendKey] = useState(c.resendApiKey || '')
+  const [resendFrom, setResendFrom] = useState(c.resendFrom || '')
+  const [resendEnabled, setResendEnabled] = useState(c.resendEnabled === true)
+  const [resendTesting, setResendTesting] = useState(false)
+  const testResend = async () => {
+    if (!resendKey.trim() || !resendFrom.trim()) { toast('Completá API Key y email de envío primero.', 'er'); return }
+    setResendTesting(true)
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey.trim()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: resendFrom.trim(),
+          to: [resendFrom.trim()],
+          subject: 'Test de conexión — ANMA Regalos',
+          html: '<p>✅ La integración de email está funcionando correctamente.</p>',
+        }),
+      })
+      if (res.ok) {
+        toast('Email de prueba enviado — revisá tu bandeja de entrada.', 'ok')
+        updateConfig({ resendApiKey: resendKey.trim(), resendFrom: resendFrom.trim(), resendEnabled: true })
+        setResendEnabled(true)
+      } else {
+        const d = await res.json().catch(() => ({}))
+        toast(`Error: ${d.message || d.name || 'API Key inválida'}`, 'er')
+      }
+    } catch (e) {
+      toast('No se pudo conectar con Resend. Verificá la API Key.', 'er')
+    }
+    setResendTesting(false)
+  }
+  const saveResend = () => {
+    updateConfig({ resendApiKey: resendKey.trim(), resendFrom: resendFrom.trim(), resendEnabled })
+    toast('Configuración de email guardada', 'ok')
+  }
+
   /* ── Invitaciones / Equipo ── */
   const [invEmail, setInvEmail] = useState('')
   const [invName, setInvName] = useState('')
@@ -768,7 +805,108 @@ export default function Config() {
         <div style={{ display: 'grid', gap: 18, maxWidth: 820 }}>
           <div style={{ fontSize: 13, color: 'var(--txt2)', marginBottom: 2 }}>
             <i className="fa fa-circle-info" style={{ marginRight: 6, color: 'var(--brand)' }} />
-            Conectá ANMA con herramientas externas. Los datos se envían en tiempo real cuando guardás un presupuesto.
+            Conectá ANMA con herramientas externas.
+          </div>
+
+          {/* ── WHATSAPP CARD ── */}
+          <div className="pay-card on">
+            <div className="pay-card-head">
+              <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)' }}>
+                <i className="fa-brands fa-whatsapp" />
+              </div>
+              <div className="pay-head-txt">
+                <div className="pay-head-title">WhatsApp</div>
+                <div className="pay-head-sub">Mensajes y pedidos de reposición directo desde la app</div>
+              </div>
+              <div className="pay-status on"><i className="fa fa-circle-check" /> ACTIVO</div>
+            </div>
+            <div className="pay-card-body">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                {[
+                  { icon: 'fa-paper-plane', color: '#25D366', title: 'Enviar presupuesto', desc: 'Botón directo en cada presupuesto para compartirlo por WA' },
+                  { icon: 'fa-rotate',      color: '#128C7E', title: 'Re-orden a proveedor', desc: 'Mensaje automático de reposición con lista de productos' },
+                  { icon: 'fa-share-nodes', color: '#25D366', title: 'Portal de proveedor', desc: 'Compartir el portal de catálogo y precios acordados' },
+                  { icon: 'fa-link',        color: '#128C7E', title: 'Click-to-chat',      desc: 'Cada contacto tiene su botón de WA para abrir la conversación' },
+                ].map(f => (
+                  <div key={f.title} style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.2)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: f.color + '22', color: f.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
+                      <i className={`fa ${f.icon}`} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)' }}>{f.title}</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 2, lineHeight: 1.4 }}>{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,.07)', border: '1px solid rgba(245,158,11,.25)', fontSize: 11.5, color: 'var(--txt2)', lineHeight: 1.6 }}>
+                <i className="fa fa-circle-info" style={{ color: '#D97706', marginRight: 6 }} />
+                <b>¿Querés importar tus contactos de WhatsApp?</b> WhatsApp no permite leer contactos desde apps externas. Pero podés exportarlos desde tu teléfono:
+                <br />
+                <span style={{ color: 'var(--txt3)', fontSize: 11 }}>
+                  Android: Contactos → Más → Exportar → Seleccioná los contactos → Guardar como .vcf
+                  &nbsp;·&nbsp; iOS: Contactos → Compartir → Guardar archivo .vcf
+                </span>
+                <br />
+                <span style={{ fontWeight: 700, color: '#D97706' }}>Luego usá el botón "Importar .vcf" en la sección Clientes.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── EMAIL (RESEND) CARD ── */}
+          <div className={`pay-card ${resendEnabled ? 'on' : ''}`}>
+            <div className="pay-card-head" onClick={() => setResendEnabled(!resendEnabled)}>
+              <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#000,#333)' }}>
+                <i className="fa fa-envelope" />
+              </div>
+              <div className="pay-head-txt">
+                <div className="pay-head-title">Email — Resend <span style={{ fontSize: 9, padding: '2px 7px', background: 'var(--brand-xlt)', color: 'var(--brand)', borderRadius: 20, marginLeft: 6, fontWeight: 700, letterSpacing: '.3px', textTransform: 'uppercase' }}>Nuevo</span></div>
+                <div className="pay-head-sub">Enviá presupuestos en PDF directamente por email desde la app</div>
+              </div>
+              <div className={`pay-status ${resendEnabled ? 'on' : ''}`}>
+                {resendEnabled ? <><i className="fa fa-circle-check" /> ACTIVO</> : <><i className="fa fa-circle" /> INACTIVO</>}
+              </div>
+              <button className={`toggle ${resendEnabled ? 'on' : ''}`} onClick={e => { e.stopPropagation(); setResendEnabled(!resendEnabled) }} />
+            </div>
+            {resendEnabled && (
+              <div className="pay-card-body">
+                <div style={{ background: 'rgba(0,0,0,.04)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, fontSize: 11, color: 'var(--txt2)', lineHeight: 1.6 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>Cómo obtener tu API Key gratis:</div>
+                  <ol style={{ margin: 0, paddingLeft: 18 }}>
+                    <li>Entrá a <b>resend.com</b> y creá una cuenta gratuita (hasta 3.000 emails/mes gratis).</li>
+                    <li>En el dashboard: <b>API Keys → Create API Key</b>.</li>
+                    <li>Copiá la key y pegala abajo.</li>
+                    <li>En "Email de envío" usá <b>onboarding@resend.dev</b> si no verificaste tu dominio todavía.</li>
+                  </ol>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 12 }}>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label><i className="fa fa-key" style={{ marginRight: 4, color: '#000' }} />API Key de Resend</label>
+                    <input type="password" value={resendKey} onChange={e => setResendKey(e.target.value)}
+                      placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+                      style={{ fontFamily: 'monospace', fontSize: 12 }} />
+                  </div>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label><i className="fa fa-at" style={{ marginRight: 4 }} />Email de envío</label>
+                    <input type="email" value={resendFrom} onChange={e => setResendFrom(e.target.value)}
+                      placeholder="tu@empresa.com" />
+                  </div>
+                </div>
+                <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost btn-sm" onClick={testResend} disabled={resendTesting}>
+                    <i className={`fa ${resendTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
+                    {resendTesting ? ' Enviando...' : ' Probar conexión'}
+                  </button>
+                  <button className="btn btn-primary btn-sm" onClick={saveResend}>
+                    <i className="fa fa-floppy-disk" /> Guardar
+                  </button>
+                </div>
+                <div style={{ marginTop: 12, padding: '9px 13px', borderRadius: 9, background: 'rgba(124,58,237,.07)', border: '1px solid rgba(124,58,237,.2)', fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
+                  <i className="fa fa-circle-check" style={{ color: 'var(--brand)', marginRight: 6 }} />
+                  Una vez configurado, en cada presupuesto aparece el botón <b>"Enviar por email"</b> que manda el PDF al cliente automáticamente.
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── GOOGLE SHEETS CARD ── */}

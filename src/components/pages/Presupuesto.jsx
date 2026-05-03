@@ -432,6 +432,37 @@ export default function Presupuesto() {
     setTimeout(() => win.print(), 300)
   }
 
+  /* ── Enviar por email (Resend) ── */
+  const [emailSending, setEmailSending] = useState(false)
+  const sendByEmail = async () => {
+    const clientEmail = form.clientEmail || get('clients').find(cl => cl.company === form.company || cl.contact === form.contact)?.email || ''
+    if (!clientEmail) { toast('Este cliente no tiene email cargado. Agregalo en Clientes.', 'er'); return }
+    if (!c.resendApiKey) { toast('Configurá el email en Configuración → Integraciones → Email.', 'er'); return }
+    setEmailSending(true)
+    try {
+      const html = buildPdfHtml()
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${c.resendApiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: c.resendFrom || 'onboarding@resend.dev',
+          to: [clientEmail],
+          subject: `Presupuesto de ${c.businessName || 'ANMA'} — ${form.budgetNum || ''}`,
+          html,
+        }),
+      })
+      if (res.ok) {
+        toast(`Presupuesto enviado a ${clientEmail}`, 'ok')
+      } else {
+        const d = await res.json().catch(() => ({}))
+        toast(`Error al enviar: ${d.message || 'verificá la configuración de email'}`, 'er')
+      }
+    } catch {
+      toast('No se pudo enviar el email. Verificá tu conexión.', 'er')
+    }
+    setEmailSending(false)
+  }
+
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph">
@@ -623,6 +654,12 @@ export default function Presupuesto() {
               <button className="cp-btn cp-btn-ghost" onClick={copyWA}><i className="fa-brands fa-whatsapp" /> Copiar WA</button>
               <button className="cp-btn cp-btn-ghost" onClick={openPreview}><i className="fa fa-eye" /> Vista previa</button>
               <button className="cp-btn cp-btn-ghost" onClick={printPDF}><i className="fa fa-file-pdf" /> PDF</button>
+              {c.resendEnabled && (
+                <button className="cp-btn cp-btn-ghost" onClick={sendByEmail} disabled={emailSending}>
+                  <i className={`fa ${emailSending ? 'fa-spinner fa-spin' : 'fa-envelope'}`} />
+                  {emailSending ? ' Enviando...' : ' Email'}
+                </button>
+              )}
               {mpResult && <div style={{ marginTop: 4, fontSize: 10, wordBreak: 'break-all' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
             </div>
             {(mpCfg.enabled || bankCfg.enabled) ? (
