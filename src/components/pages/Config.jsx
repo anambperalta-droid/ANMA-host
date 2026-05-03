@@ -926,18 +926,29 @@ export default function Config() {
             </div>
             {gsEnabled && (
               <div className="pay-card-body">
-                <div style={{ background: 'rgba(52,168,83,.08)', border: '1.5px solid rgba(52,168,83,.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, fontSize: 11, color: '#0F9D58', lineHeight: 1.55 }}>
-                  <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><i className="fa fa-list-ol" /> Pasos para activar</div>
-                  <ol style={{ margin: 0, paddingLeft: 20 }}>
-                    <li>Abrí Google Sheets y creá una hoja nueva (ej: "ANMA Presupuestos").</li>
-                    <li>En el menú: <b>Extensiones → Apps Script</b>.</li>
-                    <li>Pegá el código (botón "Copiar código" abajo) y guardá.</li>
-                    <li>Hacé clic en <b>Implementar → Nueva implementación → Tipo: Aplicación web</b>.</li>
-                    <li>En "Quién tiene acceso" elegí <b>"Cualquier usuario"</b> y autorizá.</li>
-                    <li>Copiá la URL que termina en <code>/exec</code> y pegala abajo.</li>
-                    <li>Tocá <b>"Probar conexión"</b> — deberías ver una fila "PING" en tu Sheet.</li>
-                  </ol>
-                </div>
+
+                {/* Pasos visuales */}
+                {[
+                  { n:1, title:'Copiá el código', desc: <>Hacé clic en <b>"Copiar código"</b> (abajo). Dejalo en el portapapeles.</> },
+                  { n:2, title:'Abrí tu Google Sheet', desc: <>En el menú de la hoja: <b>Extensiones → Apps Script</b>. Se abre el editor.</> },
+                  { n:3, title:'Pegá y guardá', desc: <>Borrá todo lo que hay, pegá el código (Ctrl+V) y guardá con <b>Ctrl+S</b>. Poné cualquier nombre al proyecto.</> },
+                  { n:4, title:'Implementar', desc: <><b>Implementar → Nueva implementación</b>. En "Tipo" elegí <b>Aplicación web</b>. En "Quién tiene acceso" elegí <b>Cualquier usuario</b>. Clic en <b>Implementar</b>.</> },
+                  { n:5, title:'Autorizá (paso normal)', desc: <><b>Google va a mostrar una advertencia.</b> Es normal — el script es tuyo. Hacé clic en <b>"Configuración avanzada"</b> (abajo a la izquierda) → <b>"Ir al proyecto (no es seguro)"</b> → <b>Permitir</b>.</>, warn: true },
+                  { n:6, title:'Copiá la URL', desc: <>Copiá la URL larga que termina en <code style={{fontSize:10}}>/exec</code> y pegala en el campo de abajo.</> },
+                  { n:7, title:'Probá la conexión', desc: <>Tocá <b>"Probar conexión"</b>. Si aparece una fila nueva en tu Sheet, ¡listo!</> },
+                ].map(s => (
+                  <div key={s.n} style={{ display:'flex', gap:12, marginBottom:10, alignItems:'flex-start' }}>
+                    <div style={{ width:24, height:24, borderRadius:'50%', background: s.warn ? '#D97706' : '#0F9D58', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, flexShrink:0, marginTop:1 }}>{s.n}</div>
+                    <div style={{ fontSize:12, color:'var(--txt2)', lineHeight:1.6 }}>
+                      <b style={{ color: s.warn ? '#92400E' : 'var(--txt)', display:'block', marginBottom:2 }}>{s.warn && '⚠️ '}{s.title}</b>
+                      {s.desc}
+                      {s.warn && <div style={{ marginTop:4, padding:'6px 10px', borderRadius:8, background:'rgba(245,158,11,.1)', border:'1px solid rgba(245,158,11,.3)', fontSize:11, color:'#92400E' }}>
+                        Si ves "Google no verificó esta app" → <b>Configuración avanzada → Ir al proyecto → Permitir</b>. Tu script, tu cuenta — es seguro.
+                      </div>}
+                    </div>
+                  </div>
+                ))}
+
 
                 <div className="fg">
                   <label><i className="fa fa-link" style={{ marginRight: 4, color: '#0F9D58' }} />URL del Web App (Apps Script /exec)</label>
