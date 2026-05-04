@@ -233,7 +233,7 @@ tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--surface2)}
 td b{color:var(--txt);font-weight:600}
 .acts{display:flex;gap:4px}
-.act{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);color:var(--txt3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
+.act{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--txt2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
 .act:hover{background:var(--surface2);color:var(--txt);border-color:var(--border2)}
 .act.edit:hover{background:var(--blue-lt);color:var(--blue);border-color:var(--blue)}
 .act.del:hover{background:var(--red-lt);color:var(--red);border-color:var(--red)}

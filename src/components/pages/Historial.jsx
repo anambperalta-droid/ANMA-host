@@ -105,7 +105,7 @@ const DOT_PAY = { pending: '#DC2626', partial: '#D97706', paid: '#16A34A' }
 
 function DotBadge({ status }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#374151', fontSize: 12, whiteSpace: 'nowrap', fontWeight: 500 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--txt2)', fontSize: 12, whiteSpace: 'nowrap', fontWeight: 500 }}>
       <span style={{ width: 8, height: 8, borderRadius: '50%', background: DOT_STATUS[status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
       {STATUS_MAP[status] || 'Borrador'}
     </span>
@@ -997,15 +997,87 @@ export default function Historial() {
               <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} sparkData={hidden ? null : sparkTicket} />
               <KpiCard label="Presupuestos" value={String(periodBudgets.length)} />
 
-              {/* ── Bar chart 65% + Panel derecho 35% ── */}
+              {/* ── Izquierda (gráfico + tabla) + Derecha (donut + seguimiento) ── */}
               <div className="bento-wide bento-chart-inner" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                <div className="bento-chart" style={{ flex: '1 1 55%', minWidth: 280, boxSizing: 'border-box', alignSelf: 'flex-start' }}>
-                  <div className="card-header">
-                    <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
+
+                {/* COLUMNA IZQUIERDA: gráfico de barras + tabla de presupuestos */}
+                <div style={{ flex: '1 1 55%', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div className="bento-chart" style={{ boxSizing: 'border-box' }}>
+                    <div className="card-header">
+                      <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
+                    </div>
+                    <BarChart data={chartData} prevData={prevChartData} />
                   </div>
-                  <BarChart data={chartData} prevData={prevChartData} />
+
+                  {/* Tabla últimos presupuestos — DENTRO de la col izquierda para no pasar el cuadrante de Seg. Activo */}
+                  <div className="bento-chart resumen-tbl" style={{ overflow: 'visible' }}>
+                    <style>{`
+                      .resumen-tbl table{width:100%;border-collapse:collapse;table-layout:auto}
+                      .resumen-tbl th{padding:6px 10px;font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2);border-bottom:1px solid var(--border)}
+                      .resumen-tbl td{padding:7px 10px;font-size:12px;border-top:1px solid var(--border);color:var(--txt2)}
+                      .resumen-tbl tbody tr:hover td{background:var(--surface2)}
+                      .resumen-tbl th.c-num,.resumen-tbl td.c-num{width:70px;font-variant-numeric:tabular-nums}
+                      .resumen-tbl th.c-cli,.resumen-tbl td.c-cli{width:auto;min-width:160px}
+                      .resumen-tbl th.c-tot,.resumen-tbl td.c-tot{width:110px;text-align:right;font-variant-numeric:tabular-nums}
+                      .resumen-tbl th.c-est,.resumen-tbl td.c-est{width:120px}
+                      .resumen-tbl th.c-act,.resumen-tbl td.c-act{width:40px}
+                    `}</style>
+                    <div className="card-header">
+                      <span className="card-title">Últimos presupuestos</span>
+                      <span className="card-link" onClick={() => setTab('lista')}>Ver todos <i className="fa fa-arrow-right" /></span>
+                    </div>
+                    {budgets.length ? (
+                      <table>
+                        <thead><tr><th className="c-num">N°</th><th className="c-cli">Cliente</th><th className="c-tot">Total</th><th className="c-est">Estado</th><th className="c-act"></th></tr></thead>
+                        <tbody>
+                          {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => (
+                            <tr key={b.id}>
+                              <td className="c-num"><b>{b.num || '—'}</b></td>
+                              <td className="c-cli">{b.company || b.contact || '—'}</td>
+                              <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
+                              <td className="c-est"><DotBadge status={b.status} /></td>
+                              <td className="c-act" style={{ position: 'relative' }}>
+                                <button
+                                  className="act"
+                                  style={{ width: 28, height: 28 }}
+                                  onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === b.id ? null : b.id) }}
+                                  title="Acciones"
+                                >
+                                  <i className="fa fa-ellipsis-vertical" />
+                                </button>
+                                {openMenuId === b.id && (
+                                  <div
+                                    style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 24px rgba(0,0,0,.13)' }}
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    {[
+                                      { icon: 'fa-pen', label: 'Editar', action: () => { editB(b.id); setOpenMenuId(null) } },
+                                      { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', action: () => { copyWA(b); setOpenMenuId(null) } },
+                                      { icon: 'fa-paper-plane', label: 'Re-enviar', action: () => { handleResend(b); setOpenMenuId(null) } },
+                                    ].map((item, idx) => (
+                                      <button key={idx} onClick={item.action}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', border: 'none', background: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)', textAlign: 'left' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                      >
+                                        <i className={`fa ${item.icon}`} style={{ width: 14, color: 'var(--brand)' }} />
+                                        {item.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="empty"><div className="ico"><i className="fa fa-file-invoice" /></div><h4>Sin presupuestos</h4><p>Creá el primero con el botón de arriba</p></div>
+                    )}
+                  </div>
                 </div>
 
+                {/* COLUMNA DERECHA: donut + seguimiento/entregas */}
                 <div style={{ flex: '1 1 30%', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {/* Donut */}
                   <div className="bento-chart" style={{ padding: 12, paddingBottom: 8 }}>
@@ -1111,70 +1183,6 @@ export default function Historial() {
                 </div>
               </div>
 
-              <div className="bento-chart bento-wide resumen-tbl" style={{ gridColumn: '1 / -1', overflow: 'visible', maxWidth: 'calc(65% - 7px)' }}>
-                <style>{`
-                  .resumen-tbl table{width:100%;border-collapse:collapse;table-layout:auto}
-                  .resumen-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em}
-                  .resumen-tbl td{padding:8px 10px;font-size:12px;border-top:1px solid #F3F4F6}
-                  .resumen-tbl th.c-num,.resumen-tbl td.c-num{width:70px;font-variant-numeric:tabular-nums}
-                  .resumen-tbl th.c-cli,.resumen-tbl td.c-cli{width:auto;min-width:220px}
-                  .resumen-tbl th.c-tot,.resumen-tbl td.c-tot{width:120px;text-align:right;font-variant-numeric:tabular-nums}
-                  .resumen-tbl th.c-est,.resumen-tbl td.c-est{width:130px}
-                  .resumen-tbl th.c-act,.resumen-tbl td.c-act{width:44px}
-                `}</style>
-                <div className="card-header">
-                  <span className="card-title">Últimos presupuestos</span>
-                  <span className="card-link" onClick={() => setTab('lista')}>Ver todos <i className="fa fa-arrow-right" /></span>
-                </div>
-                {budgets.length ? (
-                  <table>
-                    <thead><tr><th className="c-num">N°</th><th className="c-cli">Cliente</th><th className="c-tot">Total</th><th className="c-est">Estado</th><th className="c-act"></th></tr></thead>
-                    <tbody>
-                      {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => (
-                        <tr key={b.id}>
-                          <td className="c-num"><b>{b.num || '—'}</b></td>
-                          <td className="c-cli">{b.company || b.contact || '—'}</td>
-                          <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
-                          <td className="c-est"><DotBadge status={b.status} /></td>
-                          <td className="c-act" style={{ position: 'relative' }}>
-                            <button
-                              className="act"
-                              style={{ width: 30, height: 30 }}
-                              onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === b.id ? null : b.id) }}
-                              title="Acciones"
-                            >
-                              <i className="fa fa-ellipsis-vertical" />
-                            </button>
-                            {openMenuId === b.id && (
-                              <div
-                                style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 24px rgba(0,0,0,.13)' }}
-                                onClick={e => e.stopPropagation()}
-                              >
-                                {[
-                                  { icon: 'fa-pen', label: 'Editar', action: () => { editB(b.id); setOpenMenuId(null) } },
-                                  { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', action: () => { copyWA(b); setOpenMenuId(null) } },
-                                  { icon: 'fa-paper-plane', label: 'Re-enviar', action: () => { handleResend(b); setOpenMenuId(null) } },
-                                ].map((item, idx) => (
-                                  <button key={idx} onClick={item.action}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', border: 'none', background: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)', textAlign: 'left' }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                  >
-                                    <i className={`fa ${item.icon}`} style={{ width: 14, color: 'var(--brand)' }} />
-                                    {item.label}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="empty"><div className="ico"><i className="fa fa-file-invoice" /></div><h4>Sin presupuestos</h4><p>Creá el primero con el botón de arriba</p></div>
-                )}
-              </div>
             </div>
           )}
         </>
@@ -1187,10 +1195,10 @@ export default function Historial() {
             .hist-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
             .hist-tbl table{border-collapse:collapse;min-width:860px}
             @media(max-width:640px){.hist-tbl table{min-width:520px}}
-            .hist-tbl th{padding:9px 10px 10px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid #F3F4F6;white-space:nowrap;background:var(--surface2)}
-            .hist-tbl td{padding:11px 10px;border-bottom:1px solid #F3F4F6;vertical-align:middle;background:var(--surface)}
+            .hist-tbl th{padding:8px 10px;font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid var(--border);white-space:nowrap;background:var(--surface2)}
+            .hist-tbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;background:var(--surface)}
             .hist-tbl tr:last-child td{border-bottom:none}
-            .hist-tbl tbody tr:hover td{background:#F9FAFB}
+            .hist-tbl tbody tr:hover td{background:var(--surface2)}
             .hist-tbl tbody tr.selected td{background:var(--brand-xlt)}
             .hist-tbl thead th:nth-child(1){position:sticky;left:0;z-index:3}
             .hist-tbl thead th:nth-child(2){position:sticky;left:32px;z-index:3;box-shadow:2px 0 5px -2px rgba(0,0,0,.08)}
@@ -1198,9 +1206,9 @@ export default function Historial() {
             .hist-tbl tbody td:nth-child(1){position:sticky;left:0;z-index:2}
             .hist-tbl tbody td:nth-child(2){position:sticky;left:32px;z-index:2;box-shadow:2px 0 5px -2px rgba(0,0,0,.08)}
             .hist-tbl tbody td:last-child{position:sticky;right:0;z-index:2;box-shadow:-2px 0 5px -2px rgba(0,0,0,.08)}
-            .hist-act{color:#D1D5DB;background:none;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s ease,opacity .15s ease}
-            .hist-act:hover{background:none}
-            .hist-act i{opacity:.5;transition:opacity .15s ease}
+            .hist-act{color:var(--txt3);background:none;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color .15s ease,opacity .15s ease}
+            .hist-act:hover{background:var(--surface2)}
+            .hist-act i{opacity:.7;transition:opacity .15s ease}
             .hist-act:hover i{opacity:1}
           `}</style>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
@@ -1208,10 +1216,10 @@ export default function Historial() {
               <i className="fa fa-magnifying-glass" />
               <input type="text" placeholder="Buscar cliente, empresa..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 8, padding: 2, gap: 1 }}>
+            <div style={{ display: 'flex', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 2, gap: 1 }}>
               {['all', 'draft', 'sent', 'negotiating', 'confirmed', 'lost'].map(f => (
                 <button key={f} onClick={() => setFilter(f)}
-                  style={{ padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: filter === f ? 600 : 400, background: filter === f ? '#fff' : 'transparent', color: filter === f ? '#111827' : '#6B7280', boxShadow: filter === f ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
+                  style={{ padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: filter === f ? 600 : 400, background: filter === f ? 'var(--surface)' : 'transparent', color: filter === f ? 'var(--txt)' : 'var(--txt3)', boxShadow: filter === f ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
                   {f === 'all' ? 'Todos' : STATUS_MAP[f]}
                 </button>
               ))}
@@ -1302,7 +1310,7 @@ export default function Historial() {
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
                           <div>
-                            <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                            <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: 'var(--txt2)', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
                               value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
                               {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                             </select>
@@ -1317,7 +1325,7 @@ export default function Historial() {
                       <td className="col-hide-mobile" style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_PAY[b.payStatus] || '#DC2626', flexShrink: 0, display: 'inline-block' }} />
-                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: '#374151', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: 'var(--txt2)', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
                             value={b.payStatus || 'pending'} onChange={e => handlePayStatusChange(b.id, e.target.value)}>
                             {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                           </select>
@@ -1341,9 +1349,9 @@ export default function Historial() {
               </tbody>
             </table>
           </div>
-          <div style={{ marginTop: 8, fontSize: 11, color: '#9CA3AF', textAlign: 'right', letterSpacing: '.02em' }}>
+          <div style={{ marginTop: 8, fontSize: 11, color: 'var(--txt3)', textAlign: 'right', letterSpacing: '.02em' }}>
             {filteredBudgets.length} resultado{filteredBudgets.length !== 1 ? 's' : ''}
-            {filter !== 'all' && <span style={{ marginLeft: 8, padding: '1px 7px', background: '#F3F4F6', borderRadius: 10, fontWeight: 600, color: '#6B7280' }}>{STATUS_MAP[filter]}</span>}
+            {filter !== 'all' && <span style={{ marginLeft: 8, padding: '1px 7px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, fontWeight: 600, color: 'var(--txt3)' }}>{STATUS_MAP[filter]}</span>}
           </div>
         </>
       )}
