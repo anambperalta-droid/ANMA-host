@@ -685,101 +685,100 @@ export default function Presupuesto() {
 
             <div className="cp-actions">
 
-              {/* 1 — Guardar: acción principal, más grande */}
+              {/* ── 1. GUARDAR ── acción principal */}
               <button className="cp-btn cp-btn-primary"
                 onClick={handleSave}
-                style={{ fontSize: 14, padding: '13px 16px', fontWeight: 800, letterSpacing: '.01em' }}>
+                style={{ fontSize: 14, padding: '13px 16px', fontWeight: 800, letterSpacing: '.01em', boxShadow: '0 4px 16px rgba(var(--brand-rgb),.35)' }}>
                 <i className="fa fa-floppy-disk" /> Guardar Presupuesto
               </button>
 
-              {/* 2 — Comunicación: grupo verde WA */}
-              <div style={{ marginTop: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.18)', borderRadius: 10, padding: '10px 11px' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+              {/* ── 2. COMUNICACIÓN ── flujo de venta, 2 botones WA únicos */}
+              <div style={{ marginTop: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.18)', borderRadius: 10, padding: '11px 12px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 9, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <i className="fa-brands fa-whatsapp" /> Comunicación
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {/* Enviar presupuesto por WA */}
-                  <button onClick={sendWhatsApp}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '9px 12px', background: 'rgba(37,211,102,.2)', border: '1.5px solid rgba(37,211,102,.4)', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.32)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.2)'}>
-                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 15, color: '#4ade80' }} />
-                    Enviar a WhatsApp
+
+                {/* Botón 1: primer contacto */}
+                <button onClick={sendWhatsApp}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: 'rgba(37,211,102,.22)', border: '1.5px solid rgba(37,211,102,.42)', borderRadius: 8, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s', marginBottom: 6 }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.34)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.22)'}>
+                  <i className="fa-brands fa-whatsapp" style={{ fontSize: 16, color: '#4ade80', flexShrink: 0 }} />
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>Enviar Presupuesto</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>Primer contacto con el cliente</div>
+                  </div>
+                </button>
+
+                {/* Botón 2: cerrar venta con datos de pago */}
+                {bankCfg.enabled ? (
+                  <button onClick={sendBankDataByWA}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.26)', borderRadius: 8, color: '#86efac', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.18)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.1)'}>
+                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 16, flexShrink: 0 }} />
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>Enviar Datos de Pago</div>
+                      <div style={{ fontSize: 10, color: 'rgba(134,239,172,.65)', marginTop: 2 }}>CBU / Alias para cerrar la venta</div>
+                    </div>
                   </button>
-                  {/* Finalizar y Enviar Cobro (presupuesto + banco) */}
-                  {bankCfg.enabled && (
-                    <button onClick={sendPaymentByWA}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', padding: '8px 12px', background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.25)', borderRadius: 8, color: '#86efac', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.18)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.1)'}>
-                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 13 }} />
-                      Finalizar y Enviar Cobro
-                    </button>
-                  )}
-                </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,.28)', padding: '6px 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="fa fa-circle-info" style={{ fontSize: 10 }} />
+                    Activá transferencia en Config › Pagos para habilitar este botón
+                  </div>
+                )}
               </div>
 
-              {/* 3 — Documentos: fila compacta */}
+              {/* ── 3. DOCUMENTOS ── herramientas, fila compacta slate */}
               <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Documentos</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Documentos</div>
                 <div style={{ display: 'flex', gap: 5 }}>
                   <button onClick={openPreview}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 6px', background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 7, color: 'rgba(255,255,255,.78)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.12)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.07)'}>
-                    <i className="fa fa-eye" style={{ fontSize: 11 }} /> Vista previa
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '8px 6px', background: 'rgba(100,116,139,.18)', border: '1px solid rgba(100,116,139,.32)', borderRadius: 7, color: 'rgba(255,255,255,.72)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(100,116,139,.3)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(100,116,139,.18)'}>
+                    <i className="fa fa-eye" style={{ fontSize: 12 }} /> Vista previa
                   </button>
                   <button onClick={printPDF}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 6px', background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 7, color: 'rgba(255,255,255,.78)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.12)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.07)'}>
-                    <i className="fa fa-file-pdf" style={{ fontSize: 11 }} /> PDF
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '8px 6px', background: 'rgba(100,116,139,.18)', border: '1px solid rgba(100,116,139,.32)', borderRadius: 7, color: 'rgba(255,255,255,.72)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(100,116,139,.3)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(100,116,139,.18)'}>
+                    <i className="fa fa-file-pdf" style={{ fontSize: 12 }} /> PDF
                   </button>
-                  {c.resendEnabled && (
-                    <button onClick={sendByEmail} disabled={emailSending}
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 6px', background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 7, color: 'rgba(255,255,255,.78)', fontSize: 11, fontWeight: 600, cursor: emailSending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: emailSending ? .6 : 1, transition: 'background .15s' }}
-                      onMouseEnter={e => { if (!emailSending) e.currentTarget.style.background = 'rgba(255,255,255,.12)' }}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.07)'}>
-                      <i className={`fa ${emailSending ? 'fa-spinner fa-spin' : 'fa-envelope'}`} style={{ fontSize: 11 }} />
-                      {emailSending ? 'Enviando' : 'Email'}
-                    </button>
-                  )}
                 </div>
+                {c.resendEnabled && (
+                  <button onClick={sendByEmail} disabled={emailSending}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', marginTop: 5, padding: '7px', background: 'rgba(100,116,139,.12)', border: '1px solid rgba(100,116,139,.22)', borderRadius: 7, color: 'rgba(255,255,255,.55)', fontSize: 11, fontWeight: 500, cursor: emailSending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: emailSending ? .6 : 1, transition: 'background .15s' }}
+                    onMouseEnter={e => { if (!emailSending) e.currentTarget.style.background = 'rgba(100,116,139,.22)' }}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(100,116,139,.12)'}>
+                    <i className={`fa ${emailSending ? 'fa-spinner fa-spin' : 'fa-envelope'}`} style={{ fontSize: 11 }} />
+                    {emailSending ? 'Enviando email...' : 'Enviar por email'}
+                  </button>
+                )}
               </div>
 
-              {mpResult && <div style={{ marginTop: 6, fontSize: 10, wordBreak: 'break-all', color: 'rgba(255,255,255,.7)' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
+              {mpResult && <div style={{ marginTop: 6, fontSize: 10, wordBreak: 'break-all', color: 'rgba(255,255,255,.65)' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
             </div>
 
-            {/* 4 — Cobro: MP + datos de pago por WA */}
-            {(mpCfg.enabled || bankCfg.enabled) ? (
+            {/* ── 4. PAGO ONLINE ── Mercado Pago (si está activo) */}
+            {mpCfg.enabled && (
               <div style={{ marginTop: 10 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
-                  <i className="fa fa-money-check-dollar" style={{ marginRight: 4 }} />Cobro
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                  <i className="fa fa-credit-card" style={{ marginRight: 4 }} />Pago online
                 </div>
-                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                  {mpCfg.enabled && (
-                    <button onClick={generateMP} disabled={mpLoading}
-                      style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 5, padding: '7px 9px', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 8, color: '#fff', fontSize: 11, fontWeight: 600, cursor: mpLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background .15s', opacity: mpLoading ? .7 : 1 }}
-                      onMouseEnter={e => { if (!mpLoading) e.currentTarget.style.background = 'rgba(255,255,255,.14)' }}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,.08)'}>
-                      <i className="fa fa-credit-card" style={{ fontSize: 12 }} />
-                      <span>{mpLoading ? 'Generando...' : 'Mercado Pago'}</span>
-                    </button>
-                  )}
-                  {bankCfg.enabled && (
-                    <button onClick={sendBankDataByWA}
-                      style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 5, padding: '7px 9px', background: 'rgba(37,211,102,.09)', border: '1px solid rgba(37,211,102,.22)', borderRadius: 8, color: '#86efac', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.17)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.09)'}>
-                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 13 }} />
-                      <span>Enviar Datos de Pago</span>
-                    </button>
-                  )}
-                </div>
+                <button onClick={generateMP} disabled={mpLoading}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '8px 10px', background: 'rgba(0,132,255,.12)', border: '1px solid rgba(0,132,255,.26)', borderRadius: 8, color: '#60a5fa', fontSize: 12, fontWeight: 600, cursor: mpLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: mpLoading ? .7 : 1, transition: 'background .15s' }}
+                  onMouseEnter={e => { if (!mpLoading) e.currentTarget.style.background = 'rgba(0,132,255,.2)' }}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,132,255,.12)'}>
+                  <i className="fa fa-credit-card" style={{ fontSize: 13 }} />
+                  {mpLoading ? 'Generando link...' : 'Generar link de pago (MP)'}
+                </button>
               </div>
-            ) : (
+            )}
+            {!mpCfg.enabled && !bankCfg.enabled && (
               <div className="cp-pay-empty">
-                <i className="fa fa-circle-info" /> Activá un método de pago en Config &gt; Pagos
+                <i className="fa fa-circle-info" /> Activá un método de cobro en Config › Pagos
               </div>
             )}
 
