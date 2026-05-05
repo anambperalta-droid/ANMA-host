@@ -188,7 +188,7 @@ function VariablesPanel({ client, config, budget }) {
   ]
 
   return (
-    <div style={{
+    <div className="msg-vars-panel" style={{
       position: 'sticky', top: 72, background: '#fff', borderRadius: 16,
       border: '1px solid #e2e8f0', padding: '18px 20px',
       boxShadow: P.shadow, width: 240, flexShrink: 0,
@@ -409,7 +409,7 @@ export default function Mensajes() {
       </div>
 
       {/* ── Tabs de etapas ── */}
-      <div style={{
+      <div className="msg-stage-tabs" style={{
         display: 'flex', gap: 2, background: '#f8fafc', border: '1px solid #e2e8f0',
         borderRadius: 14, padding: 4, marginBottom: 20, width: 'fit-content',
       }}>
@@ -440,12 +440,12 @@ export default function Mensajes() {
       </div>
 
       {/* ── Layout: Cards + Variables panel sticky ── */}
-      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+      <div className="msg-layout" style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
 
         {/* Cards grid */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {stageTemplates.length ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+            <div className="msg-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
               {stageTemplates.map(t => {
                 const pending = activeClient ? unresolvedCount(t.text) : 0
                 return (
