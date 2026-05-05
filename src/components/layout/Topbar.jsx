@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import NotificationBell from './NotificationBell'
 import { useTaskFab } from '../../context/TaskFabContext'
 import { usePrivacy } from '../../context/PrivacyContext'
@@ -15,12 +15,39 @@ function initialTheme() {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+// Cloud sync status: 'ok' | 'saving' | null
+function useSyncStatus() {
+  const [status, setStatus] = useState(null)
+  const timer = useRef(null)
+  useEffect(() => {
+    const onWrite = () => {
+      setStatus('saving')
+      clearTimeout(timer.current)
+    }
+    const onSaved = () => {
+      setStatus('ok')
+      clearTimeout(timer.current)
+      timer.current = setTimeout(() => setStatus(null), 3000)
+    }
+    window.addEventListener('anma:cloud-saved', onSaved)
+    // show 'saving' when a write is queued (debounced push not fired yet)
+    window.addEventListener('anma:synced', onSaved)
+    return () => {
+      window.removeEventListener('anma:cloud-saved', onSaved)
+      window.removeEventListener('anma:synced', onSaved)
+      clearTimeout(timer.current)
+    }
+  }, [])
+  return status
+}
+
 export default function Topbar({ onMenuClick }) {
   const loc = useLocation()
   const title = PAGE_NAMES[loc.pathname] || 'ANMA'
   const [theme, setTheme] = useState(initialTheme)
   const { panelOpen, setPanelOpen, activeTasks, focusMode, setFocusMode } = useTaskFab()
   const { hidden, toggle } = usePrivacy()
+  const syncStatus = useSyncStatus()
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -87,6 +114,22 @@ export default function Topbar({ onMenuClick }) {
           </span>
         )}
       </button>
+
+      {/* Cloud sync indicator */}
+      {syncStatus && (
+        <div title={syncStatus === 'ok' ? 'Datos guardados en la nube' : 'Guardando…'} style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          fontSize: 11, fontWeight: 600, padding: '0 8px', height: 28,
+          borderRadius: 8, transition: 'all .3s',
+          background: syncStatus === 'ok' ? '#D1FAE5' : '#EDE9FE',
+          color: syncStatus === 'ok' ? '#065F46' : '#7C3AED',
+          border: `1px solid ${syncStatus === 'ok' ? '#A7F3D0' : '#DDD6FE'}`,
+          flexShrink: 0,
+        }}>
+          <i className={`fa ${syncStatus === 'ok' ? 'fa-cloud-arrow-up' : 'fa-rotate fa-spin'}`} style={{ fontSize: 12 }} />
+          <span className="hide-xs">{syncStatus === 'ok' ? 'Guardado' : 'Guardando'}</span>
+        </div>
+      )}
 
       {/* Tema claro/oscuro */}
       <button

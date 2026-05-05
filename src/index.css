@@ -696,6 +696,7 @@ td b{color:var(--txt);font-weight:600}
 @media(max-width:640px){
   .topbar{height:56px!important;padding:0 14px!important}
   .tfab-btn{bottom:72px!important;right:16px!important}
+  .hide-xs{display:none!important}
   /* Botones del header más compactos */
   .ph-right .btn{font-size:11px;padding:5px 10px;gap:4px}
   .ph-right .period-pills{display:none}
