@@ -639,10 +639,31 @@ td b{color:var(--txt);font-weight:600}
 .notif-item-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 .notif-item-body{flex:1;min-width:0}
 .notif-item-title{font-size:12px;font-weight:700;line-height:1.3;margin-bottom:2px}
-.notif-item-desc{font-size:11px;color:var(--txt3);line-height:1.35;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.notif-cta{font-size:10.5px;font-weight:700;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;transition:opacity .15s}
-.notif-cta:hover{opacity:.85}
-.notif-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.notif-item-sub{font-size:11px;color:var(--txt3);line-height:1.35;margin-bottom:6px}
+.notif-action-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:6px;padding:5px 11px;border-radius:8px;
+  font-size:11px;font-weight:700;border:none;cursor:pointer;
+  font-family:inherit;transition:opacity .15s,transform .1s;
+  background:var(--na-bg,var(--brand-xlt));color:var(--na-color,var(--brand));
+  -webkit-tap-highlight-color:transparent;min-height:32px;
+}
+.notif-action-btn:hover{opacity:.85}
+.notif-action-btn:active{transform:scale(.95)}
+.notif-action-btn i{font-size:13px}
+.notif-unread-dot{position:absolute;right:28px;top:14px;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.notif-dismiss-btn{
+  position:absolute;right:6px;top:6px;
+  width:24px;height:24px;border-radius:6px;
+  background:transparent;border:none;
+  color:var(--txt4);cursor:pointer;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.notif-dismiss-btn:hover{background:rgba(0,0,0,.06);color:var(--txt2)}
+.notif-restore{padding:10px 12px;border-top:1px solid var(--border);text-align:center;background:var(--surface2)}
+.notif-restore button{background:transparent;border:none;color:var(--brand);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.notif-item{position:relative}
 
 /* ── Mobile mejorado ── */
 @media(max-width:768px){

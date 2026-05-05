@@ -4,6 +4,99 @@ import { useData } from '../../context/DataContext'
 import { fmt } from '../../lib/storage'
 
 const NOTIF_KEY = 'anma3_notif_read'
+const NOTIF_DISMISS_KEY = 'anma3_notif_dismissed'
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTION ENGINE — Mapeo dinámico de categoría → acción primaria.
+   Para agregar un nuevo tipo (ej: 'cumpleaños'), solo hay que
+   agregar una entrada acá. El sistema renderiza el botón correcto
+   sin tocar ningún otro archivo.
+═══════════════════════════════════════════════════════════════ */
+const ACTION_MAP = {
+  pago: {
+    label: 'Cobrar por WhatsApp',
+    icon: 'fa-brands fa-whatsapp',
+    color: '#16A34A',
+    bg: '#DCFCE7',
+    handler: (alert, { nav }) => {
+      const num = (alert.wa || '').replace(/\D/g, '')
+      const msg = `Hola ${alert.clientName || 'cliente'}, te escribo por el pedido ${alert.budgetNum || ''} — queda pendiente el pago de ${alert.amount || ''}. ¿Cómo podemos coordinar?`
+      if (num) {
+        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
+      } else {
+        nav(alert.route || '/')
+      }
+    },
+  },
+  logistica: {
+    label: 'Cambiar Estado',
+    icon: 'fa-truck-fast',
+    color: '#2563EB',
+    bg: '#EFF6FF',
+    handler: (alert, { nav }) => {
+      nav(alert.route || '/')
+    },
+  },
+  comercial: {
+    label: 'Seguimiento WA',
+    icon: 'fa-brands fa-whatsapp',
+    color: '#7C3AED',
+    bg: '#F3E8FF',
+    handler: (alert, { nav }) => {
+      const num = (alert.wa || '').replace(/\D/g, '')
+      const msg = `Hola ${alert.clientName || ''}, ¿cómo va todo? Quería saber si pudiste evaluar el presupuesto ${alert.budgetNum || ''} que te enviamos. Estoy a disposición.`
+      if (num) {
+        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
+      } else {
+        nav(alert.route || '/')
+      }
+    },
+  },
+  stock: {
+    label: 'Ver catálogo',
+    icon: 'fa-box-open',
+    color: '#D97706',
+    bg: '#FEF3C7',
+    handler: (alert, { nav }) => {
+      nav('/catalogo')
+    },
+  },
+  cumpleaños: {
+    label: 'Saludar',
+    icon: 'fa-cake-candles',
+    color: '#EC4899',
+    bg: '#FCE7F3',
+    handler: (alert, { nav }) => {
+      const num = (alert.wa || '').replace(/\D/g, '')
+      const msg = `¡Feliz cumpleaños ${alert.clientName || ''}! 🎉 Desde todo el equipo te deseamos un gran día.`
+      if (num) {
+        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
+      } else {
+        nav(alert.route || '/clientes')
+      }
+    },
+  },
+  /* ─── FALLBACK: cualquier categoría nueva/desconocida ─── */
+  _default: {
+    label: 'Gestionar Pedido',
+    icon: 'fa-arrow-up-right-from-square',
+    color: 'var(--brand)',
+    bg: 'var(--brand-xlt)',
+    handler: (alert, { nav }) => {
+      nav(alert.route || '/')
+    },
+  },
+}
+
+/**
+ * Resuelve la acción para una alerta dada su categoría.
+ * Si la categoría no existe en ACTION_MAP, usa _default.
+ */
+function resolveAction(category) {
+  return ACTION_MAP[category] || ACTION_MAP._default
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
 
 const daysAgo = (iso) => {
   if (!iso) return null
@@ -31,10 +124,10 @@ function buildAlerts(budgets, products) {
       alerts.push({
         id: `stock0-${p.id}`,
         level: 'critical',
+        category: 'stock',
         icon: 'fa-box-open',
         title: `Sin stock: ${p.name}`,
         body: `El producto se agotó — reponelo antes de aceptar nuevos pedidos`,
-        cta: 'Ver catálogo',
         route: '/catalogo',
         ts: pid,
       })
@@ -42,10 +135,10 @@ function buildAlerts(budgets, products) {
       alerts.push({
         id: `stocklow-${p.id}`,
         level: 'warning',
+        category: 'stock',
         icon: 'fa-box',
         title: `Te quedan solo ${stock} ${p.name}`,
         body: `Mínimo configurado: ${minStock} unidades — es momento de reponer`,
-        cta: 'Ver catálogo',
         route: '/catalogo',
         ts: pid,
       })
@@ -58,80 +151,85 @@ function buildAlerts(budgets, products) {
     const delivDays = daysUntil(b.deliveryDate)
     const active = !['cancelled', 'lost'].includes(b.status)
     const cliente = b.contact || b.company || 'el cliente'
+    const meta = { wa: b.wa, clientName: cliente, budgetNum: b.num, amount: fmt(b.total) }
 
-    // 🔴 CRÍTICO: entrega vencida
+    // 🔴 CRÍTICO: entrega vencida → logística
     if (b.deliveryDate && delivDays !== null && delivDays < 0 && active && b.status !== 'delivered') {
       alerts.push({
         id: `overdue-${b.id}`,
         level: 'critical',
+        category: 'logistica',
         icon: 'fa-fire',
         title: `Entrega vencida — ${b.num}`,
         body: `${cliente} · ${Math.abs(delivDays)}d de retraso · ${fmt(b.total)}`,
-        cta: 'Ver pedido',
         route: `/presupuesto/${b.id}`,
         ts: b.id,
+        ...meta,
       })
     }
 
-    // 🔴 CRÍTICO: pago pendiente >21 días
+    // 🔴 CRÍTICO: pago pendiente >21 días → pago
     if (b.payStatus === 'pending' && b.status === 'confirmed' && sinceDays !== null && sinceDays > 21) {
       alerts.push({
         id: `unpaid-${b.id}`,
         level: 'critical',
+        category: 'pago',
         icon: 'fa-circle-dollar-to-slot',
         title: `Cobro pendiente — ${b.num}`,
         body: `${cliente} · ${sinceDays}d sin cobrar · ${fmt(b.total)}`,
-        cta: 'Ver pedido',
         route: `/presupuesto/${b.id}`,
         ts: b.id,
+        ...meta,
       })
     }
 
-    // 🟡 ALERTA: entrega próxima ≤3 días — lenguaje natural
+    // 🟡 ALERTA: entrega próxima ≤3 días → logística
     if (b.deliveryDate && delivDays !== null && delivDays >= 0 && delivDays <= 3 && active && b.status !== 'delivered') {
       const whenLabel = delivDays === 0 ? 'HOY' : delivDays === 1 ? 'mañana' : `en ${delivDays} días`
       alerts.push({
         id: `soon-${b.id}`,
         level: 'warning',
+        category: 'logistica',
         icon: 'fa-truck-fast',
         title: delivDays <= 1
           ? `Debés entregar ${whenLabel} a ${cliente}`
           : `Entregá el pedido de ${cliente} ${whenLabel}`,
         body: `${b.num} · ${fmt(b.total)}`,
-        cta: 'Ver pedido',
         route: `/presupuesto/${b.id}`,
         ts: b.id,
+        ...meta,
       })
     }
 
-    // 🟡 ALERTA: confirmado sin seña 2-14 días
+    // 🟡 ALERTA: confirmado sin seña 2-14 días → pago
     if (b.status === 'confirmed' && b.payStatus === 'pending' && sinceDays !== null && sinceDays >= 2 && sinceDays <= 14) {
       alerts.push({
         id: `nosena-${b.id}`,
         level: 'warning',
+        category: 'pago',
         icon: 'fa-clock-rotate-left',
         title: `${b.num} lleva ${sinceDays}d sin la seña`,
         body: `${cliente} — pedido confirmado pero sin cobrar depósito · ${fmt(b.total)}`,
-        cta: 'Cobrar seña',
         route: `/presupuesto/${b.id}`,
         ts: b.id,
+        ...meta,
       })
     }
 
-    // 🟡 ALERTA: seguimiento >7 días sin respuesta
+    // 🟡 ALERTA: seguimiento >7 días sin respuesta → comercial
     if (['sent', 'negotiating'].includes(b.status) && sinceDays !== null && sinceDays > 7) {
       alerts.push({
         id: `followup-${b.id}`,
         level: 'warning',
+        category: 'comercial',
         icon: 'fa-hourglass-half',
         title: `Seguimiento necesario — ${b.num}`,
         body: `${cliente} · ${sinceDays}d sin respuesta · ${fmt(b.total)}`,
-        cta: 'Ver historial',
         route: '/',
         ts: b.id,
+        ...meta,
       })
     }
-
   })
 
   const order = { critical: 0, warning: 1 }
@@ -152,7 +250,7 @@ export default function NotificationBell() {
     try { return new Set(JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]')) } catch { return new Set() }
   })
   const [dismissedIds, setDismissedIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('anma3_notif_dismissed') || '[]')) } catch { return new Set() }
+    try { return new Set(JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY) || '[]')) } catch { return new Set() }
   })
 
   const budgets = get('budgets')
@@ -180,18 +278,18 @@ export default function NotificationBell() {
   const dismissAlert = useCallback((id) => {
     const newIds = new Set([...dismissedIds, id])
     setDismissedIds(newIds)
-    localStorage.setItem('anma3_notif_dismissed', JSON.stringify([...newIds]))
+    localStorage.setItem(NOTIF_DISMISS_KEY, JSON.stringify([...newIds]))
   }, [dismissedIds])
 
   const restoreDismissed = useCallback(() => {
     setDismissedIds(new Set())
-    localStorage.setItem('anma3_notif_dismissed', '[]')
+    localStorage.setItem(NOTIF_DISMISS_KEY, '[]')
   }, [])
 
-  const handleCTA = (alert) => {
+  const executeAction = (alert) => {
     markRead(alert.id)
-    setOpen(false)
-    nav(alert.route)
+    const action = resolveAction(alert.category)
+    action.handler(alert, { nav, setOpen })
   }
 
   useEffect(() => {
@@ -204,7 +302,7 @@ export default function NotificationBell() {
   return (
     <>
       <button
-        className={`tb-btn notif-bell ${hasCritical ? 'pulse-critical' : ''}`}
+        className={`tb-btn notif-bell${hasCritical ? ' pulse-critical' : ''}`}
         onClick={() => setOpen(o => !o)}
         aria-label="Notificaciones"
         title="Notificaciones"
@@ -234,7 +332,7 @@ export default function NotificationBell() {
             <span style={{ fontWeight: 700, fontSize: 14 }}>Notificaciones</span>
             {unreadCount > 0 && (
               <span style={{ background: 'var(--brand)', color: '#fff', borderRadius: 99, fontSize: 10, fontWeight: 800, padding: '1px 7px' }}>
-                {unreadCount} nuevas
+                {unreadCount}
               </span>
             )}
           </div>
@@ -249,6 +347,7 @@ export default function NotificationBell() {
             </button>
           </div>
         </div>
+
         <div className="notif-list">
           {alerts.length === 0 ? (
             <div className="notif-empty">
@@ -260,36 +359,37 @@ export default function NotificationBell() {
             alerts.map(alert => {
               const col = LEVEL_COLORS[alert.level]
               const isRead = readIds.has(alert.id)
+              const action = resolveAction(alert.category)
               return (
-                <div key={alert.id} className={`notif-item ${isRead ? 'read' : ''}`}
-                  style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start', position: 'relative' }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: col.bg + '22', color: col.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0, marginTop: 1 }}>
+                <div key={alert.id} className={`notif-item${isRead ? ' read' : ''}`}
+                  style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80' }}>
+                  {/* Icon */}
+                  <div className="notif-item-ico" style={{ background: col.bg + '22', color: col.bg }}>
                     <i className={`fa ${alert.icon}`} />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0, paddingRight: 18 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: isRead ? 'var(--txt2)' : col.text, lineHeight: 1.3 }}>
+                  {/* Content */}
+                  <div className="notif-item-body">
+                    <div className="notif-item-title" style={{ color: isRead ? 'var(--txt2)' : col.text }}>
                       {alert.title}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2, lineHeight: 1.3 }}>{alert.body}</div>
-                    <a onClick={(e) => { e.preventDefault(); handleCTA(alert) }} href="#"
-                      style={{ display: 'inline-block', marginTop: 4, fontSize: 10.5, fontWeight: 600, color: col.bg, textDecoration: 'none', cursor: 'pointer' }}>
-                      {alert.cta} →
-                    </a>
+                    <div className="notif-item-sub">{alert.body}</div>
+                    {/* ACTION BUTTON — dinámico por categoría */}
+                    <button
+                      className="notif-action-btn"
+                      style={{ '--na-color': action.color, '--na-bg': action.bg }}
+                      onClick={(e) => { e.stopPropagation(); executeAction(alert) }}
+                    >
+                      <i className={`fa ${action.icon}`} />
+                      {action.label}
+                    </button>
                   </div>
-                  {!isRead && <div style={{ position: 'absolute', right: 26, top: 14, width: 7, height: 7, borderRadius: '50%', background: col.bg, flexShrink: 0 }} title="No leída" />}
+                  {/* Unread dot */}
+                  {!isRead && <div className="notif-unread-dot" style={{ background: col.bg }} />}
+                  {/* Dismiss */}
                   <button
+                    className="notif-dismiss-btn"
                     onClick={(e) => { e.stopPropagation(); dismissAlert(alert.id) }}
-                    title="Descartar (ya está resuelta)"
-                    style={{
-                      position: 'absolute', right: 6, top: 6,
-                      width: 22, height: 22, borderRadius: 6,
-                      background: 'transparent', border: 'none',
-                      color: 'var(--txt4)', cursor: 'pointer', fontSize: 11,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all .15s', fontFamily: 'inherit',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,.06)'; e.currentTarget.style.color = 'var(--txt2)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--txt4)' }}
+                    title="Descartar"
                   >
                     <i className="fa fa-xmark" />
                   </button>
@@ -298,10 +398,9 @@ export default function NotificationBell() {
             })
           )}
           {dismissedCount > 0 && (
-            <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', textAlign: 'center', background: 'var(--surface2)' }}>
-              <button onClick={restoreDismissed}
-                style={{ background: 'transparent', border: 'none', color: 'var(--brand)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                <i className="fa fa-rotate-left" style={{ fontSize: 10 }} />
+            <div className="notif-restore">
+              <button onClick={restoreDismissed}>
+                <i className="fa fa-rotate-left" />
                 Restaurar {dismissedCount} descartada{dismissedCount !== 1 ? 's' : ''}
               </button>
             </div>
