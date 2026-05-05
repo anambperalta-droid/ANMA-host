@@ -13,70 +13,115 @@ const NOTIF_DISMISS_KEY = 'anma3_notif_dismissed'
    sin tocar ningún otro archivo.
 ═══════════════════════════════════════════════════════════════ */
 const ACTION_MAP = {
+  /* ──────────────────────────────────────────────────────────────
+     💸 PAGO — Dispara mensaje de cobro por WhatsApp.
+     Extrae: clientName, budgetNum, amount, wa
+  ────────────────────────────────────────────────────────────── */
   pago: {
-    label: 'Cobrar por WhatsApp',
-    icon: 'fa-brands fa-whatsapp',
+    label: 'Cobrar',
+    icon: 'fa-money-bill-wave',       // 💸 billete — universal para pagos
     color: '#16A34A',
     bg: '#DCFCE7',
     handler: (alert, { nav }) => {
       const num = (alert.wa || '').replace(/\D/g, '')
-      const msg = `Hola ${alert.clientName || 'cliente'}, te escribo por el pedido ${alert.budgetNum || ''} — queda pendiente el pago de ${alert.amount || ''}. ¿Cómo podemos coordinar?`
-      if (num) {
-        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
-      } else {
-        nav(alert.route || '/')
-      }
+      if (!num) { nav(alert.route || '/'); return }
+      const parts = [
+        `Hola ${alert.clientName || ''}`,
+        alert.budgetNum ? `, te escribo por el pedido *${alert.budgetNum}*` : '',
+        alert.amount ? ` — queda pendiente el pago de *${alert.amount}*` : '',
+        `. ¿Cómo preferís abonar?`
+      ]
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(parts.join(''))}`, '_blank')
     },
   },
+
+  /* ──────────────────────────────────────────────────────────────
+     🚚 LOGÍSTICA — Botón de cambiar estado (En camino/Entregado).
+     Extrae: budgetNum, route
+  ────────────────────────────────────────────────────────────── */
   logistica: {
     label: 'Cambiar Estado',
-    icon: 'fa-truck-fast',
+    icon: 'fa-truck-ramp-box',        // 🚚 camión — universal para envíos
     color: '#2563EB',
     bg: '#EFF6FF',
     handler: (alert, { nav }) => {
       nav(alert.route || '/')
     },
   },
+
+  /* ──────────────────────────────────────────────────────────────
+     💬 COMERCIAL — Seguimiento por WhatsApp (cortesía).
+     Extrae: clientName, budgetNum, wa
+  ────────────────────────────────────────────────────────────── */
   comercial: {
-    label: 'Seguimiento WA',
-    icon: 'fa-brands fa-whatsapp',
+    label: 'Seguimiento',
+    icon: 'fa-comment-dots',          // 💬 mensaje — universal para consultas
     color: '#7C3AED',
     bg: '#F3E8FF',
     handler: (alert, { nav }) => {
       const num = (alert.wa || '').replace(/\D/g, '')
-      const msg = `Hola ${alert.clientName || ''}, ¿cómo va todo? Quería saber si pudiste evaluar el presupuesto ${alert.budgetNum || ''} que te enviamos. Estoy a disposición.`
-      if (num) {
-        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
-      } else {
-        nav(alert.route || '/')
-      }
+      if (!num) { nav(alert.route || '/'); return }
+      const parts = [
+        `Hola ${alert.clientName || ''}! ¿Cómo estás?`,
+        alert.budgetNum ? ` Quería consultarte por el presupuesto *${alert.budgetNum}*` : '',
+        ` que te enviamos. ¿Pudiste evaluarlo? Estoy a disposición para lo que necesites.`
+      ]
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(parts.join(''))}`, '_blank')
     },
   },
+
+  /* ──────────────────────────────────────────────────────────────
+     📦 STOCK — Redirige al catálogo para reponer.
+     Extrae: route (→ /catalogo)
+  ────────────────────────────────────────────────────────────── */
   stock: {
-    label: 'Ver catálogo',
-    icon: 'fa-box-open',
+    label: 'Reponer',
+    icon: 'fa-boxes-stacked',         // 📦 cajas — universal para inventario
     color: '#D97706',
     bg: '#FEF3C7',
     handler: (alert, { nav }) => {
-      nav('/catalogo')
+      nav(alert.route || '/catalogo')
     },
   },
+
+  /* ──────────────────────────────────────────────────────────────
+     🎂 CUMPLEAÑOS — Saludar por WhatsApp.
+     Extrae: clientName, wa
+  ────────────────────────────────────────────────────────────── */
   cumpleaños: {
     label: 'Saludar',
-    icon: 'fa-cake-candles',
+    icon: 'fa-cake-candles',          // 🎂 torta — universal para cumpleaños
     color: '#EC4899',
     bg: '#FCE7F3',
     handler: (alert, { nav }) => {
       const num = (alert.wa || '').replace(/\D/g, '')
-      const msg = `¡Feliz cumpleaños ${alert.clientName || ''}! 🎉 Desde todo el equipo te deseamos un gran día.`
-      if (num) {
-        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
-      } else {
-        nav(alert.route || '/clientes')
-      }
+      if (!num) { nav(alert.route || '/clientes'); return }
+      const msg = `¡Feliz cumpleaños ${alert.clientName || ''}! 🎉 Desde todo el equipo te deseamos un excelente día. ¡Que la pases genial!`
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     },
   },
-  /* ─── FALLBACK: cualquier categoría nueva/desconocida ─── */
+
+  /* ──────────────────────────────────────────────────────────────
+     🔔 RECORDATORIO — Acción genérica de recordatorio.
+     Extrae: clientName, wa, route
+  ────────────────────────────────────────────────────────────── */
+  recordatorio: {
+    label: 'Contactar',
+    icon: 'fa-bell',
+    color: '#0891B2',
+    bg: '#ECFEFF',
+    handler: (alert, { nav }) => {
+      const num = (alert.wa || '').replace(/\D/g, '')
+      if (!num) { nav(alert.route || '/'); return }
+      const msg = `Hola ${alert.clientName || ''}! Te contacto como recordatorio sobre ${alert.budgetNum ? `el pedido *${alert.budgetNum}*` : 'tu consulta'}. ¿En qué puedo ayudarte?`
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
+    },
+  },
+
+  /* ──────────────────────────────────────────────────────────────
+     ⚠️ FALLBACK — Cualquier categoría nueva/desconocida.
+     Siempre muestra "Gestionar Pedido" → editor completo.
+  ────────────────────────────────────────────────────────────── */
   _default: {
     label: 'Gestionar Pedido',
     icon: 'fa-arrow-up-right-from-square',
@@ -90,7 +135,10 @@ const ACTION_MAP = {
 
 /**
  * Resuelve la acción para una alerta dada su categoría.
- * Si la categoría no existe en ACTION_MAP, usa _default.
+ * Si la categoría no existe en ACTION_MAP, usa _default (fallback).
+ * Esto permite agregar categorías futuras sin tocar este archivo:
+ * solo hay que pushear alertas con `category: 'miNuevaCategoria'`
+ * y agregar la entrada en ACTION_MAP arriba.
  */
 function resolveAction(category) {
   return ACTION_MAP[category] || ACTION_MAP._default
