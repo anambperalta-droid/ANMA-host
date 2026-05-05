@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
@@ -7,6 +7,76 @@ import { getMPConfig, createPaymentLink, getBankConfig, buildBankInfoText } from
 import { pushBudget, getSheetsConfig } from '../../lib/sheets'
 
 const emptyItem = () => ({ name: '', qty: 1, costUnit: '', priceUnit: '' })
+
+/* ── Selector de producto (BottomSheet / modal) ── */
+function ProductPicker({ open, onClose, products, onSelect }) {
+  const [q, setQ] = useState('')
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (open) { setQ(''); setTimeout(() => inputRef.current?.focus(), 120) }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const h = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [open, onClose])
+
+  useEffect(() => {
+    if (open) document.body.style.overflow = 'hidden'
+    else document.body.style.overflow = ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  const sq = q.toLowerCase()
+  const filtered = q
+    ? products.filter(p => (p.name || '').toLowerCase().includes(sq) || (p.cat || '').toLowerCase().includes(sq))
+    : products
+
+  return (
+    <>
+      <div className={`bsheet-overlay${open ? ' open' : ''}`} onClick={onClose} />
+      <div className={`bsheet${open ? ' open' : ''}`} style={{ maxHeight: '70vh' }}>
+        <div className="bsheet-handle" />
+        <div style={{ padding: '6px 16px 10px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface2)', border: '1.5px solid var(--border)', borderRadius: 12, padding: '0 12px', height: 44 }}>
+            <i className="fa fa-magnifying-glass" style={{ color: 'var(--txt4)', fontSize: 13 }} />
+            <input ref={inputRef} type="text" value={q} onChange={e => setQ(e.target.value)}
+              placeholder="Buscar producto..."
+              style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: 14, color: 'var(--txt)', width: '100%', fontFamily: 'inherit' }} />
+            {q && <button onClick={() => setQ('')} style={{ background: 'none', border: 'none', color: 'var(--txt4)', cursor: 'pointer', fontSize: 13, padding: 4 }}><i className="fa fa-xmark" /></button>}
+          </div>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px 16px' }}>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--txt3)', fontSize: 13 }}>
+              <i className="fa fa-box-open" style={{ fontSize: 24, display: 'block', marginBottom: 8, opacity: .4 }} />
+              {q ? 'Sin resultados' : 'No hay productos cargados'}
+            </div>
+          ) : filtered.map(p => (
+            <button key={p.id} className="bsheet-item" onClick={() => { onSelect(p); onClose() }}>
+              <div className="bsheet-item-ico" style={{ width: 36, height: 36, borderRadius: 10, fontSize: 15 }}>
+                <i className="fa fa-box-open" />
+              </div>
+              <div className="bsheet-item-body">
+                <div className="bsheet-item-title" style={{ fontSize: 13 }}>{p.name}</div>
+                <div className="bsheet-item-sub">
+                  {p.cat && <span>{p.cat} · </span>}
+                  Costo: {fmt(p.cost || 0)}
+                </div>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--money)', flexShrink: 0 }}>
+                {fmt(Math.round((p.cost || 0) * 1.4))}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
 
 /* Utilidades de fecha */
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -182,6 +252,18 @@ export default function Presupuesto() {
   }
   const addItem = () => setItems(prev => [...prev, emptyItem()])
   const removeItem = (idx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)
+
+  /* ── Product picker ── */
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerIdx, setPickerIdx] = useState(null)
+  const openPicker = (idx) => { setPickerIdx(idx); setPickerOpen(true) }
+  const handlePickProduct = useCallback((p) => {
+    if (pickerIdx === null) return
+    setItems(prev => prev.map((it, i) => {
+      if (i !== pickerIdx) return it
+      return { ...it, name: p.name, costUnit: p.cost || 0, priceUnit: Math.round(num(p.cost) * (1 + marginPct / 100)) }
+    }))
+  }, [pickerIdx, marginPct])
 
   /* ── Drag & drop de filas ── */
   const dragIdxRef = useRef(null)
@@ -620,7 +702,15 @@ export default function Presupuesto() {
                         draggable onDragStart={handleDragStart(i)} title="Arrastrar para reordenar">
                         <i className="fa fa-grip-vertical" />
                       </td>
-                      <td><input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" list="prod-suggestions" style={{ padding: '6px 8px', fontSize: 12 }} /></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                          <input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" style={{ padding: '6px 8px', fontSize: 12, flex: 1 }} />
+                          <button onClick={() => openPicker(i)} type="button" title="Elegir del catálogo"
+                            style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, transition: 'background .12s' }}>
+                            <i className="fa fa-list" />
+                          </button>
+                        </div>
+                      </td>
                       <td><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
                       <td><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
                       <td><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
@@ -630,9 +720,9 @@ export default function Presupuesto() {
                   ))}
                 </tbody>
               </table>
-              <datalist id="prod-suggestions">{products.map(p => <option key={p.id} value={p.name} />)}</datalist>
             </div>
             <button className="btn btn-ghost btn-xs" style={{ marginTop: 8 }} onClick={addItem}><i className="fa fa-plus" /> Agregar producto</button>
+            <ProductPicker open={pickerOpen} onClose={() => setPickerOpen(false)} products={products} onSelect={handlePickProduct} />
           </BSection>
 
           {/* PARÁMETROS */}
