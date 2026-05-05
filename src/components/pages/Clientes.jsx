@@ -111,7 +111,7 @@ export default function Clientes() {
   const [importModal, setImportModal] = useState(false)
   const [detailClient, setDetailClient] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
-  const [viewMode, setViewMode] = useState('table')
+  const [viewMode, setViewMode] = useState('cards')
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c' })
   const [newNote, setNewNote] = useState('')
@@ -342,36 +342,72 @@ export default function Clientes() {
           </div>
         </>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 12 }}>
-          {loading ? [1,2,3,4,5,6].map(i => (
-            <div key={i} className="card"><div className="sk sk-text" style={{ height: 16, width: '60%', marginBottom: 8 }} /><div className="sk sk-text" style={{ height: 14, width: '80%' }} /></div>
-          )) : filtered.length ? filtered.map(c => (
-            <div key={c.id} className="card" style={{ cursor: 'pointer' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--sh-md)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}
-              onClick={() => openDetail(c)}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                  {(c.company || '?')[0].toUpperCase()}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.company}</div>
-                  {c.contact && <div style={{ fontSize: 11, color: 'var(--txt3)' }}>{c.contact}</div>}
-                </div>
-              </div>
-              {c.rubro && <span className="badge b-purple" style={{ marginBottom: 6 }}>{c.rubro}</span>}
-              <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--txt2)', marginTop: 6 }}>
-                {c.wa && <span><i className="fa-brands fa-whatsapp" style={{ marginRight: 3 }} />{c.wa}</span>}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-                <span style={{ fontSize: 10, color: 'var(--txt3)' }}>{clientBudgets(c).length} presupuesto{clientBudgets(c).length !== 1 ? 's' : ''}</span>
-                <div className="acts" onClick={e => e.stopPropagation()}>
-                  <button className="act edit" onClick={() => openEdit(c)}><i className="fa fa-pen" /></button>
-                  <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
-                </div>
+        <div className="nc-list">
+          {loading ? [1,2,3,4,5].map(i => (
+            <div key={i} className="nc-skeleton">
+              <div className="sk-ava" />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <div className="sk-line" style={{ width: `${50 + i * 8}%` }} />
+                <div className="sk-line" style={{ width: `${30 + i * 5}%`, opacity: .6 }} />
               </div>
             </div>
-          )) : <div className="empty" style={{ gridColumn: '1/-1' }}><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4></div>}
+          )) : filtered.length ? filtered.map(c => {
+            const ps = clientPayStatus(c)
+            const dotColor = ps === 'pending' ? '#DC2626' : ps === 'partial' ? '#D97706' : ps === 'paid' ? '#16A34A' : 'var(--border2)'
+            const buds = clientBudgets(c)
+            const totalSold = clientTotalVendido(c)
+            const days = clientLastBudgetDays(c)
+            return (
+              <div key={c.id} className="nc" onClick={() => openDetail(c)}>
+                {/* Avatar con punto de estado de pago */}
+                <div className="nc-ava nc-ava-brand">
+                  {(c.company || '?')[0].toUpperCase()}
+                  <span className="nc-dot" style={{ background: dotColor }}
+                    title={ps === 'pending' ? 'Pago pendiente' : ps === 'partial' ? 'Seña abonada' : ps === 'paid' ? 'Pagado' : 'Sin pedidos'} />
+                </div>
+
+                {/* Info central */}
+                <div className="nc-body">
+                  <div className="nc-title">{c.company}</div>
+                  <div className="nc-sub">
+                    {c.contact && <span>{c.contact}</span>}
+                    {c.rubro && <span style={{ color: 'var(--txt4)' }}>{c.contact ? ' · ' : ''}{c.rubro}</span>}
+                    {!c.contact && !c.rubro && <span style={{ color: 'var(--txt4)' }}>Sin contacto</span>}
+                  </div>
+                  {(buds.length > 0 || totalSold > 0) && (
+                    <div className="nc-meta">
+                      {buds.length > 0 && (
+                        <span><i className="fa fa-file-invoice" style={{ marginRight: 4, fontSize: 10 }} />{buds.length} ppto{buds.length !== 1 ? 's' : ''}</span>
+                      )}
+                      {totalSold > 0 && <span className="nc-meta-val">{fmt(totalSold)}</span>}
+                      {days !== null && <span>{days === 0 ? 'Hoy' : `hace ${days}d`}</span>}
+                    </div>
+                  )}
+                </div>
+
+                {/* Acciones */}
+                <div className="nc-acts" onClick={e => e.stopPropagation()}>
+                  {c.wa && (
+                    <button className="ibtn ibtn-wa" title={`WhatsApp ${c.wa}`} onClick={() => openWA(c)}>
+                      <i className="fa-brands fa-whatsapp" />
+                    </button>
+                  )}
+                  <button className="ibtn ibtn-edit" title="Editar cliente" onClick={() => openEdit(c)}>
+                    <i className="fa fa-pen" style={{ fontSize: 14 }} />
+                  </button>
+                </div>
+              </div>
+            )
+          }) : (
+            <div className="empty-native">
+              <div className="ico"><i className="fa fa-users" /></div>
+              <h4>Sin clientes</h4>
+              <p>Agregá tu primer cliente para empezar a gestionar pedidos.</p>
+              <button className="btn btn-primary btn-sm" onClick={() => openEdit()} style={{ marginTop: 4 }}>
+                <i className="fa fa-plus" /> Agregar cliente
+              </button>
+            </div>
+          )}
         </div>
       )}
 
