@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { applyThemeColors } from '../../lib/theme'
@@ -10,6 +10,7 @@ import Topbar from './Topbar'
 import CommandPalette from './CommandPalette'
 import TaskFab from './TaskFab'
 import BottomNav from './BottomNav'
+import BottomSheet, { BottomSheetItem } from './BottomSheet'
 import PWAInstall from './PWAInstall'
 import Historial from '../pages/Historial'
 import Presupuesto from '../pages/Presupuesto'
@@ -223,9 +224,12 @@ function AdminGuard({ children }) {
 
 function AppShellInner() {
   const { config } = useData()
+  const { can } = useAuth()
   const { focusMode } = useTaskFab()
+  const nav = useNavigate()
   const [cmdOpen, setCmdOpen] = useState(false)
   const [sideOpen, setSideOpen] = useState(false)
+  const [moreSheet, setMoreSheet] = useState(false)
 
   useEffect(() => {
     const c = config()
@@ -236,6 +240,7 @@ function AppShellInner() {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(true) }
       if (e.key === 'Escape') {
+        if (moreSheet) { setMoreSheet(false); return }
         if (cmdOpen) { setCmdOpen(false); return }
         const opens = document.querySelectorAll('.modal-bg.open')
         if (opens.length) {
@@ -248,7 +253,7 @@ function AppShellInner() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [cmdOpen])
+  }, [cmdOpen, moreSheet])
 
   // Seleccionar todo al enfocar cualquier input numérico (evita escribir sobre el 0)
   useEffect(() => {
@@ -256,6 +261,8 @@ function AppShellInner() {
     document.addEventListener('focus', numFocus, true)
     return () => document.removeEventListener('focus', numFocus, true)
   }, [])
+
+  const goSheet = (path) => { setMoreSheet(false); nav(path) }
 
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
@@ -281,7 +288,21 @@ function AppShellInner() {
       {cmdOpen && <CommandPalette onClose={() => setCmdOpen(false)} />}
       <TaskFab />
       {focusMode && <FocusOverlay />}
-      <BottomNav onMore={() => setSideOpen(true)} />
+      <BottomNav onMore={() => setMoreSheet(true)} />
+      <BottomSheet open={moreSheet} onClose={() => setMoreSheet(false)} title="Más opciones">
+        {can('proveedor.view') && (
+          <BottomSheetItem icon="fa-industry" label="Proveedores" sub="Gestión de proveedores" onClick={() => goSheet('/proveedores')} />
+        )}
+        {can('logistica.view') && (
+          <BottomSheetItem icon="fa-truck-fast" label="Logística" sub="Envíos y entregas" onClick={() => goSheet('/logistica')} />
+        )}
+        {can('mensajes.view') && (
+          <BottomSheetItem icon="fa-brands fa-whatsapp" label="Mensajes WA" sub="Plantillas y envíos" onClick={() => goSheet('/mensajes')} iconBg="#DCFCE7" iconColor="#16A34A" />
+        )}
+        {can('config.access') && (
+          <BottomSheetItem icon="fa-gear" label="Configuración" sub="Personalización y datos" onClick={() => goSheet('/config')} iconBg="var(--surface2)" iconColor="var(--txt2)" />
+        )}
+      </BottomSheet>
       <PWAInstall />
     </div>
   )
