@@ -10,6 +10,7 @@ import Topbar from './Topbar'
 import CommandPalette from './CommandPalette'
 import TaskFab from './TaskFab'
 import BottomNav from './BottomNav'
+import PWAInstall from './PWAInstall'
 import Historial from '../pages/Historial'
 import Presupuesto from '../pages/Presupuesto'
 import Clientes from '../pages/Clientes'
@@ -281,6 +282,7 @@ function AppShellInner() {
       <TaskFab />
       {focusMode && <FocusOverlay />}
       <BottomNav onMore={() => setSideOpen(true)} />
+      <PWAInstall />
     </div>
   )
 }
