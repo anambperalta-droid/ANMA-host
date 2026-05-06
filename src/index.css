@@ -972,6 +972,102 @@ td b{color:var(--txt);font-weight:600}
 
 /* ═══ MOBILE UX OVERHAUL ═══ */
 
+/* ── Dashboard: full mobile redesign ── */
+@media(max-width:768px){
+  /* Page header compact */
+  .ph{flex-direction:column!important;align-items:flex-start!important;gap:8px!important;padding:12px 0 8px!important}
+  .ph h2{font-size:18px!important;margin:0!important}
+  .ph p{font-size:11px!important;margin:0!important}
+  .ph-right{width:100%;flex-wrap:wrap;gap:6px!important;justify-content:flex-start}
+  .ph-right .btn{font-size:11px!important;padding:6px 10px!important;min-height:0!important}
+
+  /* KPI bento grid — 2 col, ultra-compact */
+  .bento{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:10px}
+  .bento-kpi{padding:10px 12px 8px!important;border-radius:12px!important}
+  .bento-kpi .kpi-label,.bento-kpi > div:first-child{font-size:9px!important;margin-bottom:2px!important}
+  .bento-kpi .kpi-val,
+  .bento-kpi > div:nth-child(2) > div:first-child{font-size:18px!important;letter-spacing:-.03em}
+  .bento-kpi svg{display:none!important}
+  .kpi-glow{display:none!important}
+  .bento-kpi [style*="borderLeft"]{border-left-width:2px!important}
+
+  /* Inner two-column → single stack */
+  .bento-wide{grid-column:1/-1!important}
+  .bento-chart-inner{flex-direction:column!important;gap:10px!important}
+  .bento-chart-inner > div{flex:1 1 100%!important;min-width:0!important}
+  .bento-chart{padding:12px!important;border-radius:12px!important}
+  .bento-chart .card-header{margin-bottom:6px}
+  .bento-chart .card-title{font-size:12px!important}
+  .bento-chart .card-link{font-size:11px!important}
+
+  /* Bar chart shorter */
+  .bar-chart{height:80px!important}
+  .bl{font-size:8px!important}
+
+  /* Últimos presupuestos table — compact */
+  .resumen-tbl{border-radius:12px!important;overflow:hidden!important}
+  .resumen-tbl table{min-width:0!important;table-layout:fixed!important}
+  .resumen-tbl .c-num{display:none!important}
+  .resumen-tbl .c-act{width:32px!important}
+  .resumen-tbl .c-est{width:70px!important}
+  .resumen-tbl .c-cli{width:auto!important;min-width:0!important}
+  .resumen-tbl .c-tot{width:80px!important}
+  .resumen-tbl th{padding:5px 6px!important;font-size:9px!important}
+  .resumen-tbl td{padding:6px!important;font-size:11px!important}
+
+  /* Donut chart compact */
+  .bento-chart svg[viewBox="0 0 90 90"]{width:80px!important;height:80px!important}
+
+  /* Mini seguimiento items */
+  .mini-seg-item{padding:8px 10px!important;margin-bottom:6px!important;border-radius:10px!important}
+  .mini-seg-more{font-size:11px!important;padding:8px!important}
+
+  /* Modo Hoy — single col, tight */
+  .modo-hoy-grid{grid-template-columns:1fr!important;gap:8px!important}
+  .modo-hoy-grid > div{padding:10px 12px!important;border-radius:12px!important}
+  .modo-hoy-grid > div > div:first-child > div:first-child{width:28px!important;height:28px!important;border-radius:8px!important;font-size:12px!important}
+  .modo-hoy-grid > div > div:first-child .fa-arrow-right{display:none}
+
+  /* Tab bar horizontal scroll */
+  .tab-bar{margin-top:6px!important;margin-bottom:10px!important;width:100%!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px!important}
+  .tab-bar::-webkit-scrollbar{display:none}
+  .tab-btn{white-space:nowrap;flex-shrink:0;font-size:12px!important;padding:6px 12px!important}
+
+  /* Seguimiento cards compact */
+  .seg-card{padding:10px 12px!important;border-radius:12px!important;gap:6px!important;flex-wrap:wrap}
+  .seg-light{width:28px!important;height:28px!important;font-size:11px!important}
+  .seg-info{min-width:0;flex:1}
+  .seg-top{flex-wrap:wrap;gap:4px!important}
+  .seg-top span{font-size:10px!important}
+  .seg-cli{font-size:12px!important}
+  .seg-co{font-size:10px!important}
+  .seg-meta{flex-direction:row!important;align-items:center;width:100%;gap:10px!important;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+  .seg-days{flex-direction:row!important;gap:4px!important;align-items:baseline}
+  .seg-days .num{font-size:15px!important}
+  .seg-days .lbl{font-size:10px!important}
+  .seg-total{font-size:12px!important;flex:1}
+  .seg-actions{flex-direction:row!important;gap:4px!important}
+
+  /* Insight cards */
+  .insight-card{border-radius:12px!important;padding:12px!important}
+  .analysis-grid{gap:8px!important}
+
+  /* Lista tab filters compact */
+  .search-row{max-width:100%!important;flex:1 1 100%!important}
+  .hist-tbl{border-radius:12px!important}
+
+  /* Bento seg (status donut panel) */
+  .bento-seg{padding:10px!important;border-radius:12px!important}
+}
+@media(max-width:400px){
+  .bento{grid-template-columns:1fr 1fr!important}
+  .bento-kpi .kpi-val,
+  .bento-kpi > div:nth-child(2) > div:first-child{font-size:16px!important}
+  .ph h2{font-size:16px!important}
+  .resumen-tbl .c-est{display:none!important}
+  .resumen-tbl .c-tot{width:auto!important}
+}
+
 /* ── Modals → full-screen bottom sheet on mobile ── */
 @media(max-width:768px){
   .modal-bg{padding:0;align-items:flex-end!important}
