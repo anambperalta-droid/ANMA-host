@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -6,6 +6,40 @@ import { testMPConnection } from '../../lib/mercadopago'
 import { applyThemeColors } from '../../lib/theme'
 import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets, APPS_SCRIPT_TEMPLATE } from '../../lib/sheets'
 import { SITES, CURRENT_SITE, sendInvite } from '../../lib/invites'
+import { flushSync } from '../../lib/sync'
+
+/* ── Modal de confirmación destructiva ── */
+function DeleteConfirmModal({ title, message, onConfirm, onClose }) {
+  const [typed, setTyped] = useState('')
+  return (
+    <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal" style={{ maxWidth: 420 }}>
+        <div className="mh">
+          <h3><i className="fa fa-triangle-exclamation" style={{ color: 'var(--red)', marginRight: 8 }} />{title}</h3>
+          <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--txt2)', lineHeight: 1.5, margin: '0 0 14px' }}>{message}</p>
+        <div className="fg">
+          <label style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, fontWeight: 600 }}>
+            Escribí <b style={{ color: 'var(--red)' }}>ELIMINAR</b> para confirmar
+          </label>
+          <input
+            type="text" value={typed} onChange={e => setTyped(e.target.value)} autoFocus
+            placeholder="ELIMINAR"
+            style={{ borderColor: typed === 'ELIMINAR' ? 'var(--green)' : undefined }}
+          />
+        </div>
+        <div className="mfooter">
+          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-danger" disabled={typed !== 'ELIMINAR'} onClick={() => { onConfirm(); onClose() }}
+            style={{ opacity: typed === 'ELIMINAR' ? 1 : 0.5 }}>
+            <i className="fa fa-trash" /> Eliminar definitivamente
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function NewListCreator({ onCreate }) {
   const [label, setLabel] = useState('')
@@ -157,6 +191,8 @@ export default function Config() {
   const [bankNotes, setBankNotes] = useState(c.bankNotes || '')
   const [newPass, setNewPass] = useState('')
   const [repPass, setRepPass] = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [acctEmail, setAcctEmail] = useState(c.email || '')
 
   /* ── Google Sheets sync state ── */
@@ -204,6 +240,7 @@ export default function Config() {
   }
   const saveResend = () => {
     updateConfig({ resendApiKey: resendKey.trim(), resendFrom: resendFrom.trim(), resendEnabled })
+    flushSync()
     toast('Configuración de email guardada', 'ok')
   }
 
@@ -259,21 +296,25 @@ export default function Config() {
       portalIntroCopy, portalShareMsg,
     })
     applyThemeColors(bcolor, acolor)
+    flushSync()
     toast('Configuración guardada', 'ok')
   }
 
   const saveMPConfig = () => {
     updateConfig({ mpEnabled, mpToken, mpPubkey, mpName, mpCurrency, mpUseSena: mpSena })
+    flushSync()
     toast('Configuración MP guardada', 'ok')
   }
 
   const saveBankConfig = () => {
     updateConfig({ bankEnabled, bankHolder, bankName, bankAccountType, bankCbu, bankAlias, bankCuit, bankNotes })
+    flushSync()
     toast('Datos bancarios guardados', 'ok')
   }
 
   const saveSheetsConfig = () => {
     setSheetsConfig({ enabled: gsEnabled, url: gsUrl.trim(), autoSync: gsAuto })
+    flushSync()
     toast('Integración con Google Sheets guardada', 'ok')
   }
   const testSheets = async () => {
@@ -327,17 +368,21 @@ export default function Config() {
     if (!file) return
     if (file.size > 300 * 1024) { toast('La imagen debe ser menor a 300KB.', 'er'); return }
     const reader = new FileReader()
-    reader.onload = (ev) => { updateConfig({ logo: ev.target.result }); toast('Logo actualizado', 'ok') }
+    reader.onload = (ev) => { updateConfig({ logo: ev.target.result }); flushSync(); toast('Logo actualizado', 'ok') }
     reader.readAsDataURL(file)
   }
 
-  const removeLogo = () => { updateConfig({ logo: '' }); toast('Logo eliminado', 'in') }
+  const removeLogo = () => { updateConfig({ logo: '' }); flushSync(); toast('Logo eliminado', 'in') }
 
   const clearAll = () => {
-    if (window.confirm('¿Estás seguro? Se eliminarán TODOS los datos.')) {
-      ['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates'].forEach(k => localStorage.removeItem('anma3_' + k))
-      toast('Datos eliminados', 'in'); window.location.reload()
-    }
+    setDeleteConfirm({
+      title: 'Eliminar TODOS los datos',
+      message: 'Esta acción es irreversible. Se eliminarán todos los presupuestos, clientes, productos, proveedores y plantillas. No se puede deshacer.',
+      onConfirm: () => {
+        ['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates'].forEach(k => localStorage.removeItem('anma3_' + k))
+        toast('Datos eliminados', 'in'); window.location.reload()
+      },
+    })
   }
 
   const doBackup = () => {
@@ -382,23 +427,23 @@ export default function Config() {
     else toast('No se pudo restaurar', 'err')
   }
 
-  const handleListAdd = (configKey, val) => updateConfig({ [configKey]: [...(c[configKey] || []), val] })
-  const handleListRemove = (configKey, idx) => updateConfig({ [configKey]: (c[configKey] || []).filter((_, i) => i !== idx) })
+  const handleListAdd = (configKey, val) => { updateConfig({ [configKey]: [...(c[configKey] || []), val] }); flushSync() }
+  const handleListRemove = (configKey, idx) => { updateConfig({ [configKey]: (c[configKey] || []).filter((_, i) => i !== idx) }); flushSync() }
   const handleCustomListAdd = (key, val) => {
     const lists = (c.customLists || []).map(cl => cl.key === key ? { ...cl, items: [...(cl.items || []), val] } : cl)
-    updateConfig({ customLists: lists })
+    updateConfig({ customLists: lists }); flushSync()
   }
   const handleCustomListRemove = (key, idx) => {
     const lists = (c.customLists || []).map(cl => cl.key === key ? { ...cl, items: (cl.items || []).filter((_, i) => i !== idx) } : cl)
-    updateConfig({ customLists: lists })
+    updateConfig({ customLists: lists }); flushSync()
   }
   const handleCreateCustomList = (label) => {
     const key = `custom_${Date.now()}`
-    updateConfig({ customLists: [...(c.customLists || []), { key, label, items: [] }] })
+    updateConfig({ customLists: [...(c.customLists || []), { key, label, items: [] }] }); flushSync()
   }
   const handleDeleteCustomList = (key) => {
     if (!window.confirm('¿Eliminar esta lista y todos sus elementos?')) return
-    updateConfig({ customLists: (c.customLists || []).filter(cl => cl.key !== key) })
+    updateConfig({ customLists: (c.customLists || []).filter(cl => cl.key !== key) }); flushSync()
   }
 
   const userName = (c.email || '').split('@')[0] || 'Administrador'
@@ -667,7 +712,7 @@ export default function Config() {
           {FEATURE_FLAGS.map(f => {
             const active = !!(c.features?.[f.key])
             return (
-              <div key={f.key} onClick={() => updateConfig({ features: { ...(c.features || {}), [f.key]: !active } })} style={{
+              <div key={f.key} onClick={() => { updateConfig({ features: { ...(c.features || {}), [f.key]: !active } }); flushSync() }} style={{
                 display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
                 padding: '14px 18px', background: 'var(--surface)',
                 border: `1.5px solid ${active ? f.color + '50' : 'var(--border)'}`,
@@ -1125,8 +1170,24 @@ export default function Config() {
             </div>
             <div className="fg"><label>Email de cuenta</label><input type="email" value={acctEmail} onChange={e => setAcctEmail(e.target.value)} /></div>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', letterSpacing: '.8px', textTransform: 'uppercase', margin: '8px 0 14px' }}>Cambiar contraseña</div>
-            <div className="fg"><label>Nueva contraseña</label><input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Mínimo 6 caracteres" /></div>
-            <div className="fg"><label>Repetir</label><input type="password" value={repPass} onChange={e => setRepPass(e.target.value)} placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" /></div>
+            <div className="fg">
+              <label>Nueva contraseña</label>
+              <div style={{ position: 'relative' }}>
+                <input type={showPass ? 'text' : 'password'} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Mínimo 6 caracteres" style={{ paddingRight: 36 }} />
+                <button type="button" onClick={() => setShowPass(v => !v)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, padding: 4 }} title={showPass ? 'Ocultar' : 'Mostrar'}>
+                  <i className={`fa ${showPass ? 'fa-eye-slash' : 'fa-eye'}`} />
+                </button>
+              </div>
+            </div>
+            <div className="fg">
+              <label>Repetir</label>
+              <div style={{ position: 'relative' }}>
+                <input type={showPass ? 'text' : 'password'} value={repPass} onChange={e => setRepPass(e.target.value)} placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" style={{ paddingRight: 36 }} />
+                <button type="button" onClick={() => setShowPass(v => !v)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, padding: 4 }} title={showPass ? 'Ocultar' : 'Mostrar'}>
+                  <i className={`fa ${showPass ? 'fa-eye-slash' : 'fa-eye'}`} />
+                </button>
+              </div>
+            </div>
             <button className="btn btn-primary btn-sm" onClick={handleChangePass}><i className="fa fa-key" /> Actualizar contraseña</button>
           </div>
           <div className="card">
@@ -1160,6 +1221,15 @@ export default function Config() {
           </div>
           </div>{/* cierra grid 2 columnas */}
         </div>
+      )}
+
+      {deleteConfirm && (
+        <DeleteConfirmModal
+          title={deleteConfirm.title}
+          message={deleteConfirm.message}
+          onConfirm={deleteConfirm.onConfirm}
+          onClose={() => setDeleteConfirm(null)}
+        />
       )}
     </div>
   )

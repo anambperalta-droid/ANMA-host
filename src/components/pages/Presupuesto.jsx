@@ -169,7 +169,7 @@ export default function Presupuesto() {
 
   const [form, setForm] = useState({
     contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '',
-    shipCost: 0, shipCharged: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
+    shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
     margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0,
   })
   const [items, setItems] = useState([emptyItem()])
@@ -316,7 +316,7 @@ export default function Presupuesto() {
     if (form.wa && !isValidWA(form.wa)) { toast('El WhatsApp no tiene un formato válido. Ej: +54 351 1234567', 'er'); setWaTouched(true); return }
     const validItems = items.filter(i => i.name).map(i => ({ ...i, qty: num(i.qty), costUnit: num(i.costUnit), priceUnit: num(i.priceUnit) }))
     if (!validItems.length) { toast('Necesitás al menos un producto. Agregá uno desde "Productos".', 'er'); return }
-    const saveForm = { ...form, shipCost: num(form.shipCost), shipCharged: form.shipCharged !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
+    const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
     const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
@@ -432,7 +432,7 @@ export default function Presupuesto() {
     const ownerWA = (c.ownerWA || c.businessWA || '').replace(/[^\d+]/g, '')
     const acceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(calc.total)}.`)
     const waLink = ownerWA ? `https://wa.me/${ownerWA.replace('+','')}?text=${acceptMsg}` : ''
-    const hasShip = num(form.shipCost) && form.shipCharged !== false
+    const showEnvioLeyenda = form.envioACotizar !== false
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${budgetNum}</title>
     <style>
       *{box-sizing:border-box}
@@ -497,7 +497,7 @@ export default function Presupuesto() {
     </table>
     <div class="totals"><div class="totals-box">
       <div class="totals-row"><span>Subtotal productos</span><span>${fmt(calc.totalRevenue)}</span></div>
-      ${hasShip ? `<div class="totals-row"><span>Envío</span><span>${fmt(num(form.shipCost))}</span></div>` : ''}
+      ${showEnvioLeyenda ? `<div class="totals-row" style="font-size:10px;color:#92400E;font-style:italic"><span>🚚 Costo de envío sujeto a pesaje y despacho</span><span>A cotizar</span></div>` : ''}
       <div class="totals-row big"><span>Total</span><span>${fmt(calc.total)}</span></div>
       <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(calc.depositAmt)}</span></div>
       <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(calc.total - calc.depositAmt)}</span></div>
@@ -595,7 +595,7 @@ export default function Presupuesto() {
             onClick={() => {
               localStorage.removeItem(DRAFT_KEY)
               setDraftRestored(false)
-              setForm({ contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '', shipCost: 0, shipCharged: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '', margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0 })
+              setForm({ contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '', shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '', margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0 })
               setItems([emptyItem()])
             }}
           >
@@ -657,11 +657,9 @@ export default function Presupuesto() {
                 )}
               </div>
               <div className="fg">
-                <label>Costo envío ($)</label>
-                <input type="number" value={form.shipCost} onFocus={selectOnFocus} onChange={e => setF('shipCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('shipCost', 0) }} min="0" />
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, marginTop: 4, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.shipCharged !== false} onChange={e => setF('shipCharged', e.target.checked)} style={{ width: 'auto' }} />
-                  Cobrar envío al cliente (sumar al total)
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}>
+                  <input type="checkbox" checked={form.envioACotizar !== false} onChange={e => setF('envioACotizar', e.target.checked)} style={{ width: 'auto' }} />
+                  Envío a cotizar (mostrar leyenda en PDF)
                 </label>
               </div>
               <div className="fg"><label>Estado</label>

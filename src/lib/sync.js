@@ -153,6 +153,13 @@ export async function pullFromCloud(userId) {
   }
 }
 
+/** Force an immediate push, cancelling any pending debounce timer.
+ *  Use after critical saves (config, payments) to persist instantly. */
+export function flushSync() {
+  clearTimeout(_timer)
+  doPush()
+}
+
 /** Expose current workspace context for other modules (audit log, UI). */
 export function getSyncContext() {
   return { userId: _uid, workspaceId: _wsId, role: _role }
