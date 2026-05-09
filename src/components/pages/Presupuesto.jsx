@@ -89,16 +89,23 @@ const selectOnFocus = (e) => e.target.select()
 /* ── Validación WhatsApp ── */
 const isValidWA = (v) => { if (!v) return true; const cleaned = v.replace(/[\s\-()]/g, ''); return /^[+]?\d{8,15}$/.test(cleaned) }
 
-/* ── Sección colapsable ── */
-function BSection({ icon, title, badge, children, defaultOpen = true, error = false }) {
-  const [open, setOpen] = useState(defaultOpen)
+/* ── Pasos del wizard ── */
+const WIZARD_STEPS = [
+  { id: 1, icon: 'fa-user-tie', label: 'Cliente', desc: 'Contacto y datos' },
+  { id: 2, icon: 'fa-box-open', label: 'Productos', desc: 'Items del pedido' },
+  { id: 3, icon: 'fa-truck', label: 'Entrega', desc: 'Envío y precio' },
+  { id: 4, icon: 'fa-check-double', label: 'Confirmar', desc: 'Revisar y enviar' },
+]
+
+/* ── Encabezado de panel ── */
+function PaneHeader({ icon, title, subtitle }) {
   return (
-    <div className={`bsec ${open ? '' : 'collapsed'} ${error ? 'has-err' : ''}`}>
-      <div className="bsec-title" onClick={() => setOpen(!open)}>
-        <div className="bsec-title-left"><i className={`fa ${icon}`} />{title}{badge ? <span className="bsec-badge">{badge}</span> : null}{error ? <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 15, height: 15, borderRadius: '50%', background: '#FEE2E2', color: '#DC2626', fontSize: 8, fontWeight: 900, marginLeft: 6, flexShrink: 0 }}>!</span> : null}</div>
-        <i className={`fa fa-chevron-${open ? 'up' : 'down'} bsec-ch`} />
+    <div className="wiz-pane-head">
+      <div className="wiz-pane-ico"><i className={`fa ${icon}`} /></div>
+      <div>
+        <div className="wiz-pane-title">{title}</div>
+        {subtitle && <div className="wiz-pane-sub">{subtitle}</div>}
       </div>
-      <div className="bsec-body">{children}</div>
     </div>
   )
 }
@@ -130,8 +137,7 @@ function ClientCombo({ clients, value, onSelect, onChange }) {
         onChange={e => { setQ(e.target.value); onChange(e.target.value); setOpen(true) }}
         onFocus={() => setOpen(true)}
         placeholder="Buscar cliente por nombre o empresa..."
-        autoComplete="off"
-        autoFocus />
+        autoComplete="off" />
       {open && filtered.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
@@ -179,6 +185,7 @@ export default function Presupuesto() {
   const [mpLoading, setMpLoading] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [waTouched, setWaTouched] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
   const [draftRestored, setDraftRestored] = useState(false)
 
   const clients = get('clients')
@@ -195,7 +202,8 @@ export default function Presupuesto() {
         setForm({
           contact: b.contact || '', company: b.company || '', wa: b.wa || '',
           ocasion: b.ocasion || '', delivery: b.delivery || '', deliveryDate: b.deliveryDate || '',
-          shipCost: b.shipCost || 0, shipCharged: b.shipCharged !== false, status: b.status || 'draft',
+          shipCost: b.shipCost || 0, shipCharged: b.shipCharged !== false,
+          status: b.status || 'draft',
           noteInt: b.noteInt || '', noteCli: b.noteCli || '',
           payStatus: b.payStatus || 'pending',
           margin: b.margin ?? c.defaultMargin ?? 40,
@@ -207,13 +215,13 @@ export default function Presupuesto() {
         setMarginBudgetedSaved(typeof b.marginBudgeted === 'number' ? b.marginBudgeted : null)
       }
     } else {
-      // Restaurar borrador si existe
       try {
         const saved = localStorage.getItem(DRAFT_KEY)
         if (saved) {
-          const { f, it } = JSON.parse(saved)
+          const { f, it, step } = JSON.parse(saved)
           if (f) setForm(prev => ({ ...prev, ...f }))
           if (it?.length) setItems(it)
+          if (step) setCurrentStep(step)
           setDraftRestored(true)
           toast('Borrador restaurado — tus datos anteriores están cargados', 'ok')
         }
@@ -221,14 +229,13 @@ export default function Presupuesto() {
     }
   }, [id]) // eslint-disable-line
 
-  // Auto-guardar borrador mientras se edita un presupuesto nuevo
   useEffect(() => {
     if (id) return
     const hasSomeData = form.contact || form.company || items.some(i => i.name)
     if (hasSomeData) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: items }))
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: items, step: currentStep }))
     }
-  }, [form, items]) // eslint-disable-line
+  }, [form, items, currentStep]) // eslint-disable-line
 
   const setF = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -253,7 +260,6 @@ export default function Presupuesto() {
   const addItem = () => setItems(prev => [...prev, emptyItem()])
   const removeItem = (idx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)
 
-  /* ── Product picker ── */
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerIdx, setPickerIdx] = useState(null)
   const openPicker = (idx) => { setPickerIdx(idx); setPickerOpen(true) }
@@ -294,7 +300,6 @@ export default function Presupuesto() {
     const logTotal = num(form.logoCost) * totalQty
     const ship = num(form.shipCost)
     const shipCharged = form.shipCharged !== false
-    // Negocio siempre paga el envío; el cliente solo si shipCharged=true
     const baseCost = totalCost + logTotal + ship
     const total = totalRevenue + (shipCharged ? ship : 0)
     const gain = total - baseCost
@@ -323,7 +328,6 @@ export default function Presupuesto() {
     setDraftRestored(false)
     localStorage.removeItem(DRAFT_KEY)
     toast('Presupuesto guardado', 'ok')
-    // ─── Auto-sync a Google Sheets (fire-and-forget) ───
     const gs = getSheetsConfig()
     if (gs.enabled && gs.autoSync && gs.url && savedBudget) {
       pushBudget(savedBudget).then(r => {
@@ -333,13 +337,39 @@ export default function Presupuesto() {
     nav('/')
   }
 
+  /* ── Validación por paso ── */
+  const stepError = (step) => {
+    if (step === 1) {
+      if (!form.contact && !form.company) return 'Cargá un contacto o nombre de empresa para continuar.'
+      if (form.wa && !isValidWA(form.wa)) return 'El WhatsApp no tiene un formato válido. Ej: +54 351 1234567'
+      return null
+    }
+    if (step === 2) {
+      if (!items.some(i => i.name)) return 'Agregá al menos un producto al pedido.'
+      return null
+    }
+    return null
+  }
+  const goNext = () => {
+    const err = stepError(currentStep)
+    if (err) { toast(err, 'er'); if (currentStep === 1 && form.wa) setWaTouched(true); return }
+    setCurrentStep(s => Math.min(WIZARD_STEPS.length, s + 1))
+  }
+  const goPrev = () => setCurrentStep(s => Math.max(1, s - 1))
+  const goStep = (id) => {
+    if (id <= currentStep) { setCurrentStep(id); return }
+    for (let s = currentStep; s < id; s++) {
+      const err = stepError(s)
+      if (err) { toast(err, 'er'); return }
+    }
+    setCurrentStep(id)
+  }
+
   const waText = useMemo(() => {
     const bName = c.businessName || 'ANMA'
     const prodList = items.filter(i => i.name).map(i => `• ${i.qty}x ${i.name}`).join('\n')
     return `Hola ${form.contact || '[NOMBRE]'}! Te envio el presupuesto de *${bName}* para ${form.company || '[EMPRESA]'}:\n\n${prodList}\n\n*Total:* ${fmt(calc.total)}\n*Entrega estimada:* ${form.deliveryDate || 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\nTe queda alguna duda? Quedamos a disposicion!`
   }, [form, items, calc.total, c.businessName])
-
-  const copyWA = () => navigator.clipboard.writeText(waText).then(() => toast('Mensaje WA copiado', 'ok'))
 
   const mpCfg = getMPConfig()
   const bankCfg = getBankConfig()
@@ -361,23 +391,6 @@ export default function Presupuesto() {
     setMpLoading(false)
   }
 
-  const copyBankInfo = () => {
-    const bank = getBankConfig()
-    if (!bank.enabled) { toast('Activá la transferencia bancaria en Configuración > Pagos.', 'er'); return }
-    if (!bank.cbu && !bank.alias) { toast('Cargá al menos CBU o Alias en Configuración > Pagos.', 'er'); return }
-    const text = buildBankInfoText(bank, c.businessName || 'ANMA')
-    navigator.clipboard.writeText(text).then(() => toast('Datos de transferencia copiados', 'ok'))
-  }
-
-  const copyBankWithBudget = () => {
-    const bank = getBankConfig()
-    if (!bank.enabled) { toast('Activá la transferencia bancaria en Configuración > Pagos.', 'er'); return }
-    const bankText = buildBankInfoText(bank, c.businessName || 'ANMA')
-    const fullText = `${waText}\n\n${bankText}`
-    navigator.clipboard.writeText(fullText).then(() => toast('Presupuesto + datos bancarios copiados', 'ok'))
-  }
-
-  /* ── WhatsApp directo — abre wa.me con el texto del presupuesto ── */
   const waPhone = () => form.wa.replace(/[^\d]/g, '')
 
   const sendWhatsApp = () => {
@@ -386,7 +399,6 @@ export default function Presupuesto() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(waText)}`, '_blank')
   }
 
-  /* ── Finalizar y Enviar Cobro — presupuesto + datos bancarios por WA ── */
   const sendPaymentByWA = () => {
     const bank = getBankConfig()
     if (!bank.enabled) { toast('Activá la transferencia bancaria en Configuración > Pagos.', 'er'); return }
@@ -396,7 +408,6 @@ export default function Presupuesto() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(fullText)}`, '_blank')
   }
 
-  /* ── Enviar Datos de Pago — solo CBU/Alias por WA ── */
   const sendBankDataByWA = () => {
     const bank = getBankConfig()
     if (!bank.enabled) { toast('Activá la transferencia bancaria en Configuración > Pagos.', 'er'); return }
@@ -406,7 +417,6 @@ export default function Presupuesto() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(buildBankInfoText(bank, c.businessName || 'ANMA'))}`, '_blank')
   }
 
-  /* ── ESC cierra modales ── */
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
@@ -422,13 +432,11 @@ export default function Presupuesto() {
     const brandColor = c.brandColor || '#7C3AED'
     const bName = c.businessName || 'ANMA'
     const prodRows = items.filter(i => i.name).map(i =>
-      `<tr><td>${i.name}${i.variant ? ' <span style="color:#888;font-size:10px">· ' + i.variant + '</span>' : ''}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right">${fmt(i.qty * i.priceUnit)}</td></tr>`
+      `<tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right">${fmt(i.qty * i.priceUnit)}</td></tr>`
     ).join('')
-    // Vigencia auto-calculada
     const validDays = num(c.budgetValidityDays) || 7
     const validUntil = new Date(); validUntil.setDate(validUntil.getDate() + validDays)
     const vigenciaISO = validUntil.toISOString().slice(0, 10)
-    // Link WA dueño para "Aceptar presupuesto"
     const ownerWA = (c.ownerWA || c.businessWA || '').replace(/[^\d+]/g, '')
     const acceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(calc.total)}.`)
     const waLink = ownerWA ? `https://wa.me/${ownerWA.replace('+','')}?text=${acceptMsg}` : ''
@@ -450,7 +458,6 @@ export default function Presupuesto() {
       th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
       td{padding:6px 9px;border-bottom:1px solid #EEF0F7;font-size:11px}
       tr:last-child td{border-bottom:none}
-      .variant{color:#888;font-size:9.5px;margin-left:4px}
       .totals{margin-top:6px;display:flex;justify-content:flex-end}
       .totals-box{min-width:240px;padding:10px 14px;background:linear-gradient(135deg,${brandColor}0d,${brandColor}1a);border-radius:8px;border:1px solid ${brandColor}33}
       .totals-row{display:flex;justify-content:space-between;padding:2px 0;font-size:11px;color:#555}
@@ -543,10 +550,9 @@ export default function Presupuesto() {
     setTimeout(() => win.print(), 300)
   }
 
-  /* ── Enviar por email (Resend) ── */
   const [emailSending, setEmailSending] = useState(false)
   const sendByEmail = async () => {
-    const clientEmail = form.clientEmail || get('clients').find(cl => cl.company === form.company || cl.contact === form.contact)?.email || ''
+    const clientEmail = get('clients').find(cl => cl.company === form.company || cl.contact === form.contact)?.email || ''
     if (!clientEmail) { toast('Este cliente no tiene email cargado. Agregalo en Clientes.', 'er'); return }
     if (!c.resendApiKey) { toast('Configurá el email en Configuración → Integraciones → Email.', 'er'); return }
     setEmailSending(true)
@@ -558,7 +564,7 @@ export default function Presupuesto() {
         body: JSON.stringify({
           from: c.resendFrom || 'onboarding@resend.dev',
           to: [clientEmail],
-          subject: `Presupuesto de ${c.businessName || 'ANMA'} — ${form.budgetNum || ''}`,
+          subject: `Presupuesto de ${c.businessName || 'ANMA'}`,
           html,
         }),
       })
@@ -577,7 +583,7 @@ export default function Presupuesto() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>{editId ? 'Editar presupuesto' : 'Nuevo presupuesto'}</h2><p>Completá los datos para generar el presupuesto</p></div>
+        <div className="ph-left"><h2>{editId ? 'Editar pedido' : 'Nuevo pedido'}</h2><p>Completá los datos del pedido o cotización</p></div>
         <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /> Descartar</button></div>
       </div>
 
@@ -604,145 +610,227 @@ export default function Presupuesto() {
         </div>
       )}
 
-      <style>{`
-        .budget-layout .bsec input, .budget-layout .bsec select, .budget-layout .bsec textarea { border: 1px solid #E2E8F0; }
-        .budget-layout .bsec input:focus, .budget-layout .bsec select:focus, .budget-layout .bsec textarea:focus { border-color: var(--brand); }
-      `}</style>
+      {/* STEPPER */}
+      <div className="wizard-steps">
+        {WIZARD_STEPS.map((s, idx) => {
+          const state = currentStep === s.id ? 'active' : currentStep > s.id ? 'done' : 'pending'
+          return (
+            <div key={s.id} className="wiz-step-wrap">
+              <div className={`wiz-step ${state}`} onClick={() => goStep(s.id)}>
+                <div className="wiz-step-num">
+                  {state === 'done' ? <i className="fa fa-check" /> : s.id}
+                </div>
+                <div className="wiz-step-txt">
+                  <div className="wiz-step-lbl">{s.label}</div>
+                  <div className="wiz-step-desc">{s.desc}</div>
+                </div>
+                <i className={`fa ${s.icon} wiz-step-bgicon`} />
+              </div>
+              {idx < WIZARD_STEPS.length - 1 && <div className={`wiz-conn ${currentStep > s.id ? 'done' : ''}`} />}
+            </div>
+          )
+        })}
+      </div>
+
       <div className="budget-layout">
         <div>
-          {/* CLIENTE */}
-          <BSection icon="fa-user-tie" title="Cliente" badge={form.contact || form.company || null} error={!form.contact && !form.company} defaultOpen={true}>
-            <div className="grid2">
-              <div className="fg">
-                <label>Contacto (buscar en CRM)</label>
-                <ClientCombo clients={clients} value={form.contact} onSelect={handleClientSelect} onChange={val => setF('contact', val)} />
-              </div>
-              <div className="fg"><label>Empresa</label><input type="text" value={form.company} onChange={e => setF('company', e.target.value)} placeholder="Empresa S.A." /></div>
-              <div className="fg">
-                <label>WhatsApp</label>
-                <input type="text" value={form.wa}
-                  onChange={e => { setF('wa', e.target.value); if (!waTouched) setWaTouched(true) }}
-                  onBlur={() => setWaTouched(true)}
-                  placeholder="+54 351 1234567"
-                  className={waTouched && form.wa && !isValidWA(form.wa) ? 'inp-err' : ''} />
-                {waTouched && form.wa && !isValidWA(form.wa) && (
-                  <div className="fg-err"><i className="fa fa-circle-exclamation" /> Formato no válido. Ej: <b>+54 351 1234567</b> (8 a 15 dígitos)</div>
-                )}
-              </div>
-              <div className="fg"><label>Ocasión</label>
-                <select value={form.ocasion} onChange={e => setF('ocasion', e.target.value)}>
-                  <option value="">— seleccionar —</option>
-                  {(c.occasions || []).map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </div>
-            </div>
-          </BSection>
-
-          {/* ENTREGA */}
-          <BSection icon="fa-truck" title="Entrega y estado" badge={form.deliveryDate || form.delivery || null} defaultOpen={false}>
-            <div className="grid2">
-              <div className="fg"><label>Modalidad</label>
-                <select value={form.delivery} onChange={e => setF('delivery', e.target.value)}>
-                  <option value="">— seleccionar —</option>
-                  {(c.deliveryModes || []).map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-              </div>
-              <div className="fg">
-                <label>Fecha pactada</label>
-                <input type="date" value={form.deliveryDate} onChange={e => setF('deliveryDate', e.target.value)} {...(editId ? {} : { min: todayISO() })} />
-                {form.deliveryDate && isWeekend(form.deliveryDate) && (
-                  <div style={{ fontSize: 10, color: 'var(--amber,#F59E0B)', marginTop: 3 }}>
-                    <i className="fa fa-triangle-exclamation" /> Es fin de semana. Verificá si entregás ese día.
+          <div className="wiz-pane">
+            {/* ─── PASO 1: CLIENTE ─── */}
+            {currentStep === 1 && (
+              <>
+                <PaneHeader icon="fa-user-tie" title="Paso 1 · Cliente" subtitle="¿A quién le estás haciendo el presupuesto?" />
+                <div className="grid2">
+                  <div className="fg">
+                    <label>Contacto (buscar en CRM)</label>
+                    <ClientCombo clients={clients} value={form.contact} onSelect={handleClientSelect} onChange={val => setF('contact', val)} />
                   </div>
-                )}
-              </div>
-              <div className="fg">
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}>
-                  <input type="checkbox" checked={form.envioACotizar !== false} onChange={e => setF('envioACotizar', e.target.checked)} style={{ width: 'auto' }} />
-                  Envío a cotizar (mostrar leyenda en PDF)
-                </label>
-              </div>
-              <div className="fg"><label>Estado</label>
-                <select value={form.status} onChange={e => setF('status', e.target.value)}>
-                  <option value="draft">Borrador</option>
-                  <option value="sent">Enviado al cliente</option>
-                  <option value="confirmed">Confirmado</option>
-                  <option value="inprogress">En preparación</option>
-                  <option value="delivered">Entregado</option>
-                  <option value="cancelled">Cancelado</option>
-                </select>
-              </div>
-              <div className="fg"><label>Estado de pago</label>
-                <select value={form.payStatus} onChange={e => setF('payStatus', e.target.value)}>
-                  <option value="pending">Pago pendiente</option>
-                  <option value="partial">Seña abonada</option>
-                  <option value="paid">Pagado</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid2">
-              <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
-              <div className="fg"><label>Nota al cliente (PDF)</label><textarea value={form.noteCli} onChange={e => setF('noteCli', e.target.value)} rows={2} placeholder="Visible en el presupuesto..." /></div>
-            </div>
-          </BSection>
+                  <div className="fg"><label>Empresa</label><input type="text" value={form.company} onChange={e => setF('company', e.target.value)} placeholder="Empresa S.A." /></div>
+                  <div className="fg">
+                    <label>WhatsApp</label>
+                    <input type="text" value={form.wa}
+                      onChange={e => { setF('wa', e.target.value); if (!waTouched) setWaTouched(true) }}
+                      onBlur={() => setWaTouched(true)}
+                      placeholder="+54 351 1234567"
+                      className={waTouched && form.wa && !isValidWA(form.wa) ? 'inp-err' : ''} />
+                    {waTouched && form.wa && !isValidWA(form.wa) && (
+                      <div className="fg-err"><i className="fa fa-circle-exclamation" /> Formato no válido. Ej: <b>+54 351 1234567</b> (8 a 15 dígitos)</div>
+                    )}
+                  </div>
+                  <div className="fg"><label>Ocasión</label>
+                    <select value={form.ocasion} onChange={e => setF('ocasion', e.target.value)}>
+                      <option value="">— seleccionar —</option>
+                      {(c.occasions || []).map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="wiz-tip">
+                  <i className="fa fa-lightbulb" /> Buscá un contacto existente o creá uno nuevo escribiendo el nombre. Seleccioná la ocasión para personalizar el presupuesto.
+                </div>
+              </>
+            )}
 
-          {/* PRODUCTOS */}
-          <BSection icon="fa-box-open" title="Productos" badge={items.filter(i => i.name).length ? `${items.filter(i => i.name).length} ítems` : null} error={!items.some(i => i.name)} defaultOpen={!!id}>
-            <div style={{ overflowX: 'auto' }}>
-              <table>
-                <thead><tr><th style={{ width: 24 }}></th><th style={{ minWidth: 160 }}>Producto</th><th style={{ width: 65 }}>Cant.</th><th style={{ width: 100 }}>Costo u.</th><th style={{ width: 100 }}>Precio u.</th><th style={{ width: 95 }}>Subtotal</th><th style={{ width: 36 }}></th></tr></thead>
-                <tbody>
-                  {items.map((it, i) => (
-                    <tr key={i}
-                      onDragOver={handleDragOver(i)} onDrop={handleDrop(i)} onDragLeave={handleDragLeave}
-                      style={dragOver === i ? { background: 'var(--brand-xlt)', outline: '2px dashed var(--brand)' } : undefined}>
-                      <td style={{ textAlign: 'center', cursor: 'grab', color: 'var(--txt3)' }}
-                        draggable onDragStart={handleDragStart(i)} title="Arrastrar para reordenar">
-                        <i className="fa fa-grip-vertical" />
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                          <input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" style={{ padding: '6px 8px', fontSize: 12, flex: 1 }} />
-                          <button onClick={() => openPicker(i)} type="button" title="Elegir del catálogo"
-                            style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, transition: 'background .12s' }}>
-                            <i className="fa fa-list" />
-                          </button>
+            {/* ─── PASO 2: PRODUCTOS ─── */}
+            {currentStep === 2 && (
+              <>
+                <PaneHeader icon="fa-box-open" title="Paso 2 · Productos" subtitle="Agregá los ítems que incluye el pedido" />
+                <div style={{ overflowX: 'auto' }}>
+                  <table>
+                    <thead><tr><th style={{ width: 24 }}></th><th style={{ minWidth: 160 }}>Producto</th><th style={{ width: 65 }}>Cant.</th><th style={{ width: 100 }}>Costo u.</th><th style={{ width: 100 }}>Precio u.</th><th style={{ width: 95 }}>Subtotal</th><th style={{ width: 36 }}></th></tr></thead>
+                    <tbody>
+                      {items.map((it, i) => (
+                        <tr key={i}
+                          onDragOver={handleDragOver(i)} onDrop={handleDrop(i)} onDragLeave={handleDragLeave}
+                          style={dragOver === i ? { background: 'var(--brand-xlt)', outline: '2px dashed var(--brand)' } : undefined}>
+                          <td style={{ textAlign: 'center', cursor: 'grab', color: 'var(--txt3)' }}
+                            draggable onDragStart={handleDragStart(i)} title="Arrastrar para reordenar">
+                            <i className="fa fa-grip-vertical" />
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                              <input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" style={{ padding: '6px 8px', fontSize: 12, flex: 1 }} />
+                              <button onClick={() => openPicker(i)} type="button" title="Elegir del catálogo"
+                                style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, transition: 'background .12s' }}>
+                                <i className="fa fa-list" />
+                              </button>
+                            </div>
+                          </td>
+                          <td><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
+                          <td><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
+                          <td><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
+                          <td style={{ fontWeight: 700, color: 'var(--money)', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
+                          <td><button className="act del" onClick={() => removeItem(i)}><i className="fa fa-xmark" /></button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <ProductPicker open={pickerOpen} onClose={() => setPickerOpen(false)} products={products} onSelect={handlePickProduct} />
+                </div>
+                <button className="btn btn-ghost btn-xs" style={{ marginTop: 8 }} onClick={addItem}><i className="fa fa-plus" /> Agregar producto</button>
+                <div className="wiz-tip">
+                  <i className="fa fa-lightbulb" /> Escribí el nombre del producto para autocompletar desde tu catálogo — el costo y precio se llenan solos.
+                </div>
+              </>
+            )}
+
+            {/* ─── PASO 3: ENTREGA ─── */}
+            {currentStep === 3 && (
+              <>
+                <PaneHeader icon="fa-truck" title="Paso 3 · Entrega y precio" subtitle="Configurá modalidad, fechas y parámetros" />
+                <div className="grid2">
+                  <div className="fg"><label>Modalidad</label>
+                    <select value={form.delivery} onChange={e => setF('delivery', e.target.value)}>
+                      <option value="">— seleccionar —</option>
+                      {(c.deliveryModes || []).map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div className="fg">
+                    <label>Fecha pactada</label>
+                    <input type="date" value={form.deliveryDate} onChange={e => setF('deliveryDate', e.target.value)} {...(editId ? {} : { min: todayISO() })} />
+                    {form.deliveryDate && isWeekend(form.deliveryDate) && (
+                      <div style={{ fontSize: 10, color: 'var(--amber,#F59E0B)', marginTop: 3 }}>
+                        <i className="fa fa-triangle-exclamation" /> Es fin de semana. Verificá si entregás ese día.
+                      </div>
+                    )}
+                  </div>
+                  <div className="fg">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}>
+                      <input type="checkbox" checked={form.envioACotizar !== false} onChange={e => setF('envioACotizar', e.target.checked)} style={{ width: 'auto' }} />
+                      Envío a cotizar (mostrar leyenda en PDF)
+                    </label>
+                  </div>
+                  <div className="fg"><label>Estado</label>
+                    <select value={form.status} onChange={e => setF('status', e.target.value)}>
+                      <option value="draft">Borrador</option>
+                      <option value="sent">Enviado al cliente</option>
+                      <option value="confirmed">Confirmado</option>
+                      <option value="inprogress">En preparación</option>
+                      <option value="delivered">Entregado</option>
+                      <option value="cancelled">Cancelado</option>
+                    </select>
+                  </div>
+                  <div className="fg"><label>Estado de pago</label>
+                    <select value={form.payStatus} onChange={e => setF('payStatus', e.target.value)}>
+                      <option value="pending">Pago pendiente</option>
+                      <option value="partial">Seña abonada</option>
+                      <option value="paid">Pagado</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid3" style={{ marginTop: 4 }}>
+                  <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setF('margin', e.target.value)} onBlur={e => { if (e.target.value === '') setF('margin', 0) }} min="0" max="100" /></div>
+                  <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
+                  <div className="fg"><label>Impresión/logo x u. ($)</label><input type="number" value={form.logoCost} onFocus={selectOnFocus} onChange={e => setF('logoCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('logoCost', 0) }} min="0" /></div>
+                </div>
+                <div className="grid2">
+                  <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
+                  <div className="fg"><label>Nota al cliente (PDF)</label><textarea value={form.noteCli} onChange={e => setF('noteCli', e.target.value)} rows={2} placeholder="Visible en el presupuesto..." /></div>
+                </div>
+              </>
+            )}
+
+            {/* ─── PASO 4: CONFIRMAR ─── */}
+            {currentStep === 4 && (
+              <>
+                <PaneHeader icon="fa-check-double" title="Paso 4 · Confirmar y enviar" subtitle="Revisá todo antes de guardar" />
+                <div className="wiz-review">
+                  <div className="wiz-rev-card">
+                    <div className="wiz-rev-card-h"><i className="fa fa-user-tie" /> Cliente <button className="wiz-rev-edit" onClick={() => goStep(1)}>Editar</button></div>
+                    <div className="wiz-rev-body">
+                      <div><b>{form.contact || '—'}</b>{form.company ? ` · ${form.company}` : ''}</div>
+                      <div className="wiz-rev-meta">{form.wa || 'Sin WhatsApp'}{form.ocasion ? ` · ${form.ocasion}` : ''}</div>
+                    </div>
+                  </div>
+                  <div className="wiz-rev-card">
+                    <div className="wiz-rev-card-h"><i className="fa fa-box-open" /> Productos ({items.filter(i => i.name).length}) <button className="wiz-rev-edit" onClick={() => goStep(2)}>Editar</button></div>
+                    <div className="wiz-rev-body">
+                      {items.filter(i => i.name).map((it, idx) => (
+                        <div key={idx} className="wiz-rev-item">
+                          <span>{it.qty}× {it.name}</span>
+                          <span>{fmt(num(it.qty) * num(it.priceUnit))}</span>
                         </div>
-                      </td>
-                      <td><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
-                      <td><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
-                      <td><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '6px 8px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }} /></td>
-                      <td style={{ fontWeight: 700, color: 'var(--money)', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit' }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
-                      <td><button className="act del" onClick={() => removeItem(i)}><i className="fa fa-xmark" /></button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button className="btn btn-ghost btn-xs" style={{ marginTop: 8 }} onClick={addItem}><i className="fa fa-plus" /> Agregar producto</button>
-            <ProductPicker open={pickerOpen} onClose={() => setPickerOpen(false)} products={products} onSelect={handlePickProduct} />
-          </BSection>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="wiz-rev-card">
+                    <div className="wiz-rev-card-h"><i className="fa fa-truck" /> Entrega <button className="wiz-rev-edit" onClick={() => goStep(3)}>Editar</button></div>
+                    <div className="wiz-rev-body">
+                      <div>{form.delivery || 'Sin modalidad'} · {form.deliveryDate || 'Sin fecha'}</div>
+                      <div className="wiz-rev-meta">Margen {form.margin}% · Seña {form.deposit}%</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="wiz-tip" style={{ marginTop: 14 }}>
+                  <i className="fa fa-circle-check" /> Todo listo. Al confirmar guardás el presupuesto y volvés al dashboard.
+                </div>
+              </>
+            )}
 
-          {/* PARÁMETROS */}
-          <BSection icon="fa-sliders" title="Parámetros de precio" badge={<span style={{ display: 'inline-flex', gap: 4 }}><span style={{ background: '#F1F5F9', color: '#64748B', borderRadius: 8, padding: '1px 8px', fontSize: 10, fontWeight: 600 }}>{form.margin || 0}% margen</span><span style={{ background: '#F1F5F9', color: '#64748B', borderRadius: 8, padding: '1px 8px', fontSize: 10, fontWeight: 600 }}>{form.deposit || 0}% seña</span></span>} defaultOpen={false}>
-            <div className="grid3">
-              <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setF('margin', e.target.value)} onBlur={e => { if (e.target.value === '') setF('margin', 0) }} min="0" max="100" /></div>
-              <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
-              <div className="fg"><label>Impresión/logo x u. ($)</label><input type="number" value={form.logoCost} onFocus={selectOnFocus} onChange={e => setF('logoCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('logoCost', 0) }} min="0" /></div>
+            {/* NAV WIZARD */}
+            <div className="wiz-nav">
+              <button className="btn btn-ghost" onClick={goPrev} disabled={currentStep === 1}>
+                <i className="fa fa-arrow-left" /> Anterior
+              </button>
+              <div className="wiz-nav-mid">Paso {currentStep} de {WIZARD_STEPS.length}</div>
+              {currentStep < WIZARD_STEPS.length ? (
+                <button className="btn btn-primary" onClick={goNext}>
+                  Siguiente <i className="fa fa-arrow-right" />
+                </button>
+              ) : (
+                <button className="btn btn-primary" onClick={handleSave}>
+                  <i className="fa fa-floppy-disk" /> Confirmar y guardar
+                </button>
+              )}
             </div>
-          </BSection>
+          </div>
         </div>
 
         {/* PANEL LATERAL */}
-        <div style={{ position: 'sticky', top: 20, alignSelf: 'start' }}>
+        <div>
           <div className="calc-panel">
             <div className="cp-title"><i className="fa fa-calculator" />Resumen</div>
-
-            {/* Métricas */}
             <div className="cp-row"><span className="cp-lbl">N° Presupuesto</span><span className="cp-val">{budgetNum}</span></div>
             <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val">{fmt(calc.totalCost)}</span></div>
             <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>
-            <div className="cp-row"><span className="cp-lbl">Envío</span><span className="cp-val">{fmt(num(form.shipCost))}</span></div>
             <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>
             <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined}>{calc.marginReal}%{calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}</span></div>
             {marginBudgetedSaved !== null && Math.abs(marginBudgetedSaved - Number(calc.marginReal)) >= 0.5 && (() => {
@@ -759,8 +847,6 @@ export default function Presupuesto() {
                 </div>
               )
             })()}
-
-            {/* Total */}
             <div className="cp-total-row">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)' }}>Total</span>
@@ -770,7 +856,6 @@ export default function Presupuesto() {
                 </div>
               </div>
             </div>
-
             <div className="cp-actions">
 
               {/* ── 1. GUARDAR ── acción principal */}
@@ -780,13 +865,11 @@ export default function Presupuesto() {
                 <i className="fa fa-floppy-disk" /> Guardar Presupuesto
               </button>
 
-              {/* ── 2. COMUNICACIÓN ── flujo de venta, 2 botones WA únicos */}
+              {/* ── 2. COMUNICACIÓN ── */}
               <div style={{ marginTop: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.18)', borderRadius: 10, padding: '11px 12px' }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 9, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <i className="fa-brands fa-whatsapp" /> Comunicación
                 </div>
-
-                {/* Botón 1: primer contacto */}
                 <button onClick={sendWhatsApp}
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: 'rgba(37,211,102,.22)', border: '1.5px solid rgba(37,211,102,.42)', borderRadius: 8, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s', marginBottom: 6 }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.34)'}
@@ -797,8 +880,6 @@ export default function Presupuesto() {
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>Primer contacto con el cliente</div>
                   </div>
                 </button>
-
-                {/* Botón 2: cerrar venta con datos de pago */}
                 {bankCfg.enabled ? (
                   <button onClick={sendBankDataByWA}
                     style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.26)', borderRadius: 8, color: '#86efac', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
@@ -818,7 +899,7 @@ export default function Presupuesto() {
                 )}
               </div>
 
-              {/* ── 3. DOCUMENTOS ── herramientas, fila compacta slate */}
+              {/* ── 3. DOCUMENTOS ── */}
               <div style={{ marginTop: 8 }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Documentos</div>
                 <div style={{ display: 'flex', gap: 5 }}>
@@ -849,7 +930,7 @@ export default function Presupuesto() {
               {mpResult && <div style={{ marginTop: 6, fontSize: 10, wordBreak: 'break-all', color: 'rgba(255,255,255,.65)' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
             </div>
 
-            {/* ── 4. PAGO ONLINE ── Mercado Pago (si está activo) */}
+            {/* ── 4. PAGO ONLINE ── Mercado Pago */}
             {mpCfg.enabled && (
               <div style={{ marginTop: 10 }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
@@ -869,8 +950,6 @@ export default function Presupuesto() {
                 <i className="fa fa-circle-info" /> Activá un método de cobro en Config › Pagos
               </div>
             )}
-
-            {/* Vista previa WA */}
             <div className="wa-prev">
               <div className="wa-prev-lbl">Vista previa WA</div>
               <div className="wa-bubble">{waText}</div>
