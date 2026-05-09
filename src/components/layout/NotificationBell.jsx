@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 import { fmt } from '../../lib/storage'
 
 const NOTIF_KEY = 'anma3_notif_read'
@@ -19,52 +21,55 @@ const ACTION_MAP = {
   ────────────────────────────────────────────────────────────── */
   pago: {
     label: 'Cobrar',
-    icon: 'fa-money-bill-wave',       // 💸 billete — universal para pagos
+    icon: 'fa-money-bill-wave',
     color: '#16A34A',
     bg: '#DCFCE7',
-    handler: (alert, { nav }) => {
+    handler: (alert, { nav, setOpen }) => {
+      setOpen(false)
       const num = (alert.wa || '').replace(/\D/g, '')
       if (!num) { nav(alert.route || '/'); return }
       const parts = [
         `Hola ${alert.clientName || ''}`,
         alert.budgetNum ? `, te escribo por el pedido *${alert.budgetNum}*` : '',
-        alert.amount ? ` — queda pendiente el pago de *${alert.amount}*` : '',
-        `. ¿Cómo preferís abonar?`
+        alert.amount    ? ` — queda pendiente el pago de *${alert.amount}*` : '',
+        `. ¿Cómo preferís abonar?`,
       ]
       window.open(`https://wa.me/${num}?text=${encodeURIComponent(parts.join(''))}`, '_blank')
     },
   },
 
   /* ──────────────────────────────────────────────────────────────
-     🚚 LOGÍSTICA — Botón de cambiar estado (En camino/Entregado).
-     Extrae: budgetNum, route
+     🚚 LOGÍSTICA — Navega al pedido específico con react-router.
+     Extrae: budgetNum, route → /presupuesto/:id
   ────────────────────────────────────────────────────────────── */
   logistica: {
     label: 'Cambiar Estado',
-    icon: 'fa-truck-ramp-box',        // 🚚 camión — universal para envíos
+    icon: 'fa-truck-ramp-box',
     color: '#2563EB',
     bg: '#EFF6FF',
-    handler: (alert, { nav }) => {
+    handler: (alert, { nav, setOpen }) => {
+      setOpen(false)
       nav(alert.route || '/')
     },
   },
 
   /* ──────────────────────────────────────────────────────────────
-     💬 COMERCIAL — Seguimiento por WhatsApp (cortesía).
+     💬 COMERCIAL — Seguimiento por WhatsApp.
      Extrae: clientName, budgetNum, wa
   ────────────────────────────────────────────────────────────── */
   comercial: {
     label: 'Seguimiento',
-    icon: 'fa-comment-dots',          // 💬 mensaje — universal para consultas
+    icon: 'fa-comment-dots',
     color: '#7C3AED',
     bg: '#F3E8FF',
-    handler: (alert, { nav }) => {
+    handler: (alert, { nav, setOpen }) => {
+      setOpen(false)
       const num = (alert.wa || '').replace(/\D/g, '')
       if (!num) { nav(alert.route || '/'); return }
       const parts = [
         `Hola ${alert.clientName || ''}! ¿Cómo estás?`,
         alert.budgetNum ? ` Quería consultarte por el presupuesto *${alert.budgetNum}*` : '',
-        ` que te enviamos. ¿Pudiste evaluarlo? Estoy a disposición para lo que necesites.`
+        ` que te enviamos. ¿Pudiste evaluarlo? Estoy a disposición para lo que necesites.`,
       ]
       window.open(`https://wa.me/${num}?text=${encodeURIComponent(parts.join(''))}`, '_blank')
     },
@@ -72,14 +77,15 @@ const ACTION_MAP = {
 
   /* ──────────────────────────────────────────────────────────────
      📦 STOCK — Redirige al catálogo para reponer.
-     Extrae: route (→ /catalogo)
+     Extrae: route → /catalogo
   ────────────────────────────────────────────────────────────── */
   stock: {
     label: 'Reponer',
-    icon: 'fa-boxes-stacked',         // 📦 cajas — universal para inventario
+    icon: 'fa-boxes-stacked',
     color: '#D97706',
     bg: '#FEF3C7',
-    handler: (alert, { nav }) => {
+    handler: (alert, { nav, setOpen }) => {
+      setOpen(false)
       nav(alert.route || '/catalogo')
     },
   },
@@ -90,10 +96,11 @@ const ACTION_MAP = {
   ────────────────────────────────────────────────────────────── */
   cumpleaños: {
     label: 'Saludar',
-    icon: 'fa-cake-candles',          // 🎂 torta — universal para cumpleaños
+    icon: 'fa-cake-candles',
     color: '#EC4899',
     bg: '#FCE7F3',
-    handler: (alert, { nav }) => {
+    handler: (alert, { nav, setOpen }) => {
+      setOpen(false)
       const num = (alert.wa || '').replace(/\D/g, '')
       if (!num) { nav(alert.route || '/clientes'); return }
       const msg = `¡Feliz cumpleaños ${alert.clientName || ''}! 🎉 Desde todo el equipo te deseamos un excelente día. ¡Que la pases genial!`
@@ -103,14 +110,15 @@ const ACTION_MAP = {
 
   /* ──────────────────────────────────────────────────────────────
      🔔 RECORDATORIO — Acción genérica de recordatorio.
-     Extrae: clientName, wa, route
+     Extrae: clientName, wa, budgetNum, route
   ────────────────────────────────────────────────────────────── */
   recordatorio: {
     label: 'Contactar',
     icon: 'fa-bell',
     color: '#0891B2',
     bg: '#ECFEFF',
-    handler: (alert, { nav }) => {
+    handler: (alert, { nav, setOpen }) => {
+      setOpen(false)
       const num = (alert.wa || '').replace(/\D/g, '')
       if (!num) { nav(alert.route || '/'); return }
       const msg = `Hola ${alert.clientName || ''}! Te contacto como recordatorio sobre ${alert.budgetNum ? `el pedido *${alert.budgetNum}*` : 'tu consulta'}. ¿En qué puedo ayudarte?`
@@ -127,7 +135,8 @@ const ACTION_MAP = {
     icon: 'fa-arrow-up-right-from-square',
     color: 'var(--brand)',
     bg: 'var(--brand-xlt)',
-    handler: (alert, { nav }) => {
+    handler: (alert, { nav, setOpen }) => {
+      setOpen(false)
       nav(alert.route || '/')
     },
   },
@@ -136,15 +145,12 @@ const ACTION_MAP = {
 /**
  * Resuelve la acción para una alerta dada su categoría.
  * Si la categoría no existe en ACTION_MAP, usa _default (fallback).
- * Esto permite agregar categorías futuras sin tocar este archivo:
- * solo hay que pushear alertas con `category: 'miNuevaCategoria'`
- * y agregar la entrada en ACTION_MAP arriba.
  */
 function resolveAction(category) {
   return ACTION_MAP[category] || ACTION_MAP._default
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════ */
 
 const daysAgo = (iso) => {
   if (!iso) return null
@@ -285,13 +291,39 @@ function buildAlerts(budgets, products) {
   return alerts
 }
 
+/* ── Helpers Supabase (fire-and-forget, silencioso si tabla no existe) ── */
+function persistReadToSupabase(userId, notifId) {
+  if (!userId) return
+  supabase
+    .from('notif_read')
+    .upsert(
+      { user_id: userId, notif_id: notifId, read_at: new Date().toISOString() },
+      { onConflict: 'user_id,notif_id' }
+    )
+    .then(null, () => {})
+}
+
+function persistBatchReadToSupabase(userId, notifIds) {
+  if (!userId || !notifIds.length) return
+  const rows = notifIds.map(id => ({
+    user_id: userId,
+    notif_id: id,
+    read_at: new Date().toISOString(),
+  }))
+  supabase
+    .from('notif_read')
+    .upsert(rows, { onConflict: 'user_id,notif_id' })
+    .then(null, () => {})
+}
+
 const LEVEL_COLORS = {
   critical: { bg: 'var(--red)', light: '#FEE2E2', text: '#991B1B', border: '#FCA5A5' },
-  warning:  { bg: '#F59E0B', light: '#FEF3C7', text: '#92400E', border: '#FCD34D' },
+  warning:  { bg: '#F59E0B',   light: '#FEF3C7', text: '#92400E', border: '#FCD34D' },
 }
 
 export default function NotificationBell() {
   const { get } = useData()
+  const { user } = useAuth()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
   const [readIds, setReadIds] = useState(() => {
@@ -301,27 +333,32 @@ export default function NotificationBell() {
     try { return new Set(JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY) || '[]')) } catch { return new Set() }
   })
 
-  const budgets = get('budgets')
+  const budgets  = get('budgets')
   const products = get('products')
-  const allAlerts = useMemo(() => buildAlerts(budgets, products), [budgets, products])
-  const alerts = useMemo(() => allAlerts.filter(a => !dismissedIds.has(a.id)), [allAlerts, dismissedIds])
+  const allAlerts  = useMemo(() => buildAlerts(budgets, products), [budgets, products])
+  const alerts     = useMemo(() => allAlerts.filter(a => !dismissedIds.has(a.id)), [allAlerts, dismissedIds])
   const dismissedCount = allAlerts.filter(a => dismissedIds.has(a.id)).length
 
-  const unread = alerts.filter(a => !readIds.has(a.id))
+  const unread      = alerts.filter(a => !readIds.has(a.id))
   const hasCritical = unread.some(a => a.level === 'critical')
   const unreadCount = unread.length
 
-  const markAllRead = useCallback(() => {
-    const newIds = new Set([...readIds, ...alerts.map(a => a.id)])
-    setReadIds(newIds)
-    localStorage.setItem(NOTIF_KEY, JSON.stringify([...newIds]))
-  }, [readIds, alerts])
-
+  /* ── Mark single as read — localStorage + Supabase ── */
   const markRead = useCallback((id) => {
     const newIds = new Set([...readIds, id])
     setReadIds(newIds)
     localStorage.setItem(NOTIF_KEY, JSON.stringify([...newIds]))
-  }, [readIds])
+    persistReadToSupabase(user?.id, id)
+  }, [readIds, user])
+
+  /* ── Mark all as read — localStorage + Supabase batch ── */
+  const markAllRead = useCallback(() => {
+    const unreadAlerts = alerts.filter(a => !readIds.has(a.id))
+    const newIds = new Set([...readIds, ...alerts.map(a => a.id)])
+    setReadIds(newIds)
+    localStorage.setItem(NOTIF_KEY, JSON.stringify([...newIds]))
+    persistBatchReadToSupabase(user?.id, unreadAlerts.map(a => a.id))
+  }, [readIds, alerts, user])
 
   const dismissAlert = useCallback((id) => {
     const newIds = new Set([...dismissedIds, id])
@@ -334,11 +371,12 @@ export default function NotificationBell() {
     localStorage.setItem(NOTIF_DISMISS_KEY, '[]')
   }, [])
 
-  const executeAction = (alert) => {
+  /* ── Execute action: mark read → close drawer → run handler ── */
+  const executeAction = useCallback((alert) => {
     markRead(alert.id)
     const action = resolveAction(alert.category)
     action.handler(alert, { nav, setOpen })
-  }
+  }, [markRead, nav])
 
   useEffect(() => {
     if (!open) return
@@ -405,7 +443,7 @@ export default function NotificationBell() {
             </div>
           ) : (
             alerts.map(alert => {
-              const col = LEVEL_COLORS[alert.level]
+              const col    = LEVEL_COLORS[alert.level]
               const isRead = readIds.has(alert.id)
               const action = resolveAction(alert.category)
               return (
