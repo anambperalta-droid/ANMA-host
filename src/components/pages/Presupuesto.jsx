@@ -467,9 +467,12 @@ export default function Presupuesto() {
       .footer{margin-top:14px;padding-top:8px;border-top:1px solid #E5E7F0;font-size:9.5px;color:#999;line-height:1.5}
       .cobro-block{margin-top:12px;padding:10px 14px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:8px}
       .cobro-title{font-size:10px;font-weight:700;color:#065F46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-      .cobro-row{display:flex;justify-content:space-between;padding:2px 0;font-size:11px}
+      .cobro-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
       .cobro-lbl{color:#666;font-weight:500}
       .cobro-val{font-weight:700;color:#1E1B4B;font-family:monospace}
+      .copy-cbu{background:#fff;border:1px solid #86EFAC;border-radius:5px;padding:2px 8px;font-size:9.5px;color:#065F46;cursor:pointer;margin-left:8px;font-family:inherit;display:inline-flex;align-items:center;gap:3px;flex-shrink:0}
+      .copy-cbu:hover{background:#DCFCE7}
+      @media print{.copy-cbu{display:none}}
       .iva-box{margin-top:10px;padding:10px 14px;background:#FAFBFD;border:1px solid #E5E7F0;border-radius:6px;font-size:10.5px;color:#374151}
       .iva-title{font-weight:700;margin-bottom:5px;font-size:10px;color:#1E1B4B;text-transform:uppercase;letter-spacing:.3px}
       .iva-row{display:flex;justify-content:space-between;padding:1.5px 0}
@@ -530,8 +533,8 @@ export default function Presupuesto() {
       return `<div class="cobro-block">
         <div class="cobro-title">💳 Datos para el pago</div>
         ${bank && bank.enabled && (bank.cbu || bank.alias) ? `
-          ${bank.cbu ? '<div class="cobro-row"><span class="cobro-lbl">CBU</span><span class="cobro-val">' + bank.cbu + '</span></div>' : ''}
-          ${bank.alias ? '<div class="cobro-row"><span class="cobro-lbl">Alias</span><span class="cobro-val">' + bank.alias + '</span></div>' : ''}
+          ${bank.cbu ? '<div class="cobro-row"><span class="cobro-lbl">CBU</span><div style="display:flex;align-items:center"><span class="cobro-val">' + bank.cbu + '</span><button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.cbu + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></div></div>' : ''}
+          ${bank.alias ? '<div class="cobro-row"><span class="cobro-lbl">Alias</span><div style="display:flex;align-items:center"><span class="cobro-val">' + bank.alias + '</span><button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.alias + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></div></div>' : ''}
           ${bank.accountName ? '<div class="cobro-row"><span class="cobro-lbl">Titular</span><span class="cobro-val">' + bank.accountName + '</span></div>' : ''}
           ${bank.bank ? '<div class="cobro-row"><span class="cobro-lbl">Banco</span><span class="cobro-val">' + bank.bank + '</span></div>' : ''}
         ` : ''}

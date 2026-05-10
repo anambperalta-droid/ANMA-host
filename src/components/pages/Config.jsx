@@ -181,6 +181,7 @@ export default function Config() {
   const [mpCurrency, setMpCurrency] = useState(c.mpCurrency || 'ARS')
   const [mpSena, setMpSena] = useState(c.mpUseSena || false)
   const [mpTestResult, setMpTestResult] = useState('')
+  const [showMpToken, setShowMpToken] = useState(false)
   const [bankEnabled, setBankEnabled] = useState(c.bankEnabled === true)
   const [bankHolder, setBankHolder] = useState(c.bankHolder || '')
   const [bankName, setBankName] = useState(c.bankName || '')
@@ -776,7 +777,15 @@ export default function Config() {
                   <i className="fa fa-circle-info" style={{ marginTop: 2 }} />
                   <div>Obtené tu Access Token desde <b>mercadopago.com.ar → Tu negocio → Configuración → Credenciales</b>. Usá las de <b>producción</b>.</div>
                 </div>
-                <div className="fg"><label>Access Token</label><input type="password" value={mpToken} onChange={e => setMpToken(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
+                <div className="fg">
+                  <label>Access Token</label>
+                  <div style={{ position: 'relative' }}>
+                    <input type={showMpToken ? 'text' : 'password'} value={mpToken} onChange={e => setMpToken(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12, paddingRight: 36 }} />
+                    <button type="button" onClick={() => setShowMpToken(v => !v)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, padding: 4 }} title={showMpToken ? 'Ocultar token' : 'Mostrar token'}>
+                      <i className={`fa ${showMpToken ? 'fa-eye-slash' : 'fa-eye'}`} />
+                    </button>
+                  </div>
+                </div>
                 <div className="fg"><label>Public Key</label><input type="text" value={mpPubkey} onChange={e => setMpPubkey(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
                 <div className="grid2">
                   <div className="fg"><label>Nombre visible</label><input type="text" value={mpName} onChange={e => setMpName(e.target.value)} placeholder="Mi Negocio" /></div>
@@ -828,13 +837,25 @@ export default function Config() {
                   </div>
                   <div className="fg"><label>CUIT / CUIL</label><input type="text" value={bankCuit} onChange={e => setBankCuit(e.target.value)} placeholder="20-12345678-9" /></div>
                 </div>
-                <div className="fg">
-                  <label><i className="fa fa-hashtag" style={{ marginRight: 4, color: 'var(--acento)' }} />CBU (22 dígitos)</label>
-                  <input type="text" value={bankCbu} onChange={e => setBankCbu(e.target.value.replace(/\s/g, ''))} placeholder="0000000000000000000000" maxLength={22} style={{ fontFamily: 'monospace', letterSpacing: '.5px' }} />
-                </div>
-                <div className="fg">
-                  <label><i className="fa fa-at" style={{ marginRight: 4, color: 'var(--acento)' }} />Alias</label>
-                  <input type="text" value={bankAlias} onChange={e => setBankAlias(e.target.value)} placeholder="mi.negocio.arg" style={{ fontFamily: 'monospace' }} />
+                <div className="grid2">
+                  <div className="fg">
+                    <label><i className="fa fa-hashtag" style={{ marginRight: 4, color: 'var(--acento)' }} />CBU (22 dígitos)</label>
+                    <div style={{ position: 'relative' }}>
+                      <input type="text" value={bankCbu} onChange={e => setBankCbu(e.target.value.replace(/\s/g, ''))} placeholder="0000000000000000000000" maxLength={22} style={{ fontFamily: 'monospace', letterSpacing: '.5px', paddingRight: 36 }} />
+                      <button type="button" disabled={!bankCbu} onClick={() => bankCbu && navigator.clipboard.writeText(bankCbu).then(() => toast('CBU copiado', 'ok'))} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: bankCbu ? 'var(--brand)' : 'var(--txt4)', cursor: bankCbu ? 'pointer' : 'default', fontSize: 13, padding: 4 }} title="Copiar CBU">
+                        <i className="fa fa-copy" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="fg">
+                    <label><i className="fa fa-at" style={{ marginRight: 4, color: 'var(--acento)' }} />Alias</label>
+                    <div style={{ position: 'relative' }}>
+                      <input type="text" value={bankAlias} onChange={e => setBankAlias(e.target.value)} placeholder="mi.negocio.arg" style={{ fontFamily: 'monospace', paddingRight: 36 }} />
+                      <button type="button" disabled={!bankAlias} onClick={() => bankAlias && navigator.clipboard.writeText(bankAlias).then(() => toast('Alias copiado', 'ok'))} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: bankAlias ? 'var(--brand)' : 'var(--txt4)', cursor: bankAlias ? 'pointer' : 'default', fontSize: 13, padding: 4 }} title="Copiar Alias">
+                        <i className="fa fa-copy" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div className="fg"><label>Notas adicionales (opcional)</label><textarea value={bankNotes} onChange={e => setBankNotes(e.target.value)} rows={2} placeholder="Ej: Enviar comprobante por WhatsApp al finalizar." /></div>
                 <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
