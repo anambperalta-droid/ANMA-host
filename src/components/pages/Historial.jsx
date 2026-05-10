@@ -1364,11 +1364,12 @@ export default function Historial() {
         <>
           {insights.length > 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
+              <style>{`.ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:900px){.ins-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.ins-grid{grid-template-columns:1fr}}`}</style>
               <div className="card-header" style={{ marginBottom: 10 }}>
                 <span className="card-title"><i className="fa fa-lightbulb" style={{ color: '#F59E0B', marginRight: 7 }} />Insights del período</span>
                 <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 10, marginLeft: 'auto' }}>{insights.length}</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              <div className="ins-grid">
                 {insights.map((ins, i) => {
                   const palette = ins.tone === 'success'
                     ? { bg: 'rgba(22,163,74,.06)', border: 'rgba(22,163,74,.25)', icon: '#16A34A', val: '#16A34A' }
