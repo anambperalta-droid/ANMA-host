@@ -10,7 +10,6 @@ import { flushSync } from '../../lib/sync'
 
 /* ── Modal de confirmación destructiva ── */
 function DeleteConfirmModal({ title, message, onConfirm, onClose }) {
-  const [typed, setTyped] = useState('')
   return (
     <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal" style={{ maxWidth: 420 }}>
@@ -18,22 +17,17 @@ function DeleteConfirmModal({ title, message, onConfirm, onClose }) {
           <h3><i className="fa fa-triangle-exclamation" style={{ color: 'var(--red)', marginRight: 8 }} />{title}</h3>
           <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
         </div>
-        <p style={{ fontSize: 12, color: 'var(--txt2)', lineHeight: 1.5, margin: '0 0 14px' }}>{message}</p>
-        <div className="fg">
-          <label style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, fontWeight: 600 }}>
-            Escribí <b style={{ color: 'var(--red)' }}>ELIMINAR</b> para confirmar
-          </label>
-          <input
-            type="text" value={typed} onChange={e => setTyped(e.target.value)} autoFocus
-            placeholder="ELIMINAR"
-            style={{ borderColor: typed === 'ELIMINAR' ? 'var(--green)' : undefined }}
-          />
+        <div style={{ padding: '12px 16px', background: 'var(--red-lt)', border: '1.5px solid #FCA5A5', borderRadius: 10, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <i className="fa fa-triangle-exclamation" style={{ color: 'var(--red)', marginTop: 2, flexShrink: 0, fontSize: 16 }} />
+          <p style={{ fontSize: 12.5, color: '#991B1B', lineHeight: 1.55, margin: 0, fontWeight: 500 }}>{message}</p>
         </div>
-        <div className="mfooter">
-          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-danger" disabled={typed !== 'ELIMINAR'} onClick={() => { onConfirm(); onClose() }}
-            style={{ opacity: typed === 'ELIMINAR' ? 1 : 0.5 }}>
-            <i className="fa fa-trash" /> Eliminar definitivamente
+        <p style={{ fontSize: 11, color: 'var(--txt3)', margin: '0 0 16px', textAlign: 'center' }}>Esta acción es <b>irreversible</b> y no se puede deshacer.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 36 }}>
+          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>
+            <i className="fa fa-xmark" /> Cancelar
+          </button>
+          <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => { onConfirm(); onClose() }}>
+            <i className="fa fa-trash" /> Confirmar Eliminación
           </button>
         </div>
       </div>
@@ -182,6 +176,8 @@ export default function Config() {
   const [mpSena, setMpSena] = useState(c.mpUseSena || false)
   const [mpTestResult, setMpTestResult] = useState('')
   const [showMpToken, setShowMpToken] = useState(false)
+  const [opShowMetrics, setOpShowMetrics] = useState(c.opShowMetrics !== false)
+  const [opShowCosts, setOpShowCosts] = useState(c.opShowCosts !== false)
   const [bankEnabled, setBankEnabled] = useState(c.bankEnabled === true)
   const [bankHolder, setBankHolder] = useState(c.bankHolder || '')
   const [bankName, setBankName] = useState(c.bankName || '')
@@ -1073,7 +1069,36 @@ export default function Config() {
       )}
 
       {tab === 'equipo' && (
-        <div style={{ display: 'grid', gap: 16, maxWidth: 560 }}>
+        <div style={{ display: 'grid', gap: 16, maxWidth: 900 }}>
+          {/* ── Permisos del Operador ── */}
+          <div className="card">
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <i className="fa fa-user-gear" style={{ color: 'var(--brand)', fontSize: 16 }} />
+              Permisos del Operador
+            </div>
+            <div className="toggle-field">
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>Mostrar Facturación y Métricas</div>
+                <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2 }}>Dashboard: totales cobrados, gráficos e indicadores financieros</div>
+              </div>
+              <button className={`toggle ${opShowMetrics ? 'on' : ''}`} onClick={() => { const v = !opShowMetrics; setOpShowMetrics(v); updateConfig({ opShowMetrics: v }); flushSync() }} />
+            </div>
+            <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
+            <div className="toggle-field">
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>Mostrar Costos y Márgenes</div>
+                <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2 }}>Catálogo: columna de costo y rentabilidad por producto</div>
+              </div>
+              <button className={`toggle ${opShowCosts ? 'on' : ''}`} onClick={() => { const v = !opShowCosts; setOpShowCosts(v); updateConfig({ opShowCosts: v }); flushSync() }} />
+            </div>
+            <div style={{ marginTop: 12, padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 11, color: 'var(--txt3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <i className="fa fa-circle-info" style={{ color: 'var(--brand)', fontSize: 12 }} />
+              Los precios Minorista y Mayorista siempre son visibles para el operador.
+            </div>
+          </div>
+
+          {/* ── 2 columnas: info + invitación ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 16, alignItems: 'start' }}>
           {/* Cómo funciona */}
           <div style={{ padding: '14px 18px', borderRadius: 14, background: 'var(--surface2)', border: '1.5px solid var(--border)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
             <div style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>💡</div>
@@ -1155,6 +1180,7 @@ export default function Config() {
                 ? <><i className="fa fa-spinner fa-spin" /> Enviando...</>
                 : <><i className="fa fa-paper-plane" /> Enviar invitación por email</>}
             </button>
+          </div>
           </div>
         </div>
       )}

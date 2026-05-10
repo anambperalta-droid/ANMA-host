@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
 
@@ -42,6 +43,8 @@ export default function Catalogo() {
   const { get, config, updateConfig, saveEntity, deleteEntity } = useData()
   const toast = useToast()
   const c = config()
+  const { role } = useAuth()
+  const opHideCosts = role === 'operator' && c.opShowCosts === false
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState('all')
   const [modal, setModal] = useState(false)
@@ -275,8 +278,21 @@ export default function Catalogo() {
       </div>
       <div className="pill-row">
         <div className="search-row" style={{ maxWidth: 280 }}><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} /></div>
-        <div className={`pill ${catFilter === 'all' ? 'active' : ''}`} onClick={() => setCatFilter('all')}>Todos</div>
-        {cats.map(cat => <div key={cat} className={`pill ${catFilter === cat ? 'active' : ''}`} onClick={() => setCatFilter(cat)}>{cat}</div>)}
+        {cats.length > 6 ? (
+          <select
+            value={catFilter}
+            onChange={e => setCatFilter(e.target.value)}
+            style={{ padding: '5px 10px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 12, background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', cursor: 'pointer' }}
+          >
+            <option value="all">Todas las categorías</option>
+            {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        ) : (
+          <>
+            <div className={`pill ${catFilter === 'all' ? 'active' : ''}`} onClick={() => setCatFilter('all')}>Todos</div>
+            {cats.map(cat => <div key={cat} className={`pill ${catFilter === cat ? 'active' : ''}`} onClick={() => setCatFilter(cat)}>{cat}</div>)}
+          </>
+        )}
         <button
           onClick={() => setCatMgmtModal(true)}
           style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', color: 'var(--txt3)', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'inherit' }}
@@ -296,7 +312,7 @@ export default function Catalogo() {
                 <th>Producto</th>
                 <th className="col-hide-mobile">Categoría</th>
                 <th className="col-hide-mobile">Proveedor</th>
-                <th>
+                {!opHideCosts && <th>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     Costo ($)
                     <button
@@ -307,8 +323,8 @@ export default function Catalogo() {
                       <i className="fa fa-clock" /> ult. act.
                     </button>
                   </span>
-                </th>
-                <th className="col-hide-mobile">% Margen</th>
+                </th>}
+                {!opHideCosts && <th className="col-hide-mobile">% Margen</th>}
                 {showCostInfo && <th className="col-hide-mobile">Últ. actualización</th>}
                 <th>Precio sugerido ($)</th>
                 <th>Acciones</th>
@@ -333,12 +349,12 @@ export default function Catalogo() {
                       <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: cc.bg, color: cc.color, letterSpacing: 0.2 }}>{p.cat}</span>
                     </td>
                     <td className="col-hide-mobile">{supplierName(p.supplierId)}</td>
-                    <td>{fmt(p.cost)}</td>
-                    <td className="col-hide-mobile">
+                    {!opHideCosts && <td>{fmt(p.cost)}</td>}
+                    {!opHideCosts && <td className="col-hide-mobile">
                       {pct !== null ? (
                         <span style={{ fontWeight: 800, fontSize: 13, color: marginColor(pct) }}>{pct}%</span>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-                    </td>
+                    </td>}
                     {showCostInfo && (
                       <td className="col-hide-mobile" style={{ fontSize: 11 }}>
                         {p.updatedAt ? (
@@ -392,7 +408,7 @@ export default function Catalogo() {
                   <div className="prod-card-name" title={p.name}>{p.name}</div>
                   <span className="prod-card-cat" style={{ background: cc.bg, color: cc.color }}>{p.cat || '—'}</span>
                   <div className="prod-card-price">{fmt(suggestedPrice(p.cost))}</div>
-                  <div className="prod-card-cost">Costo: {fmt(p.cost)}</div>
+                  {!opHideCosts && <div className="prod-card-cost">Costo: {fmt(p.cost)}</div>}
                   {pct !== null && (
                     <div className="prod-card-margin" style={{ color: marginColor(pct) }}>{pct}% margen</div>
                   )}

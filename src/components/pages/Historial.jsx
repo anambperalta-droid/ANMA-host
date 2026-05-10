@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS } from '../../lib/storage'
 import { usePrivacy } from '../../context/PrivacyContext'
@@ -394,6 +395,8 @@ export default function Historial() {
   const budgets = get('budgets')
   const products = get('products')
   const c = config()
+  const { role } = useAuth()
+  const opHideMetrics = role === 'operator' && c.opShowMetrics === false
   const now = new Date()
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
@@ -992,13 +995,13 @@ export default function Historial() {
             </div>
           ) : (
             <div className="bento sk-fade-in">
-              <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} sparkData={hidden ? null : sparkBrutas} sparkColor="var(--brand)" />
-              <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} sparkData={hidden ? null : sparkCaja} sparkColor="var(--green)" isKey />
-              <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} sparkData={hidden ? null : sparkTicket} />
+              {!opHideMetrics && <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} sparkData={hidden ? null : sparkBrutas} sparkColor="var(--brand)" />}
+              {!opHideMetrics && <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} sparkData={hidden ? null : sparkCaja} sparkColor="var(--green)" isKey />}
+              {!opHideMetrics && <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} sparkData={hidden ? null : sparkTicket} />}
               <KpiCard label="Presupuestos" value={String(periodBudgets.length)} />
 
               {/* ── Izquierda (gráfico + tabla) + Derecha (donut + seguimiento) ── */}
-              <div className="bento-wide bento-chart-inner" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              {!opHideMetrics && <div className="bento-wide bento-chart-inner" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
                 {/* COLUMNA IZQUIERDA: gráfico de barras + tabla de presupuestos */}
                 <div style={{ flex: '1 1 55%', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1181,7 +1184,7 @@ export default function Historial() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </div>}
 
             </div>
           )}
