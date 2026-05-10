@@ -677,11 +677,11 @@ export default function Presupuesto() {
               <>
                 <PaneHeader icon="fa-box-open" title="Paso 2 · Productos" subtitle="Agregá los ítems que incluye el pedido" />
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ tableLayout: 'fixed', width: '100%', minWidth: 590 }}>
+                  <table style={{ tableLayout: 'fixed', width: '100%', minWidth: 615 }}>
                     <thead><tr>
                       <th style={{ width: 24 }}></th>
                       <th>Producto</th>
-                      <th style={{ width: 60, textAlign: 'right' }}>Cant.</th>
+                      <th style={{ width: 85, textAlign: 'right' }}>Cant.</th>
                       <th style={{ width: 110, textAlign: 'right' }}>Costo u.</th>
                       <th style={{ width: 110, textAlign: 'right' }}>Precio u.</th>
                       <th style={{ width: 130, textAlign: 'right' }}>Subtotal</th>
@@ -691,23 +691,23 @@ export default function Presupuesto() {
                       {items.map((it, i) => (
                         <tr key={i}
                           onDragOver={handleDragOver(i)} onDrop={handleDrop(i)} onDragLeave={handleDragLeave}
-                          style={dragOver === i ? { background: 'var(--brand-xlt)', outline: '2px dashed var(--brand)' } : undefined}>
+                          style={{ height: 44, ...(dragOver === i ? { background: 'var(--brand-xlt)', outline: '2px dashed var(--brand)' } : {}) }}>
                           <td style={{ textAlign: 'center', cursor: 'grab', color: 'var(--txt3)', verticalAlign: 'middle' }}
                             draggable onDragStart={handleDragStart(i)} title="Arrastrar para reordenar">
                             <i className="fa fa-grip-vertical" />
                           </td>
                           <td style={{ verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                              <input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" style={{ padding: '10px 8px', fontSize: 12, flex: 1, minWidth: 0 }} />
+                              <input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" style={{ padding: '0 8px', fontSize: 12, flex: 1, minWidth: 0, height: 44, boxSizing: 'border-box' }} />
                               <button onClick={() => openPicker(i)} type="button" title="Elegir del catálogo"
                                 style={{ width: 30, height: 30, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, transition: 'background .12s' }}>
                                 <i className="fa fa-list" />
                               </button>
                             </div>
                           </td>
-                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '10px 4px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right' }} /></td>
-                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '10px 4px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right' }} /></td>
-                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '10px 4px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right' }} /></td>
+                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
+                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
+                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
                           <td style={{ fontWeight: 700, color: 'var(--money)', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', textAlign: 'right', paddingRight: 8, verticalAlign: 'middle' }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
                           <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><button onClick={() => removeItem(i)} title="Eliminar" style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'color .15s, background .15s' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}><i className="fa fa-xmark" /></button></td>
                         </tr>
