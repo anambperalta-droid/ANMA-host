@@ -466,23 +466,23 @@ export default function Proveedores() {
 
       {viewMode === 'table' ? (
         <div className="tbl-card">
-          <table>
+          <table style={{ tableLayout: 'fixed', width: '100%' }}>
             <thead><tr>
-              <th>Proveedor / Contacto</th>
-              <th style={{ width: 46, textAlign: 'center' }}>WA</th>
-              <th style={{ width: 46, textAlign: 'center' }}>Email</th>
-              <th>Rubro</th>
-              <th style={{ width: 72, textAlign: 'center' }}>Prods.</th>
-              <th style={{ width: 88 }}>Acciones</th>
+              <th style={{ width: '30%' }}>Proveedor / Contacto</th>
+              <th style={{ width: 52, textAlign: 'center' }}>WA</th>
+              <th style={{ width: 52, textAlign: 'center' }}>Email</th>
+              <th style={{ width: '22%' }}>Rubro</th>
+              <th style={{ width: 76, textAlign: 'center' }}>Prods.</th>
+              <th style={{ width: 96 }}>Acciones</th>
             </tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
                 <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
-                  <td style={{ padding: '8px 12px' }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{s.name}</div>
-                    {s.contact && <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 1 }}>{s.contact}</div>}
+                  <td style={{ padding: '8px 12px', overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.name}>{s.name}</div>
+                    {s.contact && <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.contact}</div>}
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     {s.wa ? (
@@ -502,7 +502,7 @@ export default function Proveedores() {
                       </a>
                     ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                   </td>
-                  <td style={{ fontSize: 12, color: 'var(--txt2)' }}>{s.rubro || <span style={{ color: 'var(--txt4)' }}>—</span>}</td>
+                  <td style={{ fontSize: 12, color: 'var(--txt2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.rubro || ''}>{s.rubro || <span style={{ color: 'var(--txt4)' }}>—</span>}</td>
                   <td style={{ textAlign: 'center' }}><span className="badge b-sent">{supplierProducts(s).length}</span></td>
                   <td><div className="acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
                     <button className="act edit" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
