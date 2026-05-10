@@ -613,9 +613,9 @@ export default function Config() {
               </select>
             </div>
             <div className="fg"><label>Prefijo numeración</label><input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ maxWidth: 100 }} /></div>
-            <div className="fg"><label>Margen por defecto (%)</label><input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} /></div>
-            <div className="fg"><label>Seña por defecto (%)</label><input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} /></div>
-            <div className="fg"><label>Validez (días)</label><input type="number" value={validity} onChange={e => setValidity(e.target.value)} /></div>
+            <div className="fg"><label>Margen por defecto (%)</label><input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ maxWidth: 100 }} /></div>
+            <div className="fg"><label>Seña por defecto (%)</label><input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} style={{ maxWidth: 100 }} /></div>
+            <div className="fg"><label>Validez (días)</label><input type="number" value={validity} onChange={e => setValidity(e.target.value)} style={{ maxWidth: 90 }} /></div>
           </div>
           <div className="fg"><label>Condiciones de pago</label><textarea value={conds} onChange={e => setConds(e.target.value)} rows={3} /></div>
           <div className="fg"><label>Nota legal</label><textarea value={legal} onChange={e => setLegal(e.target.value)} rows={2} /></div>
@@ -642,9 +642,9 @@ export default function Config() {
                     <option>Consumidor Final</option>
                   </select>
                 </div>
-                <div className="fg"><label>Pto. Venta</label><input type="text" value={ptoVenta} onChange={e => setPtoVenta(e.target.value)} placeholder="00001" /></div>
-                <div className="fg"><label>Alícuota IVA (%)</label><input type="number" value={ivaRate} onChange={e => setIvaRate(e.target.value)} /></div>
-                <div className="fg"><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} /></div>
+                <div className="fg"><label>Pto. Venta</label><input type="text" value={ptoVenta} onChange={e => setPtoVenta(e.target.value)} placeholder="00001" style={{ maxWidth: 90 }} /></div>
+                <div className="fg"><label>Alícuota IVA (%)</label><input type="number" value={ivaRate} onChange={e => setIvaRate(e.target.value)} style={{ maxWidth: 90 }} /></div>
+                <div className="fg"><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} style={{ maxWidth: 90 }} /></div>
               </div>
             )}
           </div>
