@@ -468,33 +468,42 @@ export default function Proveedores() {
         <div className="tbl-card">
           <table>
             <thead><tr>
-              <th>Proveedor / Contacto</th><th>WhatsApp</th><th>Rubro</th><th>Email</th>
-              <th>Productos</th>
-              <th>Acciones</th>
+              <th>Proveedor / Contacto</th>
+              <th style={{ width: 46, textAlign: 'center' }}>WA</th>
+              <th style={{ width: 46, textAlign: 'center' }}>Email</th>
+              <th>Rubro</th>
+              <th style={{ width: 72, textAlign: 'center' }}>Prods.</th>
+              <th style={{ width: 88 }}>Acciones</th>
             </tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
                 <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
-                  <td>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)' }}>{s.name}</div>
-                      {s.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{s.contact}</div>}
-                    </div>
+                  <td style={{ padding: '8px 12px' }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{s.name}</div>
+                    {s.contact && <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 1 }}>{s.contact}</div>}
                   </td>
-                  <td>
+                  <td style={{ textAlign: 'center' }}>
                     {s.wa ? (
                       <a href={`https://wa.me/${s.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        title={s.wa}
+                        onClick={e => e.stopPropagation()} title={s.wa}
                         style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none' }}>
                         <i className="fa-brands fa-whatsapp" />
                       </a>
                     ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                   </td>
-                  <td>{s.rubro}</td><td>{s.email}</td>
-                  <td><span className="badge b-sent">{supplierProducts(s).length}</span></td>
+                  <td style={{ textAlign: 'center' }}>
+                    {s.email ? (
+                      <a href={`mailto:${s.email}`}
+                        onClick={e => e.stopPropagation()} title={s.email}
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', color: '#2563EB', fontSize: 14, textDecoration: 'none' }}>
+                        <i className="fa fa-envelope" />
+                      </a>
+                    ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--txt2)' }}>{s.rubro || <span style={{ color: 'var(--txt4)' }}>—</span>}</td>
+                  <td style={{ textAlign: 'center' }}><span className="badge b-sent">{supplierProducts(s).length}</span></td>
                   <td><div className="acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
                     <button className="act edit" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
                     <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
