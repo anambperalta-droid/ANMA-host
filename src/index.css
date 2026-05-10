@@ -920,6 +920,20 @@ td b{color:var(--txt);font-weight:600}
 
 /* ── Skeleton nativo ────────────────────────────────────────────*/
 .nc-skeleton{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px}
+
+/* ─── CLIENTES: GRID VIEW ─── */
+.nc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:1280px){.nc-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:860px){.nc-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.nc-grid{grid-template-columns:1fr}}
+.nc-grid .nc{flex-direction:column;align-items:center;text-align:center;padding:20px 14px 14px;gap:0;margin-top:0}
+.nc-grid .nc-ava{width:60px;height:60px;border-radius:50%;font-size:24px;margin-bottom:10px}
+.nc-grid .nc-body{flex:none;width:100%}
+.nc-grid .nc-title,.nc-grid .nc-sub{text-align:center}
+.nc-grid .nc-meta{justify-content:center}
+.nc-qact{display:flex;gap:6px;justify-content:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);width:100%}
+.ibtn-email{background:#EFF6FF;color:#2563EB}
+.ibtn-email:hover,.ibtn-email:active{background:#2563EB;color:#fff}
 .sk-ava{width:48px;height:48px;border-radius:14px;background:var(--surface3);flex-shrink:0;animation:skPulse 1.4s ease infinite}
 .sk-line{height:12px;border-radius:6px;background:var(--surface3);animation:skPulse 1.4s ease infinite}
 @keyframes skPulse{0%,100%{opacity:.7}50%{opacity:.35}}

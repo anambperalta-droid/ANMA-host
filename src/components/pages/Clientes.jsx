@@ -342,64 +342,64 @@ export default function Clientes() {
           </div>
         </>
       ) : (
-        <div className="nc-list">
-          {loading ? [1,2,3,4,5].map(i => (
-            <div key={i} className="nc-skeleton">
-              <div className="sk-ava" />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                <div className="sk-line" style={{ width: `${50 + i * 8}%` }} />
-                <div className="sk-line" style={{ width: `${30 + i * 5}%`, opacity: .6 }} />
-              </div>
+        <div className="nc-grid">
+          {loading ? [1,2,3,4,5,6,7,8].map(i => (
+            <div key={i} className="nc" style={{ flexDirection: 'column', alignItems: 'center', padding: '20px 14px 14px', gap: 0 }}>
+              <div className="sk" style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--surface3)', animation: 'skPulse 1.4s ease infinite', flexShrink: 0, marginBottom: 10 }} />
+              <div className="sk-line" style={{ width: '65%', marginBottom: 6 }} />
+              <div className="sk-line" style={{ width: '40%' }} />
             </div>
           )) : filtered.length ? filtered.map(c => {
             const ps = clientPayStatus(c)
             const dotColor = ps === 'pending' ? '#DC2626' : ps === 'partial' ? '#D97706' : ps === 'paid' ? '#16A34A' : 'var(--border2)'
+            const dotTitle = ps === 'pending' ? 'Pago pendiente' : ps === 'partial' ? 'Seña abonada' : ps === 'paid' ? 'Pagado' : 'Sin pedidos'
             const buds = clientBudgets(c)
             const totalSold = clientTotalVendido(c)
             const days = clientLastBudgetDays(c)
             return (
               <div key={c.id} className="nc" onClick={() => openDetail(c)}>
-                {/* Avatar con punto de estado de pago */}
+                {/* Avatar centrado con dot de estado */}
                 <div className="nc-ava nc-ava-brand">
                   {(c.company || '?')[0].toUpperCase()}
-                  <span className="nc-dot" style={{ background: dotColor }}
-                    title={ps === 'pending' ? 'Pago pendiente' : ps === 'partial' ? 'Seña abonada' : ps === 'paid' ? 'Pagado' : 'Sin pedidos'} />
+                  <span className="nc-dot" style={{ background: dotColor, border: '2.5px solid var(--surface)' }} title={dotTitle} />
                 </div>
 
-                {/* Info central */}
+                {/* Nombre e info centrada */}
                 <div className="nc-body">
                   <div className="nc-title">{c.company}</div>
                   <div className="nc-sub">
-                    {c.contact && <span>{c.contact}</span>}
-                    {c.rubro && <span style={{ color: 'var(--txt4)' }}>{c.contact ? ' · ' : ''}{c.rubro}</span>}
-                    {!c.contact && !c.rubro && <span style={{ color: 'var(--txt4)' }}>Sin contacto</span>}
+                    {c.contact || c.rubro || <span style={{ color: 'var(--txt4)' }}>Sin contacto</span>}
                   </div>
                   {(buds.length > 0 || totalSold > 0) && (
                     <div className="nc-meta">
-                      {buds.length > 0 && (
-                        <span><i className="fa fa-file-invoice" style={{ marginRight: 4, fontSize: 10 }} />{buds.length} ppto{buds.length !== 1 ? 's' : ''}</span>
-                      )}
+                      <span><i className="fa fa-file-invoice" style={{ fontSize: 10, marginRight: 3 }} />{buds.length}</span>
                       {totalSold > 0 && <span className="nc-meta-val">{fmt(totalSold)}</span>}
-                      {days !== null && <span>{days === 0 ? 'Hoy' : `hace ${days}d`}</span>}
+                      {days !== null && <span>{days === 0 ? 'hoy' : days === 1 ? 'ayer' : `${days}d`}</span>}
                     </div>
                   )}
                 </div>
 
-                {/* Acciones */}
-                <div className="nc-acts" onClick={e => e.stopPropagation()}>
+                {/* Íconos de contacto rápido */}
+                <div className="nc-qact" onClick={e => e.stopPropagation()}>
                   {c.wa && (
-                    <button className="ibtn ibtn-wa" title={`WhatsApp ${c.wa}`} onClick={() => openWA(c)}>
+                    <button className="ibtn ibtn-wa ibtn-sm" title={`WhatsApp · ${c.wa}`} onClick={() => openWA(c)}>
                       <i className="fa-brands fa-whatsapp" />
                     </button>
                   )}
-                  <button className="ibtn ibtn-edit" title="Editar cliente" onClick={() => openEdit(c)}>
-                    <i className="fa fa-pen" style={{ fontSize: 14 }} />
+                  {c.email && (
+                    <a href={`mailto:${c.email}`} className="ibtn ibtn-email ibtn-sm" title={c.email}
+                      onClick={e => e.stopPropagation()}>
+                      <i className="fa fa-envelope" />
+                    </a>
+                  )}
+                  <button className="ibtn ibtn-edit ibtn-sm" title="Editar cliente" onClick={() => openEdit(c)}>
+                    <i className="fa fa-pen" />
                   </button>
                 </div>
               </div>
             )
           }) : (
-            <div className="empty-native">
+            <div className="empty-native" style={{ gridColumn: '1 / -1' }}>
               <div className="ico"><i className="fa fa-users" /></div>
               <h4>Sin clientes</h4>
               <p>Agregá tu primer cliente para empezar a gestionar pedidos.</p>
