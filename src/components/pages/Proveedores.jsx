@@ -221,7 +221,7 @@ export default function Proveedores() {
       for (let i = startIdx; i < lines.length; i++) {
         const parts = lines[i].match(/(".*?"|[^,]+)/g)?.map(v => v.replace(/^"|"$/g, '').trim()) || []
         if (parts.length >= 1 && parts[0]) {
-          parsed.push({ name: parts[0] || '', contact: parts[1] || '', wa: parts[2] || '', rubro: parts[3] || '', email: parts[4] || '', notes: parts[5] || '' })
+          parsed.push({ name: parts[0] || '', contact: parts[1] || '', wa: parts[2] || '', email: parts[3] || '', rubro: parts[4] || '', notes: parts[5] || '' })
         }
       }
       setCsvPreview(parsed)
@@ -916,7 +916,7 @@ export default function Proveedores() {
           <div className="modal" style={{ maxWidth: 680 }}>
             <div className="mh"><h3>Importar proveedores desde CSV</h3><button className="mclose" onClick={() => { setImportModal(false); setCsvPreview([]) }}><i className="fa fa-xmark" /></button></div>
             <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 11, color: 'var(--txt2)' }}>
-              <b>Formato:</b> Nombre, Contacto, WhatsApp, Rubro, Email, Notas
+              <b>Formato:</b> Nombre, Contacto, WhatsApp, Email, Rubro, Notas
             </div>
             <div className="fg">
               <label>Archivo CSV</label>
