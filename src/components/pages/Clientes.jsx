@@ -291,24 +291,27 @@ export default function Clientes() {
         <>
           <style>{`
             .cli-tbl table th, .cli-tbl table td { padding-left: 16px; padding-right: 16px; }
+            .cli-tbl table td { padding-top: 8px; padding-bottom: 8px; }
+            .cli-tbl table th { padding-top: 10px; padding-bottom: 10px; }
             .cli-acts { opacity: 0.45; transition: opacity .15s; }
             tr:hover .cli-acts { opacity: 1; }
           `}</style>
           <div className="tbl-card cli-tbl">
             <table>
-              <thead><tr><th>Empresa / Contacto</th><th style={{ width: 80 }}>Estado</th><th style={{ width: 145 }}>Inversión Total</th><th style={{ width: 52, textAlign: 'center' }}>WA</th><th className="col-hide-mobile">Rubro</th><th style={{ width: 100 }}>Acciones</th></tr></thead>
+              <thead><tr><th>Empresa / Contacto</th><th style={{ width: 52, textAlign: 'center' }}>WA</th><th className="col-hide-mobile">Rubro</th><th style={{ width: 120 }}>Última actividad</th><th style={{ width: 96 }}>Acciones</th></tr></thead>
               <tbody>
                 {loading ? [1,2,3,4,5].map(i => (
-                  <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                  <tr key={i}><td colSpan={5}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
                 )) : filtered.length ? filtered.map(c => (
                   <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
+                    {/* Empresa + dot actividad + contacto */}
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                         {(() => {
-                          const ps = clientPayStatus(c)
-                          const dotColor = ps === 'pending' ? '#DC2626' : ps === 'partial' ? '#D97706' : ps === 'paid' ? '#16A34A' : '#CBD5E1'
-                          const dotTitle = ps === 'pending' ? 'Pago pendiente' : ps === 'partial' ? 'Seña abonada' : ps === 'paid' ? 'Pagado' : 'Sin pedidos activos'
-                          return <span title={dotTitle} style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                          const days = clientLastBudgetDays(c)
+                          const color = days === null ? '#CBD5E1' : days <= 15 ? '#16A34A' : days <= 45 ? '#D97706' : '#DC2626'
+                          const tip = days === null ? 'Sin pedidos' : days <= 15 ? `Activo — hace ${days}d` : days <= 45 ? `Tibio — hace ${days}d` : `Frío — hace ${days}d`
+                          return <span title={tip} style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
                         })()}
                         <div>
                           <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)' }}>{c.company}</div>
@@ -316,41 +319,19 @@ export default function Clientes() {
                         </div>
                       </div>
                     </td>
-                    <td>
-                      {(() => {
-                        const days = clientLastBudgetDays(c)
-                        const bg = days === null ? '#F1F5F9' : days <= 15 ? '#DCFCE7' : days <= 45 ? '#FEF3C7' : '#FEE2E2'
-                        const color = days === null ? '#94A3B8' : days <= 15 ? '#16A34A' : days <= 45 ? '#D97706' : '#DC2626'
-                        const label = days === null ? 'Sin pedidos' : days <= 15 ? 'Activo' : days <= 45 ? 'Tibio' : 'Frío'
-                        return (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: bg, color, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>
-                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />{label}
-                          </span>
-                        )
-                      })()}
-                    </td>
-                    <td>
-                      {(() => {
-                        const total = clientTotalVendido(c)
-                        const lastDate = clientLastDate(c)
-                        if (total === 0 && !lastDate) return <span style={{ color: 'var(--txt4)' }}>—</span>
-                        return (
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</div>
-                            {lastDate && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>Última: {lastDate}</div>}
-                          </div>
-                        )
-                      })()}
-                    </td>
+                    {/* WA icon centrado */}
                     <td style={{ textAlign: 'center' }}>
                       {c.wa ? (
                         <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
                           onClick={e => e.stopPropagation()} title={c.wa}
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none' }}>
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 9, background: '#DCFCE7', color: '#16A34A', fontSize: 17, textDecoration: 'none', transition: 'transform .15s' }}
+                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
+                          onMouseLeave={e => e.currentTarget.style.transform = ''}>
                           <i className="fa-brands fa-whatsapp" />
                         </a>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                     </td>
+                    {/* Rubro */}
                     <td className="col-hide-mobile">
                       {c.rubro ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--txt2)' }}>
@@ -358,10 +339,19 @@ export default function Clientes() {
                         </span>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                     </td>
+                    {/* Última actividad */}
+                    <td>
+                      {clientLastDate(c)
+                        ? <span style={{ fontSize: 12, color: 'var(--txt2)', fontVariantNumeric: 'tabular-nums' }}>{clientLastDate(c)}</span>
+                        : <span style={{ fontSize: 12, color: '#6B7280' }}>Sin pedidos</span>}
+                    </td>
+                    {/* Acciones */}
                     <td><div className="acts cli-acts" style={{ gap: 5 }} onClick={e => e.stopPropagation()}>
                       {c.wa && (
                         <button title="Re-vincular por WhatsApp" onClick={e => openRevincul(c, e)}
-                          style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: '#FEF3C7', color: '#D97706', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>
+                          style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: '#FEF3C7', color: '#D97706', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, transition: 'transform .15s' }}
+                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
+                          onMouseLeave={e => e.currentTarget.style.transform = ''}>
                           <i className="fa fa-bolt" />
                         </button>
                       )}
@@ -370,7 +360,7 @@ export default function Clientes() {
                       <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
                     </div></td>
                   </tr>
-                )) : <tr><td colSpan={6}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
+                )) : <tr><td colSpan={5}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
               </tbody>
             </table>
           </div>
