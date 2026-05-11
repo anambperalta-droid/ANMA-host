@@ -118,6 +118,8 @@ export default function Clientes() {
   const [previewBudget, setPreviewBudget] = useState(null)
   const fileRef = useRef(null)
   const [csvPreview, setCsvPreview] = useState([])
+  const [revinculModal, setRevinculModal] = useState(null)
+  const [revinculMsg, setRevinculMsg] = useState('')
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -225,6 +227,27 @@ export default function Clientes() {
     return 'none'
   }
 
+  const clientLastDate = (c) => {
+    const sorted = clientBudgets(c).filter(b => b.date).sort((a, b) => new Date(b.date) - new Date(a.date))
+    if (!sorted.length) return null
+    const d = new Date(sorted[0].date)
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(2)}`
+  }
+
+  const openRevincul = (c, e) => {
+    e.stopPropagation()
+    const msg = `Hola ${c.contact || c.company}! 👋 Te escribo desde ANMA Regalos. ¿Tenés algún evento próximo? ¡Podemos ayudarte con regalos y souvenirs personalizados! 🎁`
+    setRevinculMsg(msg)
+    setRevinculModal(c)
+  }
+
+  const sendRevincul = () => {
+    if (!revinculModal?.wa) return
+    const num = revinculModal.wa.replace(/\D/g, '')
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(revinculMsg)}`, '_blank')
+    setRevinculModal(null)
+  }
+
   const addNote = () => {
     if (!newNote.trim() || !detailClient) return
     const existing = detailClient.noteHistory || []
@@ -273,7 +296,7 @@ export default function Clientes() {
           `}</style>
           <div className="tbl-card cli-tbl">
             <table>
-              <thead><tr><th>Empresa / Contacto</th><th className="col-hide-mobile">Tipo</th><th>WhatsApp</th><th className="col-hide-mobile">Rubro</th><th>Pedidos</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Empresa / Contacto</th><th style={{ width: 80 }}>Estado</th><th style={{ width: 145 }}>Inversión Total</th><th style={{ width: 52, textAlign: 'center' }}>WA</th><th className="col-hide-mobile">Rubro</th><th style={{ width: 100 }}>Acciones</th></tr></thead>
               <tbody>
                 {loading ? [1,2,3,4,5].map(i => (
                   <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
@@ -289,16 +312,40 @@ export default function Clientes() {
                         })()}
                         <div>
                           <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)' }}>{c.company}</div>
-                          {c.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{c.contact}</div>}
+                          {c.contact && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{c.contact}</div>}
                         </div>
                       </div>
                     </td>
-                    <td className="col-hide-mobile"><span className={`badge ${c.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`}>{c.clientType === 'b2b' ? 'B2B' : 'B2C'}</span></td>
                     <td>
+                      {(() => {
+                        const days = clientLastBudgetDays(c)
+                        const bg = days === null ? '#F1F5F9' : days <= 15 ? '#DCFCE7' : days <= 45 ? '#FEF3C7' : '#FEE2E2'
+                        const color = days === null ? '#94A3B8' : days <= 15 ? '#16A34A' : days <= 45 ? '#D97706' : '#DC2626'
+                        const label = days === null ? 'Sin pedidos' : days <= 15 ? 'Activo' : days <= 45 ? 'Tibio' : 'Frío'
+                        return (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: bg, color, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />{label}
+                          </span>
+                        )
+                      })()}
+                    </td>
+                    <td>
+                      {(() => {
+                        const total = clientTotalVendido(c)
+                        const lastDate = clientLastDate(c)
+                        if (total === 0 && !lastDate) return <span style={{ color: 'var(--txt4)' }}>—</span>
+                        return (
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</div>
+                            {lastDate && <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 1 }}>Última: {lastDate}</div>}
+                          </div>
+                        )
+                      })()}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
                       {c.wa ? (
                         <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()}
-                          title={c.wa}
+                          onClick={e => e.stopPropagation()} title={c.wa}
                           style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none' }}>
                           <i className="fa-brands fa-whatsapp" />
                         </a>
@@ -307,30 +354,17 @@ export default function Clientes() {
                     <td className="col-hide-mobile">
                       {c.rubro ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--txt2)' }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0, display: 'inline-block' }} />
-                          {c.rubro}
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0, display: 'inline-block' }} />{c.rubro}
                         </span>
                       ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                     </td>
-                    <td style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {(() => {
-                        const n = clientBudgets(c).length
-                        const days = clientLastBudgetDays(c)
-                        if (n === 0) return <span style={{ color: 'var(--txt4)', fontSize: 13 }}>—</span>
-                        const color = days === null ? 'var(--txt4)' : days > 90 ? '#DC2626' : days > 30 ? '#D97706' : 'var(--txt3)'
-                        return (
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)' }}>{n}</span>
-                            {days !== null && (
-                              <span style={{ fontSize: 10, color, fontWeight: 500 }} title="Último pedido">
-                                · {days === 0 ? 'hoy' : days === 1 ? 'ayer' : `${days}d`}
-                              </span>
-                            )}
-                          </div>
-                        )
-                      })()}
-                    </td>
-                    <td><div className="acts cli-acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
+                    <td><div className="acts cli-acts" style={{ gap: 5 }} onClick={e => e.stopPropagation()}>
+                      {c.wa && (
+                        <button title="Re-vincular por WhatsApp" onClick={e => openRevincul(c, e)}
+                          style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: '#FEF3C7', color: '#D97706', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>
+                          <i className="fa fa-bolt" />
+                        </button>
+                      )}
                       <button className="act edit" onClick={() => openEdit(c)}><i className="fa fa-pen" /></button>
                       <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
                       <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
@@ -662,6 +696,39 @@ export default function Clientes() {
           onClose={() => setPreviewBudget(null)}
           onEdit={() => { setPreviewBudget(null); setDetailClient(null); nav(`/presupuesto/${previewBudget.id}`) }}
         />
+      )}
+
+      {/* MODAL RE-VINCULAR */}
+      {revinculModal && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setRevinculModal(null) }}>
+          <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            <div className="mh">
+              <h3><i className="fa fa-bolt" style={{ color: '#D97706', marginRight: 6 }} />Re-vincular — {revinculModal.company}</h3>
+              <button className="mclose" onClick={() => setRevinculModal(null)}><i className="fa fa-xmark" /></button>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--txt3)', marginBottom: 10 }}>
+              Editá el mensaje antes de enviar a <b>{revinculModal.contact || revinculModal.company}</b>
+              {revinculModal.wa && <span style={{ color: 'var(--txt4)', marginLeft: 4 }}>· {revinculModal.wa}</span>}
+            </div>
+            <div className="fg">
+              <label>Mensaje</label>
+              <textarea value={revinculMsg} onChange={e => setRevinculMsg(e.target.value)} rows={4}
+                style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: 13, lineHeight: 1.6, width: '100%', padding: '8px 12px', border: '1.5px solid var(--border)', borderRadius: 8, boxSizing: 'border-box' }} />
+            </div>
+            {!revinculModal.wa && (
+              <div style={{ fontSize: 11, color: '#DC2626', background: '#FEE2E2', borderRadius: 8, padding: '8px 12px', marginBottom: 8 }}>
+                <i className="fa fa-triangle-exclamation" style={{ marginRight: 5 }} />Esta clienta no tiene WhatsApp registrado.
+              </div>
+            )}
+            <div className="mfooter">
+              <button className="btn btn-secondary" onClick={() => setRevinculModal(null)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={sendRevincul} disabled={!revinculModal.wa}
+                style={{ background: '#16A34A', borderColor: '#16A34A' }}>
+                <i className="fa-brands fa-whatsapp" /> Enviar a WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
