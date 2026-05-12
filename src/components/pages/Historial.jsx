@@ -855,7 +855,7 @@ export default function Historial() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
-      <div className="ph">
+      <div className="ph ph-hist">
         <div className="ph-left"><h2>Dashboard</h2><p className="ph-subtitle">Pedidos, ventas y análisis de tu negocio</p></div>
         <div className="ph-right" style={{ gap: 8 }}>
           {/* Period dropdown */}

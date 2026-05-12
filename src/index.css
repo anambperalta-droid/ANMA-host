@@ -944,10 +944,10 @@ td b{color:var(--txt);font-weight:600}
   position:fixed;bottom:10px;left:10px;right:10px;
   height:60px;
   padding-bottom:env(safe-area-inset-bottom);
-  background:#1E1B4B;
-  border:none;
-  border-radius:20px;
-  box-shadow:0 8px 32px rgba(0,0,0,.25);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.08);
   z-index:500;
   align-items:center;
   justify-content:space-around;
@@ -956,31 +956,39 @@ td b{color:var(--txt);font-weight:600}
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;flex:1;height:100%;
   background:none;border:none;cursor:pointer;
-  color:rgba(255,255,255,.5);
+  color:var(--txt4);
   font-family:inherit;padding:0;
-  transition:color .15s,transform .15s;
+  transition:color .1s,transform .15s;
   -webkit-tap-highlight-color:transparent;
   min-height:var(--touch);
+  position:relative;
 }
 .bn-item:active{transform:scale(.9)}
-.bn-item i{font-size:19px;line-height:1;transition:transform .15s,color .15s}
-.bn-item span{font-size:9px;font-weight:700;letter-spacing:.02em;margin-top:2px}
-.bn-item.active{color:#fff}
+.bn-item i{font-size:19px;line-height:1;transition:transform .15s,color .1s;position:relative;z-index:1}
+.bn-item span{font-size:9px;font-weight:700;letter-spacing:.02em;margin-top:2px;position:relative;z-index:1}
+.bn-item.active{color:var(--brand)}
 .bn-item.active i{transform:scale(1.1)}
+.bn-item.active::before{
+  content:'';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:52px;height:36px;
+  background:rgba(124,58,237,.13);border-radius:18px;
+  z-index:0;
+}
 .bn-fab{
   display:flex;align-items:center;justify-content:center;
-  width:50px;height:50px;border-radius:16px;
-  background:var(--grad);
-  border:2px solid rgba(255,255,255,.2);
+  width:50px;height:50px;border-radius:50%;
+  background:var(--brand);
+  border:none;
   cursor:pointer;
-  box-shadow:0 4px 16px rgba(0,0,0,.3);
-  color:#fff;font-size:21px;
+  box-shadow:0 4px 16px rgba(124,58,237,.4);
+  color:#fff;font-size:22px;
   flex-shrink:0;
-  margin-top:-8px;
+  margin-top:-10px;
   transition:transform .15s,box-shadow .15s;
   -webkit-tap-highlight-color:transparent;
 }
-.bn-fab:active{transform:scale(.88);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.bn-fab:active{transform:scale(.88);box-shadow:0 2px 8px rgba(124,58,237,.2)}
 
 @media(max-width:768px){
   .bottom-nav{display:flex}
@@ -1257,13 +1265,15 @@ td b{color:var(--txt);font-weight:600}
   /* ── Topbar: 20% más fino — iconos 28px, barra 46px ── */
   .topbar{height:46px!important;padding:0 12px!important;gap:6px!important}
   .topbar .tb-btn{width:28px!important;height:28px!important;font-size:11px!important;border-radius:7px!important}
-  /* ── Header Dashboard minimalista: título + ícono calendario ── */
-  .ph{padding:6px 16px 4px!important}
-  .ph-left h2{font-size:15px!important;margin:0!important}
-  .ph-subtitle{display:none!important}
-  /* ── Period picker: ícono solo ── */
-  .ph-period-btn{min-height:36px!important;width:36px!important;border-radius:10px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+  /* ── Calendar en topbar: colapsar ph-hist, flotar period picker ── */
+  .ph-hist{height:0!important;overflow:visible!important;padding:0!important;border:none!important;margin:0!important;min-height:0!important}
+  .ph-hist .ph-left{display:none!important}
+  .ph-hist .ph-right{position:fixed!important;top:5px!important;right:12px!important;z-index:55!important;gap:0!important;background:transparent!important}
+  /* ── Period picker: ícono 28px igual que tb-btn ── */
+  .ph-period-btn{min-height:28px!important;width:28px!important;border-radius:7px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:11px!important}
   .ph-period-lbl{display:none!important}
+  /* ── Contenido sin espacio muerto ── */
+  .content{padding-top:6px!important}
   /* ── Tab bar: píldoras con icono+microlabel, lavanda activa ── */
   .tab-bar{background:transparent!important;border:none!important;padding:0!important;margin-top:6px!important;margin-bottom:8px!important;gap:4px!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
   .tab-bar::-webkit-scrollbar{display:none}

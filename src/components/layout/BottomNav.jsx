@@ -3,8 +3,8 @@ import { useAuth } from '../../context/AuthContext'
 
 const TABS = [
   { path: '/',            icon: 'fa-house',    label: 'Inicio',    perm: 'dashboard.view' },
-  { path: '/presupuesto', icon: 'fa-plus',     label: 'Pedido',    perm: 'pedido.create',  fab: true },
   { path: '/clientes',    icon: 'fa-users',    label: 'Clientes',  perm: 'cliente.view' },
+  { path: '/presupuesto', icon: 'fa-plus',     label: 'Pedido',    perm: 'pedido.create', fab: true },
   { path: '/catalogo',    icon: 'fa-box-open', label: 'Productos', perm: 'catalogo.view' },
   { path: null,           icon: 'fa-grid-2',   label: 'Más',       always: true },
 ]
