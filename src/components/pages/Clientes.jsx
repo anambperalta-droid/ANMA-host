@@ -272,7 +272,7 @@ export default function Clientes() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>Clientes</h2><p>Base de contactos del negocio</p></div>
+        <div className="ph-left"><h2>Clientes</h2></div>
         <div className="ph-right">
           <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}><i className="fa fa-file-import" /> Importar</button>
           <button className="btn btn-secondary btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
@@ -290,77 +290,109 @@ export default function Clientes() {
       {viewMode === 'table' ? (
         <>
           <style>{`
-            .cli-tbl table th, .cli-tbl table td { padding-left: 16px; padding-right: 16px; }
-            .cli-tbl table td { padding-top: 8px; padding-bottom: 8px; }
-            .cli-tbl table th { padding-top: 10px; padding-bottom: 10px; }
-            .cli-acts { opacity: 0.45; transition: opacity .15s; }
-            tr:hover .cli-acts { opacity: 1; }
+            .zt-tbl{max-width:1100px;margin:0 auto}
+            .zt-tbl table{width:100%;border-collapse:separate;border-spacing:0}
+            .zt-tbl thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:10px 12px;white-space:nowrap}
+            .zt-tbl thead tr{border-bottom:1.5px solid var(--border)}
+            .zt-tbl tbody td{padding:11px 12px;font-size:14px;vertical-align:middle}
+            .zt-tbl tbody tr{cursor:pointer;transition:background .12s,box-shadow .15s}
+            .zt-tbl tbody tr:hover{background:#F9FAFB;box-shadow:0 4px 20px rgba(0,0,0,.03)}
+            .zt-chk{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #D1D5DB;background:transparent;cursor:pointer;position:relative;display:block;margin:auto;transition:border-color .12s,background .12s}
+            .zt-chk:hover{border-color:var(--brand)}
+            .zt-chk:checked{border-color:var(--brand);background:var(--brand)}
+            .zt-chk:checked::after{content:'';position:absolute;top:2px;left:5px;width:4px;height:7px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(42deg)}
+            .zt-acts{opacity:0;transition:opacity .15s;display:flex;align-items:center;gap:4px;justify-content:flex-end}
+            .zt-tbl tbody tr:hover .zt-acts{opacity:1}
+            .zt-icon-btn{width:28px;height:28px;border-radius:8px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-family:inherit;transition:transform .12s}
+            .zt-icon-btn:hover{transform:scale(1.13)}
           `}</style>
-          <div className="tbl-card cli-tbl">
+          <div className="tbl-card zt-tbl">
             <table>
-              <thead><tr><th>Empresa / Contacto</th><th style={{ width: 52, textAlign: 'center' }}>WA</th><th className="col-hide-mobile">Rubro</th><th style={{ width: 120 }}>Última actividad</th><th style={{ width: 96 }}>Acciones</th></tr></thead>
+              <thead><tr>
+                <th style={{ width: 32 }}></th>
+                <th style={{ textAlign: 'left' }}>Empresa / Contacto</th>
+                <th style={{ width: 40, textAlign: 'center' }} title="WhatsApp"><i className="fa-brands fa-whatsapp" style={{ color: '#16A34A', fontSize: 12 }} /></th>
+                <th style={{ width: 40, textAlign: 'center' }} title="Email"><i className="fa fa-envelope" style={{ color: '#2563EB', fontSize: 11 }} /></th>
+                <th style={{ textAlign: 'right' }} className="col-hide-mobile">Rubro</th>
+                <th style={{ width: 130, textAlign: 'right' }}>Última actividad</th>
+                <th style={{ width: 100, textAlign: 'right' }}>Acciones</th>
+              </tr></thead>
               <tbody>
                 {loading ? [1,2,3,4,5].map(i => (
-                  <tr key={i}><td colSpan={5}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
-                )) : filtered.length ? filtered.map(c => (
-                  <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(c)}>
-                    {/* Empresa + dot actividad + contacto */}
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                        {(() => {
-                          const days = clientLastBudgetDays(c)
-                          const color = days === null ? '#CBD5E1' : days <= 15 ? '#16A34A' : days <= 45 ? '#D97706' : '#DC2626'
-                          const tip = days === null ? 'Sin pedidos' : days <= 15 ? `Activo — hace ${days}d` : days <= 45 ? `Tibio — hace ${days}d` : `Frío — hace ${days}d`
-                          return <span title={tip} style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
-                        })()}
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)' }}>{c.company}</div>
-                          {c.contact && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 1 }}>{c.contact}</div>}
+                  <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                )) : filtered.length ? filtered.map(c => {
+                  const days = clientLastBudgetDays(c)
+                  const dotColor = days === null ? '#CBD5E1' : days <= 15 ? '#16A34A' : days <= 45 ? '#D97706' : '#DC2626'
+                  const dotTip = days === null ? 'Sin pedidos' : days <= 15 ? `Activo — hace ${days}d` : days <= 45 ? `Tibio — hace ${days}d` : `Frío — hace ${days}d`
+                  const isCold = days === null || days > 30
+                  return (
+                    <tr key={c.id} onClick={() => openDetail(c)}>
+                      <td style={{ textAlign: 'center', width: 32 }} onClick={e => e.stopPropagation()}>
+                        <input type="checkbox" className="zt-chk" />
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span title={dotTip} style={{ width: 7, height: 7, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--txt)', lineHeight: 1.3 }}>{c.company || c.contact || '—'}</div>
+                            {c.contact && c.company && <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1 }}>{c.contact}</div>}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    {/* WA icon centrado */}
-                    <td style={{ textAlign: 'center' }}>
-                      {c.wa ? (
-                        <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()} title={c.wa}
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 9, background: '#DCFCE7', color: '#16A34A', fontSize: 17, textDecoration: 'none', transition: 'transform .15s' }}
-                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = ''}>
-                          <i className="fa-brands fa-whatsapp" />
-                        </a>
-                      ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-                    </td>
-                    {/* Rubro */}
-                    <td className="col-hide-mobile">
-                      {c.rubro ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--txt2)' }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0, display: 'inline-block' }} />{c.rubro}
-                        </span>
-                      ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-                    </td>
-                    {/* Última actividad */}
-                    <td>
-                      {clientLastDate(c)
-                        ? <span style={{ fontSize: 12, color: 'var(--txt2)', fontVariantNumeric: 'tabular-nums' }}>{clientLastDate(c)}</span>
-                        : <span style={{ fontSize: 12, color: '#6B7280' }}>Sin pedidos</span>}
-                    </td>
-                    {/* Acciones */}
-                    <td><div className="acts cli-acts" style={{ gap: 5 }} onClick={e => e.stopPropagation()}>
-                      {c.wa && (
-                        <button title="Re-vincular por WhatsApp" onClick={e => openRevincul(c, e)}
-                          style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: '#FEF3C7', color: '#D97706', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, transition: 'transform .15s' }}
-                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = ''}>
-                          <i className="fa fa-bolt" />
-                        </button>
-                      )}
-                      <button className="act edit" onClick={() => openEdit(c)}><i className="fa fa-pen" /></button>
-                      <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
-                      <button className="act del" onClick={() => del(c.id)}><i className="fa fa-trash" /></button>
-                    </div></td>
-                  </tr>
-                )) : <tr><td colSpan={5}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
+                      </td>
+                      <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        {c.wa ? (
+                          <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" title={c.wa}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none', transition: 'transform .12s' }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = ''}>
+                            <i className="fa-brands fa-whatsapp" />
+                          </a>
+                        ) : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>}
+                      </td>
+                      <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        {c.email ? (
+                          <a href={`mailto:${c.email}`} title={c.email}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', color: '#2563EB', fontSize: 13, textDecoration: 'none', transition: 'transform .12s' }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = ''}>
+                            <i className="fa fa-envelope" />
+                          </a>
+                        ) : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>}
+                      </td>
+                      <td className="col-hide-mobile" style={{ textAlign: 'right', fontSize: 13, color: 'var(--txt2)' }}>
+                        {c.rubro ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: 'flex-end' }}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0 }} />{c.rubro}
+                          </span>
+                        ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                      </td>
+                      <td style={{ textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                        {clientLastDate(c)
+                          ? <span style={{ color: isCold ? '#DC2626' : 'var(--txt2)' }}>{clientLastDate(c)}</span>
+                          : <span style={{ color: '#9CA3AF', fontSize: 12 }}>Sin pedidos</span>}
+                      </td>
+                      <td onClick={e => e.stopPropagation()}>
+                        <div className="zt-acts">
+                          {c.wa && (
+                            <button
+                              title={isCold ? 'Recontactar — sin actividad >30d' : 'Re-vincular por WhatsApp'}
+                              className="zt-icon-btn"
+                              style={{ background: isCold ? '#FEFCE8' : '#FEF3C7', color: isCold ? '#FACC15' : '#D97706' }}
+                              onClick={e => openRevincul(c, e)}>
+                              <i className="fa fa-bolt" />
+                            </button>
+                          )}
+                          <button title="Editar" className="zt-icon-btn" style={{ background: 'var(--surface2)', color: 'var(--txt2)' }} onClick={() => openEdit(c)}>
+                            <i className="fa fa-pen" />
+                          </button>
+                          <button title="Eliminar" className="zt-icon-btn" style={{ background: '#FEF2F2', color: '#DC2626' }} onClick={() => del(c.id)}>
+                            <i className="fa fa-trash" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                }) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-users" /></div><h4>Sin clientes</h4><p>Agregá tu primer cliente o empresa</p></div></td></tr>}
               </tbody>
             </table>
           </div>

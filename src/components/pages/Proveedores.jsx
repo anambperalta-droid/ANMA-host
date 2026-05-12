@@ -376,7 +376,7 @@ export default function Proveedores() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>Proveedores</h2><p>Directorio de proveedores</p></div>
+        <div className="ph-left"><h2>Proveedores</h2></div>
         <div className="ph-right">
           <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}><i className="fa fa-file-import" /> Importar</button>
           <button className="btn btn-secondary btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
@@ -465,52 +465,84 @@ export default function Proveedores() {
       )}
 
       {viewMode === 'table' ? (
-        <div className="tbl-card">
-          <table style={{ tableLayout: 'fixed', width: '100%' }}>
+        <div className="tbl-card zt-tbl">
+          <style>{`
+            .zt-tbl{max-width:1100px;margin:0 auto}
+            .zt-tbl table{width:100%;border-collapse:separate;border-spacing:0}
+            .zt-tbl thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:10px 12px;white-space:nowrap}
+            .zt-tbl thead tr{border-bottom:1.5px solid var(--border)}
+            .zt-tbl tbody td{padding:11px 12px;font-size:14px;vertical-align:middle}
+            .zt-tbl tbody tr{cursor:pointer;transition:background .12s,box-shadow .15s}
+            .zt-tbl tbody tr:hover{background:#F9FAFB;box-shadow:0 4px 20px rgba(0,0,0,.03)}
+            .zt-chk{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #D1D5DB;background:transparent;cursor:pointer;position:relative;display:block;margin:auto;transition:border-color .12s,background .12s}
+            .zt-chk:hover{border-color:var(--brand)}
+            .zt-chk:checked{border-color:var(--brand);background:var(--brand)}
+            .zt-chk:checked::after{content:'';position:absolute;top:2px;left:5px;width:4px;height:7px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(42deg)}
+            .zt-acts{opacity:0;transition:opacity .15s;display:flex;align-items:center;gap:4px;justify-content:flex-end}
+            .zt-tbl tbody tr:hover .zt-acts{opacity:1}
+            .zt-icon-btn{width:28px;height:28px;border-radius:8px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-family:inherit;transition:transform .12s}
+            .zt-icon-btn:hover{transform:scale(1.13)}
+          `}</style>
+          <table>
             <thead><tr>
-              <th style={{ width: '30%' }}>Proveedor / Contacto</th>
-              <th style={{ width: 52, textAlign: 'center' }}>WA</th>
-              <th style={{ width: 52, textAlign: 'center' }}>Email</th>
-              <th style={{ width: '22%' }}>Rubro</th>
-              <th style={{ width: 76, textAlign: 'center' }}>Prods.</th>
-              <th style={{ width: 96 }}>Acciones</th>
+              <th style={{ width: 32 }}></th>
+              <th style={{ textAlign: 'left' }}>Proveedor / Contacto</th>
+              <th style={{ width: 40, textAlign: 'center' }} title="WhatsApp"><i className="fa-brands fa-whatsapp" style={{ color: '#16A34A', fontSize: 12 }} /></th>
+              <th style={{ width: 40, textAlign: 'center' }} title="Email"><i className="fa fa-envelope" style={{ color: '#2563EB', fontSize: 11 }} /></th>
+              <th style={{ textAlign: 'right' }} className="col-hide-mobile">Rubro</th>
+              <th style={{ width: 70, textAlign: 'right' }}>Prods.</th>
+              <th style={{ width: 80, textAlign: 'right' }}>Acciones</th>
             </tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
-                <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
-                <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(s)}>
-                  <td style={{ padding: '8px 12px', overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.name}>{s.name}</div>
-                    {s.contact && <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.contact}</div>}
+                <tr key={s.id} onClick={() => openDetail(s)}>
+                  <td style={{ textAlign: 'center', width: 32 }} onClick={e => e.stopPropagation()}>
+                    <input type="checkbox" className="zt-chk" />
                   </td>
-                  <td style={{ textAlign: 'center' }}>
+                  <td>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--txt)', lineHeight: 1.3 }}>{s.name}</div>
+                    {s.contact && <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1 }}>{s.contact}</div>}
+                  </td>
+                  <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                     {s.wa ? (
-                      <a href={`https://wa.me/${s.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
-                        onClick={e => e.stopPropagation()} title={s.wa}
-                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none' }}>
+                      <a href={`https://wa.me/${s.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" title={s.wa}
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#DCFCE7', color: '#16A34A', fontSize: 16, textDecoration: 'none', transition: 'transform .12s' }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = ''}>
                         <i className="fa-brands fa-whatsapp" />
                       </a>
-                    ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                    ) : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>}
                   </td>
-                  <td style={{ textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                     {s.email ? (
-                      <a href={`mailto:${s.email}`}
-                        onClick={e => e.stopPropagation()} title={s.email}
-                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', color: '#2563EB', fontSize: 14, textDecoration: 'none' }}>
+                      <a href={`mailto:${s.email}`} title={s.email}
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', color: '#2563EB', fontSize: 13, textDecoration: 'none', transition: 'transform .12s' }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = ''}>
                         <i className="fa fa-envelope" />
                       </a>
-                    ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+                    ) : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>}
                   </td>
-                  <td style={{ fontSize: 12, color: 'var(--txt2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.rubro || ''}>{s.rubro || <span style={{ color: 'var(--txt4)' }}>—</span>}</td>
-                  <td style={{ textAlign: 'center' }}><span className="badge b-sent">{supplierProducts(s).length}</span></td>
-                  <td><div className="acts" style={{ gap: 8 }} onClick={e => e.stopPropagation()}>
-                    <button className="act edit" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
-                    <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
-                    <button className="act del" onClick={() => del(s.id)}><i className="fa fa-trash" /></button>
-                  </div></td>
+                  <td className="col-hide-mobile" style={{ textAlign: 'right', fontSize: 13, color: 'var(--txt2)' }}>
+                    {s.rubro || <span style={{ color: 'var(--txt4)' }}>—</span>}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt2)', fontVariantNumeric: 'tabular-nums' }}>{supplierProducts(s).length}</span>
+                  </td>
+                  <td onClick={e => e.stopPropagation()}>
+                    <div className="zt-acts">
+                      <button title="Editar" className="zt-icon-btn" style={{ background: 'var(--surface2)', color: 'var(--txt2)' }} onClick={() => openEdit(s)}>
+                        <i className="fa fa-pen" />
+                      </button>
+                      <button title="Eliminar" className="zt-icon-btn" style={{ background: '#FEF2F2', color: '#DC2626' }} onClick={() => del(s.id)}>
+                        <i className="fa fa-trash" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              )) : <tr><td colSpan={6}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
+              )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
             </tbody>
           </table>
         </div>
