@@ -1254,22 +1254,27 @@ td b{color:var(--txt);font-weight:600}
 /* ═══ BANKING UX — MOBILE NAV ═══ */
 .tab-btn-icon,.tab-btn-short{display:none}
 @media(max-width:640px){
-  .tab-bar{background:transparent!important;border:none!important;padding:0!important;gap:4px!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
+  /* ── Header minimalista: título + ícono calendario ── */
+  .ph{padding:10px 16px 6px!important}
+  .ph-left h2{font-size:15px!important;margin:0!important}
+  .ph-subtitle{display:none!important}
+  /* ── Period picker: cuadrado ícono solo ── */
+  .ph-period-btn{min-height:36px!important;width:36px!important;border-radius:10px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+  .ph-period-lbl{display:none!important}
+  /* ── Tab bar: iconos scrollables ── */
+  .tab-bar{background:transparent!important;border:none!important;padding:0!important;margin-top:10px!important;margin-bottom:10px!important;gap:4px!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
   .tab-bar::-webkit-scrollbar{display:none}
   .tab-btn{border-radius:16px!important;min-height:48px!important;padding:6px 10px!important;border:1.5px solid var(--border)!important;background:transparent!important;color:var(--txt3)!important;box-shadow:none!important;display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;flex-shrink:0}
   .tab-btn.active{background:var(--acento)!important;border-color:var(--acento)!important;color:#fff!important;box-shadow:none!important}
   .tab-btn-lbl{display:none!important}
   .tab-btn-icon{display:block!important;font-size:17px!important;line-height:1!important}
   .tab-btn-short{display:block!important;font-size:9px!important;font-weight:700!important;letter-spacing:.03em;line-height:1}
-  .ph-subtitle{display:none!important}
-  .ph-export-btn{display:none!important}
+  /* ── Botones ph-right (otras páginas) ── */
   .ph-right .btn{min-height:44px!important}
   .ph-right .btn-ghost,.ph-right .btn-secondary{display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;width:52px!important;padding:4px 2px!important;border-radius:14px!important;font-size:9px!important;font-weight:700!important;gap:1px!important;letter-spacing:.01em;line-height:1.1}
   .ph-right .btn-ghost i,.ph-right .btn-secondary i{font-size:16px!important;line-height:1.4!important}
   .ph-right .btn-primary{border-radius:22px!important;padding:0 16px!important;font-size:12px!important;min-width:unset!important}
-  .ph-right .ph-fab{width:44px!important;height:44px!important;min-height:44px!important;min-width:44px!important;border-radius:50%!important;padding:0!important;font-size:20px!important;box-shadow:0 4px 14px rgba(22,163,74,.35)!important}
-  .ph-right .ph-fab span{display:none!important}
-  .ph-period-btn{min-height:44px!important;border-radius:22px!important;padding:0 12px!important;gap:4px}
-  .ph-period-lbl{display:none!important}
+  /* NOTA: ph-export-btn y ph-fab van DESPUÉS de .ph-right .btn-* para ganar especificidad por orden */
+  .ph-right .ph-export-btn,.ph-right .ph-fab{display:none!important}
   .ph-right>div>div[style]{flex-direction:column;gap:4px}
 }
