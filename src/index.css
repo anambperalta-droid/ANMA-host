@@ -1250,3 +1250,17 @@ td b{color:var(--txt);font-weight:600}
 :root.theme-logistica{--brand:#0369A1;--brand-dark:#075985;--brand-light:#0EA5E9;--brand-xlt:rgba(3,105,161,.08);--grad:linear-gradient(135deg,#0369A1,#0EA5E9);--panel-grad:linear-gradient(160deg,#0C1445,#1E3A5F,#0369A1)}
 :root.theme-ventas{--brand:#16A34A;--brand-dark:#15803D;--brand-light:#22C55E;--brand-xlt:rgba(22,163,74,.08);--grad:linear-gradient(135deg,#16A34A,#22C55E);--panel-grad:linear-gradient(160deg,#052E16,#14532D,#16A34A)}
 :root.theme-premium{--brand:#B45309;--brand-dark:#92400E;--brand-light:#F59E0B;--brand-xlt:rgba(180,83,9,.08);--grad:linear-gradient(135deg,#B45309,#F59E0B);--panel-grad:linear-gradient(160deg,#1C1003,#431407,#B45309)}
+
+/* ═══ BANKING UX — MOBILE NAV ═══ */
+@media(max-width:640px){
+  .tab-bar{background:transparent!important;border:none!important;padding:0!important;gap:6px!important}
+  .tab-btn{border-radius:20px!important;min-height:36px!important;padding:0 14px!important;border:1.5px solid var(--border)!important;background:transparent!important;color:var(--txt3)!important;box-shadow:none!important;display:inline-flex;align-items:center;justify-content:center}
+  .tab-btn.active{background:var(--acento)!important;border-color:var(--acento)!important;color:#fff!important;box-shadow:none!important}
+  .ph-right .btn{min-height:44px!important}
+  .ph-right .btn-ghost,.ph-right .btn-secondary{display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;width:52px!important;padding:4px 2px!important;border-radius:14px!important;font-size:9px!important;font-weight:700!important;gap:1px!important;letter-spacing:.01em;line-height:1.1}
+  .ph-right .btn-ghost i,.ph-right .btn-secondary i{font-size:16px!important;line-height:1.4!important}
+  .ph-right .btn-primary{border-radius:22px!important;padding:0 16px!important;font-size:12px!important;min-width:unset!important}
+  .ph-period-btn{min-height:44px!important;border-radius:22px!important;padding:0 12px!important;gap:4px}
+  .ph-period-lbl{display:none!important}
+  .ph-right>div>div[style]{flex-direction:column;gap:4px}
+}

@@ -861,12 +861,13 @@ export default function Historial() {
           {/* Period dropdown */}
           <div style={{ position: 'relative' }}>
             <button
+              className="ph-period-btn"
               onClick={() => setShowPeriodDrop(d => !d)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', color: 'var(--txt2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
             >
               <i className="fa fa-calendar" style={{ fontSize: 11, color: 'var(--txt3)' }} />
-              {PERIODS.find(p => p.key === period)?.label || 'Período'}
-              <i className="fa fa-chevron-down" style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 2 }} />
+              <span className="ph-period-lbl">{PERIODS.find(p => p.key === period)?.label || 'Período'}</span>
+              <i className="fa fa-chevron-down ph-period-lbl" style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 2 }} />
             </button>
             {showPeriodDrop && (
               <div
@@ -894,8 +895,8 @@ export default function Historial() {
                 style={{ padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)' }} />
             </div>
           )}
-          <button className="btn btn-ghost btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
-          <button className="btn btn-primary btn-sm" onClick={() => nav('/presupuesto')} style={{ background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /> Nuevo presupuesto</button>
+          <button className="btn btn-ghost btn-sm" onClick={exportCSV}><i className="fa fa-download" /><span>Exportar</span></button>
+          <button className="btn btn-primary btn-sm" onClick={() => nav('/presupuesto')} style={{ background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /><span>Nuevo presupuesto</span></button>
         </div>
       </div>
 
