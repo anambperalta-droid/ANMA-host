@@ -586,12 +586,12 @@ export default function Presupuesto() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>{editId ? 'Editar pedido' : 'Nuevo pedido'}</h2><p>Completá los datos del pedido o cotización</p></div>
+        <div className="ph-left"><h2>{editId ? 'Editar pedido' : 'Nuevo pedido'}</h2><p className="ph-subtitle">Completá los datos del pedido o cotización</p></div>
         <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /> Descartar</button></div>
       </div>
 
       {draftRestored && !id && (
-        <div style={{
+        <div className="pres-draft-banner" style={{
           display: 'flex', alignItems: 'center', gap: 10,
           background: '#FFFBEB', border: '1.5px solid #FCD34D',
           borderRadius: 10, padding: '10px 16px', marginBottom: 14,
@@ -612,6 +612,12 @@ export default function Presupuesto() {
           </button>
         </div>
       )}
+
+      {/* MOBILE STEP INDICATOR */}
+      <div className="wiz-mobile-hd">
+        <div className="wmh-label">Paso {currentStep} de {WIZARD_STEPS.length} &nbsp;·&nbsp; <b>{WIZARD_STEPS[currentStep - 1]?.label}</b></div>
+        <div className="wmh-bar"><div className="wmh-fill" style={{ width: `${Math.round((currentStep / WIZARD_STEPS.length) * 100)}%` }} /></div>
+      </div>
 
       {/* STEPPER */}
       <div className="wizard-steps">
