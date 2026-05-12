@@ -1254,27 +1254,30 @@ td b{color:var(--txt);font-weight:600}
 /* ═══ BANKING UX — MOBILE NAV ═══ */
 .tab-btn-icon,.tab-btn-short{display:none}
 @media(max-width:640px){
-  /* ── Header minimalista: título + ícono calendario ── */
-  .ph{padding:10px 16px 6px!important}
+  /* ── Topbar: 20% más fino — iconos 28px, barra 46px ── */
+  .topbar{height:46px!important;padding:0 12px!important;gap:6px!important}
+  .topbar .tb-btn{width:28px!important;height:28px!important;font-size:11px!important;border-radius:7px!important}
+  /* ── Header Dashboard minimalista: título + ícono calendario ── */
+  .ph{padding:6px 16px 4px!important}
   .ph-left h2{font-size:15px!important;margin:0!important}
   .ph-subtitle{display:none!important}
-  /* ── Period picker: cuadrado ícono solo ── */
+  /* ── Period picker: ícono solo ── */
   .ph-period-btn{min-height:36px!important;width:36px!important;border-radius:10px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
   .ph-period-lbl{display:none!important}
-  /* ── Tab bar: iconos scrollables ── */
-  .tab-bar{background:transparent!important;border:none!important;padding:0!important;margin-top:10px!important;margin-bottom:10px!important;gap:4px!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
+  /* ── Tab bar: píldoras con icono+microlabel, lavanda activa ── */
+  .tab-bar{background:transparent!important;border:none!important;padding:0!important;margin-top:6px!important;margin-bottom:8px!important;gap:4px!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
   .tab-bar::-webkit-scrollbar{display:none}
-  .tab-btn{border-radius:16px!important;min-height:48px!important;padding:6px 10px!important;border:1.5px solid var(--border)!important;background:transparent!important;color:var(--txt3)!important;box-shadow:none!important;display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;flex-shrink:0}
-  .tab-btn.active{background:var(--acento)!important;border-color:var(--acento)!important;color:#fff!important;box-shadow:none!important}
+  .tab-btn{border-radius:20px!important;min-height:44px!important;padding:4px 12px!important;border:1px solid var(--border)!important;background:var(--surface2)!important;color:var(--txt3)!important;box-shadow:none!important;display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;flex-shrink:0;transition:background .1s,color .1s,border-color .1s}
+  .tab-btn.active{background:rgba(124,58,237,.13)!important;border-color:rgba(124,58,237,.28)!important;color:var(--brand)!important;box-shadow:none!important}
   .tab-btn-lbl{display:none!important}
-  .tab-btn-icon{display:block!important;font-size:17px!important;line-height:1!important}
+  .tab-btn-icon{display:block!important;font-size:16px!important;line-height:1!important}
   .tab-btn-short{display:block!important;font-size:9px!important;font-weight:700!important;letter-spacing:.03em;line-height:1}
   /* ── Botones ph-right (otras páginas) ── */
   .ph-right .btn{min-height:44px!important}
   .ph-right .btn-ghost,.ph-right .btn-secondary{display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;width:52px!important;padding:4px 2px!important;border-radius:14px!important;font-size:9px!important;font-weight:700!important;gap:1px!important;letter-spacing:.01em;line-height:1.1}
   .ph-right .btn-ghost i,.ph-right .btn-secondary i{font-size:16px!important;line-height:1.4!important}
   .ph-right .btn-primary{border-radius:22px!important;padding:0 16px!important;font-size:12px!important;min-width:unset!important}
-  /* NOTA: ph-export-btn y ph-fab van DESPUÉS de .ph-right .btn-* para ganar especificidad por orden */
+  /* ph-export-btn y ph-fab DESPUÉS de .ph-right .btn-* para ganar por orden */
   .ph-right .ph-export-btn,.ph-right .ph-fab{display:none!important}
   .ph-right>div>div[style]{flex-direction:column;gap:4px}
 }
