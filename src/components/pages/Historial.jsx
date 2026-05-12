@@ -856,7 +856,7 @@ export default function Historial() {
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>Dashboard</h2><p>Pedidos, ventas y análisis de tu negocio</p></div>
+        <div className="ph-left"><h2>Dashboard</h2><p className="ph-subtitle">Pedidos, ventas y análisis de tu negocio</p></div>
         <div className="ph-right" style={{ gap: 8 }}>
           {/* Period dropdown */}
           <div style={{ position: 'relative' }}>
@@ -895,15 +895,22 @@ export default function Historial() {
                 style={{ padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)' }} />
             </div>
           )}
-          <button className="btn btn-ghost btn-sm" onClick={exportCSV}><i className="fa fa-download" /><span>Exportar</span></button>
-          <button className="btn btn-primary btn-sm" onClick={() => nav('/presupuesto')} style={{ background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /><span>Nuevo presupuesto</span></button>
+          <button className="btn btn-ghost btn-sm ph-export-btn" onClick={exportCSV}><i className="fa fa-download" /><span>Exportar</span></button>
+          <button className="btn btn-primary btn-sm ph-fab" onClick={() => nav('/presupuesto')} style={{ background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /><span>Nuevo presupuesto</span></button>
         </div>
       </div>
 
       <div className="tab-bar" style={{ marginTop: 18, marginBottom: 20 }}>
-        {['resumen', 'lista', 'analisis', 'seguimiento'].map(t => (
-          <div key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-            {t === 'resumen' ? 'Resumen' : t === 'lista' ? 'Presupuestos' : t === 'analisis' ? 'Análisis' : `Seguimiento (${seguimiento.length})`}
+        {[
+          { key: 'resumen',     icon: 'fa-house',     lbl: 'Resumen',                           short: 'Inicio'   },
+          { key: 'lista',       icon: 'fa-receipt',   lbl: 'Presupuestos',                      short: 'Presup.'  },
+          { key: 'analisis',    icon: 'fa-chart-bar', lbl: 'Análisis',                          short: 'Stats'    },
+          { key: 'seguimiento', icon: 'fa-bell',      lbl: `Seguimiento (${seguimiento.length})`, short: seguimiento.length > 0 ? `${seguimiento.length}` : 'Seguim.' },
+        ].map(t => (
+          <div key={t.key} className={`tab-btn ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
+            <i className={`fa ${t.icon} tab-btn-icon`} />
+            <span className="tab-btn-lbl">{t.lbl}</span>
+            <span className="tab-btn-short">{t.short}</span>
           </div>
         ))}
       </div>
