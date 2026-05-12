@@ -585,9 +585,9 @@ export default function Presupuesto() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
-      <div className="ph">
+      <div className="ph ph-pres">
         <div className="ph-left"><h2>{editId ? 'Editar pedido' : 'Nuevo pedido'}</h2><p className="ph-subtitle">Completá los datos del pedido o cotización</p></div>
-        <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /> Descartar</button></div>
+        <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /><span className="desc-txt"> Descartar</span></button></div>
       </div>
 
       {draftRestored && !id && (
@@ -682,7 +682,7 @@ export default function Presupuesto() {
             {currentStep === 2 && (
               <>
                 <PaneHeader icon="fa-box-open" title="Paso 2 · Productos" subtitle="Agregá los ítems que incluye el pedido" />
-                <div style={{ overflowX: 'auto' }}>
+                <div className="items-scroll" style={{ overflowX: 'auto' }}>
                   <table style={{ tableLayout: 'fixed', width: '100%', minWidth: 615 }}>
                     <thead><tr>
                       <th style={{ width: 24 }}></th>
