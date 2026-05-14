@@ -467,7 +467,7 @@ export default function Proveedores() {
       <style>{`
         .zt-tbl{max-width:1100px;margin:0 auto}
         .zt-tbl table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
-        .zt-tbl thead th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#4B5563;padding:9px 8px;white-space:nowrap}
+        .zt-tbl thead th{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#374151;padding:9px 8px;white-space:nowrap}
         .zt-tbl thead tr{border-bottom:1px solid var(--border)}
         .zt-tbl tbody td{padding:9px 8px;font-size:13px;vertical-align:middle}
         .zt-tbl tbody tr{cursor:pointer;transition:background .12s}
@@ -483,8 +483,9 @@ export default function Proveedores() {
         .zt-ci{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;font-size:16px;text-decoration:none;transition:transform .12s,opacity .15s;opacity:.45}
         .zt-tbl tbody tr:hover .zt-ci{opacity:1}
         .zt-ci:hover{transform:scale(1.12)}
+        .zt-ph{align-items:center!important}
         .zt-ph .btn{height:40px!important;font-size:14px!important;font-weight:500!important;padding-left:16px!important;padding-right:16px!important}
-        .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important}
+        .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;height:40px!important}
       `}</style>
       {viewMode === 'table' ? (
         <div className="tbl-card zt-tbl">
@@ -503,8 +504,8 @@ export default function Proveedores() {
               <th style={{ textAlign: 'left' }}>Proveedor / Contacto</th>
               <th style={{ textAlign: 'center' }} title="WhatsApp"><i className="fa-brands fa-whatsapp" style={{ color: '#6B7280', fontSize: 13 }} /></th>
               <th style={{ textAlign: 'center' }} title="Email"><i className="fa fa-envelope" style={{ color: '#6B7280', fontSize: 12 }} /></th>
-              <th style={{ textAlign: 'right' }} className="col-hide-mobile">Rubro</th>
-              <th style={{ textAlign: 'right' }}>Prods.</th>
+              <th style={{ textAlign: 'left' }} className="col-hide-mobile">Rubro</th>
+              <th style={{ textAlign: 'left' }}>Prods.</th>
               <th style={{ textAlign: 'right' }}>Acciones</th>
             </tr></thead>
             <tbody>
@@ -535,12 +536,12 @@ export default function Proveedores() {
                       </a>
                     ) : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
                   </td>
-                  <td className="col-hide-mobile" style={{ textAlign: 'right' }}>
+                  <td className="col-hide-mobile" style={{ textAlign: 'left' }}>
                     {s.rubro
                       ? <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--txt2)' }}>{s.rubro}</span>
                       : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'left' }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)', fontVariantNumeric: 'tabular-nums' }}>{supplierProducts(s).length}</span>
                   </td>
                   <td onClick={e => e.stopPropagation()}>

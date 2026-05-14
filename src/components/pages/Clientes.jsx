@@ -111,7 +111,7 @@ export default function Clientes() {
   const [importModal, setImportModal] = useState(false)
   const [detailClient, setDetailClient] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
-  const [viewMode, setViewMode] = useState('cards')
+  const [viewMode, setViewMode] = useState('table')
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c' })
   const [newNote, setNewNote] = useState('')
@@ -290,7 +290,7 @@ export default function Clientes() {
       <style>{`
         .zt-tbl{max-width:1100px;margin:0 auto}
         .zt-tbl table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
-        .zt-tbl thead th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#4B5563;padding:9px 8px;white-space:nowrap}
+        .zt-tbl thead th{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#374151;padding:9px 8px;white-space:nowrap}
         .zt-tbl thead tr{border-bottom:1px solid var(--border)}
         .zt-tbl tbody td{padding:9px 8px;font-size:13px;vertical-align:middle}
         .zt-tbl tbody tr{cursor:pointer;transition:background .12s}
@@ -306,8 +306,9 @@ export default function Clientes() {
         .zt-ci{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;font-size:16px;text-decoration:none;transition:transform .12s,opacity .15s;opacity:.45}
         .zt-tbl tbody tr:hover .zt-ci{opacity:1}
         .zt-ci:hover{transform:scale(1.12)}
+        .zt-ph{align-items:center!important}
         .zt-ph .btn{height:40px!important;font-size:14px!important;font-weight:500!important;padding-left:16px!important;padding-right:16px!important}
-        .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important}
+        .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;height:40px!important}
       `}</style>
       {viewMode === 'table' ? (
         <div className="tbl-card zt-tbl">
@@ -326,8 +327,8 @@ export default function Clientes() {
               <th style={{ textAlign: 'left' }}>Empresa / Contacto</th>
               <th style={{ textAlign: 'center' }} title="WhatsApp"><i className="fa-brands fa-whatsapp" style={{ color: '#6B7280', fontSize: 13 }} /></th>
               <th style={{ textAlign: 'center' }} title="Email"><i className="fa fa-envelope" style={{ color: '#6B7280', fontSize: 12 }} /></th>
-              <th style={{ textAlign: 'right' }} className="col-hide-mobile">Rubro</th>
-              <th style={{ textAlign: 'right' }}>Última actividad</th>
+              <th style={{ textAlign: 'left' }} className="col-hide-mobile">Rubro</th>
+              <th style={{ textAlign: 'left' }}>Última actividad</th>
               <th style={{ textAlign: 'right' }}>Acciones</th>
             </tr></thead>
             <tbody>
@@ -368,12 +369,12 @@ export default function Clientes() {
                         </a>
                       ) : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
                     </td>
-                    <td className="col-hide-mobile" style={{ textAlign: 'right' }}>
+                    <td className="col-hide-mobile" style={{ textAlign: 'left' }}>
                       {c.rubro
                         ? <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--txt2)' }}>{c.rubro}</span>
                         : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
                     </td>
-                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                    <td style={{ textAlign: 'left', fontVariantNumeric: 'tabular-nums' }}>
                       {clientLastDate(c)
                         ? <span style={{ fontSize: 12, fontWeight: 400, color: isCold ? '#DC2626' : '#6B7280' }}>{clientLastDate(c)}</span>
                         : <span style={{ fontSize: 11, color: '#9CA3AF' }}>Sin pedidos</span>}
