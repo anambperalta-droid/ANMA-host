@@ -294,6 +294,12 @@ export default function Clientes() {
     navigator.clipboard.writeText(nums.join('\n'))
     toast(`${nums.length} números copiados al portapapeles`,'ok')
   }
+  const bulkMailto = () => {
+    const emails = clients.filter(c => selectedIds.has(c.id) && c.email).map(c => c.email)
+    if (!emails.length) { toast('Ningún seleccionado tiene email','in'); return }
+    window.open(`mailto:?bcc=${emails.join(',')}`)
+    toast(`Email preparado para ${emails.length} destinatario${emails.length > 1 ? 's' : ''}`, 'ok')
+  }
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
@@ -507,24 +513,26 @@ export default function Clientes() {
 
       {/* ── Barra de acciones masivas ── */}
       {selectedIds.size > 0 && (
-        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', background:'#1E1B4B', color:'#fff', borderRadius:14, display:'flex', alignItems:'center', gap:6, padding:'8px 10px 8px 16px', boxShadow:'0 8px 32px rgba(0,0,0,.32)', zIndex:200, animation:'pgIn .18s ease both', whiteSpace:'nowrap' }}>
-          <span style={{ fontSize:13, fontWeight:700, paddingRight:10, borderRight:'1px solid rgba(255,255,255,.18)' }}>
-            {selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}
-          </span>
-          <button onClick={bulkExportCSV} title="Exportar seleccionados como CSV"
-            style={{ background:'rgba(255,255,255,.12)', border:'none', color:'#fff', borderRadius:8, padding:'5px 12px', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-            <i className="fa fa-download" style={{ fontSize:12 }} /> Exportar CSV
-          </button>
-          <button onClick={bulkCopyWA} title="Copiar números WA al portapapeles"
-            style={{ background:'rgba(255,255,255,.12)', border:'none', color:'#fff', borderRadius:8, padding:'5px 12px', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-            <i className="fa-brands fa-whatsapp" style={{ fontSize:13, color:'#4ADE80' }} /> Números WA
-          </button>
-          <button onClick={bulkDelete} title="Eliminar clientes seleccionados"
-            style={{ background:'rgba(220,38,38,.85)', border:'none', color:'#fff', borderRadius:8, padding:'5px 12px', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-            <i className="fa fa-trash" style={{ fontSize:12 }} /> Eliminar
-          </button>
-          <button onClick={() => setSelectedIds(new Set())} title="Cancelar selección"
-            style={{ background:'rgba(255,255,255,.08)', border:'none', color:'rgba(255,255,255,.6)', borderRadius:8, width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, marginLeft:2 }}>
+        <div style={{ position:'fixed', bottom:18, left:'50%', transform:'translateX(-50%)', background:'rgba(12,10,40,.88)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:10, display:'flex', alignItems:'center', gap:2, padding:'4px 6px 4px 10px', boxShadow:'0 4px 18px rgba(0,0,0,.2)', zIndex:200, animation:'pgIn .15s ease both', whiteSpace:'nowrap', border:'1px solid rgba(255,255,255,.08)' }}>
+          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.55)', paddingRight:8, borderRight:'1px solid rgba(255,255,255,.1)', marginRight:2 }}>{selectedIds.size}</span>
+          {[
+            { fn: bulkExportCSV, icon:'fa fa-download', tip:'Exportar CSV', hBg:'rgba(255,255,255,.1)', hCol:'#fff' },
+            { fn: bulkCopyWA,    icon:'fa-brands fa-whatsapp', tip:'Copiar números WhatsApp', hBg:'rgba(74,222,128,.14)', hCol:'#4ADE80' },
+            { fn: bulkMailto,    icon:'fa fa-envelope', tip:'Enviar email a seleccionados', hBg:'rgba(96,165,250,.14)', hCol:'#93C5FD' },
+            { fn: bulkDelete,    icon:'fa fa-trash', tip:'Eliminar seleccionados', hBg:'rgba(220,38,38,.18)', hCol:'#FCA5A5' },
+          ].map(({ fn, icon, tip, hBg, hCol }) => (
+            <button key={tip} onClick={fn} title={tip}
+              onMouseOver={e=>{e.currentTarget.style.background=hBg;e.currentTarget.style.color=hCol}}
+              onMouseOut={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,.65)'}}
+              style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.65)', borderRadius:7, width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, transition:'all .12s' }}>
+              <i className={icon} />
+            </button>
+          ))}
+          <div style={{ width:1, height:12, background:'rgba(255,255,255,.1)', margin:'0 2px' }} />
+          <button onClick={() => setSelectedIds(new Set())} title="Cancelar"
+            onMouseOver={e=>e.currentTarget.style.color='rgba(255,255,255,.8)'}
+            onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.3)'}
+            style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.3)', borderRadius:7, width:26, height:26, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, transition:'color .12s' }}>
             <i className="fa fa-xmark" />
           </button>
         </div>
