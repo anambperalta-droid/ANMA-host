@@ -120,6 +120,7 @@ export default function Clientes() {
   const [csvPreview, setCsvPreview] = useState([])
   const [revinculModal, setRevinculModal] = useState(null)
   const [revinculMsg, setRevinculMsg] = useState('')
+  const [selectedIds, setSelectedIds] = useState(new Set())
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -269,6 +270,31 @@ export default function Clientes() {
 
   const openDetail = (c) => { setDetailClient(c); setDetailTab('info') }
 
+  const isAllSelected = filtered.length > 0 && filtered.every(c => selectedIds.has(c.id))
+  const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(c => c.id)))
+  const bulkDelete = () => {
+    if (!window.confirm(`¿Eliminar ${selectedIds.size} cliente${selectedIds.size > 1 ? 's' : ''}?`)) return
+    selectedIds.forEach(id => deleteEntity('clients', id))
+    toast(`${selectedIds.size} clientes eliminados`, 'in')
+    if (detailClient && selectedIds.has(detailClient.id)) setDetailClient(null)
+    setSelectedIds(new Set())
+  }
+  const bulkExportCSV = () => {
+    const sel = clients.filter(c => selectedIds.has(c.id))
+    const rows = [['Empresa','Contacto','WhatsApp','Email','Rubro','Notas'].join(',')]
+    sel.forEach(c => rows.push([c.company,c.contact,c.wa,c.email,c.rubro,c.notes].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')))
+    const blob = new Blob([rows.join('\n')],{type:'text/csv'})
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='clientes-seleccionados.csv'; a.click()
+    toast(`${sel.length} clientes exportados`,'ok')
+  }
+  const bulkCopyWA = () => {
+    const nums = clients.filter(c => selectedIds.has(c.id) && c.wa).map(c => c.wa)
+    if (!nums.length) { toast('Ningún seleccionado tiene WhatsApp','in'); return }
+    navigator.clipboard.writeText(nums.join('\n'))
+    toast(`${nums.length} números copiados al portapapeles`,'ok')
+  }
+
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph zt-ph">
@@ -326,7 +352,7 @@ export default function Clientes() {
               <col style={{ width: 110 }} />
             </colgroup>
             <thead><tr>
-              <th></th>
+              <th onClick={e => e.stopPropagation()} style={{ cursor:'default' }}><input type="checkbox" className="zt-chk" checked={isAllSelected} onChange={toggleSelectAll} /></th>
               <th style={{ textAlign: 'left' }}>Empresa / Contacto</th>
               <th style={{ textAlign: 'center' }} title="WhatsApp"><i className="fa-brands fa-whatsapp" style={{ color: '#6B7280', fontSize: 13 }} /></th>
               <th style={{ textAlign: 'center' }} title="Email"><i className="fa fa-envelope" style={{ color: '#6B7280', fontSize: 12 }} /></th>
@@ -343,9 +369,9 @@ export default function Clientes() {
                 const dotTip = days === null ? 'Sin pedidos' : days <= 15 ? `Activo — hace ${days}d` : days <= 45 ? `Tibio — hace ${days}d` : `Frío — hace ${days}d`
                 const isCold = days === null || days > 30
                 return (
-                  <tr key={c.id} onClick={() => openDetail(c)}>
+                  <tr key={c.id} onClick={() => openDetail(c)} style={{ background: selectedIds.has(c.id) ? 'rgba(124,58,237,.06)' : undefined }}>
                     <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                      <input type="checkbox" className="zt-chk" />
+                      <input type="checkbox" className="zt-chk" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} />
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -478,6 +504,31 @@ export default function Clientes() {
       )}
 
       <div style={{ marginTop: 8, fontSize: 11, color: 'var(--txt3)' }}>{filtered.length} cliente{filtered.length !== 1 ? 's' : ''}</div>
+
+      {/* ── Barra de acciones masivas ── */}
+      {selectedIds.size > 0 && (
+        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', background:'#1E1B4B', color:'#fff', borderRadius:14, display:'flex', alignItems:'center', gap:6, padding:'8px 10px 8px 16px', boxShadow:'0 8px 32px rgba(0,0,0,.32)', zIndex:200, animation:'pgIn .18s ease both', whiteSpace:'nowrap' }}>
+          <span style={{ fontSize:13, fontWeight:700, paddingRight:10, borderRight:'1px solid rgba(255,255,255,.18)' }}>
+            {selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}
+          </span>
+          <button onClick={bulkExportCSV} title="Exportar seleccionados como CSV"
+            style={{ background:'rgba(255,255,255,.12)', border:'none', color:'#fff', borderRadius:8, padding:'5px 12px', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+            <i className="fa fa-download" style={{ fontSize:12 }} /> Exportar CSV
+          </button>
+          <button onClick={bulkCopyWA} title="Copiar números WA al portapapeles"
+            style={{ background:'rgba(255,255,255,.12)', border:'none', color:'#fff', borderRadius:8, padding:'5px 12px', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+            <i className="fa-brands fa-whatsapp" style={{ fontSize:13, color:'#4ADE80' }} /> Números WA
+          </button>
+          <button onClick={bulkDelete} title="Eliminar clientes seleccionados"
+            style={{ background:'rgba(220,38,38,.85)', border:'none', color:'#fff', borderRadius:8, padding:'5px 12px', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+            <i className="fa fa-trash" style={{ fontSize:12 }} /> Eliminar
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} title="Cancelar selección"
+            style={{ background:'rgba(255,255,255,.08)', border:'none', color:'rgba(255,255,255,.6)', borderRadius:8, width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, marginLeft:2 }}>
+            <i className="fa fa-xmark" />
+          </button>
+        </div>
+      )}
 
       {/* MODAL EDITAR */}
       {modal && (
