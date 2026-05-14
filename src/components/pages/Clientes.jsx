@@ -290,9 +290,9 @@ export default function Clientes() {
       <style>{`
         .zt-tbl{max-width:1100px;margin:0 auto}
         .zt-tbl table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
-        .zt-tbl thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);padding:9px 12px;white-space:nowrap}
+        .zt-tbl thead th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#4B5563;padding:9px 8px;white-space:nowrap}
         .zt-tbl thead tr{border-bottom:1px solid var(--border)}
-        .zt-tbl tbody td{padding:10px 12px;font-size:13px;vertical-align:middle}
+        .zt-tbl tbody td{padding:9px 8px;font-size:13px;vertical-align:middle}
         .zt-tbl tbody tr{cursor:pointer;transition:background .12s}
         .zt-tbl tbody tr:hover{background:#F8FAFC}
         .zt-chk{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #D1D5DB;background:transparent;cursor:pointer;position:relative;display:block;margin:auto;transition:border-color .12s,background .12s}
@@ -313,13 +313,13 @@ export default function Clientes() {
         <div className="tbl-card zt-tbl">
           <table>
             <colgroup>
+              <col style={{ width: 36 }} />
+              <col style={{ width: 240 }} />
               <col style={{ width: 40 }} />
-              <col />
-              <col style={{ width: 45 }} />
-              <col style={{ width: 45 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 140 }} />
-              <col style={{ width: 120 }} />
+              <col style={{ width: 40 }} />
+              <col style={{ width: 160 }} />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 110 }} />
             </colgroup>
             <thead><tr>
               <th></th>
@@ -370,12 +370,12 @@ export default function Clientes() {
                     </td>
                     <td className="col-hide-mobile" style={{ textAlign: 'right' }}>
                       {c.rubro
-                        ? <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{c.rubro}</span>
+                        ? <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--txt2)' }}>{c.rubro}</span>
                         : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
                     </td>
                     <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                       {clientLastDate(c)
-                        ? <span style={{ fontSize: 13, color: isCold ? '#DC2626' : 'var(--txt2)' }}>{clientLastDate(c)}</span>
+                        ? <span style={{ fontSize: 12, fontWeight: 400, color: isCold ? '#DC2626' : '#6B7280' }}>{clientLastDate(c)}</span>
                         : <span style={{ fontSize: 11, color: '#9CA3AF' }}>Sin pedidos</span>}
                     </td>
                     <td onClick={e => e.stopPropagation()}>
