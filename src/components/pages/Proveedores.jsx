@@ -29,6 +29,7 @@ export default function Proveedores() {
   const [priceModal, setPriceModal] = useState(null)
   const [priceForm, setPriceForm] = useState({ newCost: '', note: '' })
   const [reorderOpen, setReorderOpen] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -275,6 +276,37 @@ export default function Proveedores() {
 
   const openDetail = (s) => { setDetailSupplier(s); setDetailTab('info') }
 
+  /* ── Bulk selection ── */
+  const isAllSelected = filtered.length > 0 && filtered.every(s => selectedIds.has(s.id))
+  const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(s => s.id)))
+  const bulkDelete = () => {
+    if (!window.confirm(`¿Eliminar ${selectedIds.size} proveedor(es)?`)) return
+    selectedIds.forEach(id => deleteEntity('suppliers', id))
+    toast(`${selectedIds.size} proveedores eliminados`, 'ok')
+    if (detailSupplier && selectedIds.has(detailSupplier.id)) setDetailSupplier(null)
+    setSelectedIds(new Set())
+  }
+  const bulkExportCSV = () => {
+    const sel = suppliers.filter(s => selectedIds.has(s.id))
+    const rows = [['Nombre','Contacto','WhatsApp','Rubro','Email','Notas'].join(',')]
+    sel.forEach(s => rows.push([s.name,s.contact,s.wa,s.rubro,s.email,s.notes].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')))
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'proveedores-seleccion.csv'; a.click()
+    toast(`${sel.length} proveedores exportados`, 'ok')
+  }
+  const bulkCopyWA = () => {
+    const nums = suppliers.filter(s => selectedIds.has(s.id) && s.wa).map(s => s.wa)
+    if (!nums.length) { toast('Ninguno tiene WhatsApp', 'warn'); return }
+    navigator.clipboard.writeText(nums.join('\n')).then(() => toast(`${nums.length} números copiados`, 'ok'))
+  }
+  const bulkMailto = () => {
+    const emails = suppliers.filter(s => selectedIds.has(s.id) && s.email).map(s => s.email)
+    if (!emails.length) { toast('Ninguno tiene email', 'warn'); return }
+    window.open(`mailto:?bcc=${emails.join(',')}`)
+    toast(`Email abierto con ${emails.length} destinatarios`, 'ok')
+  }
+
   /* ── Generar link de portal para la proveedora ── */
   const sharePortalLink = (s) => {
     if (!s) return
@@ -503,7 +535,7 @@ export default function Proveedores() {
               <col style={{ width: 110 }} />
             </colgroup>
             <thead><tr>
-              <th></th>
+              <th onClick={e => e.stopPropagation()} style={{ cursor:'default' }}><input type="checkbox" className="zt-chk" checked={isAllSelected} onChange={toggleSelectAll} /></th>
               <th style={{ textAlign: 'left' }}>Proveedor / Contacto</th>
               <th style={{ textAlign: 'center' }} title="WhatsApp"><i className="fa-brands fa-whatsapp" style={{ color: '#6B7280', fontSize: 13 }} /></th>
               <th style={{ textAlign: 'center' }} title="Email"><i className="fa fa-envelope" style={{ color: '#6B7280', fontSize: 12 }} /></th>
@@ -515,9 +547,9 @@ export default function Proveedores() {
               {loading ? [1,2,3,4,5].map(i => (
                 <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
-                <tr key={s.id} onClick={() => openDetail(s)}>
+                <tr key={s.id} onClick={() => openDetail(s)} style={{ background: selectedIds.has(s.id) ? 'rgba(124,58,237,.06)' : undefined }}>
                   <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                    <input type="checkbox" className="zt-chk" />
+                    <input type="checkbox" className="zt-chk" checked={selectedIds.has(s.id)} onChange={() => toggleSelect(s.id)} />
                   </td>
                   <td>
                     <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--txt)', lineHeight: 1.3 }}>{s.name}</div>
@@ -996,6 +1028,33 @@ export default function Proveedores() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Bulk action bar — vertical right side */}
+      {selectedIds.size > 0 && (
+        <div style={{ position:'fixed', right:12, top:'50%', transform:'translateY(-50%)', background:'rgba(12,10,40,.88)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:10, display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'6px 4px', boxShadow:'0 4px 18px rgba(0,0,0,.2)', zIndex:200, animation:'pgIn .15s ease both', border:'1px solid rgba(255,255,255,.08)' }}>
+          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.55)', paddingBottom:6, borderBottom:'1px solid rgba(255,255,255,.1)', marginBottom:2, width:'100%', textAlign:'center' }}>{selectedIds.size}</span>
+          {[
+            { fn: bulkExportCSV, icon:'fa fa-download',        tip:'Exportar CSV',             hBg:'rgba(255,255,255,.1)',   hCol:'#fff' },
+            { fn: bulkCopyWA,    icon:'fa-brands fa-whatsapp', tip:'Copiar números WhatsApp',  hBg:'rgba(74,222,128,.14)',   hCol:'#4ADE80' },
+            { fn: bulkMailto,    icon:'fa fa-envelope',         tip:'Enviar email',             hBg:'rgba(96,165,250,.14)',   hCol:'#93C5FD' },
+            { fn: bulkDelete,    icon:'fa fa-trash',            tip:'Eliminar seleccionados',   hBg:'rgba(220,38,38,.18)',    hCol:'#FCA5A5' },
+          ].map(({ fn, icon, tip, hBg, hCol }) => (
+            <button key={tip} onClick={fn} title={tip}
+              onMouseOver={e=>{e.currentTarget.style.background=hBg;e.currentTarget.style.color=hCol}}
+              onMouseOut={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,.65)'}}
+              style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.65)', borderRadius:7, width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, transition:'all .12s' }}>
+              <i className={icon} />
+            </button>
+          ))}
+          <div style={{ width:12, height:1, background:'rgba(255,255,255,.1)', margin:'2px 0' }} />
+          <button onClick={() => setSelectedIds(new Set())} title="Cancelar"
+            onMouseOver={e=>e.currentTarget.style.color='rgba(255,255,255,.8)'}
+            onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.3)'}
+            style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.3)', borderRadius:7, width:26, height:26, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, transition:'color .12s' }}>
+            <i className="fa fa-xmark" />
+          </button>
         </div>
       )}
     </div>

@@ -81,6 +81,7 @@ function ProductPicker({ open, onClose, products, onSelect }) {
 /* Utilidades de fecha */
 const todayISO = () => new Date().toISOString().slice(0, 10)
 const isWeekend = (iso) => { if (!iso) return false; const d = new Date(iso + 'T00:00'); const w = d.getDay(); return w === 0 || w === 6 }
+const fmtDate = (iso) => { if (!iso) return ''; const [y,m,d] = String(iso).slice(0,10).split('-'); return `${d}/${m}/${y.slice(2)}` }
 
 /* ── Helpers para inputs numéricos sin NaN ── */
 const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
@@ -368,7 +369,7 @@ export default function Presupuesto() {
   const waText = useMemo(() => {
     const bName = c.businessName || 'ANMA'
     const prodList = items.filter(i => i.name).map(i => `• ${i.qty}x ${i.name}`).join('\n')
-    return `Hola ${form.contact || '[NOMBRE]'}! Te envio el presupuesto de *${bName}* para ${form.company || '[EMPRESA]'}:\n\n${prodList}\n\n*Total:* ${fmt(calc.total)}\n*Entrega estimada:* ${form.deliveryDate || 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\nTe queda alguna duda? Quedamos a disposicion!`
+    return `Hola ${form.contact || '[NOMBRE]'}! Te envio el presupuesto de *${bName}* para ${form.company || '[EMPRESA]'}:\n\n${prodList}\n\n*Total:* ${fmt(calc.total)}\n*Entrega estimada:* ${form.deliveryDate ? fmtDate(form.deliveryDate) : 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\nTe queda alguna duda? Quedamos a disposicion!`
   }, [form, items, calc.total, c.businessName])
 
   const mpCfg = getMPConfig()
@@ -811,7 +812,7 @@ export default function Presupuesto() {
                   <div className="wiz-rev-card">
                     <div className="wiz-rev-card-h"><i className="fa fa-truck" /> Entrega <button className="wiz-rev-edit" onClick={() => goStep(3)}>Editar</button></div>
                     <div className="wiz-rev-body">
-                      <div>{form.delivery || 'Sin modalidad'} · {form.deliveryDate || 'Sin fecha'}</div>
+                      <div>{form.delivery || 'Sin modalidad'} · {form.deliveryDate ? fmtDate(form.deliveryDate) : 'Sin fecha'}</div>
                       <div className="wiz-rev-meta">Margen {form.margin}% · Seña {form.deposit}%</div>
                     </div>
                   </div>
@@ -821,6 +822,14 @@ export default function Presupuesto() {
                 </div>
               </>
             )}
+
+            {/* MINI TOTAL BAR — visible solo en mobile (calc-panel oculto) */}
+            <div className="pres-mob-total">
+              <div className="pmt-label">Total</div>
+              <div className="pmt-val">{fmt(calc.total)}</div>
+              {calc.marginLow && <span className="pmt-warn" title={`Margen bajo (< ${calc.marginThreshold}%)`}><i className="fa fa-triangle-exclamation" /></span>}
+              <div className="pmt-margin">{calc.marginReal}%</div>
+            </div>
 
             {/* NAV WIZARD */}
             <div className="wiz-nav">

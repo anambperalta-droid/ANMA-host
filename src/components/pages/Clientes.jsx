@@ -513,13 +513,13 @@ export default function Clientes() {
 
       {/* ── Barra de acciones masivas ── */}
       {selectedIds.size > 0 && (
-        <div style={{ position:'fixed', bottom:18, left:'50%', transform:'translateX(-50%)', background:'rgba(12,10,40,.88)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:10, display:'flex', alignItems:'center', gap:2, padding:'4px 6px 4px 10px', boxShadow:'0 4px 18px rgba(0,0,0,.2)', zIndex:200, animation:'pgIn .15s ease both', whiteSpace:'nowrap', border:'1px solid rgba(255,255,255,.08)' }}>
-          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.55)', paddingRight:8, borderRight:'1px solid rgba(255,255,255,.1)', marginRight:2 }}>{selectedIds.size}</span>
+        <div style={{ position:'fixed', right:12, top:'50%', transform:'translateY(-50%)', background:'rgba(12,10,40,.88)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:10, display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'6px 4px', boxShadow:'0 4px 18px rgba(0,0,0,.2)', zIndex:200, animation:'pgIn .15s ease both', border:'1px solid rgba(255,255,255,.08)' }}>
+          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.55)', paddingBottom:6, borderBottom:'1px solid rgba(255,255,255,.1)', marginBottom:2, width:'100%', textAlign:'center' }}>{selectedIds.size}</span>
           {[
-            { fn: bulkExportCSV, icon:'fa fa-download', tip:'Exportar CSV', hBg:'rgba(255,255,255,.1)', hCol:'#fff' },
-            { fn: bulkCopyWA,    icon:'fa-brands fa-whatsapp', tip:'Copiar números WhatsApp', hBg:'rgba(74,222,128,.14)', hCol:'#4ADE80' },
-            { fn: bulkMailto,    icon:'fa fa-envelope', tip:'Enviar email a seleccionados', hBg:'rgba(96,165,250,.14)', hCol:'#93C5FD' },
-            { fn: bulkDelete,    icon:'fa fa-trash', tip:'Eliminar seleccionados', hBg:'rgba(220,38,38,.18)', hCol:'#FCA5A5' },
+            { fn: bulkExportCSV, icon:'fa fa-download',        tip:'Exportar CSV',             hBg:'rgba(255,255,255,.1)',   hCol:'#fff' },
+            { fn: bulkCopyWA,    icon:'fa-brands fa-whatsapp', tip:'Copiar números WhatsApp',  hBg:'rgba(74,222,128,.14)',   hCol:'#4ADE80' },
+            { fn: bulkMailto,    icon:'fa fa-envelope',         tip:'Enviar email',             hBg:'rgba(96,165,250,.14)',   hCol:'#93C5FD' },
+            { fn: bulkDelete,    icon:'fa fa-trash',            tip:'Eliminar seleccionados',   hBg:'rgba(220,38,38,.18)',    hCol:'#FCA5A5' },
           ].map(({ fn, icon, tip, hBg, hCol }) => (
             <button key={tip} onClick={fn} title={tip}
               onMouseOver={e=>{e.currentTarget.style.background=hBg;e.currentTarget.style.color=hCol}}
@@ -528,7 +528,7 @@ export default function Clientes() {
               <i className={icon} />
             </button>
           ))}
-          <div style={{ width:1, height:12, background:'rgba(255,255,255,.1)', margin:'0 2px' }} />
+          <div style={{ width:12, height:1, background:'rgba(255,255,255,.1)', margin:'2px 0' }} />
           <button onClick={() => setSelectedIds(new Set())} title="Cancelar"
             onMouseOver={e=>e.currentTarget.style.color='rgba(255,255,255,.8)'}
             onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.3)'}
