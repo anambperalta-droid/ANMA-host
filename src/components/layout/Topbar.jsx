@@ -41,7 +41,7 @@ function useSyncStatus() {
   return status
 }
 
-export default function Topbar({ onMenuClick }) {
+export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
   const loc = useLocation()
   const title = PAGE_NAMES[loc.pathname] || 'ANMA'
   const [theme, setTheme] = useState(initialTheme)
@@ -60,6 +60,15 @@ export default function Topbar({ onMenuClick }) {
     <header className="topbar">
       <button className="tb-btn tb-btn-menu" onClick={onMenuClick} aria-label="Menú">
         <i className="fa fa-bars" />
+      </button>
+      {/* Desktop sidebar collapse toggle */}
+      <button
+        className="tb-btn tb-btn-collapse"
+        onClick={onCollapseClick}
+        title={collapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
+        aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+      >
+        <i className="fa fa-table-columns" />
       </button>
       <span className="tb-page-title">{title}</span>
       <div style={{ flex: 1 }} />

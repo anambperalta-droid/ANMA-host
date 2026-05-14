@@ -222,6 +222,8 @@ function AdminGuard({ children }) {
   return isGlobalAdmin ? children : <NoAccess />
 }
 
+const COLLAPSED_KEY = 'anma_sidebar_collapsed'
+
 function AppShellInner() {
   const { config } = useData()
   const { can } = useAuth()
@@ -230,6 +232,15 @@ function AppShellInner() {
   const [cmdOpen, setCmdOpen] = useState(false)
   const [sideOpen, setSideOpen] = useState(false)
   const [moreSheet, setMoreSheet] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(COLLAPSED_KEY) === 'true' } catch { return false }
+  })
+
+  const toggleCollapsed = () => setCollapsed(c => {
+    const next = !c
+    try { localStorage.setItem(COLLAPSED_KEY, String(next)) } catch {}
+    return next
+  })
 
   useEffect(() => {
     const c = config()
@@ -266,10 +277,10 @@ function AppShellInner() {
 
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />
+      <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} collapsed={collapsed} />
       {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
-      <div className="main">
-        <Topbar onMenuClick={() => setSideOpen(!sideOpen)} />
+      <div className={`main${collapsed ? ' slim' : ''}`}>
+        <Topbar onMenuClick={() => setSideOpen(!sideOpen)} onCollapseClick={toggleCollapsed} collapsed={collapsed} />
         <div className="content">
           <Routes>
             <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />

@@ -19,7 +19,7 @@ const NAV = [
   { path: '/config', icon: 'fa-gear', label: 'Configuración', ownerOnly: true },
 ]
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar({ open, onClose, collapsed }) {
   const loc = useLocation()
   const nav = useNavigate()
   const { logout, role, can, isGlobalAdmin } = useAuth()
@@ -40,7 +40,7 @@ export default function Sidebar({ open, onClose }) {
   }
 
   return (
-    <aside className={`sidebar ${open ? 'open' : ''}`}>
+    <aside className={`sidebar ${open ? 'open' : ''}${collapsed ? ' slim' : ''}`}>
       <div className="sb-top">
         <div className="sb-logo-row">
           <div className="sb-logo">
@@ -61,20 +61,20 @@ export default function Sidebar({ open, onClose }) {
           if (item.section) return <div key={i} className="sb-sec">{item.section}</div>
           const active = loc.pathname === item.path || (item.path === '/presupuesto' && loc.pathname.startsWith('/presupuesto'))
           return (
-            <div key={item.path} className={`sb-item ${active ? 'active' : ''}`} onClick={() => goTo(item.path)}>
+            <div key={item.path} className={`sb-item ${active ? 'active' : ''}`} data-tip={item.label} onClick={() => goTo(item.path)}>
               <i className={`fa ${item.icon}`} />
-              {item.label}
+              <span className="sb-lbl">{item.label}</span>
             </div>
           )
         })}
         {role === 'owner' && (
-          <div className="sb-item" onClick={doBackup}><i className="fa fa-cloud-arrow-down" />Backup</div>
+          <div className="sb-item" data-tip="Backup" onClick={doBackup}><i className="fa fa-cloud-arrow-down" /><span className="sb-lbl">Backup</span></div>
         )}
         {isGlobalAdmin && (
           <>
             <div className="sb-sec">Super admin</div>
-            <div className={`sb-item ${loc.pathname === '/admin' ? 'active' : ''}`} onClick={() => goTo('/admin')}>
-              <i className="fa fa-shield-halved" />Admin · Workspaces
+            <div className={`sb-item ${loc.pathname === '/admin' ? 'active' : ''}`} data-tip="Admin · Workspaces" onClick={() => goTo('/admin')}>
+              <i className="fa fa-shield-halved" /><span className="sb-lbl">Admin · Workspaces</span>
             </div>
           </>
         )}

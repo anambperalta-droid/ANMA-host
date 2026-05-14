@@ -137,7 +137,8 @@ input,select,textarea{font-family:inherit}
 .llink:hover{text-decoration:underline}
 
 /* ─── APP SHELL ─── */
-.sidebar{width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:transform var(--tr)}
+:root{--sw-slim:64px}
+.sidebar{width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:transform var(--tr),width .3s ease}
 .sidebar::-webkit-scrollbar{width:0}
 .sb-top{padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
 .sb-logo-row{display:flex;align-items:center;gap:10px}
@@ -159,7 +160,7 @@ input,select,textarea{font-family:inherit}
 .sb-ava{width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
 
 /* ─── MAIN AREA ─── */
-.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;height:100vh;max-width:calc(100vw - var(--sw));overflow:hidden}
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;height:100vh;max-width:calc(100vw - var(--sw));overflow:hidden;transition:margin-left .3s ease,max-width .3s ease}
 .topbar{height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:12px;position:sticky;top:0;z-index:50;flex-shrink:0}
 .tb-page-title{display:none;font-size:15px;font-weight:700;color:var(--txt);flex:1;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
 .tb-search{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;width:200px;cursor:pointer;transition:border-color var(--tr)}
@@ -593,6 +594,26 @@ td b{color:var(--txt);font-weight:600}
 .period-pills .pill{border:none;background:none;border-radius:6px;font-size:10px;font-weight:600;padding:4px 10px}
 .period-pills .pill.active{background:var(--surface);color:var(--acento);box-shadow:var(--sh)}
 
+/* ─── SIDEBAR SLIM (desktop collapse) ─── */
+@media(min-width:641px){
+  .sidebar.slim{width:var(--sw-slim);overflow:visible}
+  .sidebar.slim .sb-logo-txt,.sidebar.slim .sb-sec,.sidebar.slim .sb-lbl,.sidebar.slim .sb-uname,.sidebar.slim .sb-urole,.sidebar.slim .sb-chip{display:none!important}
+  .sidebar.slim .sb-top{padding:12px 10px}
+  .sidebar.slim .sb-logo-row{justify-content:center}
+  .sidebar.slim .sb-nav{padding:8px 8px}
+  .sidebar.slim .sb-item{justify-content:center;padding:10px 0;gap:0}
+  .sidebar.slim .sb-item i{width:auto;font-size:16px}
+  .sidebar.slim .sb-foot{padding:8px}
+  .sidebar.slim .sb-user{justify-content:center;padding:8px;gap:0}
+  .sidebar.slim .sb-ava{margin:0}
+  /* Tooltip on hover in slim mode */
+  .sidebar.slim .sb-item[data-tip]::after{content:attr(data-tip);position:absolute;left:calc(var(--sw-slim) + 8px);top:50%;transform:translateY(-50%);background:rgba(15,23,42,.92);color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:300;box-shadow:0 4px 14px rgba(0,0,0,.28);letter-spacing:.01em}
+  .sidebar.slim .sb-item[data-tip]:hover::after{opacity:1}
+  /* Main area expands when sidebar is slim */
+  .main.slim{margin-left:var(--sw-slim);max-width:calc(100vw - var(--sw-slim))}
+}
+.tb-btn-collapse{display:inline-flex}
+
 /* ─── RESPONSIVE / MOBILE ─── */
 .tb-btn-menu{display:none}
 
@@ -613,8 +634,10 @@ td b{color:var(--txt);font-weight:600}
   .sb-overlay{display:block}
   /* Main fills viewport */
   .main{margin-left:0;width:100vw;max-width:100vw}
-  /* Burger menu visible */
+  .main.slim{margin-left:0;max-width:100vw}
+  /* Burger menu visible, collapse toggle hidden */
   .tb-btn-menu{display:inline-flex!important;align-items:center;justify-content:center}
+  .tb-btn-collapse{display:none!important}
   /* Topbar reshape */
   .topbar{padding:10px 14px;gap:10px}
   .tb-search{display:none}
