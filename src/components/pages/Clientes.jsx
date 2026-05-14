@@ -307,8 +307,11 @@ export default function Clientes() {
         .zt-tbl tbody tr:hover .zt-ci{opacity:1}
         .zt-ci:hover{transform:scale(1.12)}
         .zt-ph{align-items:center!important}
-        .zt-ph .btn{height:40px!important;font-size:14px!important;font-weight:500!important;padding-left:16px!important;padding-right:16px!important}
-        .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;height:40px!important}
+        .zt-ph .btn{height:34px!important;font-size:13px!important;font-weight:500!important;padding:6px 16px!important;border-radius:9999px!important;display:inline-flex!important;align-items:center!important;gap:6px!important;line-height:1!important}
+        .zt-ph .btn-ghost,.zt-ph .btn-secondary{background:#fff!important;border:1px solid #E5E7EB!important;color:#374151!important;box-shadow:none!important}
+        .zt-ph .btn i{font-size:14px!important}
+        .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;height:34px!important;border-radius:9999px!important}
+        .pill-row .pill{height:34px!important;border-radius:9999px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
       `}</style>
       {viewMode === 'table' ? (
         <div className="tbl-card zt-tbl">
