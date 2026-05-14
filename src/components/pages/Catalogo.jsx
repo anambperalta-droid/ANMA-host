@@ -259,7 +259,7 @@ export default function Catalogo() {
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>Catálogo de Productos</h2><p>Productos, categorías y costos</p></div>
+        <div className="ph-left"><h2>Catálogo de Productos</h2></div>
         <div className="ph-right">
           <button className="btn btn-ghost btn-sm" onClick={() => setPriceUpdateModal(true)}>
             <i className="fa fa-percent" /> Actualizar precios

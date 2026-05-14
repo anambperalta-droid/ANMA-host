@@ -586,7 +586,7 @@ export default function Presupuesto() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph ph-pres">
-        <div className="ph-left"><h2>{editId ? 'Editar pedido' : 'Nuevo pedido'}</h2><p className="ph-subtitle">Completá los datos del pedido o cotización</p></div>
+        <div className="ph-left"><h2>{editId ? 'Editar pedido' : 'Nuevo pedido'}</h2></div>
         <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /><span className="desc-txt"> Descartar</span></button></div>
       </div>
 

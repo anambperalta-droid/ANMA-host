@@ -467,7 +467,7 @@ export default function Proveedores() {
       <style>{`
         .zt-tbl{max-width:1100px;margin:0 auto}
         .zt-tbl table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
-        .zt-tbl thead th{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#374151;padding:9px 8px;white-space:nowrap}
+        .zt-tbl thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);padding:8px 8px;white-space:nowrap}
         .zt-tbl thead tr{border-bottom:1px solid var(--border)}
         .zt-tbl tbody td{padding:9px 8px;font-size:13px;vertical-align:middle}
         .zt-tbl tbody tr{cursor:pointer;transition:background .12s}

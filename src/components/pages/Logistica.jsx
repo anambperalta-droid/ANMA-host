@@ -235,7 +235,6 @@ export default function Logistica() {
       <div className="ph">
         <div className="ph-left">
           <h2>Logística</h2>
-          <p>Gestión de envíos — costos, remitos y seguimiento</p>
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => openShip()}>
           <i className="fa fa-plus" /> Registrar envío

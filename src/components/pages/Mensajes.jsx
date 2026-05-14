@@ -387,7 +387,6 @@ export default function Mensajes() {
             </span>
             Mensajes WhatsApp
           </h2>
-          <p>Templates inteligentes para cada etapa de venta</p>
         </div>
         <div className="ph-right">
           <button className="btn btn-ghost btn-sm" onClick={restoreDefaults} style={{ borderRadius: 10 }}>
