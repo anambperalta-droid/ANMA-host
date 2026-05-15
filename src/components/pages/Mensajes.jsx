@@ -380,14 +380,6 @@ export default function Mensajes() {
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       {/* ── Header ── */}
       <div className="ph">
-        <div className="ph-left">
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 32, height: 32, borderRadius: 10, background: P.accentSoft, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i className="fa-brands fa-whatsapp" style={{ color: P.accent, fontSize: 16 }} />
-            </span>
-            Mensajes WhatsApp
-          </h2>
-        </div>
         <div className="ph-right">
           <button className="btn btn-ghost btn-sm" onClick={restoreDefaults} style={{ borderRadius: 10 }}>
             <i className="fa fa-rotate-left" /> Restaurar

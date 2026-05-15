@@ -408,7 +408,6 @@ export default function Proveedores() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph zt-ph">
-        <div className="ph-left prov-ph-title"><h2>Proveedores</h2></div>
         <div className="ph-right" style={{ gap: 6 }}>
           <div className="cli-pill-group">
             <button className="cli-pill" onClick={() => setImportModal(true)}>

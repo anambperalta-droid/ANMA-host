@@ -895,7 +895,6 @@ export default function Historial() {
 
       {/* Desktop: full header */}
       <div className="ph ph-hist">
-        <div className="ph-left"><h2>Dashboard</h2></div>
         <div className="ph-right" style={{ gap: 8 }}>
           {/* Period dropdown */}
           <div style={{ position: 'relative' }}>

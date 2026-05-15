@@ -359,7 +359,6 @@ export default function Logistica() {
 
       {/* Header desktop — hidden on mobile */}
       <div className="ph logi-ph" style={{ alignItems: 'center' }}>
-        <div className="ph-left"><h2>Logística</h2></div>
         <div className="ph-right" style={{ gap: 6 }}>
           <div className="logi-cli-pill-group">
             {['envios', 'tarifas', 'resumen'].map(t => (

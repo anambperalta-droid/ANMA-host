@@ -259,9 +259,6 @@ export default function Catalogo() {
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph cat-ph" style={{ marginBottom: 6 }}>
-        <div className="ph-left">
-          <h2 className="cat-page-title">Productos</h2>
-        </div>
         <div className="ph-right" style={{ gap: 6 }}>
           <div className="cli-pill-group">
             <button className="cli-pill" onClick={() => setPriceUpdateModal(true)}>
