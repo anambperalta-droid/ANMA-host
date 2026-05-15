@@ -175,12 +175,10 @@ export default function Clientes() {
     const reader = new FileReader()
     reader.onload = (ev) => {
       const content = ev.target.result
-      // Detectar si es .vcf
       if (file.name.endsWith('.vcf') || content.includes('BEGIN:VCARD')) {
         setCsvPreview(parseVcf(content))
         return
       }
-      // CSV
       const lines = content.split('\n').filter(l => l.trim())
       const header = lines[0].toLowerCase()
       const startIdx = header.includes('empresa') || header.includes('company') ? 1 : 0
@@ -266,8 +264,6 @@ export default function Clientes() {
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
   }
 
-  // ESC global se maneja en AppShell
-
   const openDetail = (c) => { setDetailClient(c); setDetailTab('info') }
 
   const isAllSelected = filtered.length > 0 && filtered.every(c => selectedIds.has(c.id))
@@ -303,17 +299,30 @@ export default function Clientes() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
+
+      {/* ── HEADER ── */}
       <div className="ph zt-ph">
-        <div className="ph-left"><h2>Clientes</h2></div>
+        <div className="ph-left cli-ph-title"><h2>Clientes</h2></div>
         <div className="ph-right">
-          <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}><i className="fa fa-file-import" /> Importar</button>
-          <button className="btn btn-secondary btn-sm" onClick={exportCSV}><i className="fa fa-download" /> Exportar</button>
-          <button className="btn btn-primary btn-sm" onClick={() => openEdit()}><i className="fa fa-plus" /> Agregar</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}>
+            <i className="fa fa-file-import" /><span className="cli-btn-txt"> Importar</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={exportCSV}>
+            <i className="fa fa-download" /><span className="cli-btn-txt"> Exportar</span>
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={() => openEdit()}>
+            <i className="fa fa-plus" /><span className="cli-btn-txt"> Agregar</span>
+          </button>
         </div>
       </div>
+
+      {/* ── BÚSQUEDA + TOGGLE VISTA ── */}
       <div className="pill-row">
-        <div className="search-row zt-search-row"><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar empresa, contacto, rubro..." value={search} onChange={e => setSearch(e.target.value)} /></div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+        <div className="search-row zt-search-row">
+          <i className="fa fa-magnifying-glass" />
+          <input type="text" placeholder="Buscar empresa, contacto, rubro..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="cli-view-toggle" style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
           <button className={`pill ${viewMode === 'table' ? 'active' : ''}`} onClick={() => setViewMode('table')}><i className="fa fa-table-list" /></button>
           <button className={`pill ${viewMode === 'cards' ? 'active' : ''}`} onClick={() => setViewMode('cards')}><i className="fa fa-grip" /></button>
         </div>
@@ -344,9 +353,47 @@ export default function Clientes() {
         .zt-ph .btn i{font-size:14px!important}
         .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;height:34px!important;border-radius:9999px!important}
         .pill-row .pill{height:34px!important;border-radius:9999px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+
+        /* ── TARJETAS MÓVILES — sin scroll horizontal ── */
+        .cli-mob-list{display:none;flex-direction:column}
+        .cli-mob-card{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s}
+        .cli-mob-card:active{background:var(--surface2)}
+        .cli-mob-card:last-child{border-bottom:none}
+        .cli-mob-id{flex:1;min-width:0;display:flex;align-items:center;gap:7px}
+        .cli-mob-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+        .cli-mob-id-text{min-width:0;flex:1}
+        .cli-mob-company{font-weight:700;font-size:13px;color:var(--txt);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .cli-mob-contact{font-size:11px;color:#6B7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .cli-mob-mid{flex-shrink:0;width:68px;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .cli-mob-cicons{display:flex;gap:5px}
+        .cli-mob-ci{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-size:14px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+        .cli-mob-ci:active{opacity:.7}
+        .cli-mob-ci-wa{background:#DCFCE7;color:#16A34A}
+        .cli-mob-ci-mail{background:#EFF6FF;color:#2563EB}
+        .cli-mob-ci-ph{display:inline-block;width:28px;height:28px}
+        .cli-mob-date{font-size:10.5px;font-variant-numeric:tabular-nums;line-height:1;text-align:center}
+        .cli-mob-acts{flex-shrink:0;display:flex;gap:4px;align-items:center}
+        .cli-mob-act{width:34px;height:34px;border-radius:9px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:transform .1s,background .12s}
+        .cli-mob-act:active{transform:scale(0.88)}
+        .cli-mob-act-del{background:#FEF2F2!important;color:#DC2626!important}
+
+        @media(max-width:640px){
+          .cli-desk-only{display:none!important}
+          .cli-mob-list{display:flex}
+          .cli-ph-title{display:none!important}
+          .cli-btn-txt{display:none!important}
+          .cli-view-toggle{display:none!important}
+          .zt-ph .ph-right .btn{width:44px!important;height:44px!important;padding:0!important;border-radius:12px!important;gap:0!important}
+          .zt-ph .ph-right .btn i{font-size:18px!important}
+        }
+        @media(min-width:641px){
+          .cli-mob-list{display:none!important}
+        }
       `}</style>
+
+      {/* ── VISTA DESKTOP (tabla / cards grid) ── */}
       {viewMode === 'table' ? (
-        <div className="tbl-card zt-tbl">
+        <div className="tbl-card zt-tbl cli-desk-only">
           <table>
             <colgroup>
               <col style={{ width: 36 }} />
@@ -440,7 +487,7 @@ export default function Clientes() {
           </table>
         </div>
       ) : (
-        <div className="nc-grid">
+        <div className="nc-grid cli-desk-only">
           {loading ? [1,2,3,4,5,6,7,8].map(i => (
             <div key={i} className="nc" style={{ flexDirection: 'column', alignItems: 'center', padding: '20px 14px 14px', gap: 0 }}>
               <div className="sk" style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--surface3)', animation: 'skPulse 1.4s ease infinite', flexShrink: 0, marginBottom: 10 }} />
@@ -456,13 +503,10 @@ export default function Clientes() {
             const days = clientLastBudgetDays(c)
             return (
               <div key={c.id} className="nc" onClick={() => openDetail(c)}>
-                {/* Avatar centrado con dot de estado */}
                 <div className="nc-ava nc-ava-brand">
                   {(c.company || '?')[0].toUpperCase()}
                   <span className="nc-dot" style={{ background: dotColor, border: '2.5px solid var(--surface)' }} title={dotTitle} />
                 </div>
-
-                {/* Nombre e info centrada */}
                 <div className="nc-body">
                   <div className="nc-title">{c.company}</div>
                   <div className="nc-sub">
@@ -476,8 +520,6 @@ export default function Clientes() {
                     </div>
                   )}
                 </div>
-
-                {/* Íconos de contacto rápido */}
                 <div className="nc-qact" onClick={e => e.stopPropagation()}>
                   {c.wa && (
                     <button className="ibtn ibtn-wa ibtn-sm" title={`WhatsApp · ${c.wa}`} onClick={() => openWA(c)}>
@@ -485,8 +527,7 @@ export default function Clientes() {
                     </button>
                   )}
                   {c.email && (
-                    <a href={`mailto:${c.email}`} className="ibtn ibtn-email ibtn-sm" title={c.email}
-                      onClick={e => e.stopPropagation()}>
+                    <a href={`mailto:${c.email}`} className="ibtn ibtn-email ibtn-sm" title={c.email} onClick={e => e.stopPropagation()}>
                       <i className="fa fa-envelope" />
                     </a>
                   )}
@@ -508,6 +549,101 @@ export default function Clientes() {
           )}
         </div>
       )}
+
+      {/* ── TARJETAS MÓVILES COMPACTAS (≤640px) ── */}
+      <div className="cli-mob-list">
+        {loading ? Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className="cli-mob-card" style={{ cursor: 'default', pointerEvents: 'none' }}>
+            <div className="cli-mob-id">
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--surface3)', animation: 'skPulse 1.4s ease infinite', flexShrink: 0 }} />
+              <div className="cli-mob-id-text">
+                <div className="sk sk-text" style={{ height: 13, width: `${45 + i * 8}%`, marginBottom: 4 }} />
+                <div className="sk sk-text" style={{ height: 10, width: `${28 + i * 6}%` }} />
+              </div>
+            </div>
+            <div className="cli-mob-mid">
+              <div style={{ display: 'flex', gap: 5 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--surface3)', animation: 'skPulse 1.4s ease infinite' }} />
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--surface3)', animation: 'skPulse 1.4s ease infinite' }} />
+              </div>
+              <div className="sk sk-text" style={{ height: 10, width: 36 }} />
+            </div>
+            <div className="cli-mob-acts">
+              {[0,1,2].map(j => (
+                <div key={j} style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface3)', animation: 'skPulse 1.4s ease infinite' }} />
+              ))}
+            </div>
+          </div>
+        )) : filtered.length ? filtered.map(c => {
+          const days = clientLastBudgetDays(c)
+          const dotColor = days === null ? '#CBD5E1' : days <= 15 ? '#16A34A' : days <= 45 ? '#D97706' : '#DC2626'
+          const dotTip = days === null ? 'Sin pedidos' : days <= 15 ? `Activo — hace ${days}d` : days <= 45 ? `Tibio — hace ${days}d` : `Frío — hace ${days}d`
+          const isCold = days === null || days > 30
+          const lastDate = clientLastDate(c)
+          return (
+            <div key={c.id} className="cli-mob-card" onClick={() => openDetail(c)}
+              style={{ background: selectedIds.has(c.id) ? 'rgba(124,58,237,.06)' : undefined }}>
+
+              {/* SECTOR IZQUIERDO: identidad */}
+              <div className="cli-mob-id">
+                <span className="cli-mob-dot" title={dotTip} style={{ background: dotColor }} />
+                <div className="cli-mob-id-text">
+                  <div className="cli-mob-company">{c.company || c.contact || '—'}</div>
+                  {c.contact && c.company && <div className="cli-mob-contact">{c.contact}</div>}
+                </div>
+              </div>
+
+              {/* SECTOR CENTRAL: accesos rápidos + fecha */}
+              <div className="cli-mob-mid" onClick={e => e.stopPropagation()}>
+                <div className="cli-mob-cicons">
+                  {c.wa
+                    ? <a href={`https://wa.me/${c.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                        className="cli-mob-ci cli-mob-ci-wa" title={c.wa} onClick={e => e.stopPropagation()}>
+                        <i className="fa-brands fa-whatsapp" />
+                      </a>
+                    : <span className="cli-mob-ci-ph" />}
+                  {c.email
+                    ? <a href={`mailto:${c.email}`}
+                        className="cli-mob-ci cli-mob-ci-mail" title={c.email} onClick={e => e.stopPropagation()}>
+                        <i className="fa fa-envelope" />
+                      </a>
+                    : <span className="cli-mob-ci-ph" />}
+                </div>
+                <div className="cli-mob-date" style={{ color: lastDate && isCold ? '#DC2626' : 'var(--txt3)' }}>
+                  {lastDate || <span style={{ color: 'var(--txt4)' }}>—</span>}
+                </div>
+              </div>
+
+              {/* SECTOR DERECHO: action bar */}
+              <div className="cli-mob-acts" onClick={e => e.stopPropagation()}>
+                {c.wa && (
+                  <button className="cli-mob-act"
+                    title={isCold ? 'Recontactar — sin actividad >30d' : 'Re-vincular por WhatsApp'}
+                    style={{ background: isCold ? '#FEF9C3' : 'var(--surface2)', color: isCold ? '#EAB308' : 'var(--txt3)' }}
+                    onClick={e => openRevincul(c, e)}>
+                    <i className="fa fa-bolt" />
+                  </button>
+                )}
+                <button className="cli-mob-act"
+                  style={{ background: 'var(--surface2)', color: 'var(--txt2)' }}
+                  title="Editar" onClick={() => openEdit(c)}>
+                  <i className="fa fa-pen" />
+                </button>
+                <button className="cli-mob-act cli-mob-act-del"
+                  title="Eliminar" onClick={() => del(c.id)}>
+                  <i className="fa fa-trash" />
+                </button>
+              </div>
+            </div>
+          )
+        }) : (
+          <div className="empty">
+            <div className="ico"><i className="fa fa-users" /></div>
+            <h4>Sin clientes</h4>
+            <p>Agregá tu primer cliente para empezar a gestionar pedidos.</p>
+          </div>
+        )}
+      </div>
 
       <div style={{ marginTop: 8, fontSize: 11, color: 'var(--txt3)' }}>{filtered.length} cliente{filtered.length !== 1 ? 's' : ''}</div>
 
@@ -568,7 +704,6 @@ export default function Clientes() {
       {detailClient && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailClient(null) }}>
           <div className="modal" style={{ maxWidth: 820, height: 'min(820px, 92vh)', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }} onClick={e => e.stopPropagation()}>
-            {/* Header */}
             <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -590,48 +725,34 @@ export default function Clientes() {
                 </div>
               </div>
             </div>
-
-            {/* Pestañas */}
             <div className="detail-tabs">
               {[['info', 'Información'], ['historial', 'Historial'], ['notas', 'Notas']].map(([k, l]) => (
                 <div key={k} className={`detail-tab ${detailTab === k ? 'active' : ''}`} onClick={() => setDetailTab(k)}>{l}</div>
               ))}
             </div>
-
-            {/* Body */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-
-              {/* TAB: Información */}
               {detailTab === 'info' && (
                 <div>
-                  {/* Links activos */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                     {detailClient.wa && (
-                      <a
-                        href="#"
-                        onClick={e => { e.preventDefault(); openWA(detailClient) }}
+                      <a href="#" onClick={e => { e.preventDefault(); openWA(detailClient) }}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DCFCE7', color: '#16A34A', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', cursor: 'pointer', transition: 'opacity .15s' }}
                         onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
                         onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                        title="Abrir chat de WhatsApp"
-                      >
+                        title="Abrir chat de WhatsApp">
                         <i className="fa-brands fa-whatsapp" />{detailClient.wa}
                       </a>
                     )}
                     {detailClient.email && (
-                      <a
-                        href={`mailto:${detailClient.email}`}
+                      <a href={`mailto:${detailClient.email}`}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--blue-lt)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', transition: 'opacity .15s' }}
                         onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                      >
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                         <i className="fa fa-envelope" />{detailClient.email}
                       </a>
                     )}
                     {detailClient.rubro && <span className="badge b-purple">{detailClient.rubro}</span>}
                   </div>
-
-                  {/* KPI rápido */}
                   {(() => {
                     const bgs = clientBudgets(detailClient)
                     const totalVendido = clientTotalVendido(detailClient)
@@ -656,8 +777,6 @@ export default function Clientes() {
                     )
                     return null
                   })()}
-
-                  {/* Nota general */}
                   {detailClient.notes ? (
                     <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 14px', fontSize: 12, color: 'var(--txt2)', fontStyle: 'italic', borderLeft: '3px solid var(--brand)' }}>
                       {detailClient.notes}
@@ -669,8 +788,6 @@ export default function Clientes() {
                   )}
                 </div>
               )}
-
-              {/* TAB: Historial de presupuestos */}
               {detailTab === 'historial' && (
                 <div>
                   {clientBudgets(detailClient).length ? (
@@ -704,8 +821,6 @@ export default function Clientes() {
                   )}
                 </div>
               )}
-
-              {/* TAB: Notas de seguimiento */}
               {detailTab === 'notas' && (
                 <div>
                   {(detailClient.noteHistory || []).length > 0 ? (
