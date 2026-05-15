@@ -91,6 +91,7 @@ export default function Logistica() {
     try { return sessionStorage.getItem('logistica_late_dismissed') === '1' } catch { return false }
   })
   const [hoveredStatus, setHoveredStatus] = useState(null)
+  const [adding, setAdding] = useState(false)
   const dismissLateAlert = () => {
     try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
     setLateAlertDismissed(true)
@@ -627,91 +628,177 @@ export default function Logistica() {
       {/* ── TAB TARIFAS ────────────────────────────────────────────── */}
       {tab === 'tarifas' && (
         <>
-          <div className="logi-tariff-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div className="card">
-              <div className="card-header"><span className="card-title">Agregar tarifa / zona</span></div>
-              <div className="grid2">
-                <div className="fg">
-                  <label>Zona / Destino</label>
-                  <input type="text" value={tzForm.zone} onChange={e => setTzForm(f => ({ ...f, zone: e.target.value }))} placeholder="Córdoba Capital" />
-                </div>
-                <div className="fg">
-                  <label>Empresa de envío</label>
-                  <input type="text" list="carriers-list-tz" value={tzForm.carrier || ''} onChange={e => setTzForm(f => ({ ...f, carrier: e.target.value }))} placeholder="Vía Cargo…" autoComplete="off" />
-                  <datalist id="carriers-list-tz">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
-                </div>
-                <div className="fg">
-                  <label>Precio por kg ($)</label>
-                  <input type="number" value={tzForm.ppkg} onChange={e => setTzForm(f => ({ ...f, ppkg: e.target.value }))} placeholder="0" />
-                </div>
-                <div className="fg">
-                  <label>Mínimo ($)</label>
-                  <input type="number" value={tzForm.min} onChange={e => setTzForm(f => ({ ...f, min: e.target.value }))} placeholder="0" />
-                </div>
-                <div className="fg">
-                  <label>Días hábiles</label>
-                  <input type="number" value={tzForm.days} onChange={e => setTzForm(f => ({ ...f, days: e.target.value }))} placeholder="0" />
+          <div className="logi-tariff-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, alignItems: 'start' }}>
+
+            {/* ── Formulario ── */}
+            <div className="card" style={{ borderRadius: 24, padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <i className="fa fa-plus" style={{ color: 'var(--brand)', marginRight: 6 }} />Nueva tarifa
+              </div>
+
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label>Zona / Destino</label>
+                <div style={{ position: 'relative' }}>
+                  <i className="fa fa-map-pin" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
+                  <input type="text" value={tzForm.zone} onChange={e => setTzForm(f => ({ ...f, zone: e.target.value }))} placeholder="Córdoba Capital" style={{ paddingLeft: 28 }} />
                 </div>
               </div>
-              <div className="fg">
+
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label>Empresa de envío</label>
+                <div style={{ position: 'relative' }}>
+                  <i className="fa fa-truck" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
+                  <input type="text" list="carriers-list-tz" value={tzForm.carrier || ''} onChange={e => setTzForm(f => ({ ...f, carrier: e.target.value }))} placeholder="Vía Cargo…" autoComplete="off" style={{ paddingLeft: 28 }} />
+                  <datalist id="carriers-list-tz">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>$/kg</label>
+                  <div style={{ position: 'relative' }}>
+                    <i className="fa fa-scale-balanced" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 10, pointerEvents: 'none', zIndex: 1 }} />
+                    <input type="number" value={tzForm.ppkg} onChange={e => setTzForm(f => ({ ...f, ppkg: e.target.value }))} placeholder="0" style={{ paddingLeft: 26 }} />
+                  </div>
+                </div>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>Mínimo $</label>
+                  <div style={{ position: 'relative' }}>
+                    <i className="fa fa-coins" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 10, pointerEvents: 'none', zIndex: 1 }} />
+                    <input type="number" value={tzForm.min} onChange={e => setTzForm(f => ({ ...f, min: e.target.value }))} placeholder="0" style={{ paddingLeft: 26 }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label>Días hábiles</label>
+                <div style={{ position: 'relative' }}>
+                  <i className="fa fa-clock" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
+                  <input type="number" value={tzForm.days} onChange={e => setTzForm(f => ({ ...f, days: e.target.value }))} placeholder="0" style={{ paddingLeft: 28 }} />
+                </div>
+              </div>
+
+              <div className="fg" style={{ marginBottom: 0 }}>
                 <label>Notas</label>
                 <input type="text" value={tzForm.notes} onChange={e => setTzForm(f => ({ ...f, notes: e.target.value }))} placeholder="Observaciones…" />
               </div>
-              <button className="btn btn-primary btn-sm" onClick={addTariff} style={{ marginTop: 4 }}>
-                <i className="fa fa-plus" /> Agregar tarifa
+
+              <button
+                className="btn btn-primary"
+                disabled={adding}
+                onClick={() => {
+                  if (!tzForm.zone) { toast('Ingresá la zona.', 'er'); return }
+                  setAdding(true); addTariff(); setTimeout(() => setAdding(false), 700)
+                }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 2 }}
+              >
+                {adding ? <><i className="fa fa-circle-notch fa-spin" /> Agregando…</> : <><i className="fa fa-plus" /> Agregar tarifa</>}
               </button>
             </div>
 
-            <div className="card">
-              <div className="card-header"><span className="card-title">Tarifas configuradas</span></div>
-              {tariffs.length ? tariffs.map(t => (
-                <div key={t.id} className="metric-row">
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{t.zone}</div>
-                    <div style={{ fontSize: 11, color: 'var(--txt3)' }}>
-                      {t.carrier && <span style={{ fontWeight: 600, color: 'var(--txt2)' }}>{t.carrier} · </span>}
-                      {fmt(t.ppkg)}/kg · mín {fmt(t.min)} · {t.days} día{t.days !== 1 ? 's' : ''}
-                      {t.notes ? ` · ${t.notes}` : ''}
-                    </div>
-                  </div>
-                  <button className="act del" onClick={() => delTariff(t.id)} style={{ flexShrink: 0 }}>
-                    <i className="fa fa-trash" />
-                  </button>
+            {/* ── Lista de tarifas ── */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt2)' }}>Tarifas configuradas</span>
+                <span style={{ fontSize: 11, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 10px', borderRadius: 20, fontWeight: 600 }}>
+                  {tariffs.length} zona{tariffs.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              {tariffs.length ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {tariffs.map(t => {
+                    const carrierCls = {
+                      'Correo Argentino': 'b-amber', 'OCA': 'b-blue', 'Andreani': 'b-purple',
+                      'Vía Cargo': 'b-confirmed', 'En mano': 'b-draft',
+                    }
+                    return (
+                      <div
+                        key={t.id}
+                        style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, transition: 'box-shadow .15s, border-color .15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,.07)'; e.currentTarget.style.borderColor = 'var(--txt4)' }}
+                        onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--border)' }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--txt)' }}>{t.zone}</span>
+                            {t.carrier && <span className={`badge ${carrierCls[t.carrier] || 'b-draft'}`} style={{ fontSize: 10, padding: '2px 7px' }}>{t.carrier}</span>}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 12, color: 'var(--txt3)', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(t.ppkg)}/kg</span>
+                            <span>mín {fmt(t.min)}</span>
+                            {t.notes && <span style={{ color: 'var(--txt4)', fontStyle: 'italic' }}>{t.notes}</span>}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <div style={{ textAlign: 'center', background: 'var(--surface2)', borderRadius: 12, padding: '6px 12px', minWidth: 48 }}>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', fontFamily: 'ui-monospace,SFMono-Regular,monospace', lineHeight: 1 }}>{t.days || 0}d</div>
+                            <div style={{ fontSize: 9, color: 'var(--txt4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.4px', marginTop: 2 }}>
+                              <i className="fa fa-clock" style={{ marginRight: 2, fontSize: 8 }} />háb.
+                            </div>
+                          </div>
+                          <button className="logi-act-circ del" onClick={() => delTariff(t.id)} title="Eliminar">
+                            <i className="fa fa-trash" />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              )) : (
-                <div style={{ padding: '16px 12px', textAlign: 'center' }}>
-                  <i className="fa fa-map-location-dot" style={{ fontSize: 24, color: 'var(--txt4)', marginBottom: 8, display: 'block' }} />
-                  <div style={{ fontSize: 13, color: 'var(--txt3)', marginBottom: 10 }}>Sin tarifas configuradas</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt4)' }}>← Usá el formulario de la izquierda para agregar tu primera zona</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', background: 'var(--surface2)', borderRadius: 24, border: '2px dashed var(--border)', textAlign: 'center', minHeight: 200 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
+                    <i className="fa fa-route" style={{ fontSize: 20, color: 'var(--brand)' }} />
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--txt2)', marginBottom: 6 }}>Sin zonas configuradas</div>
+                  <div style={{ fontSize: 12, color: 'var(--txt3)', maxWidth: 220 }}>Optimizá tus envíos configurando tu primera zona de tarifas</div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 16 }}>
-            <div className="card-header">
-              <span className="card-title"><i className="fa fa-calculator" style={{ color: 'var(--brand)', marginRight: 6 }} />Calculadora de flete</span>
+          {/* ── Calculadora ── */}
+          <div style={{ marginTop: 16, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 24, padding: '18px 20px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className="fa fa-calculator" style={{ color: '#fff', fontSize: 14 }} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', lineHeight: 1.2 }}>Calculadora de flete</div>
+                <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 1 }}>Estimá el costo antes de cotizar</div>
+              </div>
             </div>
-            <div className="grid2">
-              <div className="fg">
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div className="fg" style={{ marginBottom: 0 }}>
                 <label>Zona destino</label>
                 <select value={calcZone} onChange={e => setCalcZone(e.target.value)}>
                   <option value="">Seleccioná zona</option>
-                  {tariffs.map(t => <option key={t.id} value={t.zone}>{t.zone}</option>)}
+                  {tariffs.map(t => <option key={t.id} value={t.zone}>{t.zone}{t.carrier ? ` (${t.carrier})` : ''}</option>)}
                 </select>
               </div>
-              <div className="fg">
+              <div className="fg" style={{ marginBottom: 0 }}>
                 <label>Peso total (kg)</label>
-                <input type="number" value={calcKg} onChange={e => setCalcKg(e.target.value)} placeholder="1" min="0" step="0.1" />
+                <div style={{ position: 'relative' }}>
+                  <i className="fa fa-scale-balanced" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
+                  <input type="number" value={calcKg} onChange={e => setCalcKg(e.target.value)} placeholder="1" min="0" step="0.1" style={{ paddingLeft: 28 }} />
+                </div>
               </div>
             </div>
+
             {calcZone && calcKg ? (
-              <div style={{ background: 'var(--acento-xlt)', border: '1.5px solid var(--acento)', borderRadius: 8, padding: '12px 16px', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, color: 'var(--txt2)' }}>Costo estimado</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--acento)' }}>{fmt(calcFrete())}</span>
+              <div style={{ background: 'var(--surface)', border: '2px solid #10B981', borderRadius: 16, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: '#10B981', textTransform: 'uppercase', letterSpacing: '.8px' }}>Costo estimado</div>
+                  <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 3 }}>{calcZone}{calcKg ? ` · ${calcKg} kg` : ''}</div>
+                </div>
+                <span style={{ fontSize: 30, fontWeight: 900, color: '#10B981', fontFamily: 'ui-monospace,SFMono-Regular,monospace', letterSpacing: '-.02em' }}>{fmt(calcFrete())}</span>
               </div>
             ) : (
-              <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 8, padding: '8px 0' }}>Seleccioná zona y peso para calcular</div>
+              <div style={{ background: 'var(--surface)', borderRadius: 14, padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <i className="fa fa-arrow-pointer" style={{ color: 'var(--txt4)', fontSize: 13 }} />
+                <span style={{ fontSize: 12, color: 'var(--txt4)' }}>Seleccioná zona y peso para estimar el costo</span>
+              </div>
             )}
           </div>
         </>
