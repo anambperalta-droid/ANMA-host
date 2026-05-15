@@ -85,13 +85,13 @@ export default function Logistica() {
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState({})
   const [tzForm, setTzForm] = useState({ zone: '', carrier: '', ppkg: '', min: '', days: '', notes: '' })
-  const [calcZone, setCalcZone] = useState('')
-  const [calcKg, setCalcKg] = useState('')
   const [lateAlertDismissed, setLateAlertDismissed] = useState(() => {
     try { return sessionStorage.getItem('logistica_late_dismissed') === '1' } catch { return false }
   })
   const [hoveredStatus, setHoveredStatus] = useState(null)
   const [adding, setAdding] = useState(false)
+  const [despachoDir, setDespachoDir] = useState(() => localStorage.getItem('anma_desp_dir') || '')
+  const [despachoCUIT, setDespachoCUIT] = useState(() => localStorage.getItem('anma_desp_cuit') || '')
   const dismissLateAlert = () => {
     try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
     setLateAlertDismissed(true)
@@ -194,12 +194,6 @@ export default function Logistica() {
     toast('Tarifa agregada', 'ok')
   }
   const delTariff = (id) => { deleteEntity('tariffs', id); toast('Tarifa eliminada', 'in') }
-
-  const calcFrete = () => {
-    const t = tariffs.find(x => x.zone === calcZone)
-    if (!t || !calcKg) return null
-    return Math.max(t.min || 0, (t.ppkg || 0) * Number(calcKg))
-  }
 
   const totalShipCost = shipments.reduce((s, x) => s + (x.freight || 0), 0)
   const nowYM = new Date().toISOString().slice(0, 7)
@@ -756,49 +750,80 @@ export default function Logistica() {
             </div>
           </div>
 
-          {/* ── Calculadora ── */}
-          <div style={{ marginTop: 16, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 24, padding: '18px 20px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <i className="fa fa-calculator" style={{ color: '#fff', fontSize: 14 }} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', lineHeight: 1.2 }}>Calculadora de flete</div>
-                <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 1 }}>Estimá el costo antes de cotizar</div>
-              </div>
+          {/* ── Cotizadores + Herramientas de Despacho ── */}
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+            {/* Barra cotizadores oficiales + Plantilla WA */}
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', flexShrink: 0 }}>
+                <i className="fa fa-arrow-up-right-from-square" style={{ marginRight: 6 }} />Cotizar en:
+              </span>
+              {[
+                { name: 'OCA', url: 'https://www.oca.com.ar', cls: 'b-blue' },
+                { name: 'Vía Cargo', url: 'https://www.viacargo.com.ar', cls: 'b-confirmed' },
+                { name: 'Andreani', url: 'https://www.andreani.com', cls: 'b-purple' },
+                { name: 'Correo Argentino', url: 'https://www.correoargentino.com.ar', cls: 'b-amber' },
+              ].map(c => (
+                <a key={c.name} href={c.url} target="_blank" rel="noreferrer"
+                  className={`badge ${c.cls}`}
+                  style={{ fontSize: 12, padding: '6px 14px', borderRadius: 12, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <i className="fa fa-globe" style={{ fontSize: 10 }} />
+                  {c.name}
+                </a>
+              ))}
+              <div style={{ flex: 1 }} />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText('¡Hola! El costo de envío para tu pedido es de $________ a través de ________. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda quedo atento!')
+                  toast('Plantilla copiada al portapapeles ✓', 'ok')
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#F0FDF4', border: '1.5px solid #86EFAC', color: '#15803D', borderRadius: 12, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <i className="fa fa-copy" />
+                Copiar plantilla WA
+              </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-              <div className="fg" style={{ marginBottom: 0 }}>
-                <label>Zona destino</label>
-                <select value={calcZone} onChange={e => setCalcZone(e.target.value)}>
-                  <option value="">Seleccioná zona</option>
-                  {tariffs.map(t => <option key={t.id} value={t.zone}>{t.zone}{t.carrier ? ` (${t.carrier})` : ''}</option>)}
-                </select>
+            {/* Mis Datos de Despacho */}
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px' }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
+                <i className="fa fa-box-archive" style={{ marginRight: 6, color: 'var(--brand)' }} />Mis Datos de Despacho
               </div>
-              <div className="fg" style={{ marginBottom: 0 }}>
-                <label>Peso total (kg)</label>
-                <div style={{ position: 'relative' }}>
-                  <i className="fa fa-scale-balanced" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
-                  <input type="number" value={calcKg} onChange={e => setCalcKg(e.target.value)} placeholder="1" min="0" step="0.1" style={{ paddingLeft: 28 }} />
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 200, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <i className="fa fa-location-dot" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
+                  <input
+                    type="text"
+                    value={despachoDir}
+                    onChange={e => { setDespachoDir(e.target.value); localStorage.setItem('anma_desp_dir', e.target.value) }}
+                    placeholder="Dirección de retiro…"
+                    style={{ flex: 1, fontSize: 12 }}
+                  />
+                  <button
+                    onClick={() => { if (despachoDir) { navigator.clipboard.writeText(despachoDir); toast('Dirección copiada ✓', 'ok') } }}
+                    title="Copiar dirección"
+                    style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className="fa fa-copy" style={{ fontSize: 11 }} />
+                  </button>
+                </div>
+                <div style={{ flex: '0 0 220px', display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <i className="fa fa-id-card" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
+                  <input
+                    type="text"
+                    value={despachoCUIT}
+                    onChange={e => { setDespachoCUIT(e.target.value); localStorage.setItem('anma_desp_cuit', e.target.value) }}
+                    placeholder="CUIT…"
+                    style={{ flex: 1, fontSize: 12 }}
+                  />
+                  <button
+                    onClick={() => { if (despachoCUIT) { navigator.clipboard.writeText(despachoCUIT); toast('CUIT copiado ✓', 'ok') } }}
+                    title="Copiar CUIT"
+                    style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className="fa fa-copy" style={{ fontSize: 11 }} />
+                  </button>
                 </div>
               </div>
             </div>
 
-            {calcZone && calcKg ? (
-              <div style={{ background: 'var(--surface)', border: '2px solid #10B981', borderRadius: 16, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: '#10B981', textTransform: 'uppercase', letterSpacing: '.8px' }}>Costo estimado</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 3 }}>{calcZone}{calcKg ? ` · ${calcKg} kg` : ''}</div>
-                </div>
-                <span style={{ fontSize: 30, fontWeight: 900, color: '#10B981', fontFamily: 'ui-monospace,SFMono-Regular,monospace', letterSpacing: '-.02em' }}>{fmt(calcFrete())}</span>
-              </div>
-            ) : (
-              <div style={{ background: 'var(--surface)', borderRadius: 14, padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <i className="fa fa-arrow-pointer" style={{ color: 'var(--txt4)', fontSize: 13 }} />
-                <span style={{ fontSize: 12, color: 'var(--txt4)' }}>Seleccioná zona y peso para estimar el costo</span>
-              </div>
-            )}
           </div>
         </>
       )}
