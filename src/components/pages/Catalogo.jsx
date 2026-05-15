@@ -260,7 +260,7 @@ export default function Catalogo() {
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph">
         <div className="ph-left">
-          <h2>Catálogo de Productos</h2>
+          <h2 className="cat-page-title">PRODUCTOS</h2>
         </div>
         <div className="ph-right">
           {/* Desktop: texto completo — ocultos en mobile, reemplazados por mob-hdr-acts */}
@@ -324,6 +324,47 @@ export default function Catalogo() {
           </button>
         </div>
       </div>
+      {/* ── MOBILE CARD LIST (≤640px) ── */}
+      <div className="cat-mob-list">
+        {loading ? [1,2,3,4].map(i => (
+          <div key={i} className="cat-mob-item">
+            <div className="cat-mob-item-l" style={{ flex: 1 }}><div className="sk-line" style={{ height: 16, width: '55%' }} /></div>
+          </div>
+        )) : filtered.length ? filtered.map(p => {
+          const cc = catColor(p.cat)
+          return (
+            <div key={p.id} className="cat-mob-item" onClick={() => open(p)}>
+              <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
+                style={{ cursor: 'pointer', flexShrink: 0, width: 16, height: 16 }}
+                onClick={e => e.stopPropagation()} />
+              <div className="cat-mob-item-l">
+                {p.image
+                  ? <img src={p.image} className="cat-mob-item-img" alt={p.name} />
+                  : <div className="cat-mob-item-noimg"><i className="fa fa-box-open" style={{ color: cc.color, fontSize: 16, opacity: .6 }} /></div>
+                }
+                <div className="cat-mob-item-info">
+                  <span className="cat-mob-item-name">{p.name}</span>
+                  {p.cat && <span className="cat-mob-item-cat">{p.cat}</span>}
+                </div>
+                <span className="cat-mob-item-price">{fmt(suggestedPrice(p.cost))}</span>
+              </div>
+              <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()}>
+                <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
+                <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>
+              </div>
+            </div>
+          )
+        }) : (
+          <div className="empty-native">
+            <div className="ico"><i className="fa fa-box-open" /></div>
+            <h4>Sin productos</h4>
+            <p>Agregá tu primer producto al catálogo.</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── DESKTOP TABLE / GRID (≥641px) ── */}
+      <div className="cat-desk-view">
       {viewMode === 'table' ? (
         <div className="tbl-card">
           <table>
@@ -462,6 +503,7 @@ export default function Catalogo() {
           )}
         </div>
       )}
+      </div>{/* /cat-desk-view */}
 
       {selectedIds.size > 0 && (
         <div style={{
