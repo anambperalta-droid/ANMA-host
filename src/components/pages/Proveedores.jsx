@@ -536,8 +536,89 @@ export default function Proveedores() {
         .cli-pill-new:hover{opacity:.88}
         .cli-pill-new:active{opacity:.76;transform:scale(.96)}
         .cli-pill-new i{font-size:11px}
-        @media(max-width:640px){.prov-ph-title{display:none!important}.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}}
+        /* ── TARJETAS MÓVILES PROVEEDORES ── */
+        .prov-mob-list{display:none;flex-direction:column}
+        .prov-mob-card{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s}
+        .prov-mob-card:active{background:var(--surface2)}
+        .prov-mob-card:last-child{border-bottom:none}
+        .prov-mob-id{flex:1;min-width:0;display:flex;align-items:center;gap:7px}
+        .prov-mob-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+        .prov-mob-id-text{min-width:0;flex:1}
+        .prov-mob-name{font-weight:700;font-size:13px;color:var(--txt);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .prov-mob-contact{font-size:11px;color:#6B7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .prov-mob-mid{flex-shrink:0;width:76px;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .prov-mob-cicons{display:flex;gap:5px}
+        .prov-mob-ci{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-size:14px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+        .prov-mob-ci:active{opacity:.7}
+        .prov-mob-ci-wa{background:#DCFCE7;color:#16A34A}
+        .prov-mob-ci-mail{background:#EFF6FF;color:#2563EB}
+        .prov-mob-ci-ph{display:inline-block;width:28px;height:28px}
+        .prov-mob-prods{font-size:10.5px;font-weight:600;color:var(--txt3);line-height:1;text-align:center;white-space:nowrap}
+        .prov-mob-acts{flex-shrink:0;display:flex;gap:4px;align-items:center}
+        .prov-mob-act{width:34px;height:34px;border-radius:9px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-family:inherit;background:var(--surface2);color:var(--txt2);-webkit-tap-highlight-color:transparent;transition:transform .1s,background .12s}
+        .prov-mob-act:active{transform:scale(0.88)}
+        .prov-mob-act-del{background:#FEF2F2!important;color:#DC2626!important}
+        @media(max-width:640px){.prov-desk-only{display:none!important}.prov-mob-list{display:flex}.prov-ph-title{display:none!important}.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}}
+        @media(min-width:641px){.prov-mob-list{display:none!important}}
       `}</style>
+      {/* LISTA MÓVIL */}
+      <div className="prov-mob-list">
+        {loading ? [1,2,3,4].map(i => (
+          <div key={i} className="prov-mob-card" style={{ cursor: 'default' }}>
+            <div className="prov-mob-id">
+              <span className="prov-mob-dot" style={{ background: '#E5E7EB' }} />
+              <div className="prov-mob-id-text">
+                <div className="sk sk-text" style={{ height: 13, width: '55%', marginBottom: 5 }} />
+                <div className="sk sk-text" style={{ height: 11, width: '35%' }} />
+              </div>
+            </div>
+            <div className="prov-mob-mid">
+              <div className="prov-mob-cicons">
+                <span className="prov-mob-ci-ph" style={{ background: '#F3F4F6', borderRadius: 8 }} />
+                <span className="prov-mob-ci-ph" style={{ background: '#F3F4F6', borderRadius: 8 }} />
+              </div>
+              <div className="sk sk-text" style={{ height: 10, width: 40 }} />
+            </div>
+            <div className="prov-mob-acts">
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: '#F3F4F6' }} />
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: '#F3F4F6' }} />
+            </div>
+          </div>
+        )) : filtered.length ? filtered.map(s => {
+          const days = supplierLastActivity(s)
+          const dotColor = days === null ? '#CBD5E1' : days <= 30 ? '#16A34A' : days <= 90 ? '#D97706' : '#DC2626'
+          const np = supplierProducts(s).length
+          return (
+            <div key={s.id} className="prov-mob-card" onClick={() => openDetail(s)}>
+              <div className="prov-mob-id">
+                <span className="prov-mob-dot" style={{ background: dotColor }} />
+                <div className="prov-mob-id-text">
+                  <div className="prov-mob-name">{s.name}</div>
+                  {s.contact && <div className="prov-mob-contact">{s.contact}</div>}
+                </div>
+              </div>
+              <div className="prov-mob-mid" onClick={e => e.stopPropagation()}>
+                <div className="prov-mob-cicons">
+                  {s.wa
+                    ? <a href={`https://wa.me/${s.wa.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="prov-mob-ci prov-mob-ci-wa" onClick={e => e.stopPropagation()}><i className="fa-brands fa-whatsapp" /></a>
+                    : <span className="prov-mob-ci-ph" />}
+                  {s.email
+                    ? <a href={`mailto:${s.email}`} className="prov-mob-ci prov-mob-ci-mail" onClick={e => e.stopPropagation()}><i className="fa fa-envelope" /></a>
+                    : <span className="prov-mob-ci-ph" />}
+                </div>
+                <div className="prov-mob-prods">{np} prod{np !== 1 ? 's.' : '.'}</div>
+              </div>
+              <div className="prov-mob-acts" onClick={e => e.stopPropagation()}>
+                <button className="prov-mob-act" title="Editar" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
+                <button className="prov-mob-act prov-mob-act-del" title="Eliminar" onClick={() => del(s.id)}><i className="fa fa-trash" /></button>
+              </div>
+            </div>
+          )
+        }) : (
+          <div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4></div>
+        )}
+      </div>
+      <div className="prov-desk-only">
       {viewMode === 'table' ? (
         <div className="tbl-card zt-tbl">
           <table>
@@ -643,6 +724,7 @@ export default function Proveedores() {
           )) : <div className="empty" style={{ gridColumn: '1/-1' }}><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4></div>}
         </div>
       )}
+      </div>
 
       <div style={{ marginTop: 8, fontSize: 11, color: 'var(--txt3)' }}>{filtered.length} proveedor{filtered.length !== 1 ? 'es' : ''}</div>
 
