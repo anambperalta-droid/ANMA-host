@@ -70,7 +70,7 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
       >
         <i className="fa fa-table-columns" />
       </button>
-      {loc.pathname !== '/catalogo' && <span className="tb-page-title">{title}</span>}
+      <span className="tb-page-title">{title}</span>
       <div style={{ flex: 1 }} />
 
       {/* Ocultar datos financieros */}

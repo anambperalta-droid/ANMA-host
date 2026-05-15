@@ -258,7 +258,7 @@ export default function Catalogo() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
-      <div className="ph" style={{ marginBottom: 6 }}>
+      <div className="ph cat-ph" style={{ marginBottom: 6 }}>
         <div className="ph-left">
           <h2 className="cat-page-title">Productos</h2>
         </div>
@@ -291,7 +291,7 @@ export default function Catalogo() {
         .cli-pill-new:hover{opacity:.88}
         .cli-pill-new:active{opacity:.76;transform:scale(.96)}
         .cli-pill-new i{font-size:11px}
-        @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}}
+        @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}.cat-ph{display:none!important}}
       `}</style>
 
       <div className="pill-row cat-pill-row">
