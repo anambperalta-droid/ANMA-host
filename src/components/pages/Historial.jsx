@@ -855,6 +855,45 @@ export default function Historial() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
+      {/* Mobile: single combined period + tabs row */}
+      <div className="dash-ctrl-bar">
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button className="dash-period-pill" onClick={() => setShowPeriodDrop(d => !d)}>
+            <i className="fa fa-calendar" style={{ fontSize: 10 }} />
+            <span>{PERIODS.find(p => p.key === period)?.label || 'Este mes'}</span>
+            <i className="fa fa-chevron-down" style={{ fontSize: 8, marginLeft: 1 }} />
+          </button>
+          {showPeriodDrop && (
+            <div className="dash-period-drop-m" onClick={e => e.stopPropagation()}>
+              {PERIODS.map(p => (
+                <button key={p.key} onClick={() => { setPeriod(p.key); setShowPeriodDrop(false) }}
+                  style={{ display: 'block', width: '100%', padding: '9px 16px', border: 'none',
+                    background: period === p.key ? 'var(--brand-xlt)' : 'transparent',
+                    color: period === p.key ? 'var(--brand)' : 'var(--txt2)',
+                    fontSize: 12, fontWeight: period === p.key ? 700 : 500,
+                    cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="dash-ctrl-divider" />
+        <div className="dash-ctrl-tabs">
+          {[
+            { key: 'resumen',     lbl: 'Resumen' },
+            { key: 'lista',       lbl: 'Presupuestos' },
+            { key: 'analisis',    lbl: 'Análisis' },
+            { key: 'seguimiento', lbl: seguimiento.length > 0 ? `Seguim. (${seguimiento.length})` : 'Seguimiento' },
+          ].map(t => (
+            <button key={t.key} className={`dash-ctrl-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
+              {t.lbl}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: full header */}
       <div className="ph ph-hist">
         <div className="ph-left"><h2>Dashboard</h2></div>
         <div className="ph-right" style={{ gap: 8 }}>
@@ -900,7 +939,7 @@ export default function Historial() {
         </div>
       </div>
 
-      <div className="tab-bar" style={{ marginTop: 18, marginBottom: 20 }}>
+      <div className="tab-bar tab-bar-dash" style={{ marginTop: 18, marginBottom: 20 }}>
         {[
           { key: 'resumen',     icon: 'fa-house',     lbl: 'Resumen',                           short: 'Inicio'   },
           { key: 'lista',       icon: 'fa-receipt',   lbl: 'Presupuestos',                      short: 'Presup.'  },
@@ -1013,7 +1052,7 @@ export default function Historial() {
 
                 {/* COLUMNA IZQUIERDA: gráfico de barras + tabla de presupuestos */}
                 <div style={{ flex: '1 1 55%', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div className="bento-chart" style={{ boxSizing: 'border-box' }}>
+                  <div className="bento-chart bento-chart-bar" style={{ boxSizing: 'border-box', overflow: 'hidden' }}>
                     <div className="card-header">
                       <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
                     </div>

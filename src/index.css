@@ -1005,14 +1005,14 @@ td b{color:var(--txt);font-weight:600}
 }
 .bn-fab{
   display:flex;align-items:center;justify-content:center;
-  width:50px;height:50px;border-radius:50%;
+  width:46px;height:46px;border-radius:50%;
   background:var(--brand);
   border:none;
   cursor:pointer;
   box-shadow:0 4px 16px rgba(124,58,237,.4);
-  color:#fff;font-size:22px;
+  color:#fff;font-size:20px;
   flex-shrink:0;
-  margin-top:-10px;
+  margin-top:0;
   transition:transform .15s,box-shadow .15s;
   -webkit-tap-highlight-color:transparent;
 }
@@ -1294,13 +1294,8 @@ td b{color:var(--txt);font-weight:600}
   /* ── Topbar: 20% más fino — iconos 28px, barra 46px ── */
   .topbar{height:46px!important;padding:0 12px!important;gap:6px!important}
   .topbar .tb-btn{width:28px!important;height:28px!important;font-size:11px!important;border-radius:7px!important}
-  /* ── Calendar en topbar: colapsar ph-hist, flotar period picker ── */
-  .ph-hist{height:0!important;overflow:visible!important;padding:0!important;border:none!important;margin:0!important;min-height:0!important}
-  .ph-hist .ph-left{display:none!important}
-  .ph-hist .ph-right{position:fixed!important;top:5px!important;right:12px!important;z-index:55!important;gap:0!important;background:transparent!important}
-  /* ── Period picker: ícono 28px igual que tb-btn ── */
-  .ph-period-btn{min-height:28px!important;width:28px!important;border-radius:7px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:11px!important}
-  .ph-period-lbl{display:none!important}
+  /* ── Dashboard: ph-hist hidden on mobile (replaced by dash-ctrl-bar) ── */
+  .ph-hist{display:none!important}
   /* ── Contenido sin espacio muerto ── */
   .content{padding-top:6px!important}
   /* ── Tab bar: píldoras con icono+microlabel, lavanda activa ── */
@@ -1423,3 +1418,19 @@ td b{color:var(--txt);font-weight:600}
   .cat-mob-list{display:none!important}
   .cat-desk-view{display:block!important}
 }
+
+/* ── DASHBOARD CTRL BAR ── */
+.dash-ctrl-bar{display:flex;align-items:center;position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--border);margin:0 -10px}
+.dash-period-pill{display:inline-flex;align-items:center;gap:4px;padding:6px 9px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-size:11px;font-weight:700;color:var(--txt2);cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;margin:5px 0 5px 12px;transition:background .12s,border-color .12s}
+.dash-period-pill:hover{border-color:var(--brand);color:var(--brand)}
+.dash-period-pill:active{background:var(--surface3)}
+.dash-ctrl-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;margin:0 4px}
+.dash-ctrl-tabs{display:flex;overflow-x:auto;scrollbar-width:none;flex:1;gap:4px;padding:5px 12px 5px 4px;-webkit-overflow-scrolling:touch}
+.dash-ctrl-tabs::-webkit-scrollbar{display:none}
+.dash-ctrl-tab{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--txt3);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,border-color .12s;min-height:30px;display:inline-flex;align-items:center}
+.dash-ctrl-tab.active{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.3);color:var(--brand);font-weight:700}
+.dash-ctrl-tab:active{transform:scale(0.95)}
+.dash-period-drop-m{position:absolute;left:0;top:calc(100% + 4px);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.15);min-width:190px;overflow:hidden}
+@media(min-width:641px){.dash-ctrl-bar{display:none}}
+@media(max-width:640px){.tab-bar-dash{display:none!important}}
+@media(max-width:640px){.bento-chart-bar{max-height:176px;overflow:hidden}}
