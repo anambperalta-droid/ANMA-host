@@ -241,28 +241,30 @@ export default function Logistica() {
         .logi-pills-row::-webkit-scrollbar{display:none}
         /* Mobile cards */
         .logi-mob-list{display:none;flex-direction:column}
-        .logi-card{border-bottom:1px solid var(--border);padding:11px 0;-webkit-tap-highlight-color:transparent;transition:background .1s;cursor:pointer}
+        .logi-card{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--border);padding:11px 0;-webkit-tap-highlight-color:transparent;transition:background .1s;cursor:pointer}
         .logi-card:last-child{border-bottom:none}
         .logi-card:active{background:rgba(0,0,0,.025)}
-        .logi-card-row1{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-        .logi-card-remito{font-weight:800;font-size:13px;color:var(--txt);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
-        .logi-card-bud{font-size:11px;color:var(--brand);font-weight:700;flex-shrink:0;white-space:nowrap}
+        /* Fila 1: identidad (remito + cliente) | acciones */
+        .logi-card-row1{display:flex;align-items:flex-start;gap:6px}
+        .logi-card-id{flex:1;min-width:0}
+        .logi-card-remito{font-weight:800;font-size:13px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+        .logi-card-client{font-weight:600;font-size:12px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;margin-top:1px}
         .logi-card-acts{flex-shrink:0;display:flex;gap:3px;align-items:center}
-        .logi-card-act{width:30px;height:30px;border-radius:8px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+        .logi-card-act{width:28px;height:28px;border-radius:8px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:transform .1s}
         .logi-card-act:active{transform:scale(.88)}
         .logi-card-act-wa{background:#DCFCE7;color:#16A34A}
         .logi-card-act-trk{background:#EFF6FF;color:#2563EB}
         .logi-card-act-edit{background:var(--surface2);color:var(--txt2)}
         .logi-card-act-del{background:#FEF2F2;color:#DC2626}
-        .logi-card-row2{display:flex;align-items:baseline;gap:4px;margin-bottom:5px;min-width:0;overflow:hidden}
-        .logi-card-client{font-weight:600;font-size:12px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
-        .logi-card-sep{font-size:10px;color:var(--txt4);flex-shrink:0}
-        .logi-card-city{font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:100px}
-        .logi-card-carrier{font-size:11px;color:var(--txt2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;max-width:120px;margin-left:auto}
-        .logi-card-row3{display:flex;align-items:center;gap:4px;overflow:hidden;min-width:0;flex-wrap:nowrap}
-        .logi-chip{display:inline-flex;align-items:center;padding:2px 6px;background:var(--surface2);border-radius:6px;font-size:10.5px;font-weight:600;color:var(--txt3);white-space:nowrap;line-height:1.5;flex-shrink:0}
-        .logi-chip-cost{background:rgba(22,163,74,.09)!important;color:#16A34A!important}
-        .logi-card-status-wrap{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:5px}
+        /* Fila 2: metadatos tiny (presupuesto · ciudad · transporte) */
+        .logi-card-meta{font-size:10px;color:#9CA3AF;font-weight:500;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        /* Fila 3: specs técnicos | estado + alerta */
+        .logi-card-row3{display:flex;align-items:center;gap:4px;min-width:0}
+        .logi-card-specs{flex:1;min-width:0;display:flex;align-items:center;gap:0;font-size:11px;color:#6B7280;overflow:hidden}
+        .logi-card-spec{flex-shrink:0;white-space:nowrap}
+        .logi-card-spec+.logi-card-spec::before{content:'·';margin:0 4px;color:#D1D5DB;font-weight:400}
+        .logi-card-spec-price{font-weight:700;color:var(--txt)!important}
+        .logi-card-status-wrap{flex-shrink:0;display:flex;align-items:center;gap:5px;margin-left:auto}
         .logi-card-late{font-size:10px;color:#DC2626;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px}
         @media(max-width:767px){
           .logi-ph{display:none!important}
@@ -361,12 +363,14 @@ export default function Logistica() {
                   onClick={() => openShip(s)}
                   style={late ? { background: 'rgba(220,38,38,.03)' } : undefined}
                 >
-                  {/* Fila 1: Remito | Presupuesto | Acciones */}
+                  {/* Fila 1: Remito + Cliente | Acciones */}
                   <div className="logi-card-row1">
-                    <div className="logi-card-remito">
-                      {s.remito || <span style={{ color: 'var(--txt3)', fontWeight: 500 }}>Sin remito</span>}
+                    <div className="logi-card-id">
+                      <div className="logi-card-remito">
+                        {s.remito || <span style={{ color: 'var(--txt3)', fontWeight: 400 }}>Sin remito</span>}
+                      </div>
+                      {s.client && <div className="logi-card-client">{s.client}</div>}
                     </div>
-                    {bud?.num && <div className="logi-card-bud">{bud.num}</div>}
                     <div className="logi-card-acts" onClick={e => e.stopPropagation()}>
                       {notifyLink && (
                         <button className="logi-card-act logi-card-act-wa" title="Avisar al cliente" onClick={() => window.open(notifyLink, '_blank')}>
@@ -387,26 +391,21 @@ export default function Logistica() {
                     </div>
                   </div>
 
-                  {/* Fila 2: Cliente · Ciudad | Empresa */}
-                  <div className="logi-card-row2">
-                    <div className="logi-card-client">{s.client || '—'}</div>
-                    {s.city && (
-                      <>
-                        <span className="logi-card-sep">·</span>
-                        <div className="logi-card-city">{s.city}</div>
-                      </>
-                    )}
-                    {(s.carrier || s.service) && (
-                      <div className="logi-card-carrier">{s.carrier || s.service}</div>
-                    )}
-                  </div>
+                  {/* Fila 2: Metadatos tiny — presupuesto · ciudad · transporte */}
+                  {[bud?.num, s.city, s.carrier || s.service].some(Boolean) && (
+                    <div className="logi-card-meta">
+                      {[bud?.num, s.city, s.carrier || s.service].filter(Boolean).join(' · ')}
+                    </div>
+                  )}
 
-                  {/* Fila 3: Chips de datos duros | Estado | Atraso */}
+                  {/* Fila 3: Specs técnicos | Estado + Alerta */}
                   <div className="logi-card-row3">
-                    {(s.bulks > 0) && <span className="logi-chip">{s.bulks} bulto{s.bulks !== 1 ? 's' : ''}</span>}
-                    {s.weight && <span className="logi-chip">{s.weight} kg</span>}
-                    <span className="logi-chip logi-chip-cost">{fmt(s.freight)}</span>
-                    {payerChip && <span className="logi-chip">{payerChip}</span>}
+                    <div className="logi-card-specs">
+                      {s.bulks > 0 && <span className="logi-card-spec">{s.bulks} bulto{s.bulks !== 1 ? 's' : ''}</span>}
+                      {s.weight && <span className="logi-card-spec">{s.weight} kg</span>}
+                      <span className="logi-card-spec logi-card-spec-price">{fmt(s.freight)}</span>
+                      {payerChip && <span className="logi-card-spec">{payerChip}</span>}
+                    </div>
                     <div className="logi-card-status-wrap">
                       {late && (
                         <span className="logi-card-late">
