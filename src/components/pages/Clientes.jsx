@@ -303,15 +303,17 @@ export default function Clientes() {
       {/* ── HEADER ── */}
       <div className="ph zt-ph">
         <div className="ph-left cli-ph-title"><h2>Clientes</h2></div>
-        <div className="ph-right">
-          <button className="btn btn-ghost btn-sm" onClick={() => setImportModal(true)}>
-            <i className="fa fa-file-import" /><span className="cli-btn-txt"> Importar</span>
-          </button>
-          <button className="btn btn-secondary btn-sm" onClick={exportCSV}>
-            <i className="fa fa-download" /><span className="cli-btn-txt"> Exportar</span>
-          </button>
-          <button className="btn btn-primary btn-sm" onClick={() => openEdit()}>
-            <i className="fa fa-plus" /><span className="cli-btn-txt"> Agregar</span>
+        <div className="ph-right" style={{ gap: 6 }}>
+          <div className="cli-pill-group">
+            <button className="cli-pill" onClick={() => setImportModal(true)}>
+              <i className="fa fa-file-import" /><span>Importar</span>
+            </button>
+            <button className="cli-pill" onClick={exportCSV}>
+              <i className="fa fa-download" /><span>Exportar</span>
+            </button>
+          </div>
+          <button className="cli-pill-new" onClick={() => openEdit()}>
+            <i className="fa fa-plus" /><span>Nuevo</span>
           </button>
         </div>
       </div>
@@ -348,11 +350,20 @@ export default function Clientes() {
         .zt-tbl tbody tr:hover .zt-ci{opacity:1}
         .zt-ci:hover{transform:scale(1.12)}
         .zt-ph{align-items:center!important}
-        .zt-ph .btn{height:34px!important;font-size:13px!important;font-weight:500!important;padding:6px 16px!important;border-radius:9999px!important;display:inline-flex!important;align-items:center!important;gap:6px!important;line-height:1!important}
-        .zt-ph .btn-ghost,.zt-ph .btn-secondary{background:#fff!important;border:1px solid #E5E7EB!important;color:#374151!important;box-shadow:none!important}
-        .zt-ph .btn i{font-size:14px!important}
         .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;height:34px!important;border-radius:9999px!important}
         .pill-row .pill{height:34px!important;border-radius:9999px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+
+        /* ── MICRO-PILLS DE ACCIONES ── */
+        .cli-pill-group{display:inline-flex;align-items:center;border:1px solid #E5E7EB;border-radius:9px;overflow:hidden;background:#F9FAFB}
+        .cli-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:#6B7280;line-height:1;transition:background .12s,color .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+        .cli-pill+.cli-pill{border-left:1px solid #E5E7EB}
+        .cli-pill:hover{background:#F3F4F6;color:#374151}
+        .cli-pill:active{background:#E5E7EB}
+        .cli-pill i{font-size:11px}
+        .cli-pill-new{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--brand);border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#fff;line-height:1;transition:opacity .15s,transform .1s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+        .cli-pill-new:hover{opacity:.88}
+        .cli-pill-new:active{opacity:.76;transform:scale(.96)}
+        .cli-pill-new i{font-size:11px}
 
         /* ── TARJETAS MÓVILES — sin scroll horizontal ── */
         .cli-mob-list{display:none;flex-direction:column}
@@ -381,10 +392,9 @@ export default function Clientes() {
           .cli-desk-only{display:none!important}
           .cli-mob-list{display:flex}
           .cli-ph-title{display:none!important}
-          .cli-btn-txt{display:none!important}
           .cli-view-toggle{display:none!important}
-          .zt-ph .ph-right .btn{width:44px!important;height:44px!important;padding:0!important;border-radius:12px!important;gap:0!important}
-          .zt-ph .ph-right .btn i{font-size:18px!important}
+          .cli-pill{padding:7px 9px}
+          .cli-pill-new{padding:7px 12px}
         }
         @media(min-width:641px){
           .cli-mob-list{display:none!important}
