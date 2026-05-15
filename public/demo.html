@@ -14,18 +14,29 @@
 body{margin:0;font-family:'Inter',sans-serif;background:#fdf4ff;color:#1F1338;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 
-.demo-top{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap}
-.demo-top .info{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-.demo-top .info span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.demo-top .badge{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;flex-shrink:0}
-.demo-top .actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
-.demo-top .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;font-family:inherit;border:none;cursor:pointer;transition:transform .15s,background .2s}
-.demo-top .btn-light{background:rgba(255,255,255,.95);color:#db2777}
-.demo-top .btn-light:hover{background:#fff;transform:translateY(-1px)}
-.demo-top .btn-outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)}
-.demo-top .btn-outline:hover{background:rgba(255,255,255,.1)}
+/* BROWSER CHROME */
+.bc{background:#e8eaed;border-bottom:1px solid #c8cacd;position:sticky;top:0;z-index:100}
+.bc-bar{display:flex;align-items:center;gap:10px;padding:10px 16px}
+.bc-tl{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.bc-dot{display:inline-block;width:12px;height:12px;border-radius:50%;cursor:default}
+.bc-r{background:#ff5f57}.bc-y{background:#febc2e}.bc-g{background:#28c840}
+.bc-nav{display:flex;gap:2px;align-items:center;flex-shrink:0}
+.bc-nav-btn{width:24px;height:24px;border:none;background:none;color:#777;font-size:15px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0;font-family:'Inter',sans-serif;line-height:1}
+.bc-nav-btn:hover{background:rgba(0,0,0,.08)}
+.bc-url-bar{flex:1;max-width:500px;background:#fff;border:1px solid #c8cacd;border-radius:22px;padding:5px 14px;display:flex;align-items:center;gap:7px;margin:0 auto;cursor:text;transition:border-color .15s}
+.bc-url-bar:hover{border-color:#aaa}
+.bc-url-bar i{font-size:10px;color:#188038;flex-shrink:0}
+.bc-url-text{flex:1;text-align:center;font-size:13px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-ext{display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:auto}
+.bc-back{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;font-size:12px;font-weight:600;color:#555;background:rgba(0,0,0,.07);text-decoration:none;transition:background .15s}
+.bc-back:hover{background:rgba(0,0,0,.12)}
+.bc-cta{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:#db2777;text-decoration:none;transition:background .15s,transform .1s;white-space:nowrap}
+.bc-cta:hover{background:#be185d;transform:translateY(-1px)}
+/* DEMO FLOAT BADGE */
+.demo-float{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(31,19,56,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:rgba(255,255,255,.7);font-size:11.5px;border-radius:99px;padding:8px 18px;z-index:300;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.22);pointer-events:none;letter-spacing:.02em}
+.demo-float strong{color:#fff;font-weight:700}
 
-.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 42px)}
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 46px)}
 .sb{background:linear-gradient(180deg,#1F1338,#3d0626);color:rgba(255,255,255,.75);padding:18px 14px;border-right:1px solid #fbcfe8}
 .sb-logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;letter-spacing:-.4px;color:#fff;margin-bottom:6px;padding:0 6px}
 .sb-logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
@@ -209,23 +220,37 @@ tbody tr:hover td{background:#fdf4ff}
   .page-h h1{font-size:20px}
 }
 @media(max-width:520px){
-  .demo-top{padding:8px 14px;font-size:12px}
-  .demo-top .info span:last-child{font-size:11.5px}
-  .demo-top .btn{padding:6px 10px;font-size:11px}
+  .bc-nav{display:none}
+  .bc-bar{padding:8px 10px;gap:7px}
+  .bc-url-bar{flex:1;min-width:0}
+  .bc-back span,.bc-cta span{display:none}
+  .bc-ext{gap:6px}
   .bento{grid-template-columns:1fr}
+  .demo-float{font-size:10.5px;padding:7px 14px;bottom:10px}
 }
 </style>
 </head>
 <body>
 
-<div class="demo-top">
-  <div class="info">
-    <span class="badge"><i class="fa-solid fa-circle-play"></i> Demo</span>
-    <span><b>Cajas Lúa</b> · Regalos personalizados · Datos ficticios</span>
-  </div>
-  <div class="actions">
-    <a href="/landing.html" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Volver</a>
-    <a href="https://anma-host.vercel.app/login" class="btn btn-light"><i class="fa-solid fa-sparkles"></i> Quiero mi app</a>
+<div class="bc">
+  <div class="bc-bar">
+    <div class="bc-tl">
+      <span class="bc-dot bc-r"></span>
+      <span class="bc-dot bc-y"></span>
+      <span class="bc-dot bc-g"></span>
+    </div>
+    <div class="bc-nav">
+      <button class="bc-nav-btn" style="opacity:.35;cursor:default" title="Atrás">‹</button>
+      <button class="bc-nav-btn" style="opacity:.35;cursor:default" title="Adelante">›</button>
+    </div>
+    <div class="bc-url-bar">
+      <i class="fa-solid fa-lock"></i>
+      <span class="bc-url-text">anma-host.vercel.app</span>
+    </div>
+    <div class="bc-ext">
+      <a href="/landing.html" class="bc-back"><i class="fa-solid fa-arrow-left"></i> <span>Volver</span></a>
+      <a href="https://anma-host.vercel.app/login" class="bc-cta"><i class="fa-solid fa-sparkles"></i> <span>Quiero mi app</span></a>
+    </div>
   </div>
 </div>
 
@@ -608,6 +633,8 @@ Si te encantó, ¿me ayudás dejándonos una reseña? Para mí significa muchís
     </div>
   </main>
 </div>
+
+<div class="demo-float"><strong>Demo</strong> · Cajas Lúa · datos ficticios</div>
 
 <script>
 (function(){
