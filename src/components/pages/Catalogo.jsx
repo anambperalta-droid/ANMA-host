@@ -262,44 +262,37 @@ export default function Catalogo() {
         <div className="ph-left">
           <h2 className="cat-page-title">Productos</h2>
         </div>
-        <div className="ph-right cat-ph-right-desk">
-          {/* Desktop: texto completo — ocultos en mobile, reemplazados por mob-hdr-acts */}
-          <button className="btn btn-ghost btn-sm ph-act-desktop" onClick={() => setPriceUpdateModal(true)}>
-            <i className="fa fa-percent" /> Actualizar precios
+        <div className="ph-right" style={{ gap: 6 }}>
+          <div className="cli-pill-group">
+            <button className="cli-pill" onClick={() => setPriceUpdateModal(true)}>
+              <i className="fa fa-percent" /><span>Precios</span>
+            </button>
+            <button className="cli-pill" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}>
+              <i className="fa fa-file-csv" /><span>Exportar</span>
+            </button>
+            <button className="cli-pill" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}>
+              <i className="fa fa-file-import" /><span>Importar</span>
+            </button>
+          </div>
+          <button className="cli-pill-new" onClick={() => open()}>
+            <i className="fa fa-plus" /><span>Nuevo</span>
           </button>
-          <button className="btn btn-ghost btn-sm ph-act-desktop" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}><i className="fa fa-file-csv" /> CSV</button>
-          <button className="btn btn-secondary btn-sm ph-act-desktop" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}><i className="fa fa-file-import" /> Masivo</button>
-          <button
-            className="btn btn-ghost btn-sm ph-act-desktop"
-            onClick={() => setViewMode(v => v === 'table' ? 'grid' : 'table')}
-            title={viewMode === 'table' ? 'Vista grilla' : 'Vista tabla'}
-          >
-            <i className={`fa ${viewMode === 'table' ? 'fa-grip' : 'fa-table-list'}`} />
-          </button>
-          {/* + Agregar: desktop only — en mobile lo maneja el FAB flotante */}
-          <button className="btn btn-primary btn-sm ph-add-desktop" onClick={() => open()}><i className="fa fa-plus" /> Agregar producto</button>
         </div>
       </div>
 
-      {/* ── MOBILE-ONLY: barra de acciones icono puro 44×44px ── */}
-      <div className="mob-hdr-acts">
-        <button className="mob-act-btn" onClick={() => setPriceUpdateModal(true)} title="Actualizar precios">
-          <i className="fa fa-percent" />
-        </button>
-        <button className="mob-act-btn" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }} title="Importar CSV">
-          <i className="fa fa-file-csv" />
-        </button>
-        <button className="mob-act-btn" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }} title="Carga masiva">
-          <i className="fa fa-file-import" />
-        </button>
-        <button className="mob-act-btn" onClick={() => setViewMode(v => v === 'table' ? 'grid' : 'table')} title={viewMode === 'table' ? 'Vista grilla' : 'Vista tabla'}>
-          <i className={`fa ${viewMode === 'table' ? 'fa-grip' : 'fa-table-list'}`} />
-        </button>
-        <div className="mob-act-sep" />
-        <button className="mob-act-btn mob-act-btn-add" onClick={() => open()} title="Agregar producto">
-          <i className="fa fa-plus" />
-        </button>
-      </div>
+      <style>{`
+        .cli-pill-group{display:inline-flex;align-items:center;border:1px solid #E5E7EB;border-radius:9px;overflow:hidden;background:#F9FAFB}
+        .cli-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:#6B7280;line-height:1;transition:background .12s,color .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+        .cli-pill+.cli-pill{border-left:1px solid #E5E7EB}
+        .cli-pill:hover{background:#F3F4F6;color:#374151}
+        .cli-pill:active{background:#E5E7EB}
+        .cli-pill i{font-size:11px}
+        .cli-pill-new{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--brand);border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#fff;line-height:1;transition:opacity .15s,transform .1s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+        .cli-pill-new:hover{opacity:.88}
+        .cli-pill-new:active{opacity:.76;transform:scale(.96)}
+        .cli-pill-new i{font-size:11px}
+        @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}}
+      `}</style>
 
       <div className="pill-row cat-pill-row">
         <div className="search-row" style={{ maxWidth: 280 }}><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} /></div>
