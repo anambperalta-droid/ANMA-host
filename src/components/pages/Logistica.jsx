@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
-import { fmt } from '../../lib/storage'
+import { fmt, fmtDate } from '../../lib/storage'
 
 const SERVICE_MULTIPLIER = {
   'Estándar': 1,
@@ -14,6 +14,59 @@ const CARRIERS = ['Vía Cargo']
 
 const CARRIER_TRACKING = {
   'Vía Cargo': c => `https://www.viacargo.com.ar/web/seguimiento?nro=${c}`,
+}
+
+const STATUS_SELECT_STYLE = {
+  'Preparando':   { background: '#FEF3C7', color: '#92400E', border: '1.5px solid #FCD34D' },
+  'Despachado':   { background: '#DBEAFE', color: '#1E40AF', border: '1.5px solid #93C5FD' },
+  'En tránsito':  { background: '#EDE9FE', color: '#5B21B6', border: '1.5px solid #C4B5FD' },
+  'Entregado':    { background: '#DCFCE7', color: '#14532D', border: '1.5px solid #86EFAC' },
+  'Con problema': { background: '#FEF2F2', color: '#991B1B', border: '1.5px solid #FCA5A5' },
+}
+
+const DONUT_COLORS = {
+  'Preparando':   '#FCD34D',
+  'Despachado':   '#60A5FA',
+  'En tránsito':  '#A78BFA',
+  'Entregado':    '#34D399',
+  'Con problema': '#F87171',
+}
+
+function DonutChart({ data, hovered }) {
+  const total = data.reduce((s, d) => s + d.count, 0)
+  const R = 32, CX = 44, CY = 44
+  const CIRC = 2 * Math.PI * R
+  if (total === 0) return (
+    <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontSize: 9, color: 'var(--txt4)' }}>sin datos</span>
+    </div>
+  )
+  let acc = 0
+  const segments = data.filter(d => d.count > 0).map(d => {
+    const len = (d.count / total) * CIRC
+    const startDeg = (acc / CIRC) * 360 - 90
+    acc += len
+    return { ...d, len, startDeg }
+  })
+  return (
+    <svg width={88} height={88} viewBox="0 0 88 88" style={{ flexShrink: 0 }}>
+      <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--surface2)" strokeWidth={10} />
+      {segments.map(seg => (
+        <circle
+          key={seg.label}
+          cx={CX} cy={CY} r={R}
+          fill="none"
+          stroke={DONUT_COLORS[seg.label] || '#CBD5E1'}
+          strokeWidth={hovered === seg.label ? 14 : 9}
+          strokeDasharray={`${seg.len} ${CIRC - seg.len}`}
+          transform={`rotate(${seg.startDeg} ${CX} ${CY})`}
+          style={{ transition: 'stroke-width .15s', cursor: 'pointer' }}
+        />
+      ))}
+      <text x={CX} y={CY - 5} textAnchor="middle" style={{ fontSize: 15, fontWeight: 800, fill: 'var(--txt)', fontFamily: 'inherit' }}>{total}</text>
+      <text x={CX} y={CY + 10} textAnchor="middle" style={{ fontSize: 8, fill: '#9CA3AF', fontFamily: 'inherit' }}>envíos</text>
+    </svg>
+  )
 }
 
 const getTrackingUrl = (carrier, code) => {
@@ -37,6 +90,7 @@ export default function Logistica() {
   const [lateAlertDismissed, setLateAlertDismissed] = useState(() => {
     try { return sessionStorage.getItem('logistica_late_dismissed') === '1' } catch { return false }
   })
+  const [hoveredStatus, setHoveredStatus] = useState(null)
   const dismissLateAlert = () => {
     try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
     setLateAlertDismissed(true)
@@ -164,6 +218,12 @@ export default function Logistica() {
   }
   const lateShipments = useMemo(() => shipments.filter(isLate), [shipments, tariffs])
 
+  const todayCount = useMemo(() => {
+    const t = new Date().toISOString().slice(0, 10)
+    return shipments.filter(s => s.date === t).length
+  }, [shipments])
+  const pendingCount = useMemo(() => shipments.filter(s => s.status === 'Preparando').length, [shipments])
+
   const varianceCount = useMemo(() => {
     return shipments.filter(s => {
       if (s.payer !== 'Incluido en precio' || !s.budgetId) return false
@@ -209,6 +269,9 @@ export default function Logistica() {
     return months
   }, [shipments])
   const maxCost = Math.max(...monthlyData.map(m => m.cost), 1)
+  const prevMonthCost = monthlyData.length >= 2 ? monthlyData[monthlyData.length - 2].cost : 0
+  const currMonthCost = monthlyData.length >= 1 ? monthlyData[monthlyData.length - 1].cost : 0
+  const trendPct = prevMonthCost > 0 ? Math.round(((currMonthCost - prevMonthCost) / prevMonthCost) * 100) : null
 
   const statusBadge = (s) => {
     const cls = { Preparando: 'b-amber', Despachado: 'b-blue', 'En tránsito': 'b-purple', Entregado: 'b-confirmed', 'Con problema': 'b-lost' }
@@ -240,9 +303,9 @@ export default function Logistica() {
         .logi-pills-row{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center;padding-bottom:1px}
         .logi-pills-row::-webkit-scrollbar{display:none}
         /* Mobile cards */
-        .logi-mob-list{display:none;flex-direction:column}
-        .logi-card{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--border);padding:11px 0;-webkit-tap-highlight-color:transparent;transition:background .1s;cursor:pointer}
-        .logi-card:last-child{border-bottom:none}
+        .logi-mob-list{display:none;flex-direction:column;padding:4px 0 16px}
+        .logi-card{display:flex;flex-direction:column;gap:4px;border-radius:24px;padding:13px 16px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;position:relative;-webkit-tap-highlight-color:transparent;transition:background .1s;cursor:pointer}
+        .logi-card.late{border-color:#FECACA;border-left:4px solid #DC2626}
         .logi-card:active{background:rgba(0,0,0,.025)}
         /* Fila 1: identidad (remito + cliente) | acciones */
         .logi-card-row1{display:flex;align-items:flex-start;gap:6px}
@@ -250,7 +313,7 @@ export default function Logistica() {
         .logi-card-remito{font-weight:800;font-size:13px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
         .logi-card-client{font-weight:600;font-size:12px;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;margin-top:1px}
         .logi-card-acts{flex-shrink:0;display:flex;gap:3px;align-items:center}
-        .logi-card-act{width:28px;height:28px;border-radius:8px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+        .logi-card-act{width:28px;height:28px;border-radius:50%;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:transform .1s}
         .logi-card-act:active{transform:scale(.88)}
         .logi-card-act-wa{background:#DCFCE7;color:#16A34A}
         .logi-card-act-trk{background:#EFF6FF;color:#2563EB}
@@ -282,6 +345,15 @@ export default function Logistica() {
           .logi-mob-list{display:none!important}
           .logi-mob-tabs{display:none!important}
         }
+        /* Circular action buttons — desktop table */
+        .logi-act-circ{width:28px;height:28px;border-radius:50%;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-family:inherit;background:var(--surface2);color:var(--txt2);transition:box-shadow .15s,transform .1s;flex-shrink:0}
+        .logi-act-circ:hover{box-shadow:0 2px 8px rgba(0,0,0,.14)}
+        .logi-act-circ:active{transform:scale(.88)}
+        .logi-act-circ.wa{background:#DCFCE7;color:#16A34A}
+        .logi-act-circ.trk{background:#EFF6FF;color:#2563EB}
+        .logi-act-circ.del{background:#FEF2F2;color:#DC2626}
+        /* Status quick-select */
+        .logi-status-sel{border-radius:20px;padding:3px 22px 3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;background-repeat:no-repeat;background-position:right 7px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%236B7280' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E")}
       `}</style>
 
       {/* Header desktop — hidden on mobile */}
@@ -348,6 +420,23 @@ export default function Logistica() {
             ))}
           </div>
 
+          {/* ── KPI strip ── */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            {[
+              { label: 'Envíos hoy',  val: todayCount,          icon: 'fa-truck-fast',           color: 'var(--brand)' },
+              { label: 'Pendientes',  val: pendingCount,         icon: 'fa-box',                  color: '#D97706' },
+              { label: 'Atrasados',   val: lateShipments.length, icon: 'fa-triangle-exclamation',  color: '#DC2626' },
+            ].map(k => (
+              <div key={k.label} className="card" style={{ flex: 1, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <i className={`fa ${k.icon}`} style={{ color: k.val > 0 ? k.color : 'var(--txt4)', fontSize: 16, flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: k.val > 0 ? k.color : 'var(--txt)', lineHeight: 1.2 }}>{k.val}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* ── MOBILE CARD LIST (≤767px) ── */}
           <div className="logi-mob-list">
             {filteredShips.length ? filteredShips.map(s => {
@@ -359,10 +448,14 @@ export default function Logistica() {
               return (
                 <div
                   key={s.id}
-                  className="logi-card"
+                  className={`logi-card${late ? ' late' : ''}`}
                   onClick={() => openShip(s)}
-                  style={late ? { background: 'rgba(220,38,38,.03)' } : undefined}
                 >
+                  {/* Badge estado — esquina superior derecha */}
+                  <div style={{ position: 'absolute', top: 12, right: 12 }} onClick={e => e.stopPropagation()}>
+                    {statusBadge(s.status)}
+                  </div>
+
                   {/* Fila 1: Remito + Cliente | Acciones */}
                   <div className="logi-card-row1">
                     <div className="logi-card-id">
@@ -371,7 +464,7 @@ export default function Logistica() {
                       </div>
                       {s.client && <div className="logi-card-client">{s.client}</div>}
                     </div>
-                    <div className="logi-card-acts" onClick={e => e.stopPropagation()}>
+                    <div className="logi-card-acts" onClick={e => e.stopPropagation()} style={{ marginRight: 72 }}>
                       {notifyLink && (
                         <button className="logi-card-act logi-card-act-wa" title="Avisar al cliente" onClick={() => window.open(notifyLink, '_blank')}>
                           <i className="fa-brands fa-whatsapp" />
@@ -398,7 +491,7 @@ export default function Logistica() {
                     </div>
                   )}
 
-                  {/* Fila 3: Specs técnicos | Estado + Alerta */}
+                  {/* Fila 3: Specs técnicos | Alerta atrasado */}
                   <div className="logi-card-row3">
                     <div className="logi-card-specs">
                       {s.bulks > 0 && <span className="logi-card-spec">{s.bulks} bulto{s.bulks !== 1 ? 's' : ''}</span>}
@@ -406,14 +499,12 @@ export default function Logistica() {
                       <span className="logi-card-spec logi-card-spec-price">{fmt(s.freight)}</span>
                       {payerChip && <span className="logi-card-spec">{payerChip}</span>}
                     </div>
-                    <div className="logi-card-status-wrap">
-                      {late && (
-                        <span className="logi-card-late">
-                          <i className="fa fa-triangle-exclamation" /> {days}d
-                        </span>
-                      )}
-                      {statusBadge(s.status)}
-                    </div>
+                    {late && (
+                      <span className="logi-card-late">
+                        <span className="ins-led-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: '#DC2626', display: 'inline-block', flexShrink: 0 }} />
+                        <i className="fa fa-triangle-exclamation" /> {days}d
+                      </span>
+                    )}
                   </div>
                 </div>
               )
@@ -425,62 +516,100 @@ export default function Logistica() {
             )}
           </div>
 
-          {/* ── DESKTOP TABLE (≥768px) ── */}
+          {/* ── DESKTOP TABLE (≥768px) — 7 columnas ── */}
           <div className="logi-desk-only">
             <div className="tbl-card logistica-tbl">
               <table>
                 <thead>
                   <tr>
-                    <th>Remito</th><th>Fecha</th><th>Cliente</th><th>Ciudad</th>
-                    <th>Presupuesto</th><th>Empresa</th><th>Servicio</th><th>Bultos</th><th>Peso</th>
-                    <th>Costo</th><th>Paga</th><th>Estado</th><th>Acciones</th>
+                    <th>Envío</th>
+                    <th>Destinatario</th>
+                    <th>Carga</th>
+                    <th>Estado</th>
+                    <th style={{ textAlign: 'right' }}>Costo</th>
+                    <th>Paga</th>
+                    <th style={{ textAlign: 'right' }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredShips.length ? filteredShips.map(s => {
-                    const bud = budgets.find(b => b.id === s.budgetId)
                     const late = isLate(s)
                     const days = daysSince(s.date)
                     const notifyLink = notifyStatusChange(s, s.status)
+                    const cargaTxt = [
+                      s.bulks > 0 ? `${s.bulks} bulto${s.bulks !== 1 ? 's' : ''}` : null,
+                      s.weight ? `${s.weight} kg` : null,
+                    ].filter(Boolean).join(' / ')
                     return (
-                      <tr key={s.id} style={late ? { background: 'rgba(220,38,38,.04)' } : undefined}>
-                        <td><b>{s.remito || '—'}</b></td>
-                        <td>
-                          {s.date}
+                      <tr key={s.id} style={{ verticalAlign: 'middle', ...(late ? { background: 'rgba(220,38,38,.03)' } : {}) }}>
+
+                        {/* ENVÍO */}
+                        <td style={{ paddingTop: 10, paddingBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+                            <span style={{ fontWeight: 700, fontSize: 13, fontFamily: 'ui-monospace,SFMono-Regular,monospace', letterSpacing: '-.01em' }}>
+                              {s.remito || <span style={{ color: 'var(--txt4)', fontWeight: 400, fontFamily: 'inherit' }}>Sin remito</span>}
+                            </span>
+                            <span style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 400 }}>{fmtDate(s.date)}</span>
+                          </div>
                           {['Despachado', 'En tránsito'].includes(s.status) && days > 0 && (
-                            <div style={{ fontSize: 10, color: late ? '#DC2626' : 'var(--txt3)', fontWeight: late ? 700 : 500, marginTop: 1 }}>
-                              {late && <i className="fa fa-triangle-exclamation" style={{ marginRight: 3 }} />}
+                            <div style={{ marginTop: 3, display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: late ? '#DC2626' : '#9CA3AF', fontWeight: late ? 700 : 400 }}>
+                              {late && <span className="ins-led-pulse" style={{ width: 5, height: 5, borderRadius: '50%', background: '#DC2626', display: 'inline-block', flexShrink: 0 }} />}
                               hace {days}d{late ? ' · atrasado' : ''}
                             </div>
                           )}
                         </td>
-                        <td>{s.client || '—'}</td>
-                        <td>{s.city || '—'}</td>
-                        <td>{bud?.num || '—'}</td>
-                        <td>{s.carrier || '—'}</td>
-                        <td>{s.service}</td>
-                        <td>{s.bulks}</td>
-                        <td>{s.weight ? `${s.weight} kg` : '—'}</td>
-                        <td style={{ fontWeight: 700 }}>{fmt(s.freight)}</td>
-                        <td>{s.payer}</td>
-                        <td>{statusBadge(s.status)}</td>
+
+                        {/* DESTINATARIO */}
+                        <td style={{ paddingTop: 10, paddingBottom: 10 }}>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{s.client || '—'}</div>
+                          {(s.city || s.carrier) && (
+                            <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              {[s.city, s.carrier].filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* CARGA */}
+                        <td style={{ fontSize: 12, color: 'var(--txt2)', whiteSpace: 'nowrap' }}>
+                          {cargaTxt || '—'}
+                        </td>
+
+                        {/* ESTADO — quick-change select */}
+                        <td onClick={e => e.stopPropagation()}>
+                          <select
+                            className="logi-status-sel"
+                            value={s.status}
+                            onChange={e => { saveEntity('shipments', { ...s, status: e.target.value }); toast('Estado actualizado', 'ok') }}
+                            style={STATUS_SELECT_STYLE[s.status] || { background: '#F9FAFB', color: '#374151', border: '1.5px solid #E5E7EB' }}
+                          >
+                            {statusList.map(st => <option key={st} value={st}>{st}</option>)}
+                          </select>
+                        </td>
+
+                        {/* COSTO */}
+                        <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, fontFamily: 'ui-monospace,SFMono-Regular,monospace' }}>{fmt(s.freight)}</td>
+
+                        {/* PAGA */}
+                        <td style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>{s.payer || '—'}</td>
+
+                        {/* ACCIONES */}
                         <td>
-                          <div className="acts">
+                          <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                             {s.trackingUrl && (
-                              <button className="act" style={{ color: '#3B82F6' }} onClick={() => window.open(getTrackingUrl(s.carrier, s.trackingUrl), '_blank')} title="Ver seguimiento"><i className="fa fa-location-arrow" /></button>
+                              <button className="logi-act-circ trk" onClick={() => window.open(getTrackingUrl(s.carrier, s.trackingUrl), '_blank')} title="Ver seguimiento"><i className="fa fa-location-arrow" /></button>
                             )}
                             {notifyLink && (
-                              <button className="act" style={{ color: '#16A34A' }} onClick={() => window.open(notifyLink, '_blank')} title="Avisar al cliente por WhatsApp"><i className="fa-brands fa-whatsapp" /></button>
+                              <button className="logi-act-circ wa" onClick={() => window.open(notifyLink, '_blank')} title="WhatsApp"><i className="fa-brands fa-whatsapp" /></button>
                             )}
-                            <button className="act edit" onClick={() => openShip(s)} title="Editar"><i className="fa fa-pen" /></button>
-                            <button className="act del" onClick={() => delShip(s.id)} title="Eliminar"><i className="fa fa-trash" /></button>
+                            <button className="logi-act-circ" onClick={() => openShip(s)} title="Editar"><i className="fa fa-pen" /></button>
+                            <button className="logi-act-circ del" onClick={() => delShip(s.id)} title="Eliminar"><i className="fa fa-trash" /></button>
                           </div>
                         </td>
                       </tr>
                     )
                   }) : (
                     <tr>
-                      <td colSpan={13}>
+                      <td colSpan={7}>
                         <div className="empty">
                           <div className="ico"><i className="fa fa-truck-fast" /></div>
                           <p>{search || sFilter !== 'all' ? 'Sin resultados para el filtro aplicado' : 'Sin envíos registrados'}</p>
@@ -492,12 +621,6 @@ export default function Logistica() {
               </table>
             </div>
           </div>
-
-          {filteredShips.length > 0 && (
-            <div style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'right', marginTop: 6 }}>
-              {filteredShips.length} envío{filteredShips.length !== 1 ? 's' : ''} · Total flete: <b style={{ color: 'var(--money)' }}>{fmt(filteredShips.reduce((a, s) => a + (s.freight || 0), 0))}</b>
-            </div>
-          )}
         </>
       )}
 
@@ -597,54 +720,107 @@ export default function Logistica() {
       {/* ── TAB RESUMEN ────────────────────────────────────────────── */}
       {tab === 'resumen' && (
         <>
+          {/* Export button */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <button className="btn btn-sm" onClick={() => window.print()}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface2)', border: '1.5px solid var(--border)', color: 'var(--txt2)', borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              <i className="fa fa-file-arrow-down" style={{ fontSize: 13 }} />
+              Descargar reporte
+            </button>
+          </div>
+
+          {/* KPI cards */}
           <div className="kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
-            {[
-              { label: 'Costo total envíos', val: fmt(totalShipCost), color: 'var(--money)' },
-              { label: 'Envíos este mes', val: thisMonth, color: 'var(--txt)' },
-              { label: 'Promedio por envío', val: fmt(avgCost), color: 'var(--money)' },
-              { label: 'Atrasados', val: lateShipments.length, color: lateShipments.length > 0 ? '#DC2626' : 'var(--txt)', sub: lateShipments.length > 0 ? 'Despachado/En tránsito > SLA' : 'Todo al día' },
-              { label: 'Desvíos de flete', val: varianceCount, color: varianceCount > 0 ? '#D97706' : 'var(--txt)', sub: varianceCount > 0 ? 'Real ≠ cobrado al cliente' : 'Coincide con lo cobrado' },
-            ].map(k => (
-              <div key={k.label} className="card" style={{ padding: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{k.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: k.color }}>{k.val}</div>
-                {k.sub && <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 3 }}>{k.sub}</div>}
-              </div>
-            ))}
+            {/* Costo total — with trend */}
+            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Costo total envíos</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--money)' }}>{fmt(totalShipCost)}</div>
+              {trendPct !== null && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 5, fontSize: 11, fontWeight: 700, color: trendPct > 0 ? '#DC2626' : '#10B981' }}>
+                  <i className={`fa fa-arrow-${trendPct > 0 ? 'up' : 'down'}`} style={{ fontSize: 9 }} />
+                  {Math.abs(trendPct)}% vs mes pasado
+                </div>
+              )}
+              {trendPct === null && <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 5 }}>Sin datos previos</div>}
+            </div>
+
+            {/* Envíos este mes */}
+            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Envíos este mes</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--txt)' }}>{thisMonth}</div>
+            </div>
+
+            {/* Promedio por envío */}
+            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Promedio por envío</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--money)' }}>{fmt(avgCost)}</div>
+            </div>
+
+            {/* Atrasados */}
+            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Atrasados</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: lateShipments.length > 0 ? '#DC2626' : 'var(--txt)' }}>{lateShipments.length}</div>
+              <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 3 }}>{lateShipments.length > 0 ? 'Despachado/En tránsito > SLA' : 'Todo al día'}</div>
+            </div>
+
+            {/* Desvíos de flete — red bg when > 0 */}
+            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', background: varianceCount > 0 ? '#FEF2F2' : undefined, border: varianceCount > 0 ? '1.5px solid #FCA5A5' : undefined }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: varianceCount > 0 ? '#991B1B' : 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Desvíos de flete</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: varianceCount > 0 ? '#DC2626' : 'var(--txt)' }}>{varianceCount}</div>
+              <div style={{ fontSize: 10, color: varianceCount > 0 ? '#B91C1C' : 'var(--txt3)', marginTop: 3 }}>{varianceCount > 0 ? 'Real ≠ cobrado al cliente' : 'Coincide con lo cobrado'}</div>
+            </div>
           </div>
 
           <div className="logi-summary-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div className="card">
-              <div className="card-header"><span className="card-title">Desglose por estado</span></div>
-              {byStatus.filter(b => b.count > 0).length ? byStatus.filter(b => b.count > 0).map(b => (
-                <div key={b.label} className="metric-row">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {statusBadge(b.label)}
-                    <span style={{ fontSize: 12, color: 'var(--txt2)' }}>{b.count} envío{b.count !== 1 ? 's' : ''}</span>
+            {/* Desglose por estado — donut + legend */}
+            <div className="card" style={{ borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', padding: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 14 }}>Desglose por estado</div>
+              {byStatus.filter(b => b.count > 0).length ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  <DonutChart data={byStatus.filter(b => b.count > 0)} hovered={hoveredStatus} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flex: 1, minWidth: 0 }}>
+                    {byStatus.filter(b => b.count > 0).map(b => (
+                      <div key={b.label} onMouseEnter={() => setHoveredStatus(b.label)} onMouseLeave={() => setHoveredStatus(null)}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', borderRadius: 10, cursor: 'default', transition: 'background .12s', background: hoveredStatus === b.label ? 'var(--surface2)' : 'transparent' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: DONUT_COLORS[b.label] || '#CBD5E1', flexShrink: 0, display: 'inline-block' }} />
+                          <span style={{ fontSize: 11, color: 'var(--txt2)', fontWeight: hoveredStatus === b.label ? 700 : 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.label}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)' }}>{fmt(b.cost)}</span>
+                          <span style={{ fontSize: 10, color: 'var(--txt4)' }}>{b.count} env.</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--money)' }}>{fmt(b.cost)}</span>
                 </div>
-              )) : (
-                <div style={{ fontSize: 13, color: 'var(--txt3)', padding: 12 }}>Sin envíos registrados</div>
+              ) : (
+                <div style={{ fontSize: 13, color: 'var(--txt3)', padding: '12px 0', textAlign: 'center' }}>Sin envíos registrados</div>
               )}
             </div>
 
-            <div className="card">
-              <div className="card-header"><span className="card-title">Costo por mes (últimos 6 meses)</span></div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                {monthlyData.map(m => (
-                  <div key={m.ym}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
-                      <span style={{ color: 'var(--txt2)', textTransform: 'capitalize' }}>{m.label}</span>
-                      <span style={{ fontWeight: 700, color: m.cost ? 'var(--money)' : 'var(--txt3)' }}>
-                        {m.cost ? fmt(m.cost) : '—'} {m.count > 0 && <span style={{ fontWeight: 400, color: 'var(--txt3)' }}>({m.count})</span>}
-                      </span>
+            {/* Costo por mes — taller bars */}
+            <div className="card" style={{ borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', padding: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 14 }}>Costo por mes (últimos 6 meses)</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {monthlyData.map((m, idx) => {
+                  const isLast = idx === monthlyData.length - 1
+                  const pct = maxCost > 0 ? Math.min(100, Math.max(0, (m.cost / maxCost) * 100)) : 0
+                  return (
+                    <div key={m.ym}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, marginBottom: 4 }}>
+                        <span style={{ color: isLast ? 'var(--txt)' : 'var(--txt2)', fontWeight: isLast ? 700 : 500, textTransform: 'capitalize' }}>{m.label}</span>
+                        <span style={{ fontWeight: 700, color: m.cost ? 'var(--money)' : 'var(--txt4)', fontFamily: 'ui-monospace,SFMono-Regular,monospace', fontSize: 12 }}>
+                          {m.cost ? fmt(m.cost) : '—'}
+                          {m.count > 0 && <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10, marginLeft: 4 }}>({m.count})</span>}
+                        </span>
+                      </div>
+                      <div style={{ height: 10, background: 'var(--surface2)', borderRadius: 6, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: isLast ? 'var(--brand)' : 'var(--acento)', borderRadius: 6, transition: 'width .5s ease', minWidth: pct > 0 ? 6 : 0 }} />
+                      </div>
                     </div>
-                    <div style={{ height: 6, background: 'var(--surface2)', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${(m.cost / maxCost) * 100}%`, background: 'var(--acento)', borderRadius: 4, transition: 'width .5s ease' }} />
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
