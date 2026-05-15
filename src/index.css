@@ -1375,32 +1375,37 @@ td b{color:var(--txt);font-weight:600}
 }
 
 /* ── MOB CATALOG HEADER (mobile-first) ── */
-/* ─ Título: título case, compacto en mobile ─ */
-.cat-page-title{font-size:18px;font-weight:800;letter-spacing:-.3px;margin:0;line-height:1.2}
-/* ─ Mobile: ocultar CONTENEDOR de botones desktop (no botones individuales — evita conflicto de especificidad) ─ */
+/* ─ Título: semibold, compacto, alineado con las tarjetas ─ */
+.cat-page-title{font-size:17px;font-weight:600;letter-spacing:-.2px;margin:0;line-height:1.2;color:var(--txt)}
+/* ─ Mobile: ocultar CONTENEDOR de botones desktop ─ */
 .cat-ph-right-desk{display:none!important}
-/* ─ Mobile: icon bar siempre visible ─ */
-.mob-hdr-acts{display:flex;gap:8px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center}
-.mob-act-btn{width:44px;height:44px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;flex-shrink:0;transition:background .15s;font-family:inherit}
-.mob-act-btn:hover{background:var(--border);color:var(--txt)}
+/* ─ Mobile: icon bar visible por defecto ─ */
+.mob-hdr-acts{display:flex;gap:6px;padding:8px 0;background:var(--surface);border-bottom:1px solid var(--border);align-items:center}
+.mob-act-btn{width:44px;height:44px;border-radius:16px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;flex-shrink:0;transition:background .15s,transform .1s,color .15s;font-family:inherit}
+.mob-act-btn:hover{background:var(--acento-xlt);border-color:var(--acento);color:var(--acento)}
+.mob-act-btn:active{transform:scale(0.88);background:var(--surface3)}
+.mob-act-btn-add{background:var(--brand);color:#fff;border-color:transparent}
+.mob-act-btn-add:hover{background:var(--brand-dark,var(--brand));opacity:.9;color:#fff;border-color:transparent}
+.mob-act-btn-add:active{transform:scale(0.88);opacity:.8}
+.mob-act-sep{width:1px;height:28px;background:var(--border);flex-shrink:0;margin:0 2px}
 /* ─ Pill row: stacked on mobile ─ */
 .cat-pill-row{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
 .cat-pill-row .search-row{max-width:none!important;width:100%!important}
-/* ─ Category scroll ─ */
+/* ─ Category scroll: native scroll, last pill ligeramente cortado ─ */
 .cat-scroll-row{display:flex;align-items:center;min-width:0;position:relative;overflow:hidden}
-.cat-scroll-pills{display:flex;align-items:center;gap:6px;overflow-x:auto;flex-wrap:nowrap;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0;padding:2px 4px 2px 0}
+.cat-scroll-pills{display:flex;align-items:center;gap:6px;overflow-x:auto;flex-wrap:nowrap;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0;padding:2px 52px 2px 0}
 .cat-scroll-pills::-webkit-scrollbar{display:none}
 .cat-scroll-pills .pill{flex-shrink:0;white-space:nowrap}
-.cat-gestionar{flex-shrink:0;white-space:nowrap;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--txt3);font-size:11px;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:background .15s;position:relative;z-index:2;margin-left:2px}
+.cat-gestionar{flex-shrink:0;white-space:nowrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:5px 10px;cursor:pointer;color:var(--txt3);font-size:11px;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:background .15s;position:relative;z-index:2;margin-left:2px}
 .cat-gestionar:hover{background:var(--surface2)}
-.cat-gestionar::before{content:'';position:absolute;right:100%;top:-4px;bottom:-4px;width:32px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none}
-/* ─ Mobile card list ─ */
-.cat-mob-list{display:flex;flex-direction:column;gap:6px;padding:10px 12px 90px}
-.cat-mob-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;transition:background .12s}
-.cat-mob-item:active{background:var(--surface2)}
+.cat-gestionar::before{content:'';position:absolute;right:100%;top:-4px;bottom:-4px;width:40px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none}
+/* ─ Mobile card list: padding-x=0 para alinear con el título ─ */
+.cat-mob-list{display:flex;flex-direction:column;gap:6px;padding:10px 0 80px}
+.cat-mob-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;cursor:pointer;transition:background .12s,transform .1s}
+.cat-mob-item:active{background:var(--surface2);transform:scale(0.985)}
 .cat-mob-item-l{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.cat-mob-item-img{width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0}
-.cat-mob-item-noimg{width:38px;height:38px;border-radius:8px;background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.cat-mob-item-img{width:38px;height:38px;border-radius:9px;object-fit:cover;flex-shrink:0}
+.cat-mob-item-noimg{width:38px;height:38px;border-radius:9px;background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .cat-mob-item-info{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
 .cat-mob-item-name{font-size:13px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cat-mob-item-cat{font-size:10px;color:var(--txt3)}
@@ -1408,9 +1413,6 @@ td b{color:var(--txt);font-weight:600}
 .cat-mob-item-acts{display:flex;gap:6px;flex-shrink:0}
 /* ─ Desktop table/grid: oculto en mobile ─ */
 .cat-desk-view{display:none}
-/* ─ FAB: visible en mobile, sobre la barra de nav ─ */
-.mob-fab{display:flex;position:fixed;bottom:80px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--brand);color:#fff;border:none;cursor:pointer;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:150;transition:transform .15s,box-shadow .15s;font-family:inherit}
-.mob-fab:active{transform:scale(0.93)}
 /* ─ Desktop: restaurar layout completo ─ */
 @media(min-width:641px){
   .cat-page-title{font-size:inherit;font-weight:inherit;letter-spacing:inherit}
@@ -1420,5 +1422,4 @@ td b{color:var(--txt);font-weight:600}
   .cat-pill-row .search-row{max-width:280px!important;width:auto!important}
   .cat-mob-list{display:none!important}
   .cat-desk-view{display:block!important}
-  .mob-fab{display:none!important}
 }

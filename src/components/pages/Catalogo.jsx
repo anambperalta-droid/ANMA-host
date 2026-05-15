@@ -258,7 +258,7 @@ export default function Catalogo() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
-      <div className="ph">
+      <div className="ph" style={{ marginBottom: 6 }}>
         <div className="ph-left">
           <h2 className="cat-page-title">Productos</h2>
         </div>
@@ -294,6 +294,10 @@ export default function Catalogo() {
         </button>
         <button className="mob-act-btn" onClick={() => setViewMode(v => v === 'table' ? 'grid' : 'table')} title={viewMode === 'table' ? 'Vista grilla' : 'Vista tabla'}>
           <i className={`fa ${viewMode === 'table' ? 'fa-grip' : 'fa-table-list'}`} />
+        </button>
+        <div className="mob-act-sep" />
+        <button className="mob-act-btn mob-act-btn-add" onClick={() => open()} title="Agregar producto">
+          <i className="fa fa-plus" />
         </button>
       </div>
 
@@ -752,10 +756,6 @@ export default function Catalogo() {
         </div>
       )}
 
-      {/* ── MOBILE FAB: Agregar producto ── */}
-      <button className="mob-fab" onClick={() => open()} title="Agregar producto">
-        <i className="fa fa-plus" />
-      </button>
     </div>
   )
 }
