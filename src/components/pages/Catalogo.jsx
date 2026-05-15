@@ -260,9 +260,9 @@ export default function Catalogo() {
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph">
         <div className="ph-left">
-          <h2 className="cat-page-title">PRODUCTOS</h2>
+          <h2 className="cat-page-title">Productos</h2>
         </div>
-        <div className="ph-right">
+        <div className="ph-right cat-ph-right-desk">
           {/* Desktop: texto completo — ocultos en mobile, reemplazados por mob-hdr-acts */}
           <button className="btn btn-ghost btn-sm ph-act-desktop" onClick={() => setPriceUpdateModal(true)}>
             <i className="fa fa-percent" /> Actualizar precios
