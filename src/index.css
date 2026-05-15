@@ -1373,3 +1373,27 @@ td b{color:var(--txt);font-weight:600}
   .wiz-nav .btn{min-height:46px!important;font-size:13px!important;flex:1!important;min-width:0!important}
   .wiz-nav .btn-primary{flex:2!important;font-weight:800!important}
 }
+
+/* ── MOB CATALOG HEADER ── */
+.mob-hdr-acts{display:none}
+.mob-act-btn{width:44px;height:44px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;flex-shrink:0;transition:background .15s;font-family:inherit}
+.mob-act-btn:hover{background:var(--border);color:var(--txt)}
+.cat-scroll-row{display:flex;align-items:center;gap:6px;flex:1;min-width:0;position:relative}
+.cat-scroll-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.cat-gestionar{flex-shrink:0;white-space:nowrap;background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--txt3);font-size:11px;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:background .15s}
+.cat-gestionar:hover{background:var(--surface2)}
+.mob-fab{display:none}
+@media(max-width:640px){
+  .mob-hdr-acts{display:flex;gap:8px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center}
+  .ph-act-desktop,.ph-add-desktop{display:none!important}
+  .cat-pill-row{flex-direction:column;align-items:stretch;gap:8px}
+  .cat-pill-row .search-row{max-width:none!important;width:100%}
+  .cat-scroll-row{flex-wrap:nowrap;overflow:hidden}
+  .cat-scroll-pills{flex-wrap:nowrap;overflow-x:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-right:4px}
+  .cat-scroll-pills::-webkit-scrollbar{display:none}
+  .cat-scroll-pills .pill{flex-shrink:0;white-space:nowrap}
+  .cat-gestionar{flex-shrink:0;position:relative;background:var(--surface);z-index:2;margin-left:0}
+  .cat-gestionar::before{content:'';position:absolute;right:100%;top:-8px;bottom:-8px;width:36px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none}
+  .mob-fab{display:flex;position:fixed;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--brand);color:#fff;border:none;cursor:pointer;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(0,0,0,.22);z-index:150;transition:transform .15s,box-shadow .15s;font-family:inherit}
+  .mob-fab:active{transform:scale(0.95)}
+}

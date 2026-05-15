@@ -259,47 +259,70 @@ export default function Catalogo() {
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph">
-        <div className="ph-left"><h2>Catálogo de Productos</h2></div>
+        <div className="ph-left">
+          <h2>Catálogo de Productos</h2>
+        </div>
         <div className="ph-right">
-          <button className="btn btn-ghost btn-sm" onClick={() => setPriceUpdateModal(true)}>
+          {/* Desktop: texto completo — ocultos en mobile, reemplazados por mob-hdr-acts */}
+          <button className="btn btn-ghost btn-sm ph-act-desktop" onClick={() => setPriceUpdateModal(true)}>
             <i className="fa fa-percent" /> Actualizar precios
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}><i className="fa fa-file-csv" /> Importar CSV</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}><i className="fa fa-file-import" /> Carga masiva</button>
+          <button className="btn btn-ghost btn-sm ph-act-desktop" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}><i className="fa fa-file-csv" /> CSV</button>
+          <button className="btn btn-secondary btn-sm ph-act-desktop" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}><i className="fa fa-file-import" /> Masivo</button>
           <button
-            className="btn btn-ghost btn-sm"
+            className="btn btn-ghost btn-sm ph-act-desktop"
             onClick={() => setViewMode(v => v === 'table' ? 'grid' : 'table')}
             title={viewMode === 'table' ? 'Vista grilla' : 'Vista tabla'}
           >
             <i className={`fa ${viewMode === 'table' ? 'fa-grip' : 'fa-table-list'}`} />
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => open()}><i className="fa fa-plus" /> Agregar producto</button>
+          {/* + Agregar: desktop only — en mobile lo maneja el FAB flotante */}
+          <button className="btn btn-primary btn-sm ph-add-desktop" onClick={() => open()}><i className="fa fa-plus" /> Agregar producto</button>
         </div>
       </div>
-      <div className="pill-row">
-        <div className="search-row" style={{ maxWidth: 280 }}><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} /></div>
-        {cats.length > 6 ? (
-          <select
-            value={catFilter}
-            onChange={e => setCatFilter(e.target.value)}
-            style={{ padding: '5px 10px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 12, background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', cursor: 'pointer' }}
-          >
-            <option value="all">Todas las categorías</option>
-            {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-          </select>
-        ) : (
-          <>
-            <div className={`pill ${catFilter === 'all' ? 'active' : ''}`} onClick={() => setCatFilter('all')}>Todos</div>
-            {cats.map(cat => <div key={cat} className={`pill ${catFilter === cat ? 'active' : ''}`} onClick={() => setCatFilter(cat)}>{cat}</div>)}
-          </>
-        )}
-        <button
-          onClick={() => setCatMgmtModal(true)}
-          style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', color: 'var(--txt3)', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'inherit' }}
-          title="Gestionar categorías"
-        >
-          <i className="fa fa-sliders" /> Gestionar
+
+      {/* ── MOBILE-ONLY: barra de acciones icono puro 44×44px ── */}
+      <div className="mob-hdr-acts">
+        <button className="mob-act-btn" onClick={() => setPriceUpdateModal(true)} title="Actualizar precios">
+          <i className="fa fa-percent" />
         </button>
+        <button className="mob-act-btn" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }} title="Importar CSV">
+          <i className="fa fa-file-csv" />
+        </button>
+        <button className="mob-act-btn" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }} title="Carga masiva">
+          <i className="fa fa-file-import" />
+        </button>
+        <button className="mob-act-btn" onClick={() => setViewMode(v => v === 'table' ? 'grid' : 'table')} title={viewMode === 'table' ? 'Vista grilla' : 'Vista tabla'}>
+          <i className={`fa ${viewMode === 'table' ? 'fa-grip' : 'fa-table-list'}`} />
+        </button>
+      </div>
+
+      <div className="pill-row cat-pill-row">
+        <div className="search-row" style={{ maxWidth: 280 }}><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+        {/* Contenedor scroll-horizontal en mobile, flex-wrap normal en desktop */}
+        <div className="cat-scroll-row">
+          <div className="cat-scroll-pills">
+            {cats.length > 6 ? (
+              <select
+                value={catFilter}
+                onChange={e => setCatFilter(e.target.value)}
+                style={{ padding: '5px 10px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 12, background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', cursor: 'pointer' }}
+              >
+                <option value="all">Todas las categorías</option>
+                {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            ) : (
+              <>
+                <div className={`pill ${catFilter === 'all' ? 'active' : ''}`} onClick={() => setCatFilter('all')}>Todos</div>
+                {cats.map(cat => <div key={cat} className={`pill ${catFilter === cat ? 'active' : ''}`} onClick={() => setCatFilter(cat)}>{cat}</div>)}
+              </>
+            )}
+          </div>
+          {/* Gestionar: fijo en extremo derecho con degradado en mobile */}
+          <button className="cat-gestionar" onClick={() => setCatMgmtModal(true)} title="Gestionar categorías">
+            <i className="fa fa-sliders" /> Gestionar
+          </button>
+        </div>
       </div>
       {viewMode === 'table' ? (
         <div className="tbl-card">
@@ -686,6 +709,11 @@ export default function Catalogo() {
           </div>
         </div>
       )}
+
+      {/* ── MOBILE FAB: Agregar producto ── */}
+      <button className="mob-fab" onClick={() => open()} title="Agregar producto">
+        <i className="fa fa-plus" />
+      </button>
     </div>
   )
 }
