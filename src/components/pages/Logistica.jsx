@@ -223,7 +223,22 @@ export default function Logistica() {
         .logi-tab-add{display:none;align-items:center;gap:4px;padding:6px 11px;background:var(--brand);border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#fff;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;flex-shrink:0;transition:opacity .15s}
         .logi-tab-add:active{opacity:.76}
         .logi-tab-add i{font-size:11px}
-        .logi-pills-row{display:flex;gap:6px;flex-wrap:wrap;margin:0;align-items:center}
+        /* Micro-píldoras de tabs — espejo de cli-pill-group */
+        .logi-cli-pill-group{display:inline-flex;align-items:center;border:1px solid #E5E7EB;border-radius:9px;overflow:hidden;background:#F9FAFB}
+        .logi-cli-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:#6B7280;line-height:1;transition:background .12s,color .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+        .logi-cli-pill+.logi-cli-pill{border-left:1px solid #E5E7EB}
+        .logi-cli-pill:hover{background:#F3F4F6;color:#374151}
+        .logi-cli-pill.active{background:#F3F4F6!important;color:#111827!important;font-weight:700!important}
+        .logi-cli-new{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--brand);border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#fff;line-height:1;transition:opacity .15s,transform .1s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+        .logi-cli-new:hover{opacity:.88}
+        .logi-cli-new:active{opacity:.76;transform:scale(.96)}
+        .logi-cli-new i{font-size:11px}
+        /* Tab bar — solo mobile */
+        .logi-mob-tabs{display:none}
+        /* Search row estilizado */
+        .logi-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;border-radius:9999px!important;height:34px!important}
+        .logi-pills-row{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center;padding-bottom:1px}
+        .logi-pills-row::-webkit-scrollbar{display:none}
         /* Mobile cards */
         .logi-mob-list{display:none;flex-direction:column}
         .logi-card{border-bottom:1px solid var(--border);padding:11px 0;-webkit-tap-highlight-color:transparent;transition:background .1s;cursor:pointer}
@@ -251,12 +266,11 @@ export default function Logistica() {
         .logi-card-late{font-size:10px;color:#DC2626;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px}
         @media(max-width:767px){
           .logi-ph{display:none!important}
+          .logi-mob-tabs{display:flex!important}
           .logi-tab-add{display:inline-flex}
           .logi-tab-bar-scroll{overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
           .logi-tab-bar-scroll::-webkit-scrollbar{display:none}
           .logi-tab-bar-scroll .tab-btn{flex-shrink:0;font-size:11px!important;white-space:nowrap}
-          .logi-pills-row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-          .logi-pills-row::-webkit-scrollbar{display:none}
           .logi-desk-only{display:none!important}
           .logi-mob-list{display:flex}
           .logi-tariff-grid{grid-template-columns:1fr!important}
@@ -264,27 +278,34 @@ export default function Logistica() {
         }
         @media(min-width:768px){
           .logi-mob-list{display:none!important}
+          .logi-mob-tabs{display:none!important}
         }
       `}</style>
 
-      {/* Header — hidden on mobile (topbar shows page title) */}
-      <div className="ph logi-ph">
-        <div className="ph-left">
-          <h2>Logística</h2>
+      {/* Header desktop — hidden on mobile */}
+      <div className="ph logi-ph" style={{ alignItems: 'center' }}>
+        <div className="ph-left"><h2>Logística</h2></div>
+        <div className="ph-right" style={{ gap: 6 }}>
+          <div className="logi-cli-pill-group">
+            {['envios', 'tarifas', 'resumen'].map(t => (
+              <button key={t} className={`logi-cli-pill${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
+                {t === 'envios' ? 'Envíos' : t === 'tarifas' ? 'Tarifas' : 'Resumen'}
+              </button>
+            ))}
+          </div>
+          <button className="logi-cli-new" onClick={() => openShip()}>
+            <i className="fa fa-plus" /><span>Registrar envío</span>
+          </button>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => openShip()}>
-          <i className="fa fa-plus" /> Registrar envío
-        </button>
       </div>
 
-      {/* Tab bar — on mobile becomes a scrollable row that includes the "+ Envío" pill */}
-      <div className="tab-bar logi-tab-bar-scroll" style={{ gap: 0 }}>
+      {/* Tab bar — solo mobile: scrollable con "+ Envío" al final */}
+      <div className="tab-bar logi-tab-bar-scroll logi-mob-tabs" style={{ gap: 0 }}>
         {['envios', 'tarifas', 'resumen'].map(t => (
           <div key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-            {t === 'envios' ? 'Envíos registrados' : t === 'tarifas' ? 'Tarifas y zonas' : 'Resumen de costos'}
+            {t === 'envios' ? 'Envíos' : t === 'tarifas' ? 'Tarifas' : 'Resumen'}
           </div>
         ))}
-        {/* Mobile-only "+ Envío" pill inside the tab bar */}
         <button className="logi-tab-add" onClick={() => openShip()}>
           <i className="fa fa-plus" /> Envío
         </button>
@@ -305,9 +326,9 @@ export default function Logistica() {
             </div>
           )}
 
-          {/* Search + status pills */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-            <div className="search-row" style={{ flex: 1, maxWidth: 340 }}>
+          {/* Search */}
+          <div style={{ marginBottom: 6 }}>
+            <div className="search-row logi-search-row" style={{ maxWidth: 400 }}>
               <i className="fa fa-magnifying-glass" style={{ color: 'var(--txt3)', fontSize: 13 }} />
               <input
                 type="text" placeholder="Buscar remito, cliente, ciudad…"
@@ -316,12 +337,13 @@ export default function Logistica() {
               />
               {search && <i className="fa fa-xmark" style={{ cursor: 'pointer', color: 'var(--txt3)' }} onClick={() => setSearch('')} />}
             </div>
-            <div className="logi-pills-row">
-              <div className={`pill ${sFilter === 'all' ? 'active' : ''}`} onClick={() => setSFilter('all')}>Todos</div>
-              {statusList.map(s => (
-                <div key={s} className={`pill ${sFilter === s ? 'active' : ''}`} onClick={() => setSFilter(s)}>{s}</div>
-              ))}
-            </div>
+          </div>
+          {/* Status pills — fila única con scroll */}
+          <div className="logi-pills-row" style={{ marginBottom: 10 }}>
+            <div className={`pill ${sFilter === 'all' ? 'active' : ''}`} onClick={() => setSFilter('all')}>Todos</div>
+            {statusList.map(s => (
+              <div key={s} className={`pill ${sFilter === s ? 'active' : ''}`} onClick={() => setSFilter(s)}>{s}</div>
+            ))}
           </div>
 
           {/* ── MOBILE CARD LIST (≤767px) ── */}
