@@ -173,11 +173,12 @@ export default function Presupuesto() {
   const { get, config, saveBudget } = useData()
   const toast = useToast()
   const c = config()
+  const feats = c.features || {}
 
   const [form, setForm] = useState({
     contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '',
     shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
-    margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0,
+    margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0, discount: 0,
   })
   const [items, setItems] = useState([emptyItem()])
   const [editId, setEditId] = useState(null)
@@ -210,6 +211,7 @@ export default function Presupuesto() {
           margin: b.margin ?? c.defaultMargin ?? 40,
           deposit: b.deposit ?? c.defaultDeposit ?? 50,
           logoCost: b.logoCost || 0,
+          discount: b.discount || 0,
         })
         setItems(b.items?.length ? b.items : [emptyItem()])
         setEditId(b.id)
@@ -605,7 +607,7 @@ export default function Presupuesto() {
             onClick={() => {
               localStorage.removeItem(DRAFT_KEY)
               setDraftRestored(false)
-              setForm({ contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '', shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '', margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0 })
+              setForm({ contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '', shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '', margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0, discount: 0 })
               setItems([emptyItem()])
             }}
           >
@@ -779,8 +781,16 @@ export default function Presupuesto() {
                   <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
                   <div className="fg"><label>Impresión/logo x u. ($)</label><input type="number" value={form.logoCost} onFocus={selectOnFocus} onChange={e => setF('logoCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('logoCost', 0) }} min="0" style={{ maxWidth: 140 }} /></div>
                 </div>
+                {feats.descuentoCliente && (
+                  <div className="fg" style={{ maxWidth: 200, marginTop: 4 }}>
+                    <label>Descuento al cliente (%)</label>
+                    <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setF('discount', e.target.value)} onBlur={e => { if (e.target.value === '') setF('discount', 0) }} min="0" max="100" style={{ maxWidth: 120 }} />
+                  </div>
+                )}
                 <div className="grid2">
-                  <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
+                  {feats.notasInternas && (
+                    <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
+                  )}
                   <div className="fg"><label>Nota al cliente (PDF)</label><textarea value={form.noteCli} onChange={e => setF('noteCli', e.target.value)} rows={2} placeholder="Visible en el presupuesto..." /></div>
                 </div>
               </>
@@ -827,8 +837,8 @@ export default function Presupuesto() {
             <div className="pres-mob-total">
               <div className="pmt-label">Total</div>
               <div className="pmt-val">{fmt(calc.total)}</div>
-              {calc.marginLow && <span className="pmt-warn" title={`Margen bajo (< ${calc.marginThreshold}%)`}><i className="fa fa-triangle-exclamation" /></span>}
-              <div className="pmt-margin">{calc.marginReal}%</div>
+              {feats.margenTabla && calc.marginLow && <span className="pmt-warn" title={`Margen bajo (< ${calc.marginThreshold}%)`}><i className="fa fa-triangle-exclamation" /></span>}
+              {feats.margenTabla && <div className="pmt-margin">{calc.marginReal}%</div>}
             </div>
 
             {/* NAV WIZARD */}
@@ -857,9 +867,9 @@ export default function Presupuesto() {
             <div className="cp-row"><span className="cp-lbl">N° Presupuesto</span><span className="cp-val">{budgetNum}</span></div>
             <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val">{fmt(calc.totalCost)}</span></div>
             <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>
-            <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>
-            <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined}>{calc.marginReal}%{calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}</span></div>
-            {marginBudgetedSaved !== null && Math.abs(marginBudgetedSaved - Number(calc.marginReal)) >= 0.5 && (() => {
+            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>}
+            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined}>{calc.marginReal}%{calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}</span></div>}
+            {feats.margenTabla && marginBudgetedSaved !== null && Math.abs(marginBudgetedSaved - Number(calc.marginReal)) >= 0.5 && (() => {
               const delta = (Number(calc.marginReal) - marginBudgetedSaved).toFixed(1)
               const positive = Number(delta) >= 0
               return (

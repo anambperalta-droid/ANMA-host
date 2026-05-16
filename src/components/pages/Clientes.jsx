@@ -113,7 +113,7 @@ export default function Clientes() {
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c' })
+  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c', discount: 0 })
   const [newNote, setNewNote] = useState('')
   const [previewBudget, setPreviewBudget] = useState(null)
   const fileRef = useRef(null)
@@ -132,7 +132,7 @@ export default function Clientes() {
   ) : clients
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c' }); setModal(true) }
+  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c', discount: 0 }); setModal(true) }
   const save = () => {
     if (!form.company) { toast('Ingresá el nombre de la empresa.', 'er'); return }
     saveEntity('clients', form); setModal(false); toast('Cliente guardado', 'ok')
@@ -702,6 +702,12 @@ export default function Clientes() {
                 </select>
               </div>
             </div>
+            {config().features?.descuentoCliente && (
+              <div className="fg" style={{ maxWidth: 220 }}>
+                <label>Descuento fijo (%)</label>
+                <input type="number" value={form.discount || 0} onChange={e => setF('discount', Number(e.target.value))} min="0" max="100" placeholder="0" style={{ maxWidth: 120 }} />
+              </div>
+            )}
             <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} placeholder="Observaciones..." /></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
           </div>

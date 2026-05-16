@@ -77,7 +77,8 @@ const getTrackingUrl = (carrier, code) => {
 }
 
 export default function Logistica() {
-  const { get, saveEntity, deleteEntity } = useData()
+  const { get, saveEntity, deleteEntity, config } = useData()
+  const feats = config().features || {}
   const toast = useToast()
   const [tab, setTab] = useState('envios')
   const [sFilter, setSFilter] = useState('all')
@@ -491,7 +492,7 @@ export default function Logistica() {
                     <div className="logi-card-specs">
                       {s.bulks > 0 && <span className="logi-card-spec">{s.bulks} bulto{s.bulks !== 1 ? 's' : ''}</span>}
                       {s.weight && <span className="logi-card-spec">{s.weight} kg</span>}
-                      <span className="logi-card-spec logi-card-spec-price">{fmt(s.freight)}</span>
+                      {feats.costoInterno && <span className="logi-card-spec logi-card-spec-price">{fmt(s.freight)}</span>}
                       {payerChip && <span className="logi-card-spec">{payerChip}</span>}
                     </div>
                     {late && (
@@ -521,7 +522,7 @@ export default function Logistica() {
                     <th>Destinatario</th>
                     <th>Carga</th>
                     <th>Estado</th>
-                    <th style={{ textAlign: 'right' }}>Costo</th>
+                    {feats.costoInterno && <th style={{ textAlign: 'right' }}>Costo</th>}
                     <th>Paga</th>
                     <th style={{ textAlign: 'right' }}>Acciones</th>
                   </tr>
@@ -582,7 +583,7 @@ export default function Logistica() {
                         </td>
 
                         {/* COSTO */}
-                        <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, fontFamily: 'ui-monospace,SFMono-Regular,monospace' }}>{fmt(s.freight)}</td>
+                        {feats.costoInterno && <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, fontFamily: 'ui-monospace,SFMono-Regular,monospace' }}>{fmt(s.freight)}</td>}
 
                         {/* PAGA */}
                         <td style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>{s.payer || '—'}</td>
@@ -1038,10 +1039,12 @@ export default function Logistica() {
                 </div>
               )}
               <div className="grid2">
-                <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
-                  <label>Costo flete ($)</label>
-                  <input type="number" value={form.freight || 0} onChange={e => setF('freight', Number(e.target.value))} />
-                </div>
+                {feats.costoInterno && (
+                  <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
+                    <label>Costo flete ($)</label>
+                    <input type="number" value={form.freight || 0} onChange={e => setF('freight', Number(e.target.value))} />
+                  </div>
+                )}
                 <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
                   <label>¿Quién paga el flete?</label>
                   <select value={form.payer || 'Mi negocio'} onChange={e => setF('payer', e.target.value)}>

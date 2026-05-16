@@ -501,7 +501,7 @@ export default function Config() {
           fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
           boxShadow: '0 4px 14px var(--brand-dim)', transition: 'all .18s', flexShrink: 0,
         }}>
-          <i className="fa fa-floppy-disk" /> Guardar
+          <i className="fa fa-floppy-disk" /> Guardar cambios
         </button>
       </div>
 
@@ -1271,6 +1271,13 @@ export default function Config() {
           onClose={() => setDeleteConfirm(null)}
         />
       )}
+
+      {/* ── Mobile floating save bar ── */}
+      <div className="cfg-mob-save">
+        <button onClick={saveAll}>
+          <i className="fa fa-floppy-disk" /> Guardar cambios
+        </button>
+      </div>
     </div>
   )
 }
