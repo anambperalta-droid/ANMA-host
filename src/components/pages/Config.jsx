@@ -79,6 +79,17 @@ function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', ite
             {items.length} elemento{items.length !== 1 ? 's' : ''}
           </div>
         </div>
+        {onDelete && (
+          <button onClick={onDelete} title="Eliminar lista" style={{
+            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--txt4)',
+            fontSize: 12, padding: '4px 6px', borderRadius: 6, display: 'flex',
+            alignItems: 'center', gap: 4, flexShrink: 0, transition: 'color .15s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--red)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--txt4)'}>
+            <i className="fa fa-trash" style={{ fontSize: 11 }} /> Eliminar
+          </button>
+        )}
       </div>
       {items.length === 0 && (
         <div style={{ padding: '10px 0 6px', textAlign: 'center', color: 'var(--txt4)', fontSize: 12 }}>
@@ -476,50 +487,32 @@ export default function Config() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 20, padding: '16px 20px',
-        background: 'linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%)',
-        borderRadius: 16, border: '1.5px solid var(--border)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, background: 'var(--grad)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff',
-          }}>
-            <i className="fa fa-gear" />
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--txt)', lineHeight: 1.2 }}>Configuración</div>
-            <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>Personalizá la app para tu negocio</div>
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 22 }}>
+        <div style={{
+          flex: 1, display: 'flex', gap: 6,
+          overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none', paddingBottom: 2,
+        }}>
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`cfg-tab-btn${tab === t.id ? ' active' : ''}`}
+            >
+              <i className={`fa ${t.icon}`} style={{ fontSize: 11 }} />
+              {t.label}
+            </button>
+          ))}
         </div>
-        <button onClick={saveAll} style={{
+        <button className="cfg-save-desk" onClick={saveAll} style={{
           display: 'inline-flex', alignItems: 'center', gap: 7,
-          height: 44, padding: '0 24px', borderRadius: 9999, border: 'none',
+          height: 36, padding: '0 18px', borderRadius: 9999, border: 'none',
           background: 'var(--color-principal)', color: '#fff',
-          fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+          fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
           boxShadow: '0 4px 14px var(--brand-dim)', transition: 'all .18s', flexShrink: 0,
         }}>
           <i className="fa fa-floppy-disk" /> Guardar cambios
         </button>
-      </div>
-
-      <div style={{
-        display: 'flex', gap: 6, marginBottom: 22,
-        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none', paddingBottom: 2,
-      }}>
-        {tabs.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`cfg-tab-btn${tab === t.id ? ' active' : ''}`}
-          >
-            <i className={`fa ${t.icon}`} style={{ fontSize: 11 }} />
-            {t.label}
-          </button>
-        ))}
       </div>
 
       {tab === 'identidad' && (
