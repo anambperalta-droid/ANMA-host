@@ -742,11 +742,6 @@ export default function Config() {
 
       {tab === 'pagos' && (
         <div style={{ display: 'grid', gap: 18, maxWidth: 780 }}>
-          <div style={{ fontSize: 13, color: 'var(--txt2)', marginBottom: 2 }}>
-            <i className="fa fa-circle-info" style={{ marginRight: 6, color: 'var(--brand)' }} />
-            Activá los métodos que querés ofrecer a tus clientes. Pueden estar los dos al mismo tiempo.
-          </div>
-
           {/* ── MERCADO PAGO CARD ── */}
           <div className={`pay-card ${mpEnabled ? 'on' : ''}`}>
             <div className="pay-card-head" onClick={() => setMpEnabled(!mpEnabled)}>
@@ -768,16 +763,18 @@ export default function Config() {
                   <i className="fa fa-circle-info" style={{ marginTop: 2 }} />
                   <div>Obtené tu Access Token desde <b>mercadopago.com.ar → Tu negocio → Configuración → Credenciales</b>. Usá las de <b>producción</b>.</div>
                 </div>
-                <div className="fg">
-                  <label>Access Token</label>
-                  <div style={{ position: 'relative' }}>
-                    <input type={showMpToken ? 'text' : 'password'} value={mpToken} onChange={e => setMpToken(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12, paddingRight: 36 }} />
-                    <button type="button" onClick={() => setShowMpToken(v => !v)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, padding: 4 }} title={showMpToken ? 'Ocultar token' : 'Mostrar token'}>
-                      <i className={`fa ${showMpToken ? 'fa-eye-slash' : 'fa-eye'}`} />
-                    </button>
+                <div className="grid2">
+                  <div className="fg">
+                    <label>Access Token</label>
+                    <div style={{ position: 'relative' }}>
+                      <input type={showMpToken ? 'text' : 'password'} value={mpToken} onChange={e => setMpToken(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12, paddingRight: 36 }} />
+                      <button type="button" onClick={() => setShowMpToken(v => !v)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, padding: 4 }} title={showMpToken ? 'Ocultar token' : 'Mostrar token'}>
+                        <i className={`fa ${showMpToken ? 'fa-eye-slash' : 'fa-eye'}`} />
+                      </button>
+                    </div>
                   </div>
+                  <div className="fg"><label>Public Key</label><input type="text" value={mpPubkey} onChange={e => setMpPubkey(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
                 </div>
-                <div className="fg"><label>Public Key</label><input type="text" value={mpPubkey} onChange={e => setMpPubkey(e.target.value)} placeholder="APP_USR-xxxxxxxx..." style={{ fontFamily: 'monospace', fontSize: 12 }} /></div>
                 <div className="grid2">
                   <div className="fg"><label>Nombre visible</label><input type="text" value={mpName} onChange={e => setMpName(e.target.value)} placeholder="Mi Negocio" /></div>
                   <div className="fg"><label>Moneda</label><select value={mpCurrency} onChange={e => setMpCurrency(e.target.value)}><option value="ARS">ARS</option><option value="BRL">BRL</option><option value="CLP">CLP</option><option value="MXN">MXN</option><option value="USD">USD</option></select></div>
@@ -788,7 +785,6 @@ export default function Config() {
                 </div>
                 <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button className="btn btn-ghost" onClick={testMP} style={{minHeight:44}}><i className="fa fa-flask-vial" /> Probar conexión</button>
-                  <button className="btn btn-primary btn-sm" onClick={saveMPConfig}><i className="fa fa-floppy-disk" /> Guardar Mercado Pago</button>
                 </div>
                 {mpTestResult && <div style={{ marginTop: 12, fontSize: 12 }} dangerouslySetInnerHTML={{ __html: mpTestResult }} />}
               </div>
@@ -819,6 +815,8 @@ export default function Config() {
                 <div className="grid2">
                   <div className="fg"><label>Titular</label><input type="text" value={bankHolder} onChange={e => setBankHolder(e.target.value)} placeholder="Juan Pérez / Empresa SA" /></div>
                   <div className="fg"><label>Banco</label><input type="text" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Galicia, Santander, BBVA..." /></div>
+                </div>
+                <div className="grid2">
                   <div className="fg"><label>Tipo de cuenta</label>
                     <select value={bankAccountType} onChange={e => setBankAccountType(e.target.value)}>
                       <option>Cuenta corriente</option>
@@ -848,9 +846,9 @@ export default function Config() {
                     </div>
                   </div>
                 </div>
-                <div className="fg"><label>Notas adicionales (opcional)</label><textarea value={bankNotes} onChange={e => setBankNotes(e.target.value)} rows={2} placeholder="Ej: Enviar comprobante por WhatsApp al finalizar." /></div>
-                <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-                  <button className="btn btn-primary btn-sm" onClick={saveBankConfig}><i className="fa fa-floppy-disk" /> Guardar datos bancarios</button>
+                <div className="grid2">
+                  <div className="fg"><label>Notas adicionales (opcional)</label><input type="text" value={bankNotes} onChange={e => setBankNotes(e.target.value)} placeholder="Ej: Enviar comprobante por WhatsApp al finalizar." /></div>
+                  <div />
                 </div>
               </div>
             )}
