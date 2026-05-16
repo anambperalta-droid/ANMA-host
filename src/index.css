@@ -244,6 +244,14 @@ td b{color:var(--txt);font-weight:600}
 .act.del:hover{background:var(--red-lt);color:var(--red);border-color:var(--red)}
 .act.wa:hover{background:#DCFCE7;color:#16A34A;border-color:#16A34A}
 .act.resend:hover{background:var(--acento-xlt);color:var(--acento);border-color:var(--acento)}
+/* Config tab pills */
+.cfg-tab-btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:9999px;border:1px solid transparent;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;background:transparent;color:var(--txt2);white-space:nowrap;transition:all .15s;flex-shrink:0}
+.cfg-tab-btn:hover:not(.active){background:var(--brand-xlt);color:var(--brand)}
+.cfg-tab-btn.active{background:var(--brand-xlt);color:var(--brand);border-color:var(--brand-dim);font-weight:700}
+.cfg-tab-btn:active{transform:scale(.95)}
+/* Config list-item delete */
+.list-del-btn{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;color:var(--txt4);font-size:13px;display:flex;align-items:center;justify-content:center;transition:color .15s;line-height:1;flex-shrink:0}
+.list-del-btn:hover{color:var(--red)}
 
 /* ─── FORMS ─── */
 .fg{margin-bottom:10px}

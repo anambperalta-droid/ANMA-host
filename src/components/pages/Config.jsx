@@ -79,11 +79,6 @@ function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', ite
             {items.length} elemento{items.length !== 1 ? 's' : ''}
           </div>
         </div>
-        {onDelete && (
-          <button className="act del" onClick={onDelete} title="Eliminar lista" style={{ flexShrink: 0 }}>
-            <i className="fa fa-trash" />
-          </button>
-        )}
       </div>
       {items.length === 0 && (
         <div style={{ padding: '10px 0 6px', textAlign: 'center', color: 'var(--txt4)', fontSize: 12 }}>
@@ -100,7 +95,7 @@ function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', ite
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item}</span>
             </div>
-            <button className="act del" onClick={() => onRemove(i)} style={{ flexShrink: 0 }}>
+            <button className="list-del-btn" onClick={() => onRemove(i)}>
               <i className="fa fa-xmark" />
             </button>
           </div>
@@ -113,15 +108,19 @@ function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', ite
             onChange={e => { setVal(e.target.value); setDupErr(false) }}
             onKeyDown={e => e.key === 'Enter' && add()}
             style={{
-              flex: 1, padding: '8px 11px',
+              flex: 1, padding: '8px 16px',
               border: `2px solid ${dupErr ? '#FCA5A5' : 'var(--border)'}`,
-              borderRadius: 9, fontFamily: 'inherit', fontSize: 13, outline: 'none',
+              borderRadius: 9999, fontFamily: 'inherit', fontSize: 13, outline: 'none',
               transition: 'border-color .2s', background: 'var(--surface)', color: 'var(--txt)',
             }}
             placeholder="Nueva entrada..."
           />
-          <button className="btn btn-primary btn-xs" onClick={add}
-            style={{ background: accentColor, borderColor: accentColor }}>
+          <button onClick={add} style={{
+            width: 36, height: 36, borderRadius: 9999, border: 'none', cursor: 'pointer',
+            background: accentColor, color: '#fff', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', fontSize: 14, flexShrink: 0,
+            boxShadow: `0 2px 8px ${accentColor}40`, transition: 'filter .15s',
+          }}>
             <i className="fa fa-plus" />
           </button>
         </div>
@@ -495,30 +494,29 @@ export default function Config() {
             <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>Personalizá la app para tu negocio</div>
           </div>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={saveAll}>
+        <button onClick={saveAll} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 7,
+          height: 44, padding: '0 24px', borderRadius: 9999, border: 'none',
+          background: 'var(--color-principal)', color: '#fff',
+          fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+          boxShadow: '0 4px 14px var(--brand-dim)', transition: 'all .18s', flexShrink: 0,
+        }}>
           <i className="fa fa-floppy-disk" /> Guardar
         </button>
       </div>
 
       <div style={{
-        display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 22,
-        padding: 4, background: 'var(--surface2)', borderRadius: 14, border: '1px solid var(--border)',
-        width: 'fit-content', maxWidth: '100%',
+        display: 'flex', gap: 6, marginBottom: 22,
+        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'none', paddingBottom: 2,
       }}>
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '7px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-              fontSize: 12, fontWeight: tab === t.id ? 700 : 500, fontFamily: 'inherit',
-              background: tab === t.id ? 'var(--brand)' : 'transparent',
-              color: tab === t.id ? '#fff' : 'var(--txt2)',
-              transition: 'all .15s',
-            }}
+            className={`cfg-tab-btn${tab === t.id ? ' active' : ''}`}
           >
-            <i className={`fa ${t.icon}`} style={{ fontSize: 12 }} />
+            <i className={`fa ${t.icon}`} style={{ fontSize: 11 }} />
             {t.label}
           </button>
         ))}
@@ -694,9 +692,6 @@ export default function Config() {
                 onDelete={() => handleDeleteCustomList(cl.key)} />
             )
           })}
-          <div style={{ gridColumn: '1 / -1' }}>
-            <NewListCreator onCreate={handleCreateCustomList} />
-          </div>
         </div>
       )}
 
