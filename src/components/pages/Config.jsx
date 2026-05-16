@@ -787,7 +787,7 @@ export default function Config() {
                   <button className={`toggle ${mpSena ? 'on' : ''}`} onClick={() => setMpSena(!mpSena)} />
                 </div>
                 <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn btn-ghost btn-sm" onClick={testMP}><i className="fa fa-flask-vial" /> Probar conexión</button>
+                  <button className="btn btn-ghost" onClick={testMP} style={{minHeight:44}}><i className="fa fa-flask-vial" /> Probar conexión</button>
                   <button className="btn btn-primary btn-sm" onClick={saveMPConfig}><i className="fa fa-floppy-disk" /> Guardar Mercado Pago</button>
                 </div>
                 {mpTestResult && <div style={{ marginTop: 12, fontSize: 12 }} dangerouslySetInnerHTML={{ __html: mpTestResult }} />}
@@ -950,7 +950,7 @@ export default function Config() {
                   </div>
                 </div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn btn-ghost btn-sm" onClick={testResend} disabled={resendTesting}>
+                  <button className="btn btn-ghost" onClick={testResend} disabled={resendTesting} style={{minHeight:44}}>
                     <i className={`fa ${resendTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
                     {resendTesting ? ' Enviando...' : ' Probar conexión'}
                   </button>
@@ -1029,7 +1029,7 @@ export default function Config() {
                 )}
 
                 <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn btn-ghost btn-sm" onClick={testSheets}><i className="fa fa-flask-vial" /> Probar conexión</button>
+                  <button className="btn btn-ghost" onClick={testSheets} style={{minHeight:44}}><i className="fa fa-flask-vial" /> Probar conexión</button>
                   <button className="btn btn-primary btn-sm" onClick={saveSheetsConfig}><i className="fa fa-floppy-disk" /> Guardar integración</button>
                   <button className="btn btn-secondary btn-sm" onClick={syncAllBudgets} disabled={gsBulkLoading}>
                     <i className={`fa ${gsBulkLoading ? 'fa-spinner fa-spin' : 'fa-rotate'}`} />

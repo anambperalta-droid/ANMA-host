@@ -285,7 +285,7 @@ td b{color:var(--txt);font-weight:600}
 
 /* ─── TABS & PILLS ─── */
 .tab-bar{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:16px;width:fit-content}
-.tab-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt3);transition:all var(--tr);white-space:nowrap;background:none;border:1px solid transparent}
+.tab-btn{padding:0 14px;min-height:36px;display:inline-flex;align-items:center;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt3);transition:all var(--tr);white-space:nowrap;background:none;border:1px solid transparent}
 .tab-btn:active{transform:scale(.95)}
 .tab-btn.active{background:var(--brand-xlt);color:var(--brand);border-color:var(--brand-dim);box-shadow:none;font-weight:700}
 .tab-btn:hover:not(.active){color:var(--brand);background:var(--brand-xlt)}
@@ -1439,8 +1439,8 @@ td b{color:var(--txt);font-weight:600}
 .dash-ctrl-divider{width:1px;height:22px;background:var(--border);flex-shrink:0;margin:0 4px}
 .dash-ctrl-tabs{display:flex;overflow-x:auto;scrollbar-width:none;flex:1;gap:4px;padding:5px 12px 5px 4px;-webkit-overflow-scrolling:touch}
 .dash-ctrl-tabs::-webkit-scrollbar{display:none}
-.dash-ctrl-tab{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--txt3);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,border-color .12s;min-height:30px;display:inline-flex;align-items:center}
-.dash-ctrl-tab.active{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.3);color:var(--brand);font-weight:700}
+.dash-ctrl-tab{flex-shrink:0;padding:0 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--txt3);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,border-color .12s;min-height:36px;display:inline-flex;align-items:center}
+.dash-ctrl-tab.active{background:var(--brand-xlt);border-color:var(--brand-dim);color:var(--brand);font-weight:700}
 .dash-ctrl-tab:active{transform:scale(0.95)}
 .dash-period-drop-m{position:absolute;left:0;top:calc(100% + 4px);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.15);min-width:190px;overflow:hidden}
 @media(min-width:641px){.dash-ctrl-bar{display:none}}

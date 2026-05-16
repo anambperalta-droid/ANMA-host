@@ -353,15 +353,14 @@ export default function Clientes() {
         .pill-row .pill{height:34px!important;border-radius:9999px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
 
         /* ── MICRO-PILLS DE ACCIONES ── */
-        .cli-pill-group{display:inline-flex;align-items:center;border:1px solid #E5E7EB;border-radius:9px;overflow:hidden;background:#F9FAFB}
-        .cli-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:#6B7280;line-height:1;transition:background .12s,color .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-        .cli-pill+.cli-pill{border-left:1px solid #E5E7EB}
-        .cli-pill:hover{background:#F3F4F6;color:#374151}
-        .cli-pill:active{background:#E5E7EB}
-        .cli-pill i{font-size:11px}
-        .cli-pill-new{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--brand);border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#fff;line-height:1;transition:opacity .15s,transform .1s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-        .cli-pill-new:hover{opacity:.88}
-        .cli-pill-new:active{opacity:.76;transform:scale(.96)}
+        .cli-pill-group{display:inline-flex;align-items:center;gap:6px}
+        .cli-pill{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 18px;border-radius:9999px;border:1.5px solid var(--border);background:var(--surface);color:var(--txt2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .15s}
+        .cli-pill:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
+        .cli-pill:active{transform:scale(.95)}
+        .cli-pill i{font-size:12px}
+        .cli-pill-new{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 20px;border-radius:9999px;border:none;background:var(--color-principal);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .18s;box-shadow:0 4px 14px var(--brand-dim)}
+        .cli-pill-new:hover{filter:brightness(1.08);transform:translateY(-1px)}
+        .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
 
         /* ── TARJETAS MÓVILES — sin scroll horizontal ── */

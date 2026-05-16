@@ -933,8 +933,8 @@ export default function Historial() {
                 style={{ padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)' }} />
             </div>
           )}
-          <button className="btn btn-ghost btn-sm ph-export-btn" onClick={exportCSV}><i className="fa fa-download" /><span>Exportar</span></button>
-          <button className="btn btn-primary btn-sm ph-fab" onClick={() => nav('/presupuesto')} style={{ background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /><span>Nuevo presupuesto</span></button>
+          <button className="btn btn-ghost ph-export-btn" onClick={exportCSV} style={{minHeight:44}}><i className="fa fa-download" /><span>Exportar</span></button>
+          <button className="btn btn-primary ph-fab" onClick={() => nav('/presupuesto')} style={{ minHeight:44, background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /><span>Nuevo presupuesto</span></button>
         </div>
       </div>
 
