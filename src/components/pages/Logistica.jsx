@@ -283,15 +283,15 @@ export default function Logistica() {
         .logi-tab-add:active{opacity:.76}
         .logi-tab-add i{font-size:11px}
         /* Micro-píldoras de tabs — espejo de cli-pill-group */
-        .logi-cli-pill-group{display:inline-flex;align-items:center;border:1px solid #E5E7EB;border-radius:9px;overflow:hidden;background:#F9FAFB}
-        .logi-cli-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;color:#6B7280;line-height:1;transition:background .12s,color .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-        .logi-cli-pill+.logi-cli-pill{border-left:1px solid #E5E7EB}
-        .logi-cli-pill:hover{background:#F3F4F6;color:#374151}
-        .logi-cli-pill.active{background:#F3F4F6!important;color:#111827!important;font-weight:700!important}
-        .logi-cli-new{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--brand);border:none;border-radius:9px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#fff;line-height:1;transition:opacity .15s,transform .1s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-        .logi-cli-new:hover{opacity:.88}
-        .logi-cli-new:active{opacity:.76;transform:scale(.96)}
-        .logi-cli-new i{font-size:11px}
+        .logi-cli-pill-group{display:inline-flex;align-items:center;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:9999px;padding:3px}
+        .logi-cli-pill{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;background:transparent;border:1px solid transparent;border-radius:9999px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;color:var(--txt3);line-height:1;transition:all .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+        .logi-cli-pill:hover{background:var(--brand-xlt);color:var(--brand)}
+        .logi-cli-pill:active{transform:scale(.95)}
+        .logi-cli-pill.active{background:var(--brand-xlt)!important;color:var(--brand)!important;font-weight:700!important;border-color:var(--brand-dim)!important}
+        .logi-cli-new{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--color-principal);border:none;border-radius:9999px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:#fff;line-height:1;transition:all .18s;white-space:nowrap;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 14px var(--brand-dim)}
+        .logi-cli-new:hover{filter:brightness(1.08);transform:translateY(-1px)}
+        .logi-cli-new:active{transform:scale(.95)}
+        .logi-cli-new i{font-size:12px}
         /* Tab bar — solo mobile */
         .logi-mob-tabs{display:none}
         /* Search row estilizado */
