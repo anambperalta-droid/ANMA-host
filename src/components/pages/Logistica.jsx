@@ -84,12 +84,12 @@ export default function Logistica() {
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState({})
-  const [tzForm, setTzForm] = useState({ zone: '', carrier: '', ppkg: '', min: '', days: '', notes: '' })
   const [lateAlertDismissed, setLateAlertDismissed] = useState(() => {
     try { return sessionStorage.getItem('logistica_late_dismissed') === '1' } catch { return false }
   })
   const [hoveredStatus, setHoveredStatus] = useState(null)
-  const [adding, setAdding] = useState(false)
+  const [cotizSearch, setCotizSearch] = useState('')
+  const [cotizClient, setCotizClient] = useState(null)
   const [despachoDir, setDespachoDir] = useState(() => localStorage.getItem('anma_desp_dir') || '')
   const [despachoCUIT, setDespachoCUIT] = useState(() => localStorage.getItem('anma_desp_cuit') || '')
   const dismissLateAlert = () => {
@@ -187,13 +187,14 @@ export default function Logistica() {
     if (window.confirm('¿Eliminar envío?')) { deleteEntity('shipments', id); toast('Envío eliminado', 'in') }
   }
 
-  const addTariff = () => {
-    if (!tzForm.zone) { toast('Ingresá la zona.', 'er'); return }
-    saveEntity('tariffs', { ...tzForm, ppkg: Number(tzForm.ppkg), min: Number(tzForm.min), days: Number(tzForm.days) })
-    setTzForm({ zone: '', carrier: '', ppkg: '', min: '', days: '', notes: '' })
-    toast('Tarifa agregada', 'ok')
-  }
-  const delTariff = (id) => { deleteEntity('tariffs', id); toast('Tarifa eliminada', 'in') }
+  const cotizFilteredClients = useMemo(() => {
+    if (!cotizSearch.trim()) return []
+    const q = cotizSearch.toLowerCase()
+    return clients.filter(c =>
+      (c.company || '').toLowerCase().includes(q) ||
+      (c.contact || '').toLowerCase().includes(q)
+    ).slice(0, 8)
+  }, [cotizSearch, clients])
 
   const totalShipCost = shipments.reduce((s, x) => s + (x.freight || 0), 0)
   const nowYM = new Date().toISOString().slice(0, 7)
@@ -355,9 +356,9 @@ export default function Logistica() {
       <div className="ph logi-ph" style={{ alignItems: 'center' }}>
         <div className="ph-right" style={{ gap: 6 }}>
           <div className="logi-cli-pill-group">
-            {['envios', 'tarifas', 'resumen'].map(t => (
+            {['envios', 'cotizar', 'resumen'].map(t => (
               <button key={t} className={`logi-cli-pill${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
-                {t === 'envios' ? 'Envíos' : t === 'tarifas' ? 'Tarifas' : 'Resumen'}
+                {t === 'envios' ? 'Envíos' : t === 'cotizar' ? 'Cotizar' : 'Resumen'}
               </button>
             ))}
           </div>
@@ -369,9 +370,9 @@ export default function Logistica() {
 
       {/* Tab bar — solo mobile: scrollable con "+ Envío" al final */}
       <div className="tab-bar logi-tab-bar-scroll logi-mob-tabs" style={{ gap: 0 }}>
-        {['envios', 'tarifas', 'resumen'].map(t => (
+        {['envios', 'cotizar', 'resumen'].map(t => (
           <div key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-            {t === 'envios' ? 'Envíos' : t === 'tarifas' ? 'Tarifas' : 'Resumen'}
+            {t === 'envios' ? 'Envíos' : t === 'cotizar' ? 'Cotizar' : 'Resumen'}
           </div>
         ))}
         <button className="logi-tab-add" onClick={() => openShip()}>
@@ -618,212 +619,180 @@ export default function Logistica() {
         </>
       )}
 
-      {/* ── TAB TARIFAS ────────────────────────────────────────────── */}
-      {tab === 'tarifas' && (
+      {/* ── TAB COTIZAR ────────────────────────────────────────────── */}
+      {tab === 'cotizar' && (
         <>
-          <div className="logi-tariff-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 16, alignItems: 'start' }}>
 
-            {/* ── Formulario ── */}
-            <div className="card" style={{ borderRadius: 24, padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* ── Panel izquierdo: Selector de cliente ── */}
+            <div className="card" style={{ borderRadius: 24, padding: '18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                <i className="fa fa-plus" style={{ color: 'var(--brand)', marginRight: 6 }} />Nueva tarifa
+                <i className="fa fa-user" style={{ color: 'var(--brand)', marginRight: 6 }} />Cliente a cotizar
               </div>
 
-              <div className="fg" style={{ marginBottom: 0 }}>
-                <label>Zona / Destino</label>
-                <div style={{ position: 'relative' }}>
-                  <i className="fa fa-map-pin" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
-                  <input type="text" value={tzForm.zone} onChange={e => setTzForm(f => ({ ...f, zone: e.target.value }))} placeholder="Córdoba Capital" style={{ paddingLeft: 28 }} />
+              {/* Buscador */}
+              <div style={{ position: 'relative' }}>
+                <i className="fa fa-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
+                <input
+                  type="text"
+                  value={cotizSearch}
+                  onChange={e => { setCotizSearch(e.target.value); setCotizClient(null) }}
+                  placeholder="Buscar empresa o contacto…"
+                  style={{ paddingLeft: 30 }}
+                />
+              </div>
+
+              {/* Resultados del buscador */}
+              {cotizSearch && !cotizClient && cotizFilteredClients.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+                  {cotizFilteredClients.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => { setCotizClient(c); setCotizSearch(c.company || c.contact || '') }}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s, background .15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand-xlt)'; e.currentTarget.style.borderColor = 'var(--brand)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{c.company || c.contact}</span>
+                      {c.company && c.contact && <span style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{c.contact}</span>}
+                      {c.wa && <span style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}><i className="fa-brands fa-whatsapp" style={{ marginRight: 4 }} />{c.wa}</span>}
+                    </button>
+                  ))}
                 </div>
-              </div>
+              )}
+              {cotizSearch && !cotizClient && cotizFilteredClients.length === 0 && (
+                <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: '12px 0' }}>Sin resultados</div>
+              )}
 
-              <div className="fg" style={{ marginBottom: 0 }}>
-                <label>Empresa de envío</label>
-                <div style={{ position: 'relative' }}>
-                  <i className="fa fa-truck" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
-                  <input type="text" list="carriers-list-tz" value={tzForm.carrier || ''} onChange={e => setTzForm(f => ({ ...f, carrier: e.target.value }))} placeholder="Vía Cargo…" autoComplete="off" style={{ paddingLeft: 28 }} />
-                  <datalist id="carriers-list-tz">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
+              {/* Cliente seleccionado */}
+              {cotizClient && (
+                <div style={{ background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: 16, padding: '14px 16px' }}>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--txt)' }}>{cotizClient.company || cotizClient.contact}</div>
+                  {cotizClient.company && cotizClient.contact && <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>{cotizClient.contact}</div>}
+                  {cotizClient.wa ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 13, fontWeight: 700, color: '#15803D' }}>
+                      <i className="fa-brands fa-whatsapp" />
+                      <span>{cotizClient.wa}</span>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: 'var(--amber)', marginTop: 6 }}><i className="fa fa-triangle-exclamation" style={{ marginRight: 4 }} />Sin número de WhatsApp</div>
+                  )}
+                  <button
+                    onClick={() => { setCotizClient(null); setCotizSearch('') }}
+                    style={{ marginTop: 10, fontSize: 11, color: 'var(--txt3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <i className="fa fa-xmark" />Cambiar cliente
+                  </button>
                 </div>
-              </div>
+              )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>$/kg</label>
-                  <div style={{ position: 'relative' }}>
-                    <i className="fa fa-scale-balanced" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 10, pointerEvents: 'none', zIndex: 1 }} />
-                    <input type="number" value={tzForm.ppkg} onChange={e => setTzForm(f => ({ ...f, ppkg: e.target.value }))} placeholder="0" style={{ paddingLeft: 26 }} />
-                  </div>
-                </div>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>Mínimo $</label>
-                  <div style={{ position: 'relative' }}>
-                    <i className="fa fa-coins" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 10, pointerEvents: 'none', zIndex: 1 }} />
-                    <input type="number" value={tzForm.min} onChange={e => setTzForm(f => ({ ...f, min: e.target.value }))} placeholder="0" style={{ paddingLeft: 26 }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="fg" style={{ marginBottom: 0 }}>
-                <label>Días hábiles</label>
-                <div style={{ position: 'relative' }}>
-                  <i className="fa fa-clock" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
-                  <input type="number" value={tzForm.days} onChange={e => setTzForm(f => ({ ...f, days: e.target.value }))} placeholder="0" style={{ paddingLeft: 28 }} />
-                </div>
-              </div>
-
-              <div className="fg" style={{ marginBottom: 0 }}>
-                <label>Notas</label>
-                <input type="text" value={tzForm.notes} onChange={e => setTzForm(f => ({ ...f, notes: e.target.value }))} placeholder="Observaciones…" />
-              </div>
-
-              <button
-                className="btn btn-primary"
-                disabled={adding}
-                onClick={() => {
-                  if (!tzForm.zone) { toast('Ingresá la zona.', 'er'); return }
-                  setAdding(true); addTariff(); setTimeout(() => setAdding(false), 700)
-                }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 2 }}
-              >
-                {adding ? <><i className="fa fa-circle-notch fa-spin" /> Agregando…</> : <><i className="fa fa-plus" /> Agregar tarifa</>}
-              </button>
-            </div>
-
-            {/* ── Lista de tarifas ── */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt2)' }}>Tarifas configuradas</span>
-                <span style={{ fontSize: 11, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 10px', borderRadius: 20, fontWeight: 600 }}>
-                  {tariffs.length} zona{tariffs.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              {tariffs.length ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {tariffs.map(t => {
-                    const carrierCls = {
-                      'Correo Argentino': 'b-amber', 'OCA': 'b-blue', 'Andreani': 'b-purple',
-                      'Vía Cargo': 'b-confirmed', 'En mano': 'b-draft',
-                    }
-                    return (
-                      <div
-                        key={t.id}
-                        style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, transition: 'box-shadow .15s, border-color .15s' }}
-                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,.07)'; e.currentTarget.style.borderColor = 'var(--txt4)' }}
-                        onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--border)' }}
-                      >
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--txt)' }}>{t.zone}</span>
-                            {t.carrier && <span className={`badge ${carrierCls[t.carrier] || 'b-draft'}`} style={{ fontSize: 10, padding: '2px 7px' }}>{t.carrier}</span>}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 12, color: 'var(--txt3)', flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(t.ppkg)}/kg</span>
-                            <span>mín {fmt(t.min)}</span>
-                            {t.notes && <span style={{ color: 'var(--txt4)', fontStyle: 'italic' }}>{t.notes}</span>}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          <div style={{ textAlign: 'center', background: 'var(--surface2)', borderRadius: 12, padding: '6px 12px', minWidth: 48 }}>
-                            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', fontFamily: 'ui-monospace,SFMono-Regular,monospace', lineHeight: 1 }}>{t.days || 0}d</div>
-                            <div style={{ fontSize: 9, color: 'var(--txt4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.4px', marginTop: 2 }}>
-                              <i className="fa fa-clock" style={{ marginRight: 2, fontSize: 8 }} />háb.
-                            </div>
-                          </div>
-                          <button className="logi-act-circ del" onClick={() => delTariff(t.id)} title="Eliminar">
-                            <i className="fa fa-trash" />
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', background: 'var(--surface2)', borderRadius: 24, border: '2px dashed var(--border)', textAlign: 'center', minHeight: 200 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
-                    <i className="fa fa-route" style={{ fontSize: 20, color: 'var(--brand)' }} />
-                  </div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--txt2)', marginBottom: 6 }}>Sin zonas configuradas</div>
-                  <div style={{ fontSize: 12, color: 'var(--txt3)', maxWidth: 220 }}>Optimizá tus envíos configurando tu primera zona de tarifas</div>
+              {!cotizClient && !cotizSearch && (
+                <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: '16px 0', lineHeight: 1.6 }}>
+                  Buscá un cliente para activar el envío directo por WhatsApp
                 </div>
               )}
             </div>
-          </div>
 
-          {/* ── Cotizadores + Herramientas de Despacho ── */}
-          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* ── Panel derecho: Herramientas ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-            {/* Barra cotizadores oficiales + Plantilla WA */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', flexShrink: 0 }}>
-                <i className="fa fa-arrow-up-right-from-square" style={{ marginRight: 6 }} />Cotizar en:
-              </span>
-              {[
-                { name: 'OCA', url: 'https://www.oca.com.ar', cls: 'b-blue' },
-                { name: 'Vía Cargo', url: 'https://www.viacargo.com.ar', cls: 'b-confirmed' },
-                { name: 'Andreani', url: 'https://www.andreani.com', cls: 'b-purple' },
-                { name: 'Correo Argentino', url: 'https://www.correoargentino.com.ar', cls: 'b-amber' },
-              ].map(c => (
-                <a key={c.name} href={c.url} target="_blank" rel="noreferrer"
-                  className={`badge ${c.cls}`}
-                  style={{ fontSize: 12, padding: '6px 14px', borderRadius: 12, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fa fa-globe" style={{ fontSize: 10 }} />
-                  {c.name}
-                </a>
-              ))}
-              <div style={{ flex: 1 }} />
+              {/* Cotizadores oficiales */}
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', flexShrink: 0 }}>
+                  <i className="fa fa-arrow-up-right-from-square" style={{ marginRight: 6 }} />Cotizar en:
+                </span>
+                {[
+                  { name: 'OCA', url: 'https://www.oca.com.ar', cls: 'b-blue' },
+                  { name: 'Vía Cargo', url: 'https://www.viacargo.com.ar', cls: 'b-confirmed' },
+                  { name: 'Andreani', url: 'https://www.andreani.com', cls: 'b-purple' },
+                  { name: 'Correo Argentino', url: 'https://www.correoargentino.com.ar', cls: 'b-amber' },
+                ].map(c => (
+                  <a key={c.name} href={c.url} target="_blank" rel="noreferrer"
+                    className={`badge ${c.cls}`}
+                    style={{ fontSize: 12, padding: '6px 14px', borderRadius: 12, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <i className="fa fa-globe" style={{ fontSize: 10 }} />
+                    {c.name}
+                  </a>
+                ))}
+              </div>
+
+              {/* Botón WhatsApp dinámico */}
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText('¡Hola! El costo de envío para tu pedido es de $________ a través de ________. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda quedo atento!')
-                  toast('Plantilla copiada al portapapeles ✓', 'ok')
+                  const msg = '¡Hola! El costo de envío para tu pedido es de $________ a través de ________. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!'
+                  if (cotizClient?.wa) {
+                    const num = cotizClient.wa.replace(/\D/g, '')
+                    window.open(`https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}`, '_blank')
+                  } else {
+                    navigator.clipboard.writeText(msg)
+                    window.open('https://web.whatsapp.com/', '_blank')
+                    toast('Texto copiado. Seleccioná el contacto en WhatsApp Web.', 'ok')
+                  }
                 }}
-                style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#F0FDF4', border: '1.5px solid #86EFAC', color: '#15803D', borderRadius: 12, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                <i className="fa fa-copy" />
-                Copiar plantilla WA
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  background: cotizClient?.wa ? '#16A34A' : '#F0FDF4',
+                  border: `2px solid ${cotizClient?.wa ? '#15803D' : '#86EFAC'}`,
+                  color: cotizClient?.wa ? '#fff' : '#15803D',
+                  borderRadius: 20, padding: '16px 24px', fontSize: 15, fontWeight: 800,
+                  cursor: 'pointer', width: '100%', transition: 'all .2s',
+                }}>
+                <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} />
+                {cotizClient?.wa
+                  ? `Enviar cotización a ${cotizClient.company || cotizClient.contact}`
+                  : 'Abrir WhatsApp Web + Copiar texto'}
               </button>
-            </div>
 
-            {/* Mis Datos de Despacho */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px' }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
-                <i className="fa fa-box-archive" style={{ marginRight: 6, color: 'var(--brand)' }} />Mis Datos de Despacho
+              {/* Vista previa del mensaje */}
+              <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 16px' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>
+                  <i className="fa fa-eye" style={{ marginRight: 5 }} />Vista previa del mensaje
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--txt2)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>
+                  "¡Hola! El costo de envío para tu pedido es de $________ a través de ________. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!"
+                </p>
               </div>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 200, display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <i className="fa fa-location-dot" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
-                  <input
-                    type="text"
-                    value={despachoDir}
-                    onChange={e => { setDespachoDir(e.target.value); localStorage.setItem('anma_desp_dir', e.target.value) }}
-                    placeholder="Dirección de retiro…"
-                    style={{ flex: 1, fontSize: 12 }}
-                  />
-                  <button
-                    onClick={() => { if (despachoDir) { navigator.clipboard.writeText(despachoDir); toast('Dirección copiada ✓', 'ok') } }}
-                    title="Copiar dirección"
-                    style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className="fa fa-copy" style={{ fontSize: 11 }} />
-                  </button>
-                </div>
-                <div style={{ flex: '0 0 220px', display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <i className="fa fa-id-card" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
-                  <input
-                    type="text"
-                    value={despachoCUIT}
-                    onChange={e => { setDespachoCUIT(e.target.value); localStorage.setItem('anma_desp_cuit', e.target.value) }}
-                    placeholder="CUIT…"
-                    style={{ flex: 1, fontSize: 12 }}
-                  />
-                  <button
-                    onClick={() => { if (despachoCUIT) { navigator.clipboard.writeText(despachoCUIT); toast('CUIT copiado ✓', 'ok') } }}
-                    title="Copiar CUIT"
-                    style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className="fa fa-copy" style={{ fontSize: 11 }} />
-                  </button>
-                </div>
+
+            </div>
+          </div>
+
+          {/* ── Mis Datos de Despacho ── */}
+          <div style={{ marginTop: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
+              <i className="fa fa-box-archive" style={{ marginRight: 6, color: 'var(--brand)' }} />Mis Datos de Despacho
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 200, display: 'flex', gap: 8, alignItems: 'center' }}>
+                <i className="fa fa-location-dot" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
+                <input
+                  type="text"
+                  value={despachoDir}
+                  onChange={e => { setDespachoDir(e.target.value); localStorage.setItem('anma_desp_dir', e.target.value) }}
+                  placeholder="Dirección de retiro…"
+                  style={{ flex: 1, fontSize: 12 }}
+                />
+                <button
+                  onClick={() => { if (despachoDir) { navigator.clipboard.writeText(despachoDir); toast('Dirección copiada ✓', 'ok') } }}
+                  title="Copiar dirección"
+                  style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className="fa fa-copy" style={{ fontSize: 11 }} />
+                </button>
+              </div>
+              <div style={{ flex: '0 0 220px', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <i className="fa fa-id-card" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
+                <input
+                  type="text"
+                  value={despachoCUIT}
+                  onChange={e => { setDespachoCUIT(e.target.value); localStorage.setItem('anma_desp_cuit', e.target.value) }}
+                  placeholder="CUIT…"
+                  style={{ flex: 1, fontSize: 12 }}
+                />
+                <button
+                  onClick={() => { if (despachoCUIT) { navigator.clipboard.writeText(despachoCUIT); toast('CUIT copiado ✓', 'ok') } }}
+                  title="Copiar CUIT"
+                  style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className="fa fa-copy" style={{ fontSize: 11 }} />
+                </button>
               </div>
             </div>
-
           </div>
         </>
       )}
