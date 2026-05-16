@@ -516,66 +516,92 @@ export default function Config() {
       </div>
 
       {tab === 'identidad' && (
-        <div className="card" style={{ maxWidth: 600 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 28, alignItems: 'start' }}>
-            <div>
-              <div className="fl" style={{ marginBottom: 8 }}>Logo</div>
-              <div className="logo-zone" onClick={() => document.getElementById('logo-file').click()}>
-                {c.logo ? <img src={c.logo} alt="" /> : <><i className="fa fa-camera" style={{ fontSize: 22 }} /><span>Subir logo</span></>}
-              </div>
-              <input type="file" id="logo-file" accept="image/*" style={{ display: 'none' }} onChange={handleLogo} />
-              <button className="btn btn-ghost btn-xs" style={{ marginTop: 8, width: '100%' }} onClick={removeLogo}>Quitar</button>
-              <div style={{ fontSize: 10, color: 'var(--txt3)', textAlign: 'center', marginTop: 4 }}>PNG/JPG · máx 300KB</div>
-            </div>
-            <div>
-              <div className="fg"><label>Nombre del negocio</label><input type="text" value={bname} onChange={e => setBname(e.target.value)} placeholder="ANMA" /></div>
-              <div className="fg"><label>Subtítulo</label><input type="text" value={bsub} onChange={e => setBsub(e.target.value)} placeholder="Tu negocio en un solo lugar" /></div>
-              {/* ── Selector de Marca Blanca ── */}
-              <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '16px 18px', marginTop: 8, border: '1.5px solid var(--border)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: 12 }}>Colores de marca</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  {/* Color Principal */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--txt2)', marginBottom: 6, letterSpacing: '.5px', textTransform: 'uppercase' }}>
-                      <i className="fa fa-palette" style={{ marginRight: 5, color: bcolor }} />Color Principal
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input type="color" value={bcolor} onChange={e => handlePrincipalChange(e.target.value)}
-                        style={{ width: 44, height: 36, border: '2px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2, background: 'var(--surface)' }} />
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: bcolor, fontFamily: 'monospace' }}>{bcolor.toUpperCase()}</div>
-                        <div style={{ fontSize: 9, color: 'var(--txt3)' }}>Sidebar, botones, badges</div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Color Acento */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--txt2)', marginBottom: 6, letterSpacing: '.5px', textTransform: 'uppercase' }}>
-                      <i className="fa fa-droplet" style={{ marginRight: 5, color: acolor }} />Color Acento
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input type="color" value={acolor} onChange={e => handleAcentoChange(e.target.value)}
-                        style={{ width: 44, height: 36, border: '2px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2, background: 'var(--surface)' }} />
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: acolor, fontFamily: 'monospace' }}>{acolor.toUpperCase()}</div>
-                        <div style={{ fontSize: 9, color: 'var(--txt3)' }}>Detalles, ganancias, estados</div>
-                      </div>
-                    </div>
-                  </div>
+        <div className="card" style={{ maxWidth: 900 }}>
+          <div className="cfg-id-grid">
+            {/* ── Columna Izquierda: Logo + Datos ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <div className="cfg-logo-box" onClick={() => document.getElementById('logo-file').click()}>
+                  {c.logo
+                    ? <><img src={c.logo} alt="Logo" /><div className="cfg-logo-ov"><i className="fa fa-camera" /></div></>
+                    : <><i className="fa fa-camera" style={{ fontSize: 26 }} /><span style={{ fontSize: 11, fontWeight: 600 }}>Subir logo</span></>
+                  }
                 </div>
-                {/* Vista previa */}
-                <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ display: 'flex', gap: 6, flex: 1, alignItems: 'center' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 6, background: bcolor, flexShrink: 0 }} />
-                    <div style={{ width: 28, height: 28, borderRadius: 6, background: acolor, flexShrink: 0 }} />
-                    <div style={{ width: 28, height: 28, borderRadius: 6, background: `linear-gradient(135deg, ${bcolor}, ${acolor})`, flexShrink: 0 }} />
-                    <span style={{ fontSize: 10, color: 'var(--txt3)', marginLeft: 4 }}>Vista previa en vivo</span>
-                  </div>
-                  <button className="btn btn-ghost btn-xs" onClick={resetColors} title="Restaurar colores originales">
-                    <i className="fa fa-rotate-left" /> Reset
+                <input type="file" id="logo-file" accept="image/*" style={{ display: 'none' }} onChange={handleLogo} />
+                {c.logo && (
+                  <button onClick={removeLogo} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--txt4)', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 6, transition: 'color .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--red)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--txt4)'}>
+                    <i className="fa fa-trash" style={{ fontSize: 10 }} /> Quitar logo
                   </button>
+                )}
+                <div style={{ fontSize: 10, color: 'var(--txt4)', textAlign: 'center' }}>PNG / JPG · máx 300 KB</div>
+              </div>
+              <div className="fg">
+                <label>Nombre del negocio</label>
+                <input type="text" value={bname} onChange={e => setBname(e.target.value)} placeholder="ANMA" style={{ borderRadius: 12 }} />
+              </div>
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label>Subtítulo</label>
+                <input type="text" value={bsub} onChange={e => setBsub(e.target.value)} placeholder="Tu negocio en un solo lugar" style={{ borderRadius: 12 }} />
+              </div>
+            </div>
+
+            {/* ── Columna Derecha: Colores + Vista previa ── */}
+            <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: '20px 22px', border: '1.5px solid var(--border)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', letterSpacing: '.8px', textTransform: 'uppercase', marginBottom: 16 }}>
+                <i className="fa fa-palette" style={{ marginRight: 6, color: 'var(--brand)' }} />Colores de marca
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+                {/* Color Principal */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--txt2)', marginBottom: 8, letterSpacing: '.5px', textTransform: 'uppercase' }}>
+                    Color Principal
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input type="color" value={bcolor} onChange={e => handlePrincipalChange(e.target.value)}
+                      style={{ width: 48, height: 48, border: '2px solid var(--border)', borderRadius: 12, cursor: 'pointer', padding: 3, background: 'var(--surface)' }} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: bcolor, fontFamily: 'monospace' }}>{bcolor.toUpperCase()}</div>
+                      <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 2 }}>Sidebar · botones · badges</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Color Acento */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--txt2)', marginBottom: 8, letterSpacing: '.5px', textTransform: 'uppercase' }}>
+                    Color Acento
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input type="color" value={acolor} onChange={e => handleAcentoChange(e.target.value)}
+                      style={{ width: 48, height: 48, border: '2px solid var(--border)', borderRadius: 12, cursor: 'pointer', padding: 3, background: 'var(--surface)' }} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: acolor, fontFamily: 'monospace' }}>{acolor.toUpperCase()}</div>
+                      <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 2 }}>Detalles · ganancias · estados</div>
+                    </div>
+                  </div>
                 </div>
               </div>
+              {/* Vista previa en vivo */}
+              <div style={{ borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                <div style={{ padding: '8px 12px', fontSize: 10, fontWeight: 700, color: 'var(--txt3)', letterSpacing: '.6px', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>
+                  Vista previa en vivo
+                </div>
+                <div style={{ padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: bcolor }} />
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: acolor }} />
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg,${bcolor},${acolor})` }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ width: '60%', height: 8, borderRadius: 4, background: bcolor, marginBottom: 6, opacity: .9 }} />
+                    <div style={{ width: '40%', height: 6, borderRadius: 4, background: acolor, opacity: .7 }} />
+                  </div>
+                </div>
+              </div>
+              <button className="btn btn-ghost btn-xs" onClick={resetColors} style={{ marginTop: 12, width: '100%' }}>
+                <i className="fa fa-rotate-left" /> Restaurar colores originales
+              </button>
             </div>
           </div>
         </div>
@@ -689,11 +715,12 @@ export default function Config() {
       )}
 
       {tab === 'modulos' && (
-        <div style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ padding: '12px 16px', background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)', fontSize: 12.5, color: 'var(--txt3)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <div style={{ maxWidth: 900 }}>
+          <div style={{ padding: '12px 16px', background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)', fontSize: 12.5, color: 'var(--txt3)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <i className="fa fa-circle-info" style={{ color: 'var(--brand)', fontSize: 15 }} />
             Activá o desactivá funciones opcionales. Los cambios aplican <b>solo a tu cuenta</b>, no afectan a otros usuarios.
           </div>
+          <div className="feat-grid">
           {FEATURE_FLAGS.map(f => {
             const active = !!(c.features?.[f.key])
             return (
@@ -730,6 +757,7 @@ export default function Config() {
               </div>
             )
           })}
+          </div>
         </div>
       )}
 
