@@ -218,9 +218,15 @@ export default function Config() {
   const [resendFrom, setResendFrom] = useState(c.resendFrom || '')
   const [resendEnabled, setResendEnabled] = useState(c.resendEnabled === true)
   const [resendTesting, setResendTesting] = useState(false)
+  const [resendTestResult, setResendTestResult] = useState(null) // null | 'ok' | 'error'
+  const [resendShowInstructions, setResendShowInstructions] = useState(!c.resendApiKey)
+  const [gsTesting, setGsTesting] = useState(false)
+  const [gsShowInstructions, setGsShowInstructions] = useState(!initSheets.url)
+  const [mpTesting, setMpTesting] = useState(false)
   const testResend = async () => {
     if (!resendKey.trim() || !resendFrom.trim()) { toast('Completá API Key y email de envío primero.', 'er'); return }
     setResendTesting(true)
+    setResendTestResult(null)
     try {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -233,15 +239,15 @@ export default function Config() {
         }),
       })
       if (res.ok) {
-        toast('Email de prueba enviado — revisá tu bandeja de entrada.', 'ok')
+        setResendTestResult('ok')
         updateConfig({ resendApiKey: resendKey.trim(), resendFrom: resendFrom.trim(), resendEnabled: true })
         setResendEnabled(true)
+        setResendShowInstructions(false)
       } else {
-        const d = await res.json().catch(() => ({}))
-        toast(`Error: ${d.message || d.name || 'API Key inválida'}`, 'er')
+        setResendTestResult('error')
       }
     } catch (e) {
-      toast('No se pudo conectar con Resend. Verificá la API Key.', 'er')
+      setResendTestResult('error')
     }
     setResendTesting(false)
   }
@@ -295,7 +301,7 @@ export default function Config() {
   const saveAll = () => {
     updateConfig({
       businessName: bname, subtitle: bsub, brandColor: bcolor, accentColor: acolor,
-      contactEmail: cEmail, contactWA: cWA, contactIG: cIG, contactWeb: cWeb, address: cAddr,
+      contactEmail: cEmail, contactWA: cWA.replace(/[^\d]/g, ''), contactIG: cIG, contactWeb: cWeb, address: cAddr,
       currency, numberFormat, budgetPrefix: prefix, defaultMargin: Number(defMargin), defaultDeposit: Number(defDeposit), validity: Number(validity),
       paymentConditions: conds, legalNote: legal,
       ivaEnabled, ivaRate: Number(ivaRate), otrosImpuestosRate: Number(otrosImp),
@@ -325,15 +331,18 @@ export default function Config() {
     toast('Integración con Google Sheets guardada', 'ok')
   }
   const testSheets = async () => {
+    setGsTesting(true)
     setGsTestResult('<span style="color:var(--amber)"><i class="fa fa-spinner fa-spin"></i> Enviando ping...</span>')
     const r = await testSheetsConnection(gsUrl.trim())
     if (r.ok) {
       setGsTestResult(`<span style="color:var(--green)"><i class="fa fa-circle-check"></i> ${r.message}</span>`)
       setSheetsConfig({ enabled: gsEnabled, url: gsUrl.trim(), autoSync: gsAuto, lastSync: new Date().toISOString(), lastStatus: 'ok' })
       setGsLastSync(new Date().toISOString()); setGsLastStatus('ok')
+      setGsShowInstructions(false)
     } else {
       setGsTestResult(`<span style="color:var(--red)"><i class="fa fa-circle-xmark"></i> ${r.message}</span>`)
     }
+    setGsTesting(false)
   }
   const syncAllBudgets = async () => {
     if (!gsEnabled || !gsUrl.trim()) { toast('Primero activá y configurá la URL de Google Sheets.', 'er'); return }
@@ -355,10 +364,12 @@ export default function Config() {
 
   const testMP = async () => {
     if (!mpToken) { toast('Ingresá un Access Token.', 'er'); return }
+    setMpTesting(true)
     setMpTestResult('<span style="color:var(--amber)"><i class="fa fa-spinner fa-spin"></i> Probando...</span>')
     const r = await testMPConnection(mpToken)
     if (r.ok) setMpTestResult(`<span style="color:var(--green)"><i class="fa fa-circle-check"></i> Conexión exitosa — ${r.count} métodos disponibles</span>`)
     else setMpTestResult(`<span style="color:var(--red)"><i class="fa fa-circle-xmark"></i> Error: ${r.message}</span>`)
+    setMpTesting(false)
   }
 
   const handleChangePass = async () => {
@@ -805,7 +816,10 @@ export default function Config() {
                   <button className={`toggle ${mpSena ? 'on' : ''}`} onClick={() => setMpSena(!mpSena)} />
                 </div>
                 <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn btn-ghost" onClick={testMP} style={{minHeight:44}}><i className="fa fa-flask-vial" /> Probar conexión</button>
+                  <button className="btn btn-ghost" onClick={testMP} disabled={mpTesting} style={{minHeight:44}}>
+                    <i className={`fa ${mpTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
+                    {mpTesting ? ' Probando...' : ' Probar conexión'}
+                  </button>
                 </div>
                 {mpTestResult && <div style={{ marginTop: 12, fontSize: 12 }} dangerouslySetInnerHTML={{ __html: mpTestResult }} />}
               </div>
@@ -946,15 +960,21 @@ export default function Config() {
             </div>
             {resendEnabled && (
               <div className="pay-card-body">
-                <div style={{ background: 'rgba(0,0,0,.04)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, fontSize: 11, color: 'var(--txt2)', lineHeight: 1.6 }}>
-                  <div style={{ fontWeight: 700, marginBottom: 4 }}>Cómo obtener tu API Key gratis:</div>
-                  <ol style={{ margin: 0, paddingLeft: 18 }}>
-                    <li>Entrá a <b>resend.com</b> y creá una cuenta gratuita (hasta 3.000 emails/mes gratis).</li>
-                    <li>En el dashboard: <b>API Keys → Create API Key</b>.</li>
-                    <li>Copiá la key y pegala abajo.</li>
-                    <li>En "Email de envío" usá <b>onboarding@resend.dev</b> si no verificaste tu dominio todavía.</li>
-                  </ol>
-                </div>
+                {resendShowInstructions ? (
+                  <div style={{ background: 'rgba(0,0,0,.04)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, fontSize: 11, color: 'var(--txt2)', lineHeight: 1.6 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 4 }}>Cómo obtener tu API Key gratis:</div>
+                    <ol style={{ margin: 0, paddingLeft: 18 }}>
+                      <li>Entrá a <b>resend.com</b> y creá una cuenta gratuita (hasta 3.000 emails/mes gratis).</li>
+                      <li>En el dashboard: <b>API Keys → Create API Key</b>.</li>
+                      <li>Copiá la key y pegala abajo.</li>
+                      <li>En "Email de envío" usá <b>onboarding@resend.dev</b> si no verificaste tu dominio todavía.</li>
+                    </ol>
+                  </div>
+                ) : (
+                  <button onClick={() => setResendShowInstructions(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--brand)', padding: '0 0 14px', display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'inherit' }}>
+                    <i className="fa fa-circle-info" style={{ fontSize: 10 }} /> Ver instrucciones de configuración ▾
+                  </button>
+                )}
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 12 }}>
                   <div className="fg" style={{ marginBottom: 0 }}>
                     <label><i className="fa fa-key" style={{ marginRight: 4, color: '#000' }} />API Key de Resend</label>
@@ -968,7 +988,7 @@ export default function Config() {
                       placeholder="tu@empresa.com" />
                   </div>
                 </div>
-                <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <button className="btn btn-ghost" onClick={testResend} disabled={resendTesting} style={{minHeight:44}}>
                     <i className={`fa ${resendTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
                     {resendTesting ? ' Enviando...' : ' Probar conexión'}
@@ -976,6 +996,12 @@ export default function Config() {
                   <button className="btn btn-primary btn-sm" onClick={saveResend}>
                     <i className="fa fa-floppy-disk" /> Guardar
                   </button>
+                  {resendTestResult && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, fontSize: 11.5, fontWeight: 700, background: resendTestResult === 'ok' ? 'rgba(16,185,129,.1)' : 'rgba(220,38,38,.1)', color: resendTestResult === 'ok' ? '#059669' : 'var(--red)', border: `1.5px solid ${resendTestResult === 'ok' ? 'rgba(16,185,129,.35)' : 'rgba(220,38,38,.35)'}` }}>
+                      <i className={`fa ${resendTestResult === 'ok' ? 'fa-circle-check' : 'fa-circle-xmark'}`} />
+                      {resendTestResult === 'ok' ? 'Conexión exitosa' : 'Error de credenciales'}
+                    </div>
+                  )}
                 </div>
                 <div style={{ marginTop: 12, padding: '9px 13px', borderRadius: 9, background: 'rgba(124,58,237,.07)', border: '1px solid rgba(124,58,237,.2)', fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
                   <i className="fa fa-circle-check" style={{ color: 'var(--brand)', marginRight: 6 }} />
@@ -1003,28 +1029,32 @@ export default function Config() {
             {gsEnabled && (
               <div className="pay-card-body">
 
-                {/* Pasos visuales */}
-                {[
-                  { n:1, title:'Copiá el código', desc: <>Hacé clic en <b>"Copiar código"</b> (abajo). Dejalo en el portapapeles.</> },
-                  { n:2, title:'Abrí tu Google Sheet', desc: <>En el menú de la hoja: <b>Extensiones → Apps Script</b>. Se abre el editor.</> },
-                  { n:3, title:'Pegá y guardá', desc: <>Borrá todo lo que hay, pegá el código (Ctrl+V) y guardá con <b>Ctrl+S</b>. Poné cualquier nombre al proyecto.</> },
-                  { n:4, title:'Implementar', desc: <><b>Implementar → Nueva implementación</b>. En "Tipo" elegí <b>Aplicación web</b>. En "Quién tiene acceso" elegí <b>Cualquier usuario</b>. Clic en <b>Implementar</b>.</> },
-                  { n:5, title:'Autorizá (paso normal)', desc: <><b>Google va a mostrar una advertencia.</b> Es normal — el script es tuyo. Hacé clic en <b>"Configuración avanzada"</b> (abajo a la izquierda) → <b>"Ir al proyecto (no es seguro)"</b> → <b>Permitir</b>.</>, warn: true },
-                  { n:6, title:'Copiá la URL', desc: <>Copiá la URL larga que termina en <code style={{fontSize:10}}>/exec</code> y pegala en el campo de abajo.</> },
-                  { n:7, title:'Probá la conexión', desc: <>Tocá <b>"Probar conexión"</b>. Si aparece una fila nueva en tu Sheet, ¡listo!</> },
-                ].map(s => (
-                  <div key={s.n} style={{ display:'flex', gap:12, marginBottom:10, alignItems:'flex-start' }}>
-                    <div style={{ width:24, height:24, borderRadius:'50%', background: s.warn ? '#D97706' : '#0F9D58', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, flexShrink:0, marginTop:1 }}>{s.n}</div>
-                    <div style={{ fontSize:12, color:'var(--txt2)', lineHeight:1.6 }}>
-                      <b style={{ color: s.warn ? '#92400E' : 'var(--txt)', display:'block', marginBottom:2 }}>{s.warn && '⚠️ '}{s.title}</b>
-                      {s.desc}
-                      {s.warn && <div style={{ marginTop:4, padding:'6px 10px', borderRadius:8, background:'rgba(245,158,11,.1)', border:'1px solid rgba(245,158,11,.3)', fontSize:11, color:'#92400E' }}>
-                        Si ves "Google no verificó esta app" → <b>Configuración avanzada → Ir al proyecto → Permitir</b>. Tu script, tu cuenta — es seguro.
-                      </div>}
+                {gsShowInstructions ? (<>
+                  {[
+                    { n:1, title:'Copiá el código', desc: <>Hacé clic en <b>"Copiar código"</b> (abajo). Dejalo en el portapapeles.</> },
+                    { n:2, title:'Abrí tu Google Sheet', desc: <>En el menú de la hoja: <b>Extensiones → Apps Script</b>. Se abre el editor.</> },
+                    { n:3, title:'Pegá y guardá', desc: <>Borrá todo lo que hay, pegá el código (Ctrl+V) y guardá con <b>Ctrl+S</b>. Poné cualquier nombre al proyecto.</> },
+                    { n:4, title:'Implementar', desc: <><b>Implementar → Nueva implementación</b>. En "Tipo" elegí <b>Aplicación web</b>. En "Quién tiene acceso" elegí <b>Cualquier usuario</b>. Clic en <b>Implementar</b>.</> },
+                    { n:5, title:'Autorizá (paso normal)', desc: <><b>Google va a mostrar una advertencia.</b> Es normal — el script es tuyo. Hacé clic en <b>"Configuración avanzada"</b> (abajo a la izquierda) → <b>"Ir al proyecto (no es seguro)"</b> → <b>Permitir</b>.</>, warn: true },
+                    { n:6, title:'Copiá la URL', desc: <>Copiá la URL larga que termina en <code style={{fontSize:10}}>/exec</code> y pegala en el campo de abajo.</> },
+                    { n:7, title:'Probá la conexión', desc: <>Tocá <b>"Probar conexión"</b>. Si aparece una fila nueva en tu Sheet, ¡listo!</> },
+                  ].map(s => (
+                    <div key={s.n} style={{ display:'flex', gap:12, marginBottom:10, alignItems:'flex-start' }}>
+                      <div style={{ width:24, height:24, borderRadius:'50%', background: s.warn ? '#D97706' : '#0F9D58', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, flexShrink:0, marginTop:1 }}>{s.n}</div>
+                      <div style={{ fontSize:12, color:'var(--txt2)', lineHeight:1.6 }}>
+                        <b style={{ color: s.warn ? '#92400E' : 'var(--txt)', display:'block', marginBottom:2 }}>{s.warn && '⚠️ '}{s.title}</b>
+                        {s.desc}
+                        {s.warn && <div style={{ marginTop:4, padding:'6px 10px', borderRadius:8, background:'rgba(245,158,11,.1)', border:'1px solid rgba(245,158,11,.3)', fontSize:11, color:'#92400E' }}>
+                          Si ves "Google no verificó esta app" → <b>Configuración avanzada → Ir al proyecto → Permitir</b>. Tu script, tu cuenta — es seguro.
+                        </div>}
+                      </div>
                     </div>
-                  </div>
-                ))}
-
+                  ))}
+                </>) : (
+                  <button onClick={() => setGsShowInstructions(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--brand)', padding: '0 0 10px', display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'inherit' }}>
+                    <i className="fa fa-circle-info" style={{ fontSize: 10 }} /> Ver instrucciones de configuración ▾
+                  </button>
+                )}
 
                 <div className="fg">
                   <label><i className="fa fa-link" style={{ marginRight: 4, color: '#0F9D58' }} />URL del Web App (Apps Script /exec)</label>
@@ -1048,7 +1078,10 @@ export default function Config() {
                 )}
 
                 <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn btn-ghost" onClick={testSheets} style={{minHeight:44}}><i className="fa fa-flask-vial" /> Probar conexión</button>
+                  <button className="btn btn-ghost" onClick={testSheets} disabled={gsTesting} style={{minHeight:44}}>
+                    <i className={`fa ${gsTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
+                    {gsTesting ? ' Probando...' : ' Probar conexión'}
+                  </button>
                   <button className="btn btn-primary btn-sm" onClick={saveSheetsConfig}><i className="fa fa-floppy-disk" /> Guardar integración</button>
                   <button className="btn btn-secondary btn-sm" onClick={syncAllBudgets} disabled={gsBulkLoading}>
                     <i className={`fa ${gsBulkLoading ? 'fa-spinner fa-spin' : 'fa-rotate'}`} />
