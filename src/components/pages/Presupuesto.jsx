@@ -833,12 +833,32 @@ export default function Presupuesto() {
               </>
             )}
 
-            {/* MINI TOTAL BAR — visible solo en mobile (calc-panel oculto) */}
+            {/* QUICK ACTIONS BAR — visible solo en mobile */}
             <div className="pres-mob-total">
-              <div className="pmt-label">Total</div>
-              <div className="pmt-val">{fmt(calc.total)}</div>
-              {feats.margenTabla && calc.marginLow && <span className="pmt-warn" title={`Margen bajo (< ${calc.marginThreshold}%)`}><i className="fa fa-triangle-exclamation" /></span>}
-              {feats.margenTabla && <div className="pmt-margin">{calc.marginReal}%</div>}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="pmt-label">Total</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div className="pmt-val">{fmt(calc.total)}</div>
+                  {feats.margenTabla && calc.marginLow && <span className="pmt-warn" title={`Margen bajo (< ${calc.marginThreshold}%)`}><i className="fa fa-triangle-exclamation" /></span>}
+                  {feats.margenTabla && <div className="pmt-margin">{calc.marginReal}%</div>}
+                </div>
+              </div>
+              <div className="pmt-acts">
+                <button className="pmt-act-btn" onClick={sendWhatsApp} title="Enviar presupuesto">
+                  <i className="fa-brands fa-whatsapp" style={{ fontSize: 20, color: '#4ade80' }} />
+                  <span>Enviar</span>
+                </button>
+                {bankCfg.enabled && (
+                  <button className="pmt-act-btn" onClick={sendBankDataByWA} title="Enviar datos de pago">
+                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 20, color: '#86efac' }} />
+                    <span>Pago</span>
+                  </button>
+                )}
+                <button className="pmt-act-btn" onClick={printPDF} title="Descargar PDF">
+                  <i className="fa fa-file-pdf" style={{ fontSize: 20, color: '#93C5FD' }} />
+                  <span>PDF</span>
+                </button>
+              </div>
             </div>
 
             {/* NAV WIZARD */}
@@ -901,38 +921,34 @@ export default function Presupuesto() {
                 <i className="fa fa-floppy-disk" /> Guardar Presupuesto
               </button>
 
-              {/* ── 2. COMUNICACIÓN ── */}
-              <div style={{ marginTop: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.18)', borderRadius: 10, padding: '11px 12px' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 9, display: 'flex', alignItems: 'center', gap: 5 }}>
+              {/* ── 2. COMUNICACIÓN — compact quick-action row ── */}
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <i className="fa-brands fa-whatsapp" /> Comunicación
                 </div>
-                <button onClick={sendWhatsApp}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: 'rgba(37,211,102,.22)', border: '1.5px solid rgba(37,211,102,.42)', borderRadius: 8, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s', marginBottom: 6 }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.34)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.22)'}>
-                  <i className="fa-brands fa-whatsapp" style={{ fontSize: 16, color: '#4ade80', flexShrink: 0 }} />
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>Enviar Presupuesto</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>Primer contacto con el cliente</div>
-                  </div>
-                </button>
-                {bankCfg.enabled ? (
-                  <button onClick={sendBankDataByWA}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.26)', borderRadius: 8, color: '#86efac', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.18)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.1)'}>
-                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 16, flexShrink: 0 }} />
-                    <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>Enviar Datos de Pago</div>
-                      <div style={{ fontSize: 10, color: 'rgba(134,239,172,.65)', marginTop: 2 }}>CBU / Alias para cerrar la venta</div>
-                    </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={sendWhatsApp}
+                    style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 6px', background: 'rgba(37,211,102,.2)', border: '1.5px solid rgba(37,211,102,.35)', borderRadius: 10, color: '#4ade80', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 700, minHeight: 54, transition: 'background .15s', justifyContent: 'center' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.32)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.2)'}>
+                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} />
+                    Enviar
                   </button>
-                ) : (
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,.28)', padding: '6px 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <i className="fa fa-circle-info" style={{ fontSize: 10 }} />
-                    Activá transferencia en Config › Pagos para habilitar este botón
-                  </div>
-                )}
+                  {bankCfg.enabled ? (
+                    <button onClick={sendBankDataByWA}
+                      style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 6px', background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.22)', borderRadius: 10, color: '#86efac', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, minHeight: 54, transition: 'background .15s', justifyContent: 'center' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.18)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.1)'}>
+                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} />
+                      Pago
+                    </button>
+                  ) : (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 6px', background: 'rgba(100,116,139,.06)', border: '1px dashed rgba(100,116,139,.22)', borderRadius: 10, color: 'rgba(255,255,255,.2)', fontSize: 10, minHeight: 54, justifyContent: 'center', textAlign: 'center' }}>
+                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 16 }} />
+                      Pago
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* ── 3. DOCUMENTOS ── */}
