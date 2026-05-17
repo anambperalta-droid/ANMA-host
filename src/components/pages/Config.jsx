@@ -631,72 +631,111 @@ export default function Config() {
       )}
 
       {tab === 'comercial' && (
-        <div className="card" style={{ maxWidth: 600 }}>
-          <div className="grid2">
-            <div className="fg"><label>Símbolo moneda</label><input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ maxWidth: 80 }} /></div>
-            <div className="fg"><label>Formato de números</label>
-              <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)}>
-                <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
-                <option value="en-US">1,234,567 (coma miles — US/UK)</option>
-              </select>
-            </div>
-            <div className="fg"><label>Prefijo numeración</label><input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ maxWidth: 100 }} /></div>
-            <div className="fg"><label>Margen por defecto (%)</label><input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ maxWidth: 100 }} /></div>
-            <div className="fg"><label>Seña por defecto (%)</label><input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} style={{ maxWidth: 100 }} /></div>
-            <div className="fg"><label>Validez (días)</label><input type="number" value={validity} onChange={e => setValidity(e.target.value)} style={{ maxWidth: 90 }} /></div>
-          </div>
-          <div className="fg"><label>Condiciones de pago</label><textarea value={conds} onChange={e => setConds(e.target.value)} rows={3} /></div>
-          <div className="fg"><label>Nota legal</label><textarea value={legal} onChange={e => setLegal(e.target.value)} rows={2} /></div>
-
-          {/* ── Régimen de Transparencia Fiscal (Ley 27.743) ── */}
-          <div style={{ marginTop: 16, padding: 14, background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 13, marginBottom: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={ivaEnabled} onChange={e => setIvaEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
-              <i className="fa fa-file-invoice-dollar" style={{ color: 'var(--brand)' }} />
-              Mostrar IVA en presupuesto / factura
-            </label>
-            <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 10, marginLeft: 26 }}>
-              Régimen de Transparencia Fiscal al Consumidor — Ley 27.743 (Argentina)
-            </div>
-            {ivaEnabled && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-                <div className="fg"><label>Razón social</label><input type="text" value={razonSocial} onChange={e => setRazonSocial(e.target.value)} placeholder="Tu Empresa SRL" /></div>
-                <div className="fg"><label>CUIT</label><input type="text" value={cuit} onChange={e => setCuit(e.target.value)} placeholder="20-12345678-9" /></div>
-                <div className="fg"><label>Cond. frente al IVA</label>
-                  <select value={condIva} onChange={e => setCondIva(e.target.value)}>
-                    <option>Responsable Inscripto</option>
-                    <option>Monotributista</option>
-                    <option>Exento</option>
-                    <option>Consumidor Final</option>
+        <div style={{ maxWidth: 920 }}>
+          <div className="cfg-com-grid">
+            {/* ── Cuadrante Izquierdo: Configuración general ── */}
+            <div className="card" style={{ marginBottom: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
+                <i className="fa fa-sliders" style={{ color: 'var(--brand)', fontSize: 14 }} />Configuración general
+              </div>
+              <div className="grid2">
+                <div className="fg">
+                  <label>Símbolo moneda</label>
+                  <input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ borderRadius: 12 }} />
+                </div>
+                <div className="fg">
+                  <label>Formato de números</label>
+                  <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)} style={{ borderRadius: 12 }}>
+                    <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
+                    <option value="en-US">1,234,567 (coma miles — US/UK)</option>
                   </select>
                 </div>
-                <div className="fg"><label>Pto. Venta</label><input type="text" value={ptoVenta} onChange={e => setPtoVenta(e.target.value)} placeholder="00001" style={{ maxWidth: 90 }} /></div>
-                <div className="fg"><label>Alícuota IVA (%)</label><input type="number" value={ivaRate} onChange={e => setIvaRate(e.target.value)} style={{ maxWidth: 90 }} /></div>
-                <div className="fg"><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} style={{ maxWidth: 90 }} /></div>
+                <div className="fg">
+                  <label>Prefijo numeración</label>
+                  <input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ borderRadius: 12 }} />
+                </div>
+                <div className="fg">
+                  <label>Margen por defecto (%)</label>
+                  <input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ borderRadius: 12 }} />
+                </div>
+                <div className="fg">
+                  <label>Seña por defecto (%)</label>
+                  <input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} style={{ borderRadius: 12 }} />
+                </div>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>Validez (días)</label>
+                  <input type="number" value={validity} onChange={e => setValidity(e.target.value)} style={{ borderRadius: 12 }} />
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* ── Portal Proveedor: textos editables ── */}
-          <div style={{ marginTop: 16, padding: 14, background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
-              <i className="fa fa-share-nodes" style={{ color: 'var(--brand)' }} />
-              Portal Proveedor — textos personalizables
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 10 }}>
-              Acá editás lo que dice el portal y el mensaje de WhatsApp. Si los dejás vacíos, se usan los textos por defecto.
-            </div>
-            <div className="fg">
-              <label>Mensaje principal del portal (debajo del saludo)</label>
-              <textarea value={portalIntroCopy} onChange={e => setPortalIntroCopy(e.target.value)} rows={2}
-                placeholder="Ej: Te compartimos el detalle de productos que necesitamos. Revisá precios, condiciones y confirmá disponibilidad." />
-            </div>
-            <div className="fg">
-              <label>Mensaje de WhatsApp al compartir el link</label>
-              <textarea value={portalShareMsg} onChange={e => setPortalShareMsg(e.target.value)} rows={3}
-                placeholder="Hola {contacto}! Te paso el portal con el resumen del pedido y los productos que necesito. Tiene los precios acordados, las condiciones y un botón para confirmar." />
-              <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 4 }}>
-                Variables disponibles: <code>{'{contacto}'}</code>, <code>{'{proveedor}'}</code>, <code>{'{empresa}'}</code>, <code>{'{link}'}</code>, <code>{'{cant}'}</code>
+            {/* ── Cuadrante Derecho: Textos + Fiscal + Portal ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="card" style={{ marginBottom: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <i className="fa fa-align-left" style={{ color: 'var(--brand)', fontSize: 14 }} />Textos generales
+                </div>
+                <div className="fg">
+                  <label>Condiciones de pago</label>
+                  <textarea value={conds} onChange={e => setConds(e.target.value)} rows={3} style={{ borderRadius: 12 }} />
+                </div>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>Nota legal</label>
+                  <textarea value={legal} onChange={e => setLegal(e.target.value)} rows={2} style={{ borderRadius: 12 }} />
+                </div>
+              </div>
+
+              {/* ── Régimen de Transparencia Fiscal (Ley 27.743) ── */}
+              <div className="card" style={{ marginBottom: 0 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 13, marginBottom: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={ivaEnabled} onChange={e => setIvaEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
+                  <i className="fa fa-file-invoice-dollar" style={{ color: 'var(--brand)' }} />
+                  Mostrar IVA en presupuesto / factura
+                </label>
+                <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: ivaEnabled ? 10 : 0, marginLeft: 26 }}>
+                  Régimen de Transparencia Fiscal al Consumidor — Ley 27.743 (Argentina)
+                </div>
+                {ivaEnabled && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
+                    <div className="fg"><label>Razón social</label><input type="text" value={razonSocial} onChange={e => setRazonSocial(e.target.value)} placeholder="Tu Empresa SRL" style={{ borderRadius: 12 }} /></div>
+                    <div className="fg"><label>CUIT</label><input type="text" value={cuit} onChange={e => setCuit(e.target.value)} placeholder="20-12345678-9" style={{ borderRadius: 12 }} /></div>
+                    <div className="fg"><label>Cond. frente al IVA</label>
+                      <select value={condIva} onChange={e => setCondIva(e.target.value)} style={{ borderRadius: 12 }}>
+                        <option>Responsable Inscripto</option>
+                        <option>Monotributista</option>
+                        <option>Exento</option>
+                        <option>Consumidor Final</option>
+                      </select>
+                    </div>
+                    <div className="fg"><label>Pto. Venta</label><input type="text" value={ptoVenta} onChange={e => setPtoVenta(e.target.value)} placeholder="00001" style={{ borderRadius: 12 }} /></div>
+                    <div className="fg"><label>Alícuota IVA (%)</label><input type="number" value={ivaRate} onChange={e => setIvaRate(e.target.value)} style={{ borderRadius: 12 }} /></div>
+                    <div className="fg" style={{ marginBottom: 0 }}><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} style={{ borderRadius: 12 }} /></div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Portal Proveedor: textos editables ── */}
+              <div className="card" style={{ marginBottom: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+                  <i className="fa fa-share-nodes" style={{ color: 'var(--brand)' }} />
+                  Portal Proveedor — textos personalizables
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 10 }}>
+                  Acá editás lo que dice el portal y el mensaje de WhatsApp. Si los dejás vacíos, se usan los textos por defecto.
+                </div>
+                <div className="fg">
+                  <label>Mensaje principal del portal (debajo del saludo)</label>
+                  <textarea value={portalIntroCopy} onChange={e => setPortalIntroCopy(e.target.value)} rows={2} style={{ borderRadius: 12 }}
+                    placeholder="Ej: Te compartimos el detalle de productos que necesitamos. Revisá precios, condiciones y confirmá disponibilidad." />
+                </div>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label>Mensaje de WhatsApp al compartir el link</label>
+                  <textarea value={portalShareMsg} onChange={e => setPortalShareMsg(e.target.value)} rows={3} style={{ borderRadius: 12 }}
+                    placeholder="Hola {contacto}! Te paso el portal con el resumen del pedido y los productos que necesito. Tiene los precios acordados, las condiciones y un botón para confirmar." />
+                  <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 4 }}>
+                    Variables disponibles: <code>{'{contacto}'}</code>, <code>{'{proveedor}'}</code>, <code>{'{empresa}'}</code>, <code>{'{link}'}</code>, <code>{'{cant}'}</code>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
