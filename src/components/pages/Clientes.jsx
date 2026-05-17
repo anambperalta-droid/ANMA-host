@@ -693,13 +693,17 @@ export default function Clientes() {
               <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} placeholder="+54 ..." /></div>
               <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
             </div>
-            <div className="fg"><label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud..." /></div>
-            {config().features?.descuentoCliente && (
-              <div className="fg" style={{ maxWidth: 220 }}>
-                <label>Descuento fijo (%)</label>
-                <input type="number" value={form.discount || 0} onChange={e => setF('discount', Number(e.target.value))} min="0" max="100" placeholder="0" style={{ maxWidth: 120 }} />
+            <div className="grid2">
+              <div className="fg" style={!config().features?.descuentoCliente ? { gridColumn: '1 / -1' } : undefined}>
+                <label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud..." />
               </div>
-            )}
+              {config().features?.descuentoCliente && (
+                <div className="fg">
+                  <label>Descuento fijo (%)</label>
+                  <input type="number" value={form.discount || 0} onChange={e => setF('discount', Number(e.target.value))} min="0" max="100" placeholder="0" />
+                </div>
+              )}
+            </div>
             <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} placeholder="Observaciones..." /></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
           </div>

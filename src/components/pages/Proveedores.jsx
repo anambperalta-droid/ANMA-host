@@ -736,18 +736,18 @@ export default function Proveedores() {
               <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} /></div>
               <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} /></div>
               <div className="fg">
-                <label>Rubro <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(ej: Electrónica, Textil, Alimentos)</span></label>
-                <input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Categoría / industria" />
-                {form.rubro && form.rubro.includes('@') && (
-                  <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 3, fontWeight: 600 }}>
-                    ⚠ Esto parece un email — usá el campo "Email" debajo
-                  </div>
-                )}
+                <label>Email <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(contacto@empresa.com)</span></label>
+                <input type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="contacto@proveedor.com" />
               </div>
             </div>
             <div className="fg">
-              <label>Email <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(contacto@empresa.com)</span></label>
-              <input type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="contacto@proveedor.com" />
+              <label>Rubro <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(ej: Electrónica, Textil, Alimentos)</span></label>
+              <input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Categoría / industria" />
+              {form.rubro && form.rubro.includes('@') && (
+                <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 3, fontWeight: 600 }}>
+                  ⚠ Esto parece un email — usá el campo "Email" arriba
+                </div>
+              )}
             </div>
             <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Datos fiscales y operativos</div>
             <div className="grid2">

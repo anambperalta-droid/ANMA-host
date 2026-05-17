@@ -743,8 +743,7 @@ td b{color:var(--txt);font-weight:600}
 /* ═══ NOTIFICATION BELL ═══ */
 .notif-bell{position:relative}
 .notif-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;border-radius:999px;font-size:9px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--surface);pointer-events:none;line-height:1}
-.notif-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;border:2px solid var(--surface);pointer-events:none;animation:notif-dot-pulse 2.8s ease-in-out infinite}
-@keyframes notif-dot-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.65;transform:scale(1.2)}}
+.notif-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;border:2px solid var(--surface);pointer-events:none}
 @keyframes pulse-ring{0%{transform:scale(1);opacity:.7}70%{transform:scale(1.45);opacity:0}100%{transform:scale(1.45);opacity:0}}
 .pulse-critical::after{content:'';position:absolute;inset:0;border-radius:8px;background:var(--red);animation:pulse-ring 1.4s ease-out infinite;pointer-events:none}
 
