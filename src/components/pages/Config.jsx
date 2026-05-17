@@ -639,14 +639,11 @@ export default function Config() {
       )}
 
       {tab === 'comercial' && (
-        <div style={{ maxWidth: 920 }}>
+        <div style={{ maxWidth: 1100 }}>
           <div className="cfg-com-grid">
 
-            {/* ══ COLUMNA IZQUIERDA ══ */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-              {/* Tarjeta 1 — Configuración general */}
-              <div className="card" style={{ marginBottom: 0 }}>
+            {/* ══ COLUMNA 1 — Configuración general ══ */}
+            <div className="card" style={{ marginBottom: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <i className="fa fa-sliders" style={{ color: 'var(--brand)', fontSize: 14 }} />Configuración general
                 </div>
@@ -688,8 +685,8 @@ export default function Config() {
                 </div>
               </div>
 
-              {/* Tarjeta 2 — IVA / Transparencia Fiscal */}
-              <div className="card" style={{ marginBottom: 0 }}>
+            {/* ══ COLUMNA 2 — IVA / Transparencia Fiscal ══ */}
+            <div className="card" style={{ marginBottom: 0 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 13, marginBottom: 8, cursor: 'pointer' }}>
                   <input type="checkbox" checked={ivaEnabled} onChange={e => setIvaEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
                   <i className="fa fa-file-invoice-dollar" style={{ color: 'var(--brand)' }} />
@@ -716,9 +713,7 @@ export default function Config() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* ══ COLUMNA DERECHA ══ */}
+            {/* ══ COLUMNA 3 — Textos generales + Portal Proveedor ══ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               {/* Tarjeta 1 — Textos generales */}
