@@ -20,6 +20,7 @@ import Proveedores from '../pages/Proveedores'
 import Logistica from '../pages/Logistica'
 import Mensajes from '../pages/Mensajes'
 import Config from '../pages/Config'
+import Insumos from '../pages/Insumos'
 import Admin from '../pages/Admin'
 
 const PRIORITIES = [
@@ -289,6 +290,7 @@ function AppShellInner() {
             <Route path="/clientes" element={<Guard perm="cliente.view"><Clientes /></Guard>} />
             <Route path="/catalogo" element={<Guard perm="catalogo.view"><Catalogo /></Guard>} />
             <Route path="/proveedores" element={<Guard perm="proveedor.view"><Proveedores /></Guard>} />
+            <Route path="/insumos" element={<Guard perm="catalogo.view"><Insumos /></Guard>} />
             <Route path="/logistica" element={<Guard perm="logistica.view"><Logistica /></Guard>} />
             <Route path="/mensajes" element={<Guard perm="mensajes.view"><Mensajes /></Guard>} />
             <Route path="/config" element={<Guard perm="config.access"><Config /></Guard>} />
@@ -309,6 +311,9 @@ function AppShellInner() {
         )}
         {can('mensajes.view') && (
           <BottomSheetItem icon="fa-brands fa-whatsapp" label="Mensajes WA" sub="Plantillas y envíos" onClick={() => goSheet('/mensajes')} iconBg="#DCFCE7" iconColor="#16A34A" />
+        )}
+        {can('catalogo.view') && (
+          <BottomSheetItem icon="fa-cubes" label="Packaging" sub="Materiales y presentación" onClick={() => goSheet('/insumos')} />
         )}
         {can('config.access') && (
           <BottomSheetItem icon="fa-gear" label="Configuración" sub="Personalización y datos" onClick={() => goSheet('/config')} iconBg="var(--surface2)" iconColor="var(--txt2)" />

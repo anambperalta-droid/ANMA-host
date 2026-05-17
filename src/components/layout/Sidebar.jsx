@@ -12,6 +12,7 @@ const NAV = [
   { section: 'Catálogo' },
   { path: '/catalogo', icon: 'fa-box-open', label: 'Productos', chipKey: 'products', perm: 'catalogo.view' },
   { path: '/proveedores', icon: 'fa-industry', label: 'Proveedores', chipKey: 'suppliers', perm: 'proveedor.view' },
+  { path: '/insumos', icon: 'fa-cubes', label: 'Packaging', perm: 'catalogo.view' },
   { path: '/logistica', icon: 'fa-truck-fast', label: 'Logística', perm: 'logistica.view' },
   { section: 'Comunicación' },
   { path: '/mensajes', icon: 'fa-brands fa-whatsapp', label: 'Mensajes WA', perm: 'mensajes.view' },

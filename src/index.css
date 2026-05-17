@@ -1469,3 +1469,51 @@ td b{color:var(--txt);font-weight:600}
 @media(min-width:641px){.dash-ctrl-bar{display:none}}
 @media(max-width:640px){.tab-bar-dash{display:none!important}}
 @media(max-width:640px){.bento-chart-bar{max-height:176px;overflow:hidden}}
+
+/* ── PACKAGING / INSUMOS ── */
+@keyframes ins-led-pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.ins-led-pulse{animation:ins-led-pulse 1.4s ease-in-out infinite}
+/* Mobile cards */
+.ins-mob-list{display:flex;flex-direction:column;gap:8px;padding:10px 0 16px}
+.ins-mob-card{border-radius:24px;padding:13px 16px;display:flex;align-items:center;gap:12px;border:1px solid var(--border);background:var(--surface);transition:box-shadow .15s}
+.ins-mob-card.low{border-color:#FECACA;border-left:4px solid #DC2626}
+.ins-mob-card-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;align-self:flex-start;margin-top:3px}
+.ins-mob-card-body{flex:1;min-width:0}
+.ins-mob-card-name{font-size:13px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ins-mob-card-meta{font-size:11px;color:var(--txt3);margin-top:3px}
+.ins-mob-card-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ins-mob-card-price{font-size:13px;font-weight:800;color:var(--money);white-space:nowrap;text-align:right}
+.ins-mob-card-unit{font-size:9px;color:var(--txt4);text-align:right}
+.ins-mob-card-acts{display:flex;gap:5px}
+.ins-mob-card-btn{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface2);color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:opacity .1s,transform .1s}
+.ins-mob-card-btn:active{opacity:.7;transform:scale(.93)}
+.ins-mob-card-btn.green{background:#DCFCE7;border-color:#86EFAC;color:#16A34A}
+.ins-mob-card-btn.red{background:#FFF1F2;border-color:#FECACA;color:#DC2626}
+.ins-desk-view{display:none}
+@media(min-width:641px){
+  .ins-mob-list{display:none!important}
+  .ins-desk-view{display:block!important}
+}
+/* Stock ±1 mini buttons */
+.ins-stk-btn{width:14px;height:14px;border-radius:50%;border:1px solid #CBD5E1;background:transparent;color:#94A3B8;font-size:9px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;font-family:inherit;transition:background .12s,color .12s,border-color .12s;flex-shrink:0}
+.ins-stk-btn:hover:not(:disabled){background:#F1F5F9;color:#334155;border-color:#94A3B8}
+.ins-stk-btn:active:not(:disabled){background:#E2E8F0}
+.ins-stk-btn:disabled{opacity:.28;cursor:not-allowed}
+/* Layout asimétrico 65/35 */
+.ins-layout{display:block}
+.ins-main{min-width:0}
+.ins-panel{display:none}
+@media(min-width:641px){
+  .ins-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start}
+  .ins-panel{display:flex;flex-direction:column;gap:12px}
+}
+/* Panel stat rows */
+.ins-pstat{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--txt3)}
+.ins-pstat:last-child{border-bottom:none;padding-bottom:0}
+.ins-pstat b{color:var(--txt);font-size:13px;font-weight:700}
+/* Calculadora de fraccionamiento */
+.pkg-calc-card{background:rgba(99,102,241,.06);border:1.5px solid rgba(99,102,241,.2);border-radius:12px;padding:14px 16px;margin-top:8px;display:flex;flex-direction:column;gap:10px}
+.pkg-calc-result{background:rgba(99,102,241,.12);border:2px solid rgba(99,102,241,.35);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.pkg-calc-apply{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.4;text-align:center;flex-shrink:0;transition:opacity .15s}
+.pkg-calc-apply:hover{opacity:.88}
+.pkg-calc-apply:active{opacity:.75;transform:scale(.96)}
