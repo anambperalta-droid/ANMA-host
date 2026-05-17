@@ -71,7 +71,8 @@ export default function Catalogo() {
   const [bulkSupplierValue, setBulkSupplierValue] = useState('')
   const [catMgmtModal, setCatMgmtModal] = useState(false)
   const [editingCat, setEditingCat] = useState(null)
-  const [viewMode, setViewMode] = useState('grid')
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('anma_product_view_mode') || 'grid')
+  const switchView = (mode) => { setViewMode(mode); localStorage.setItem('anma_product_view_mode', mode) }
   const imgRef = useRef(null)
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
@@ -270,6 +271,17 @@ export default function Catalogo() {
             <button className="cli-pill" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}>
               <i className="fa fa-file-import" /><span>Importar</span>
             </button>
+            {/* ── View mode toggle ── */}
+            <div style={{ display: 'inline-flex', border: '1.5px solid var(--border)', borderRadius: 9999, overflow: 'hidden', background: 'var(--surface)' }}>
+              <button title="Vista cuadrícula" onClick={() => switchView('grid')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, border: 'none', cursor: 'pointer', fontSize: 13, transition: 'all .15s', background: viewMode === 'grid' ? 'var(--brand)' : 'transparent', color: viewMode === 'grid' ? '#fff' : 'var(--txt3)' }}>
+                <i className="fa fa-border-all" />
+              </button>
+              <button title="Vista lista" onClick={() => switchView('table')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, border: 'none', cursor: 'pointer', fontSize: 13, transition: 'all .15s', background: viewMode === 'table' ? 'var(--brand)' : 'transparent', color: viewMode === 'table' ? '#fff' : 'var(--txt3)' }}>
+                <i className="fa fa-list" />
+              </button>
+            </div>
           </div>
           <button className="cli-pill-new" onClick={() => open()}>
             <i className="fa fa-plus" /><span>Nuevo</span>
