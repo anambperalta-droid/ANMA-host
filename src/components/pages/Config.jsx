@@ -641,51 +641,87 @@ export default function Config() {
       {tab === 'comercial' && (
         <div style={{ maxWidth: 920 }}>
           <div className="cfg-com-grid">
-            {/* LEFT: Configuración general */}
-            <div className="card" style={{ marginBottom: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
-                <i className="fa fa-sliders" style={{ color: 'var(--brand)', fontSize: 14 }} />Configuración general
+
+            {/* ══ COLUMNA IZQUIERDA ══ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Tarjeta 1 — Configuración general */}
+              <div className="card" style={{ marginBottom: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <i className="fa fa-sliders" style={{ color: 'var(--brand)', fontSize: 14 }} />Configuración general
+                </div>
+                {/* Fila 1: Símbolo (72px fixed) + Formato (flex-1) */}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div className="fg" style={{ width: 72, flexShrink: 0 }}>
+                    <label>Símbolo</label>
+                    <input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ borderRadius: 12 }} />
+                  </div>
+                  <div className="fg" style={{ flex: 1, minWidth: 0 }}>
+                    <label>Formato de números</label>
+                    <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)} style={{ borderRadius: 12 }}>
+                      <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
+                      <option value="en-US">1,234,567 (coma miles — US/UK)</option>
+                    </select>
+                  </div>
+                </div>
+                {/* Fila 2: Prefijo (100px fixed) + Margen (flex-1) */}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div className="fg" style={{ width: 100, flexShrink: 0 }}>
+                    <label>Prefijo</label>
+                    <input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ borderRadius: 12 }} />
+                  </div>
+                  <div className="fg" style={{ flex: 1, minWidth: 0 }}>
+                    <label>Margen por defecto (%)</label>
+                    <input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ borderRadius: 12 }} />
+                  </div>
+                </div>
+                {/* Fila 3: Seña + Validez (50/50) */}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div className="fg" style={{ flex: 1, marginBottom: 0 }}>
+                    <label>Seña por defecto (%)</label>
+                    <input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} style={{ borderRadius: 12 }} />
+                  </div>
+                  <div className="fg" style={{ flex: 1, marginBottom: 0 }}>
+                    <label>Validez (días)</label>
+                    <input type="number" value={validity} onChange={e => setValidity(e.target.value)} style={{ borderRadius: 12 }} />
+                  </div>
+                </div>
               </div>
-              {/* Fila 1: Símbolo (72px fixed) + Formato (flex-1) */}
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div className="fg" style={{ width: 72, flexShrink: 0 }}>
-                  <label>Símbolo</label>
-                  <input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ borderRadius: 12 }} />
+
+              {/* Tarjeta 2 — IVA / Transparencia Fiscal */}
+              <div className="card" style={{ marginBottom: 0 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 13, marginBottom: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={ivaEnabled} onChange={e => setIvaEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
+                  <i className="fa fa-file-invoice-dollar" style={{ color: 'var(--brand)' }} />
+                  Mostrar IVA en presupuesto / factura
+                </label>
+                <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: ivaEnabled ? 12 : 0, marginLeft: 26 }}>
+                  Régimen de Transparencia Fiscal al Consumidor — Ley 27.743 (Argentina)
                 </div>
-                <div className="fg" style={{ flex: 1, minWidth: 0 }}>
-                  <label>Formato de números</label>
-                  <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)} style={{ borderRadius: 12 }}>
-                    <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
-                    <option value="en-US">1,234,567 (coma miles — US/UK)</option>
-                  </select>
-                </div>
-              </div>
-              {/* Fila 2: Prefijo (100px fixed) + Margen (flex-1) */}
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div className="fg" style={{ width: 100, flexShrink: 0 }}>
-                  <label>Prefijo</label>
-                  <input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ borderRadius: 12 }} />
-                </div>
-                <div className="fg" style={{ flex: 1, minWidth: 0 }}>
-                  <label>Margen por defecto (%)</label>
-                  <input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ borderRadius: 12 }} />
-                </div>
-              </div>
-              {/* Fila 3: Seña + Validez (50/50) */}
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div className="fg" style={{ flex: 1, marginBottom: 0 }}>
-                  <label>Seña por defecto (%)</label>
-                  <input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} style={{ borderRadius: 12 }} />
-                </div>
-                <div className="fg" style={{ flex: 1, marginBottom: 0 }}>
-                  <label>Validez (días)</label>
-                  <input type="number" value={validity} onChange={e => setValidity(e.target.value)} style={{ borderRadius: 12 }} />
-                </div>
+                {ivaEnabled && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div className="fg"><label>Razón social</label><input type="text" value={razonSocial} onChange={e => setRazonSocial(e.target.value)} placeholder="Tu Empresa SRL" style={{ borderRadius: 12 }} /></div>
+                    <div className="fg"><label>CUIT</label><input type="text" value={cuit} onChange={e => setCuit(e.target.value)} placeholder="20-12345678-9" style={{ borderRadius: 12 }} /></div>
+                    <div className="fg" style={{ gridColumn: '1 / -1' }}><label>Cond. frente al IVA</label>
+                      <select value={condIva} onChange={e => setCondIva(e.target.value)} style={{ borderRadius: 12 }}>
+                        <option>Responsable Inscripto</option>
+                        <option>Monotributista</option>
+                        <option>Exento</option>
+                        <option>Consumidor Final</option>
+                      </select>
+                    </div>
+                    <div className="fg"><label>Pto. Venta</label><input type="text" value={ptoVenta} onChange={e => setPtoVenta(e.target.value)} placeholder="00001" style={{ borderRadius: 12 }} /></div>
+                    <div className="fg"><label>Alícuota IVA (%)</label><input type="number" value={ivaRate} onChange={e => setIvaRate(e.target.value)} style={{ borderRadius: 12 }} /></div>
+                    <div className="fg" style={{ gridColumn: '1 / -1', marginBottom: 0 }}><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} style={{ borderRadius: 12 }} /></div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* RIGHT: Textos generales + Portal Proveedor (flex-col stack) */}
+            {/* ══ COLUMNA DERECHA ══ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Tarjeta 1 — Textos generales */}
               <div className="card" style={{ marginBottom: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <i className="fa fa-align-left" style={{ color: 'var(--brand)', fontSize: 14 }} />Textos generales
@@ -700,7 +736,7 @@ export default function Config() {
                 </div>
               </div>
 
-              {/* Portal Proveedor */}
+              {/* Tarjeta 2 — Portal Proveedor */}
               <div className="card" style={{ marginBottom: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
                   <i className="fa fa-share-nodes" style={{ color: 'var(--brand)' }} />
@@ -724,35 +760,7 @@ export default function Config() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* IVA — full width below the two columns */}
-          <div className="card" style={{ marginTop: 22 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 13, marginBottom: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={ivaEnabled} onChange={e => setIvaEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
-              <i className="fa fa-file-invoice-dollar" style={{ color: 'var(--brand)' }} />
-              Mostrar IVA en presupuesto / factura
-            </label>
-            <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: ivaEnabled ? 10 : 0, marginLeft: 26 }}>
-              Régimen de Transparencia Fiscal al Consumidor — Ley 27.743 (Argentina)
-            </div>
-            {ivaEnabled && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
-                <div className="fg"><label>Razón social</label><input type="text" value={razonSocial} onChange={e => setRazonSocial(e.target.value)} placeholder="Tu Empresa SRL" style={{ borderRadius: 12 }} /></div>
-                <div className="fg"><label>CUIT</label><input type="text" value={cuit} onChange={e => setCuit(e.target.value)} placeholder="20-12345678-9" style={{ borderRadius: 12 }} /></div>
-                <div className="fg"><label>Cond. frente al IVA</label>
-                  <select value={condIva} onChange={e => setCondIva(e.target.value)} style={{ borderRadius: 12 }}>
-                    <option>Responsable Inscripto</option>
-                    <option>Monotributista</option>
-                    <option>Exento</option>
-                    <option>Consumidor Final</option>
-                  </select>
-                </div>
-                <div className="fg"><label>Pto. Venta</label><input type="text" value={ptoVenta} onChange={e => setPtoVenta(e.target.value)} placeholder="00001" style={{ borderRadius: 12 }} /></div>
-                <div className="fg"><label>Alícuota IVA (%)</label><input type="number" value={ivaRate} onChange={e => setIvaRate(e.target.value)} style={{ borderRadius: 12 }} /></div>
-                <div className="fg" style={{ marginBottom: 0 }}><label>Otros Imp. Indirectos (%)</label><input type="number" value={otrosImp} onChange={e => setOtrosImp(e.target.value)} style={{ borderRadius: 12 }} /></div>
-              </div>
-            )}
           </div>
         </div>
       )}
