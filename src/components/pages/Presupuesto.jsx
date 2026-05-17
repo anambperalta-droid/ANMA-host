@@ -691,7 +691,7 @@ export default function Presupuesto() {
                       <th style={{ width: 24 }}></th>
                       <th>Producto</th>
                       <th style={{ width: 85, textAlign: 'right' }}>Cant.</th>
-                      <th style={{ width: 110, textAlign: 'right' }}>Costo u.</th>
+                      {feats.costoInterno && <th style={{ width: 110, textAlign: 'right' }}>Costo u.</th>}
                       <th style={{ width: 110, textAlign: 'right' }}>Precio u.</th>
                       <th style={{ width: 130, textAlign: 'right' }}>Subtotal</th>
                       <th style={{ width: 40 }}></th>
@@ -715,7 +715,7 @@ export default function Presupuesto() {
                             </div>
                           </td>
                           <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
-                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
+                          {feats.costoInterno && <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>}
                           <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
                           <td style={{ fontWeight: 700, color: 'var(--money)', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', textAlign: 'right', paddingRight: 8, verticalAlign: 'middle' }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
                           <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><button onClick={() => removeItem(i)} title="Eliminar" style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'color .15s, background .15s' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}><i className="fa fa-xmark" /></button></td>
@@ -865,7 +865,7 @@ export default function Presupuesto() {
           <div className="calc-panel">
             <div className="cp-title"><i className="fa fa-calculator" />Resumen</div>
             <div className="cp-row"><span className="cp-lbl">N° Presupuesto</span><span className="cp-val">{budgetNum}</span></div>
-            <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val">{fmt(calc.totalCost)}</span></div>
+            {feats.costoInterno && <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val">{fmt(calc.totalCost)}</span></div>}
             <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>
             {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>}
             {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined}>{calc.marginReal}%{calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}</span></div>}
