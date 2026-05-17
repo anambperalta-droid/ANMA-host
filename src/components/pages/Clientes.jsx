@@ -693,15 +693,7 @@ export default function Clientes() {
               <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} placeholder="+54 ..." /></div>
               <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
             </div>
-            <div className="grid2">
-              <div className="fg"><label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud..." /></div>
-              <div className="fg"><label>Tipo de cliente</label>
-                <select value={form.clientType || 'b2c'} onChange={e => setF('clientType', e.target.value)}>
-                  <option value="b2c">B2C — Cliente final</option>
-                  <option value="b2b">B2B — Empresa / Mayorista</option>
-                </select>
-              </div>
-            </div>
+            <div className="fg"><label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud..." /></div>
             {config().features?.descuentoCliente && (
               <div className="fg" style={{ maxWidth: 220 }}>
                 <label>Descuento fijo (%)</label>
@@ -728,7 +720,6 @@ export default function Clientes() {
                     <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailClient.company}</h3>
                     <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {detailClient.contact && <span>{detailClient.contact}</span>}
-                      <span className={`badge ${detailClient.clientType === 'b2b' ? 'b-confirmed' : 'b-sent'}`} style={{ fontSize: 9 }}>{detailClient.clientType === 'b2b' ? 'B2B' : 'B2C'}</span>
                       {detailClient.rubro && <span style={{ color: 'var(--txt4)' }}>· {detailClient.rubro}</span>}
                     </div>
                   </div>

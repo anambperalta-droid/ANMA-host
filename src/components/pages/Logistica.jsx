@@ -34,11 +34,11 @@ const DONUT_COLORS = {
 
 function DonutChart({ data, hovered }) {
   const total = data.reduce((s, d) => s + d.count, 0)
-  const R = 32, CX = 44, CY = 44
+  const R = 64, CX = 80, CY = 80
   const CIRC = 2 * Math.PI * R
   if (total === 0) return (
-    <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <span style={{ fontSize: 9, color: 'var(--txt4)' }}>sin datos</span>
+    <div style={{ width: 160, height: 160, borderRadius: '50%', background: 'var(--surface2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontSize: 11, color: 'var(--txt4)' }}>sin datos</span>
     </div>
   )
   let acc = 0
@@ -49,22 +49,22 @@ function DonutChart({ data, hovered }) {
     return { ...d, len, startDeg }
   })
   return (
-    <svg width={88} height={88} viewBox="0 0 88 88" style={{ flexShrink: 0 }}>
-      <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--surface2)" strokeWidth={10} />
+    <svg width={160} height={160} viewBox="0 0 160 160" style={{ flexShrink: 0 }}>
+      <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--surface2)" strokeWidth={13} />
       {segments.map(seg => (
         <circle
           key={seg.label}
           cx={CX} cy={CY} r={R}
           fill="none"
           stroke={DONUT_COLORS[seg.label] || '#CBD5E1'}
-          strokeWidth={hovered === seg.label ? 14 : 9}
+          strokeWidth={hovered === seg.label ? 18 : 13}
           strokeDasharray={`${seg.len} ${CIRC - seg.len}`}
           transform={`rotate(${seg.startDeg} ${CX} ${CY})`}
           style={{ transition: 'stroke-width .15s', cursor: 'pointer' }}
         />
       ))}
-      <text x={CX} y={CY - 5} textAnchor="middle" style={{ fontSize: 15, fontWeight: 800, fill: 'var(--txt)', fontFamily: 'inherit' }}>{total}</text>
-      <text x={CX} y={CY + 10} textAnchor="middle" style={{ fontSize: 8, fill: '#9CA3AF', fontFamily: 'inherit' }}>envíos</text>
+      <text x={CX} y={CY - 8} textAnchor="middle" style={{ fontSize: 26, fontWeight: 800, fill: 'var(--txt)', fontFamily: 'inherit' }}>{total}</text>
+      <text x={CX} y={CY + 13} textAnchor="middle" style={{ fontSize: 11, fill: '#9CA3AF', fontFamily: 'inherit' }}>envíos</text>
     </svg>
   )
 }
@@ -853,30 +853,30 @@ export default function Logistica() {
           </div>
 
           <div className="logi-summary-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {/* Desglose por estado — donut + legend */}
-            <div className="card" style={{ borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', padding: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 14 }}>Desglose por estado</div>
+            {/* Desglose por estado — donut centrado + leyenda */}
+            <div className="card" style={{ borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', padding: '18px 20px' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 18 }}>Desglose por estado</div>
               {byStatus.filter(b => b.count > 0).length ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
                   <DonutChart data={byStatus.filter(b => b.count > 0)} hovered={hoveredStatus} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
                     {byStatus.filter(b => b.count > 0).map(b => (
                       <div key={b.label} onMouseEnter={() => setHoveredStatus(b.label)} onMouseLeave={() => setHoveredStatus(null)}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', borderRadius: 10, cursor: 'default', transition: 'background .12s', background: hoveredStatus === b.label ? 'var(--surface2)' : 'transparent' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: DONUT_COLORS[b.label] || '#CBD5E1', flexShrink: 0, display: 'inline-block' }} />
-                          <span style={{ fontSize: 11, color: 'var(--txt2)', fontWeight: hoveredStatus === b.label ? 700 : 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.label}</span>
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 12, cursor: 'default', transition: 'background .12s', background: hoveredStatus === b.label ? 'var(--surface2)' : 'transparent' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                          <span style={{ width: 10, height: 10, borderRadius: '50%', background: DONUT_COLORS[b.label] || '#CBD5E1', flexShrink: 0, display: 'inline-block', boxShadow: hoveredStatus === b.label ? `0 0 0 3px ${(DONUT_COLORS[b.label] || '#CBD5E1')}30` : 'none', transition: 'box-shadow .15s' }} />
+                          <span style={{ fontSize: 12.5, color: 'var(--txt)', fontWeight: hoveredStatus === b.label ? 700 : 500 }}>{b.label}</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)' }}>{fmt(b.cost)}</span>
-                          <span style={{ fontSize: 10, color: 'var(--txt4)' }}>{b.count} env.</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                          <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600, background: 'var(--surface2)', padding: '2px 8px', borderRadius: 20 }}>{b.count} env.</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--money)', minWidth: 64, textAlign: 'right' }}>{fmt(b.cost)}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div style={{ fontSize: 13, color: 'var(--txt3)', padding: '12px 0', textAlign: 'center' }}>Sin envíos registrados</div>
+                <div style={{ fontSize: 13, color: 'var(--txt3)', padding: '24px 0', textAlign: 'center' }}>Sin envíos registrados</div>
               )}
             </div>
 
