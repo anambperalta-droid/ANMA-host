@@ -397,6 +397,20 @@ export default function Clientes() {
         @media(min-width:641px){
           .cli-mob-list{display:none!important}
         }
+
+        /* ── CLIENT DETAIL DRAWER / BOTTOM SHEET ── */
+        @keyframes cliDrawerIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+        @keyframes cliSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .cli-drawer-backdrop{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.32);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);animation:fadeIn .2s ease both}
+        @media(min-width:641px){
+          .cli-drawer{position:fixed;right:0;top:0;bottom:0;width:min(500px,96vw);background:var(--surface);z-index:401;display:flex;flex-direction:column;box-shadow:-6px 0 32px rgba(0,0,0,.14);animation:cliDrawerIn .24s cubic-bezier(.22,1,.36,1) both;overflow:hidden;border-left:1px solid var(--border)}
+        }
+        @media(max-width:640px){
+          .cli-drawer{position:fixed;left:0;right:0;bottom:0;max-height:84vh;background:var(--surface);z-index:401;display:flex;flex-direction:column;border-radius:20px 20px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.14);animation:cliSheetUp .28s cubic-bezier(.32,1.28,.58,1) both;overflow:hidden}
+          .cli-drawer::before{content:'';display:block;width:36px;height:4px;background:var(--border2,#D1D5DB);border-radius:2px;margin:10px auto 0;flex-shrink:0}
+        }
+        .cli-drawer-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+        .cli-drawer-scroll{flex:1;overflow-y:auto;padding:16px 20px}
       `}</style>
 
       {/* ── VISTA DESKTOP (tabla / cards grid) ── */}
@@ -712,9 +726,10 @@ export default function Clientes() {
 
       {/* FICHA DETALLE */}
       {detailClient && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailClient(null) }}>
-          <div className="modal" style={{ maxWidth: 820, height: 'min(820px, 92vh)', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+        <>
+          <div className="cli-drawer-backdrop" onClick={() => setDetailClient(null)} />
+          <div className="cli-drawer" onClick={e => e.stopPropagation()}>
+            <div className="cli-drawer-head">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
@@ -739,7 +754,7 @@ export default function Clientes() {
                 <div key={k} className={`detail-tab ${detailTab === k ? 'active' : ''}`} onClick={() => setDetailTab(k)}>{l}</div>
               ))}
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+            <div className="cli-drawer-scroll">
               {detailTab === 'info' && (
                 <div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -857,7 +872,7 @@ export default function Clientes() {
               )}
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL IMPORTAR CSV */}

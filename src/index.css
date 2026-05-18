@@ -1480,6 +1480,11 @@ td b{color:var(--txt);font-weight:600}
 @media(min-width:641px){.dash-ctrl-bar{display:none}}
 @media(max-width:640px){.tab-bar-dash{display:none!important}}
 @media(max-width:640px){.bento-chart-bar{max-height:176px;overflow:hidden}}
+/* Seguimiento/carousel card — height auto on mobile (no stretch) */
+.bento-chart-noflex{flex:1}
+@media(max-width:640px){.bento-chart-noflex{flex:none!important;height:auto!important;min-height:0!important}}
+/* Bar chart always clips to container */
+.bar-chart{overflow:hidden}
 
 /* ── PACKAGING / INSUMOS ── */
 @keyframes ins-led-pulse{0%,100%{opacity:1}50%{opacity:.25}}
