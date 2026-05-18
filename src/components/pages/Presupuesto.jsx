@@ -589,7 +589,12 @@ export default function Presupuesto() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
       <div className="ph ph-pres">
-        <div className="ph-left"><h2>{editId ? 'Editar pedido' : 'Nuevo pedido'}</h2></div>
+        <div className="ph-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '.01em', color: 'var(--txt)' }}>{budgetNum}</span>
+          {(form.status === 'draft' || !editId) && (
+            <span style={{ background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE', borderRadius: 9999, padding: '2px 9px', fontSize: 11, fontWeight: 700, lineHeight: 1.5, whiteSpace: 'nowrap' }}>Borrador</span>
+          )}
+        </div>
         <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /><span className="desc-txt"> Descartar</span></button></div>
       </div>
 
@@ -921,31 +926,26 @@ export default function Presupuesto() {
                 <i className="fa fa-floppy-disk" /> Guardar Presupuesto
               </button>
 
-              {/* ── 2. COMUNICACIÓN — compact quick-action row ── */}
+              {/* ── 2. COMUNICACIÓN — compact ghost row ── */}
               <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <i className="fa-brands fa-whatsapp" /> Comunicación
-                </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.32)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Comunicación</div>
+                <div style={{ display: 'flex', gap: 5 }}>
                   <button onClick={sendWhatsApp}
-                    style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 6px', background: 'rgba(37,211,102,.2)', border: '1.5px solid rgba(37,211,102,.35)', borderRadius: 10, color: '#4ade80', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 700, minHeight: 54, transition: 'background .15s', justifyContent: 'center' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.32)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.2)'}>
-                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} />
-                    Enviar
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '8px 6px', background: 'rgba(37,211,102,.08)', border: '1px solid rgba(37,211,102,.22)', borderRadius: 7, color: '#4ade80', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 600, transition: 'background .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.16)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.08)'}>
+                    <i className="fa-brands fa-whatsapp" style={{ fontSize: 13 }} /> Enviar
                   </button>
                   {bankCfg.enabled ? (
                     <button onClick={sendBankDataByWA}
-                      style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 6px', background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.22)', borderRadius: 10, color: '#86efac', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, minHeight: 54, transition: 'background .15s', justifyContent: 'center' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.18)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.1)'}>
-                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} />
-                      Pago
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '8px 6px', background: 'rgba(37,211,102,.06)', border: '1px solid rgba(37,211,102,.18)', borderRadius: 7, color: '#86efac', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 600, transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,211,102,.14)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(37,211,102,.06)'}>
+                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 13 }} /> Pago
                     </button>
                   ) : (
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 6px', background: 'rgba(100,116,139,.06)', border: '1px dashed rgba(100,116,139,.22)', borderRadius: 10, color: 'rgba(255,255,255,.2)', fontSize: 10, minHeight: 54, justifyContent: 'center', textAlign: 'center' }}>
-                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 16 }} />
-                      Pago
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 6px', background: 'rgba(100,116,139,.05)', border: '1px dashed rgba(100,116,139,.18)', borderRadius: 7, color: 'rgba(255,255,255,.18)', fontSize: 11 }}>
+                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 12 }} /> Pago
                     </div>
                   )}
                 </div>
