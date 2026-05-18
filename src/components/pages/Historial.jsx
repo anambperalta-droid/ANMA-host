@@ -371,6 +371,8 @@ export default function Historial() {
   const [quickFilter, setQuickFilter] = useState('')
   const [pendingLossId, setPendingLossId] = useState(null)
   const [showLossReason, setShowLossReason] = useState(false)
+  const [selectedCliente, setSelectedCliente] = useState(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [todayCollapsed, setTodayCollapsed] = useState(() => {
     try { return localStorage.getItem('anma_today_collapsed') === '1' } catch { return false }
   })
@@ -394,6 +396,7 @@ export default function Historial() {
 
   const budgets = get('budgets')
   const products = get('products')
+  const clients = get('clients')
   const c = config()
   const { role } = useAuth()
   const opHideMetrics = role === 'operator' && c.opShowMetrics === false
@@ -1079,10 +1082,21 @@ export default function Historial() {
                       <table>
                         <thead><tr><th className="c-num">N°</th><th className="c-cli">Cliente</th><th className="c-tot">Total</th><th className="c-est">Estado</th><th className="c-act"></th></tr></thead>
                         <tbody>
-                          {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => (
+                          {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => {
+                            const cliName = b.company || b.contact || '—'
+                            const matchedCli = (clients || []).find(c => (b.company && c.company === b.company) || (b.contact && c.contact === b.contact))
+                            return (
                             <tr key={b.id}>
                               <td className="c-num"><b>{b.num || '—'}</b></td>
-                              <td className="c-cli">{b.company || b.contact || '—'}</td>
+                              <td className="c-cli">
+                                {matchedCli ? (
+                                  <span
+                                    onClick={() => { setSelectedCliente(matchedCli); setIsPreviewOpen(true) }}
+                                    style={{ cursor: 'pointer', color: 'var(--brand)', fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: 3 }}
+                                    title="Ver perfil del cliente"
+                                  >{cliName}</span>
+                                ) : cliName}
+                              </td>
                               <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
                               <td className="c-est"><DotBadge status={b.status} /></td>
                               <td className="c-act" style={{ position: 'relative' }}>
@@ -1117,7 +1131,8 @@ export default function Historial() {
                                 )}
                               </td>
                             </tr>
-                          ))}
+                          )})}
+
                         </tbody>
                       </table>
                     ) : (
@@ -1594,6 +1609,95 @@ export default function Historial() {
           onClose={() => setPendingLossId(null)}
         />
       )}
+
+      {/* ═══ Cliente Preview Drawer / BottomSheet ═══ */}
+      {isPreviewOpen && selectedCliente && (() => {
+        const cli = selectedCliente
+        const initials = ((cli.company || cli.contact || '?')[0] || '?').toUpperCase()
+        const cliBudgets = budgets.filter(b => (cli.company && b.company === cli.company) || (cli.contact && b.contact === cli.contact))
+        const closePreview = () => { setIsPreviewOpen(false); setSelectedCliente(null) }
+        const waNum = (cli.whatsapp || cli.phone || '').replace(/\D/g, '')
+        return (
+          <>
+            <style>{`
+              @keyframes cliDrawerInH{from{transform:translateX(100%)}to{transform:translateX(0)}}
+              @keyframes cliSheetUpH{from{transform:translateY(100%)}to{transform:translateY(0)}}
+              .hst-cli-backdrop{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.32);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+              @media(min-width:641px){
+                .hst-cli-drawer{position:fixed;right:0;top:0;bottom:0;width:min(440px,96vw);background:var(--surface);z-index:401;display:flex;flex-direction:column;box-shadow:-6px 0 32px rgba(0,0,0,.14);animation:cliDrawerInH .24s cubic-bezier(.22,1,.36,1) both;overflow:hidden;border-left:1px solid var(--border)}
+              }
+              @media(max-width:640px){
+                .hst-cli-drawer{position:fixed;left:0;right:0;bottom:0;max-height:84vh;background:var(--surface);z-index:401;display:flex;flex-direction:column;border-radius:20px 20px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.14);animation:cliSheetUpH .28s cubic-bezier(.32,1.28,.58,1) both;overflow:hidden}
+                .hst-cli-drawer::before{content:'';display:block;width:36px;height:4px;background:var(--border2,#D1D5DB);border-radius:2px;margin:10px auto 0;flex-shrink:0}
+              }
+            `}</style>
+            <div className="hst-cli-backdrop" onClick={closePreview} />
+            <div className="hst-cli-drawer" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, flexShrink: 0 }}>{initials}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cli.company || cli.contact || '—'}</div>
+                  {cli.company && cli.contact && <div style={{ fontSize: 12, color: 'var(--txt3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cli.contact}</div>}
+                </div>
+                <button onClick={closePreview} style={{ width: 32, height: 32, border: 'none', background: 'var(--surface2)', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--txt3)', flexShrink: 0 }}>
+                  <i className="fa fa-xmark" />
+                </button>
+              </div>
+              {/* Scroll body */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+                {/* Contact pills */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                  {waNum && (
+                    <a href={`https://wa.me/${waNum}`} target="_blank" rel="noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9999, background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.28)', color: '#16A34A', textDecoration: 'none', fontSize: 12, fontWeight: 700 }}>
+                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 14 }} /> WhatsApp
+                    </a>
+                  )}
+                  {cli.email && (
+                    <a href={`mailto:${cli.email}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9999, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt2)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}>
+                      <i className="fa fa-envelope" style={{ fontSize: 12 }} /> {cli.email}
+                    </a>
+                  )}
+                </div>
+                {/* Mini info */}
+                {(cli.address || cli.cuit) && (
+                  <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: 'var(--txt2)', display: 'flex', flexDirection: 'column', gap: 4, border: '1px solid var(--border)' }}>
+                    {cli.cuit && <div><b>CUIT:</b> {cli.cuit}</div>}
+                    {cli.address && <div><b>Dirección:</b> {cli.address}</div>}
+                  </div>
+                )}
+                {/* Budget history */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Presupuestos ({cliBudgets.length})</div>
+                {cliBudgets.length ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[...cliBudgets].sort((a, b) => b.id - a.id).slice(0, 8).map(b => (
+                      <div key={b.id} onClick={() => { nav(`/presupuesto/${b.id}`); closePreview() }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 9, cursor: 'pointer', transition: 'background .15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface3,var(--border))'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}
+                      >
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', minWidth: 40 }}>{b.num || '#—'}</span>
+                        <span style={{ flex: 1, fontSize: 11, color: 'var(--txt3)' }}>{b.date || ''}</span>
+                        <DotBadge status={b.status} />
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{money(b.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 12, color: 'var(--txt4)', padding: '8px 0' }}>Sin presupuestos registrados.</div>
+                )}
+                {/* Go to Clientes */}
+                <button onClick={() => { nav('/clientes'); closePreview() }}
+                  style={{ marginTop: 20, width: '100%', padding: '10px 0', border: '1.5px solid var(--brand)', borderRadius: 9, background: 'var(--brand-xlt)', color: 'var(--brand)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                  <i className="fa fa-pen" /> Editar Perfil del Cliente
+                </button>
+              </div>
+            </div>
+          </>
+        )
+      })()}
     </div>
   )
 }

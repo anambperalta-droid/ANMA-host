@@ -815,7 +815,8 @@ td b{color:var(--txt);font-weight:600}
   .resumen-tbl{max-width:100%!important;width:100%!important;overflow-x:auto!important}
   /* Chart bento: stack vertically */
   .bento-chart-inner{flex-direction:column!important}
-  .bento-chart-inner > *{flex:1 1 100%!important;min-width:0!important;width:100%!important}
+  .bento-chart-inner > *{flex:0 0 auto!important;min-width:0!important;width:100%!important}
+  .bento-chart-inner > .bento-chart-noflex{flex:none!important;height:auto!important;min-height:0!important}
   .seg-card{flex-direction:column;gap:8px}
   .seg-meta{flex-direction:row;justify-content:space-between;width:100%}
   .period-pills{flex-wrap:wrap}
