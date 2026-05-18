@@ -598,28 +598,6 @@ export default function Presupuesto() {
         <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { localStorage.removeItem(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /><span className="desc-txt"> Descartar</span></button></div>
       </div>
 
-      {draftRestored && !id && (
-        <div className="pres-draft-banner" style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          background: '#FFFBEB', border: '1.5px solid #FCD34D',
-          borderRadius: 10, padding: '10px 16px', marginBottom: 14,
-          fontSize: 12, color: '#92400E'
-        }}>
-          <i className="fa fa-rotate-left" style={{ color: '#D97706' }} />
-          <span><b>Borrador recuperado.</b> Tus datos anteriores están cargados — podés continuar donde dejaste.</span>
-          <button
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#92400E', cursor: 'pointer', fontSize: 11, fontWeight: 600, textDecoration: 'underline' }}
-            onClick={() => {
-              localStorage.removeItem(DRAFT_KEY)
-              setDraftRestored(false)
-              setForm({ contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '', shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '', margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0, discount: 0 })
-              setItems([emptyItem()])
-            }}
-          >
-            Limpiar borrador
-          </button>
-        </div>
-      )}
 
       {/* MOBILE STEP INDICATOR */}
       <div className="wiz-mobile-hd">
@@ -705,23 +683,23 @@ export default function Presupuesto() {
                       {items.map((it, i) => (
                         <tr key={i}
                           onDragOver={handleDragOver(i)} onDrop={handleDrop(i)} onDragLeave={handleDragLeave}
-                          style={{ height: 44, ...(dragOver === i ? { background: 'var(--brand-xlt)', outline: '2px dashed var(--brand)' } : {}) }}>
+                          style={{ height: 36, ...(dragOver === i ? { background: 'var(--brand-xlt)', outline: '2px dashed var(--brand)' } : {}) }}>
                           <td style={{ textAlign: 'center', cursor: 'grab', color: 'var(--txt3)', verticalAlign: 'middle' }}
                             draggable onDragStart={handleDragStart(i)} title="Arrastrar para reordenar">
                             <i className="fa fa-grip-vertical" />
                           </td>
                           <td style={{ verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                              <input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" style={{ padding: '0 8px', fontSize: 12, flex: 1, minWidth: 0, height: 44, boxSizing: 'border-box' }} />
+                              <input type="text" value={it.name} onChange={e => updateItem(i, 'name', e.target.value)} placeholder="Nombre del producto" style={{ padding: '0 8px', fontSize: 12, flex: 1, minWidth: 0, height: 36, boxSizing: 'border-box' }} />
                               <button onClick={() => openPicker(i)} type="button" title="Elegir del catálogo"
-                                style={{ width: 30, height: 30, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, transition: 'background .12s' }}>
+                                style={{ width: 28, height: 28, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, transition: 'background .12s' }}>
                                 <i className="fa fa-list" />
                               </button>
                             </div>
                           </td>
-                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
-                          {feats.costoInterno && <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>}
-                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '0 2px', fontSize: 11, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 44, boxSizing: 'border-box' }} /></td>
+                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.qty} onFocus={selectOnFocus} onChange={e => updateItem(i, 'qty', e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))} onBlur={e => { if (e.target.value === '') updateItem(i, 'qty', 1) }} min="1" style={{ padding: '0 4px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 36, boxSizing: 'border-box' }} /></td>
+                          {feats.costoInterno && <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.costUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'costUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'costUnit', 0) }} min="0" style={{ padding: '0 4px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 36, boxSizing: 'border-box' }} /></td>}
+                          <td style={{ verticalAlign: 'middle' }}><input type="number" value={it.priceUnit} onFocus={selectOnFocus} onChange={e => updateItem(i, 'priceUnit', e.target.value)} onBlur={e => { if (e.target.value === '') updateItem(i, 'priceUnit', 0) }} min="0" style={{ padding: '0 4px', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', width: '100%', textAlign: 'right', height: 36, boxSizing: 'border-box' }} /></td>
                           <td style={{ fontWeight: 700, color: 'var(--money)', fontSize: 12, fontVariantNumeric: 'tabular-nums', fontFamily: 'inherit', textAlign: 'right', paddingRight: 8, verticalAlign: 'middle' }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
                           <td style={{ textAlign: 'center', verticalAlign: 'middle' }}><button onClick={() => removeItem(i)} title="Eliminar" style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'color .15s, background .15s' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}><i className="fa fa-xmark" /></button></td>
                         </tr>
@@ -891,7 +869,7 @@ export default function Presupuesto() {
             <div className="cp-title"><i className="fa fa-calculator" />Resumen</div>
             <div className="cp-row"><span className="cp-lbl">N° Presupuesto</span><span className="cp-val">{budgetNum}</span></div>
             {feats.costoInterno && <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val">{fmt(calc.totalCost)}</span></div>}
-            <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>
+            {calc.logTotal > 0 && <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>}
             {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>}
             {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined}>{calc.marginReal}%{calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}</span></div>}
             {feats.margenTabla && marginBudgetedSaved !== null && Math.abs(marginBudgetedSaved - Number(calc.marginReal)) >= 0.5 && (() => {
