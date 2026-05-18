@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt } from '../../lib/storage'
@@ -24,6 +24,7 @@ const SUBCAT_SUGGESTIONS = {
   relleno:     ['Viruta de madera', 'Papel picado', 'Papel de seda', 'Shredded kraft', 'Algodón'],
   tarjetas:    ['Agradecimiento', 'Cumpleaños', 'Empresarial', 'Personalizada'],
   sellado:     ['Stickers circulares', 'Lacre', 'Precinto', 'Etiquetas kraft', 'Cinta adhesiva'],
+  etiquetas:   ['Etiquetas kraft', 'Stickers personalizados', 'Tarjetas', 'Sellos de cera', 'Cinta deco'],
   packaging:   ['Cajas', 'Bolsas', 'Papel de seda', 'Cintas', 'Tarjetas'],
   prod_core:   ['Textiles', 'Químicos', 'Madera', 'Metales', 'Papel/Cartón'],
   insumos_op:  ['Limpieza', 'Librería', 'Etiquetas de envío', 'Precintos'],
@@ -71,7 +72,7 @@ const relTime = (iso) => {
 }
 
 export default function Insumos() {
-  const { get, config, saveEntity, deleteEntity } = useData()
+  const { get, config, updateConfig, saveEntity, deleteEntity } = useData()
   const toast = useToast()
   const c = config()
   const cats = c.insumoCats || []
@@ -90,6 +91,37 @@ export default function Insumos() {
   const dismissLowAlert = () => {
     try { sessionStorage.setItem('pkg_low_dismissed', '1') } catch {}
     setAlertDismissed(true)
+  }
+
+  // ── Inline nueva categoría ──
+  const [showNewCat, setShowNewCat] = useState(false)
+  const [newCatLabel, setNewCatLabel] = useState('')
+
+  // Auto-poblar categorías default si el usuario no tiene ninguna
+  useEffect(() => {
+    if (cats.length === 0) {
+      updateConfig({
+        insumoCats: [
+          { id: 'cajas',     label: 'Cajas' },
+          { id: 'bolsas',    label: 'Bolsas' },
+          { id: 'cintas',    label: 'Cintas y Cordones' },
+          { id: 'relleno',   label: 'Protección y Relleno' },
+          { id: 'etiquetas', label: 'Etiquetas y Papelería' },
+        ],
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const addCat = () => {
+    const label = newCatLabel.trim()
+    if (!label) return
+    const id = `cat_${Date.now()}`
+    const newCats = [...cats, { id, label }]
+    updateConfig({ insumoCats: newCats })
+    setF('cat', id)
+    setNewCatLabel('')
+    setShowNewCat(false)
   }
 
   const insumos = get('insumos', [])
@@ -453,7 +485,7 @@ export default function Insumos() {
 
       {/* ── Modal: crear / editar material ── */}
       {modal && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+        <div className="modal-bg open" style={{ padding: '48px 16px', alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           <div className="modal" style={{ maxWidth: 480 }}>
             <div className="mh">
               <div>
@@ -575,11 +607,38 @@ export default function Insumos() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 10, borderTop: '1px solid var(--border)', marginTop: 2 }}>
                 <div className="grid2">
                   <div className="fg">
-                    <label>Categoría</label>
-                    <select value={form.cat} onChange={e => { setF('cat', e.target.value); setF('subcat', '') }}>
-                      <option value="">Sin categoría</option>
-                      {cats.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
-                    </select>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      Categoría
+                      <button
+                        type="button"
+                        onClick={() => { setShowNewCat(p => !p); setNewCatLabel('') }}
+                        title={showNewCat ? 'Cancelar nueva categoría' : 'Crear nueva categoría'}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: showNewCat ? 'var(--txt3)' : 'var(--brand)', fontSize: 15, padding: '0 2px', lineHeight: 1, display: 'flex', alignItems: 'center', gap: 3, fontWeight: 700 }}
+                      >
+                        <i className={`fa ${showNewCat ? 'fa-xmark' : 'fa-circle-plus'}`} />
+                      </button>
+                    </label>
+                    {showNewCat ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <input
+                          type="text"
+                          value={newCatLabel}
+                          onChange={e => setNewCatLabel(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') addCat(); if (e.key === 'Escape') setShowNewCat(false) }}
+                          placeholder="Nombre de la categoría..."
+                          autoFocus
+                          style={{ flex: 1 }}
+                        />
+                        <button type="button" onClick={addCat} className="btn btn-primary btn-sm" style={{ padding: '0 12px', flexShrink: 0 }}>
+                          <i className="fa fa-check" />
+                        </button>
+                      </div>
+                    ) : (
+                      <select value={form.cat} onChange={e => { setF('cat', e.target.value); setF('subcat', '') }}>
+                        <option value="">Sin categoría</option>
+                        {cats.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
+                      </select>
+                    )}
                   </div>
                   <div className="fg">
                     <label>Tipo <span style={{ fontWeight: 400, color: 'var(--txt3)', fontSize: 11 }}>(opc.)</span></label>
@@ -588,7 +647,7 @@ export default function Insumos() {
                       list={`subcat-list-${form.cat}`}
                       value={form.subcat || ''}
                       onChange={e => setF('subcat', e.target.value)}
-                      placeholder={form.cat ? 'Kraft, raso, viruta...' : 'Seleccioná categoría'}
+                      placeholder={form.cat ? 'Ej: Kraft, Satén, Premium' : 'Seleccioná categoría'}
                       disabled={!form.cat}
                     />
                     {form.cat && (
