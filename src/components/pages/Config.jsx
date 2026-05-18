@@ -647,13 +647,13 @@ export default function Config() {
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <i className="fa fa-sliders" style={{ color: 'var(--brand)', fontSize: 14 }} />Configuración general
                 </div>
-                {/* Fila 1: Símbolo (72px fixed) + Formato (flex-1) */}
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div className="fg" style={{ width: 72, flexShrink: 0 }}>
+                {/* Fila 1: Símbolo (angosto) + Formato (ancho) — colapsa a 1col en mobile */}
+                <div className="cfg-pair">
+                  <div className="fg cfg-narrow-sm">
                     <label>Símbolo</label>
                     <input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ borderRadius: 12 }} />
                   </div>
-                  <div className="fg" style={{ flex: 1, minWidth: 0 }}>
+                  <div className="fg cfg-flex">
                     <label>Formato de números</label>
                     <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)} style={{ borderRadius: 12 }}>
                       <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
@@ -661,24 +661,24 @@ export default function Config() {
                     </select>
                   </div>
                 </div>
-                {/* Fila 2: Prefijo (100px fixed) + Margen (flex-1) */}
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div className="fg" style={{ width: 100, flexShrink: 0 }}>
+                {/* Fila 2: Prefijo (angosto) + Margen (ancho) — colapsa a 1col en mobile */}
+                <div className="cfg-pair">
+                  <div className="fg cfg-narrow-md">
                     <label>Prefijo</label>
                     <input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ borderRadius: 12 }} />
                   </div>
-                  <div className="fg" style={{ flex: 1, minWidth: 0 }}>
+                  <div className="fg cfg-flex">
                     <label>Margen por defecto (%)</label>
                     <input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ borderRadius: 12 }} />
                   </div>
                 </div>
-                {/* Fila 3: Seña + Validez (50/50) */}
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div className="fg" style={{ flex: 1, marginBottom: 0 }}>
+                {/* Fila 3: Seña + Validez — grid2 colapsa a 1col en mobile */}
+                <div className="grid2" style={{ marginBottom: 0 }}>
+                  <div className="fg" style={{ marginBottom: 0 }}>
                     <label>Seña por defecto (%)</label>
                     <input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} style={{ borderRadius: 12 }} />
                   </div>
-                  <div className="fg" style={{ flex: 1, marginBottom: 0 }}>
+                  <div className="fg" style={{ marginBottom: 0 }}>
                     <label>Validez (días)</label>
                     <input type="number" value={validity} onChange={e => setValidity(e.target.value)} style={{ borderRadius: 12 }} />
                   </div>
@@ -696,7 +696,7 @@ export default function Config() {
                   Régimen de Transparencia Fiscal al Consumidor — Ley 27.743 (Argentina)
                 </div>
                 {ivaEnabled && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div className="grid2">
                     <div className="fg"><label>Razón social</label><input type="text" value={razonSocial} onChange={e => setRazonSocial(e.target.value)} placeholder="Tu Empresa SRL" style={{ borderRadius: 12 }} /></div>
                     <div className="fg"><label>CUIT</label><input type="text" value={cuit} onChange={e => setCuit(e.target.value)} placeholder="20-12345678-9" style={{ borderRadius: 12 }} /></div>
                     <div className="fg" style={{ gridColumn: '1 / -1' }}><label>Cond. frente al IVA</label>

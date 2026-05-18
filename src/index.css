@@ -265,6 +265,17 @@ td b{color:var(--txt);font-weight:600}
 .cfg-com-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;align-items:start}
 @media(max-width:960px){.cfg-com-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.cfg-com-grid{grid-template-columns:1fr}}
+/* Config: paired fields — mobile-first, stack → row on desktop */
+.cfg-pair{display:flex;flex-direction:column;gap:8px}
+.cfg-pair>.fg{width:100%!important;flex-shrink:unset!important;min-width:0;margin-bottom:0}
+.cfg-pair>.fg:last-child{margin-bottom:0}
+@media(min-width:641px){
+  .cfg-pair{flex-direction:row;gap:12px;align-items:flex-start}
+  .cfg-pair>.fg{width:auto!important}
+  .cfg-pair>.fg.cfg-narrow-sm{width:72px!important;flex-shrink:0!important}
+  .cfg-pair>.fg.cfg-narrow-md{width:100px!important;flex-shrink:0!important}
+  .cfg-pair>.fg.cfg-flex{flex:1!important;min-width:0!important}
+}
 /* Config mobile save bar + desktop save btn */
 .cfg-mob-save{display:none}
 @media(max-width:640px){.cfg-mob-save{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:200;padding:12px 16px 20px;background:linear-gradient(to top,var(--surface) 70%,transparent);pointer-events:none}.cfg-mob-save button{pointer-events:all;width:100%;height:44px;border-radius:9999px;border:none;background:var(--color-principal);color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 18px var(--brand-dim);display:flex;align-items:center;justify-content:center;gap:8px}.cfg-save-desk{display:none!important}}
