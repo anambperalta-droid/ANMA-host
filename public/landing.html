@@ -29,6 +29,8 @@ a{color:inherit;text-decoration:none}
 .btn-dark:hover{background:#2d1b4e;transform:translateY(-2px)}
 .btn-wa{background:#25D366;color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.32)}
 .btn-wa:hover{background:#1eb957;transform:translateY(-2px)}
+.btn-action{background:#059669;color:#fff;box-shadow:0 4px 14px rgba(5,150,105,.32)}
+.btn-action:hover{background:#047857;transform:translateY(-2px);box-shadow:0 8px 24px rgba(5,150,105,.42)}
 
 /* NAV */
 .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #f3e8ff}
@@ -110,10 +112,11 @@ section{padding:52px 0}
 .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .feat{background:#fdf8ff;border:1px solid #ede9fe;border-radius:20px;padding:22px 24px;transition:transform .25s,box-shadow .25s,border-color .25s}
 .feat:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(219,39,119,.08);border-color:#ec4899}
-.feat-icon{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,#ec489920,#a855f720);color:#db2777;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:14px}
-.feat h4{font-size:16px;margin:0 0 6px;font-weight:800;letter-spacing:-.3px}
+.feat-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.feat-icon{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#ec489920,#a855f720);color:#db2777;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.feat h4{font-size:15px;margin:0;font-weight:800;letter-spacing:-.3px}
 .feat p{font-size:13.5px;color:#6b5b8c;margin:0;line-height:1.6}
-@media(max-width:600px){.feat-grid{grid-template-columns:1fr}}
+@media(max-width:767px){.feat-grid{grid-template-columns:1fr}}
 
 /* COMPARACIÓN */
 .compare{background:#fff}
@@ -217,7 +220,11 @@ section{padding:52px 0}
 .cta-final::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(236,72,153,.4),transparent 70%);filter:blur(40px)}
 .cta-final h2{font-size:36px;font-weight:900;letter-spacing:-1px;margin:0 0 12px;position:relative}
 .cta-final p{font-size:16px;color:rgba(255,255,255,.7);margin:0 0 30px;position:relative}
-.cta-final-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
+.cta-final-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative}
+.cta-final-btns .btn-ghost{background:transparent;color:rgba(255,255,255,.75);border:1.5px solid rgba(255,255,255,.22);font-weight:600}
+.cta-final-btns .btn-ghost:hover{background:rgba(255,255,255,.08);color:#fff}
+.cta-final-btns .btn-wa{background:transparent;color:#4ade80;border:1.5px solid rgba(74,222,128,.3);font-weight:600;box-shadow:none}
+.cta-final-btns .btn-wa:hover{background:rgba(74,222,128,.1);color:#4ade80;transform:none}
 @media(max-width:780px){.cta-final{padding:40px 24px}.cta-final h2{font-size:26px}}
 
 /* FORM */
@@ -304,11 +311,11 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow"><span class="pulse-dot"></span> Hecho en Argentina · Para emprendedoras de regalos</span>
-      <h1 class="h1">Tu emprendimiento de regalos,<br>operando como una <em>marca grande</em></h1>
-      <p class="lead">ANMA Regalos centraliza tus pedidos, entregas, mensajes y métricas. Para que dejes de coordinar todo entre WhatsApp, Excel y la cabeza. Vos enfocate en crear; nosotros nos ocupamos del orden.</p>
+      <h1 class="h1">Hacé que cada regalo cuente,<br>sin que te cueste la <em>paz</em>.</h1>
+      <p class="lead">ANMA Regalos es el soporte invisible detrás de cada entrega. Centralizá tus pedidos, stock de insumos y mensajes en un solo lugar. Diseñado especialmente para quienes crean experiencias, porque para diseñar con amor, primero necesitás respirar tranquila con tu orden.</p>
       <div class="hero-ctas">
-        <a href="https://wa.me/5491169456863?text=Hola%2C%20quiero%20solicitar%20implementaci%C3%B3n%20de%20ANMA%20Regalos" target="_blank" class="btn btn-primary"><i class="fa-solid fa-rocket"></i> Solicitar Implementación</a>
-        <a href="/demo.html" class="btn btn-ghost"><i class="fa-solid fa-circle-play"></i> Ver demo en vivo</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-action"><i class="fa-solid fa-rocket"></i> Empezar hoy</a>
+        <a href="/demo.html" class="btn btn-ghost"><i class="fa-solid fa-circle-play"></i> Quiero mi respiro</a>
       </div>
       <div class="hero-trust">
         <span><i class="fa-solid fa-heart"></i> Sin tarjeta</span>
@@ -402,14 +409,36 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
       <h2 class="h2">Todo lo que tu emprendimiento<br>necesita para volar</h2>
       <p class="sub center">Hecho específicamente para negocios de regalos. No es un Excel disfrazado — es una herramienta de verdad.</p>
     </div>
-    <p style="text-align:center;font-size:14px;font-weight:700;color:#db2777;margin:0 0 24px;letter-spacing:.5px;font-style:italic">— Menos caos, más presencia. Tu emprendimiento merece fluir. —</p>
+    <p style="text-align:center;font-size:15px;font-weight:700;color:#db2777;margin:0 0 28px;letter-spacing:-.1px">— Menos ruido operativo, más espacio para crear. —</p>
     <div class="feat-grid">
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div><h4>Pedidos ágiles</h4><p>Creás presupuestos en segundos con tus productos cargados. Compartilos por WhatsApp y la clienta confirma con un click.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-fire"></i></div><h4>Seguimiento por urgencia</h4><p>Las entregas urgentes siempre arriba. Vencidos, pendientes, próximos. Sabés en 5 segundos qué resolver hoy.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-box-open"></i></div><h4>Catálogo prolijo</h4><p>Cajas, detalles, opciones, precios. Tu catálogo siempre actualizado — vos, tu equipo y tus clientas ven lo mismo.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-truck-fast"></i></div><h4>Logística sin dolor</h4><p>Tarifas por zona, tracking de envíos y aviso a tu clienta cuando su regalo está en camino. Profesionalismo que se nota.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-brands fa-whatsapp"></i></div><h4>WhatsApp pre-armado</h4><p>Confirmaciones, recordatorios, agradecimientos. Mensajes consistentes y bien escritos sin tipear lo mismo 50 veces.</p></div>
-      <div class="feat"><div class="feat-icon"><i class="fa-solid fa-chart-line"></i></div><h4>Resultados claros</h4><p>Ingresos, ganancia real, top de clientas y productos que rinden. Vas a ver tu emprendimiento como nunca antes.</p></div>
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-icon"><i class="fa-solid fa-list-check"></i></div>
+          <h4>Pedidos bajo control</h4>
+        </div>
+        <p>Chau a los detalles anotados en cualquier lado. Registrá cada pedido con sus especificaciones de personalización, dedicatorias y fechas de entrega en un solo renglón.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-icon"><i class="fa-solid fa-box-open"></i></div>
+          <h4>Insumos que no te faltan</h4>
+        </div>
+        <p>Cintas, cajas, papeles y productos. Tu stock de materiales se actualiza solo con cada venta para que nunca te quedes a mitad de camino armando un pedido importante.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-icon"><i class="fa-brands fa-whatsapp"></i></div>
+          <h4>Mensajes listos en un clic</h4>
+        </div>
+        <p>Mandá el estado del pedido, la confirmación de entrega o la encuesta de satisfacción por WhatsApp sin escribir lo mismo cincuenta veces al día.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-head">
+          <div class="feat-icon"><i class="fa-solid fa-truck-fast"></i></div>
+          <h4>Tus entregas, mapeadas</h4>
+        </div>
+        <p>Planificá la logística de tus envíos por fecha y zona. Una mirada rápida para saber qué sale hoy, qué sale mañana y asegurarte de que todo llegue a tiempo y perfecto.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -557,6 +586,11 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
   </div>
 </section>
 
+<!-- DESTACADO 2 — separador entre testimonios y pricing -->
+<div style="padding:36px 24px;text-align:center">
+  <p style="font-size:22px;font-weight:800;color:#1F1338;letter-spacing:-.5px;margin:0 auto;line-height:1.35;max-width:640px">Tu producción fluye,<span style="color:#db2777"> tus clientes lo sienten.</span></p>
+</div>
+
 <section id="pricing" style="background:#150d26;padding:52px 0">
   <div class="wrap">
 
@@ -697,18 +731,9 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
   </div>
 </section>
 
+<!-- FORMULARIO DE CONTACTO -->
 <section id="contact" class="contact">
   <div class="wrap">
-    <div class="cta-final" style="margin-bottom:36px">
-      <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:2px;margin:0 0 12px;position:relative">Tu negocio fluye sin fricción</p>
-      <h2>Llevá tu gestión al siguiente nivel.<br>Inicia tu implementación hoy mismo.</h2>
-      <div class="cta-final-btns">
-        <a href="https://wa.me/5491169456863?text=Hola%2C%20quiero%20solicitar%20implementaci%C3%B3n%20de%20ANMA%20Regalos" target="_blank" class="btn btn-primary"><i class="fa-solid fa-rocket"></i> Solicitar Implementación</a>
-        <a href="/demo.html" class="btn btn-ghost"><i class="fa-solid fa-circle-play"></i> Ver demo primero</a>
-        <a href="https://wa.me/5491169456863?text=Hola%20ANMA%20Regalos%2C%20quiero%20una%20demo%20guiada" target="_blank" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i> Hablar con ventas</a>
-      </div>
-    </div>
-
     <div class="contact-grid">
       <div class="contact-info">
         <h3>O contanos sobre tu emprendimiento</h3>
@@ -744,6 +769,21 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
         <i class="fa-solid fa-circle-check"></i>
         <b>¡Mensaje enviado!</b>
         Te respondemos en menos de 24h hábiles.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL — CIERRE DE CAJA (último bloque antes del footer) -->
+<section style="padding:56px 0 72px;background:#fdf4ff">
+  <div class="wrap">
+    <div class="cta-final">
+      <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:2px;margin:0 0 12px;position:relative">El alivio que tu taller estaba esperando</p>
+      <h2>ANMA Regalos: el respiro<br>que necesitaba tu operación.</h2>
+      <p style="max-width:580px;margin:0 auto 30px;position:relative">Creamos esta herramienta porque sabemos que detrás de cada regalo hay horas de dedicación intensa. Te damos el orden y la claridad que necesitás para que gestionar tu temporada alta sea, finalmente, un respiro.</p>
+      <div class="cta-final-btns">
+        <a href="https://anma-host.vercel.app/login" class="btn btn-action"><i class="fa-solid fa-rocket"></i> Empezar hoy</a>
+        <a href="https://wa.me/5491169456863?text=Hola%20ANMA%20Regalos%2C%20quiero%20una%20demo%20guiada" target="_blank" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i> Hablar con ventas</a>
       </div>
     </div>
   </div>
