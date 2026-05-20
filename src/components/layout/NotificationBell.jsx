@@ -403,7 +403,12 @@ export default function NotificationBell() {
       >
         <i className="fa fa-bell" />
         {unreadCount > 0 && (
-          <span className="notif-dot" style={{ background: hasCritical ? '#EF4444' : '#F59E0B' }} />
+          <span
+            className="notif-badge"
+            style={{ background: hasCritical ? '#EF4444' : '#F59E0B' }}
+          >
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
         )}
       </button>
 

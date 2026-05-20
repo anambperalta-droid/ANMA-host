@@ -4,7 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { fmt, STATUS_MAP, STATUS_CLS } from '../../lib/storage'
 
-/* ── Modal de vista previa de presupuesto (solo lectura) ── */
+/* ── Modal de vista previa de presupuesto (solo lectura, mobile-first) ── */
 function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
   if (!budget) return null
   const c = config
@@ -13,89 +13,172 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
   const items = budget.items || []
   const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
 
+  const printBudgetPdf = () => {
+    const rows = items.map(it =>
+      `<tr style="border-bottom:1px solid #E5E7F0">
+        <td style="padding:8px 10px;font-weight:500">${it.name || '—'}</td>
+        <td style="padding:8px 10px;text-align:center">${num(it.qty)}</td>
+        <td style="padding:8px 10px;text-align:right">${fmt(num(it.priceUnit))}</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:600">${fmt(num(it.qty) * num(it.priceUnit))}</td>
+      </tr>`).join('')
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+      <title>${budget.num || 'Presupuesto'}</title>
+      <style>*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:32px;color:#1E1B4B}table{width:100%;border-collapse:collapse}@media print{body{margin:20px}}</style>
+      </head><body>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:3px solid ${brandColor};margin-bottom:20px">
+        <div>${c.logo ? `<img src="${c.logo}" style="height:40px;margin-bottom:4px">` : `<div style="font-size:22px;font-weight:800;color:${brandColor}">${bName}</div>`}${c.subtitle ? `<div style="font-size:11px;color:#888;margin-top:2px">${c.subtitle}</div>` : ''}</div>
+        <div style="text-align:right"><div style="font-size:18px;font-weight:800">${budget.num || '—'}</div><div style="font-size:12px;color:#666;margin-top:2px">Fecha: ${budget.date || '—'}</div>${budget.deliveryDate ? `<div style="font-size:12px;color:#666">Entrega: ${budget.deliveryDate}</div>` : ''}</div>
+      </div>
+      <div style="background:#F8F9FE;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13px">
+        ${budget.contact ? `<div><b>${budget.contact}</b></div>` : ''}
+        ${budget.company ? `<div style="color:#666">${budget.company}</div>` : ''}
+        ${budget.wa ? `<div style="color:#666">${budget.wa}</div>` : ''}
+      </div>
+      <table><thead><tr style="background:${brandColor}">
+        <th style="padding:8px 10px;text-align:left;color:#fff;font-size:11px">Producto</th>
+        <th style="padding:8px 10px;text-align:center;color:#fff;font-size:11px">Cant.</th>
+        <th style="padding:8px 10px;text-align:right;color:#fff;font-size:11px">Precio unit.</th>
+        <th style="padding:8px 10px;text-align:right;color:#fff;font-size:11px">Subtotal</th>
+      </tr></thead><tbody>${rows}</tbody></table>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px">
+        <div style="width:240px">
+          ${num(budget.shipCost) > 0 ? `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;border-bottom:1px solid #E5E7F0"><span>Envío</span><span>${fmt(num(budget.shipCost))}</span></div>` : ''}
+          <div style="display:flex;justify-content:space-between;padding:10px 0 6px;font-size:18px;font-weight:800;color:${brandColor}"><span>Total</span><span>${fmt(num(budget.total))}</span></div>
+          ${num(budget.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:${brandColor};font-weight:600"><span>Seña (${num(budget.deposit) || 50}%)</span><span>${fmt(num(budget.depositAmt))}</span></div>` : ''}
+        </div>
+      </div>
+      ${budget.noteCli ? `<div style="margin-top:20px;background:#F4F6FD;border-radius:8px;padding:12px 16px;font-size:12px;color:#4B5280">${budget.noteCli}</div>` : ''}
+      ${c.paymentConditions || c.legalNote ? `<div style="margin-top:24px;padding-top:12px;border-top:1px solid #E5E7F0;font-size:10px;color:#999">${c.paymentConditions ? `<div>${c.paymentConditions}</div>` : ''}${c.legalNote ? `<div style="margin-top:3px">${c.legalNote}</div>` : ''}</div>` : ''}
+      <script>window.print()</script></body></html>`
+    const win = window.open('', '_blank')
+    if (win) { win.document.write(html); win.document.close() }
+  }
+
   return (
     <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 940, height: 'min(900px, 92vh)', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, margin: 'auto 0' }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', borderRadius: '18px 18px 0 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="fa fa-file-invoice-dollar" style={{ color: brandColor }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)' }}>Vista previa — {budget.num || '—'}</span>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 640, maxHeight: '92vh', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, margin: 'auto' }} onClick={e => e.stopPropagation()}>
+
+        {/* ── Header ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', borderRadius: '16px 16px 0 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <i className="fa fa-file-invoice-dollar" style={{ color: brandColor, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)', whiteSpace: 'nowrap' }}>{budget.num || '—'}</span>
             <span className={`badge ${STATUS_CLS[budget.status] || 'b-draft'}`}>{STATUS_MAP[budget.status] || 'Borrador'}</span>
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn btn-ghost btn-xs" onClick={onEdit}><i className="fa fa-pen" /> Editar presupuesto</button>
-            <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
-          </div>
+          <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', background: '#fff' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 18, borderBottom: `3px solid ${brandColor}`, marginBottom: 20 }}>
-            <div>
-              {c.logo ? <img src={c.logo} alt={bName} style={{ height: 44, marginBottom: 6 }} /> : <div style={{ fontSize: 24, fontWeight: 800, color: brandColor, letterSpacing: '-1px' }}>{bName}</div>}
-              {c.subtitle && <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{c.subtitle}</div>}
+
+        {/* ── Content ── */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', background: '#fff' }}>
+
+          {/* Cabecera del comprobante */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 14, borderBottom: `3px solid ${brandColor}`, marginBottom: 16, gap: 12 }}>
+            <div style={{ minWidth: 0 }}>
+              {c.logo
+                ? <img src={c.logo} alt={bName} style={{ height: 38, marginBottom: 4, maxWidth: 140 }} />
+                : <div style={{ fontSize: 20, fontWeight: 800, color: brandColor, letterSpacing: '-1px', lineHeight: 1.1 }}>{bName}</div>}
+              {c.subtitle && <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{c.subtitle}</div>}
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#1E1B4B', letterSpacing: '-.5px' }}>{budget.num || '—'}</div>
-              <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>Fecha: {budget.date || '—'}</div>
-              {budget.deliveryDate && <div style={{ fontSize: 12, color: '#666' }}>Entrega: {budget.deliveryDate}</div>}
-            </div>
-          </div>
-          <div style={{ background: '#F8F9FE', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>Datos del cliente</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px', fontSize: 13, color: '#1E1B4B' }}>
-              {budget.contact && <div><span style={{ color: '#888', fontSize: 11 }}>Contacto: </span><b>{budget.contact}</b></div>}
-              {budget.company && <div><span style={{ color: '#888', fontSize: 11 }}>Empresa: </span><b>{budget.company}</b></div>}
-              {budget.wa && <div><span style={{ color: '#888', fontSize: 11 }}>WhatsApp: </span>{budget.wa}</div>}
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#1E1B4B', letterSpacing: '-.5px' }}>{budget.num || '—'}</div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>Fecha: {budget.date || '—'}</div>
+              {budget.deliveryDate && <div style={{ fontSize: 11, color: '#666' }}>Entrega: {budget.deliveryDate}</div>}
             </div>
           </div>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Detalle de productos</div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+
+          {/* Datos cliente */}
+          <div style={{ background: '#F8F9FE', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>Cliente</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: '4px 16px', fontSize: 12, color: '#1E1B4B' }}>
+              {budget.contact && <div><span style={{ color: '#888', fontSize: 10 }}>Contacto: </span><b>{budget.contact}</b></div>}
+              {budget.company && <div><span style={{ color: '#888', fontSize: 10 }}>Empresa: </span><b>{budget.company}</b></div>}
+              {budget.wa && <div><span style={{ color: '#888', fontSize: 10 }}>WhatsApp: </span>{budget.wa}</div>}
+            </div>
+          </div>
+
+          {/* Tabla de ítems — scrolleable en mobile */}
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Detalle de productos</div>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 16, borderRadius: 6, border: '1px solid #E5E7F0' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 340 }}>
               <thead>
                 <tr style={{ background: brandColor }}>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', color: '#fff', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px' }}>Producto</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'center', color: '#fff', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>Cant.</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'right', color: '#fff', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>Precio unit.</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'right', color: '#fff', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>Subtotal</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'left', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Producto</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'center', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', width: 44 }}>Cant.</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'right', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', width: 90 }}>P. unit.</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'right', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', width: 90 }}>Subtotal</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length ? items.map((it, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #E5E7F0' }}>
-                    <td style={{ padding: '10px 12px', fontWeight: 500 }}>{it.name || '—'}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'center' }}>{num(it.qty)}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right' }}>{fmt(num(it.priceUnit))}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
+                  <tr key={i} style={{ borderBottom: '1px solid #E5E7F0', background: i % 2 === 0 ? '#fff' : '#FAFBFF' }}>
+                    <td style={{ padding: '9px 10px', fontWeight: 500 }}>{it.name || '—'}</td>
+                    <td style={{ padding: '9px 10px', textAlign: 'center' }}>{num(it.qty)}</td>
+                    <td style={{ padding: '9px 10px', textAlign: 'right' }}>{fmt(num(it.priceUnit))}</td>
+                    <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600 }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
                   </tr>
                 )) : <tr><td colSpan={4} style={{ padding: 16, textAlign: 'center', color: '#888' }}>Sin productos</td></tr>}
               </tbody>
             </table>
           </div>
+
+          {/* Totales */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <div style={{ width: 260 }}>
+            <div style={{ width: '100%', maxWidth: 240 }}>
               {num(budget.shipCost) > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, color: '#666', borderBottom: '1px solid #E5E7F0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12, color: '#666', borderBottom: '1px solid #E5E7F0' }}>
                   <span>Envío</span><span>{fmt(num(budget.shipCost))}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 6px', fontSize: 20, fontWeight: 800, color: brandColor }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 5px', fontSize: 18, fontWeight: 800, color: brandColor }}>
                 <span>Total</span><span>{fmt(num(budget.total))}</span>
               </div>
               {num(budget.depositAmt) > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, color: brandColor, fontWeight: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 12, color: brandColor, fontWeight: 600 }}>
                   <span>Seña ({num(budget.deposit) || 50}%)</span><span>{fmt(num(budget.depositAmt))}</span>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Nota al cliente */}
           {budget.noteCli && (
-            <div style={{ marginTop: 20, background: '#F4F6FD', borderRadius: 8, padding: '12px 16px', fontSize: 12, color: '#4B5280', lineHeight: 1.6 }}>
+            <div style={{ marginTop: 16, background: '#F4F6FD', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#4B5280', lineHeight: 1.6 }}>
               <i className="fa fa-message" style={{ color: brandColor, marginRight: 6 }} />{budget.noteCli}
             </div>
           )}
-          <div style={{ marginTop: 24, paddingTop: 14, borderTop: '1px solid #E5E7F0', fontSize: 10, color: '#999', lineHeight: 1.6 }}>
-            {c.paymentConditions && <div>{c.paymentConditions}</div>}
-            {c.legalNote && <div style={{ marginTop: 3 }}>{c.legalNote}</div>}
-          </div>
+
+          {/* Pie legal */}
+          {(c.paymentConditions || c.legalNote) && (
+            <div style={{ marginTop: 20, paddingTop: 12, borderTop: '1px solid #E5E7F0', fontSize: 10, color: '#999', lineHeight: 1.6 }}>
+              {c.paymentConditions && <div>{c.paymentConditions}</div>}
+              {c.legalNote && <div style={{ marginTop: 3 }}>{c.legalNote}</div>}
+            </div>
+          )}
+        </div>
+
+        {/* ── Footer de acciones ── */}
+        <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface2)', flexShrink: 0, flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-primary"
+            style={{ flex: '1 1 140px', fontSize: 13, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+            onClick={printBudgetPdf}
+          >
+            <i className="fa fa-file-pdf" /> Ver PDF Completo
+          </button>
+          <button
+            className="btn btn-ghost"
+            style={{ flex: '0 0 auto', fontSize: 12, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6 }}
+            onClick={onEdit}
+          >
+            <i className="fa fa-pen" /> Editar
+          </button>
+          <button
+            className="btn btn-ghost"
+            style={{ flex: '0 0 auto', fontSize: 12, padding: '10px 14px' }}
+            onClick={onClose}
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     </div>

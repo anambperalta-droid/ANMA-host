@@ -755,8 +755,9 @@ td b{color:var(--txt);font-weight:600}
 .notif-bell{position:relative}
 .notif-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;border-radius:999px;font-size:9px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--surface);pointer-events:none;line-height:1}
 .notif-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;border:2px solid var(--surface);pointer-events:none}
-@keyframes pulse-ring{0%{transform:scale(1);opacity:.7}70%{transform:scale(1.45);opacity:0}100%{transform:scale(1.45);opacity:0}}
-.pulse-critical::after{content:'';position:absolute;inset:0;border-radius:8px;background:var(--red);animation:pulse-ring 1.4s ease-out infinite;pointer-events:none}
+@keyframes gentle-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.pulse-critical{animation:gentle-pulse 2.8s ease-in-out infinite}
+.pulse-critical::after{display:none}
 
 .notif-overlay{position:fixed;inset:0;z-index:199;background:transparent}
 .notif-drawer{position:fixed;top:60px;right:0;width:360px;max-width:calc(100vw - 16px);height:calc(100vh - 60px);background:var(--surface);border-left:1px solid var(--border);box-shadow:-8px 0 32px rgba(0,0,0,.12);z-index:200;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);overflow:hidden}
