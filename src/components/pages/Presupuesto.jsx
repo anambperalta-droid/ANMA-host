@@ -190,7 +190,7 @@ function ClientCombo({ clients, value, onSelect, onChange }) {
 export default function Presupuesto() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { get, config, saveBudget } = useData()
+  const { get, set, config, saveBudget } = useData()
   const toast = useToast()
   const c = config()
   const feats = c.features || {}
@@ -333,6 +333,9 @@ export default function Presupuesto() {
   }
   const updateAltLabel = (altIdx, label) =>
     setAlternatives(prev => prev.map((a, i) => i !== altIdx ? a : { ...a, label }))
+  // Aprobación exclusiva: solo una alt puede estar aprobada; click en la aprobada la desaprueba
+  const approveAlt = (altIdx) =>
+    setAlternatives(prev => prev.map((a, i) => ({ ...a, approved: i === altIdx ? !a.approved : false })))
 
   /* ── Kit builder — state para pickers ── */
   const [kitProdPickerOpen, setKitProdPickerOpen] = useState(false)
@@ -435,6 +438,36 @@ export default function Presupuesto() {
     return `${c.budgetPrefix || 'AN'}-${String(num).padStart(4, '0')}`
   }, [editId, c.nextNum, c.budgetPrefix])
 
+  /* ── Descuento de stock para la alternativa aprobada ── */
+  const deductStockForApprovedAlt = () => {
+    // Si ninguna alt está marcada como aprobada, usa la primera
+    const approvedAlt = alternatives.find(a => a.approved) || alternatives[0]
+    if (!approvedAlt?.kits?.length) return
+    const allInsumos = [...get('insumos', [])]
+    const allProducts = [...get('products', [])]
+    approvedAlt.kits.forEach(kit => {
+      const kitQty = num(kit.qty)
+      // Packaging / Insumos (componente A)
+      ;(kit.packaging || []).forEach(comp => {
+        if (!comp.name) return
+        const i = allInsumos.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
+        if (i > -1 && typeof allInsumos[i].stock === 'number') {
+          allInsumos[i] = { ...allInsumos[i], stock: Math.max(0, allInsumos[i].stock - num(comp.qty) * kitQty) }
+        }
+      })
+      // Productos del kit (componente B)
+      ;(kit.products || []).forEach(comp => {
+        if (!comp.name) return
+        const i = allProducts.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
+        if (i > -1 && typeof allProducts[i].stock === 'number') {
+          allProducts[i] = { ...allProducts[i], stock: Math.max(0, allProducts[i].stock - num(comp.qty) * kitQty) }
+        }
+      })
+    })
+    set('insumos', allInsumos)
+    set('products', allProducts)
+  }
+
   const handleSave = () => {
     if (!form.contact && !form.company) { toast('Falta el cliente. Cargá un nombre de contacto o empresa.', 'er'); return }
     if (form.wa && !isValidWA(form.wa)) { toast('El WhatsApp no tiene un formato válido. Ej: +54 351 1234567', 'er'); setWaTouched(true); return }
@@ -448,7 +481,15 @@ export default function Presupuesto() {
     if (!validItems.length) { toast('Completá al menos un Kit o producto en el Paso 2.', 'er'); return }
     const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
-    const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, alternatives, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
+    // Descuento de stock: solo al pasar a "En preparación" y solo una vez
+    const wasStockDeducted = editId ? (get('budgets').find(b => b.id === editId)?.stockDeducted === true) : false
+    const willDeductStock = form.status === 'inprogress' && !wasStockDeducted
+    if (willDeductStock) {
+      deductStockForApprovedAlt()
+      const approvedLabel = (alternatives.find(a => a.approved) || alternatives[0])?.label || 'Alternativa 1'
+      toast(`Stock descontado — ${approvedLabel}`, 'ok')
+    }
+    const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, alternatives, stockDeducted: wasStockDeducted || willDeductStock, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
     setDraftRestored(false)
     localStorage.removeItem(DRAFT_KEY)
@@ -889,7 +930,9 @@ export default function Presupuesto() {
                         onClick={() => setActiveAltIdx(ai)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 4px 5px 10px', fontWeight: ai === activeAltIdx ? 700 : 500, fontSize: 12, color: ai === activeAltIdx ? 'var(--primary)' : 'var(--txt2)', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
                       >
-                        <i className="fa fa-layer-group" style={{ marginRight: 5, fontSize: 10, opacity: .7 }} />
+                        {alt.approved
+                          ? <i className="fa fa-circle-check" style={{ marginRight: 5, fontSize: 10, color: '#10B981' }} />
+                          : <i className="fa fa-layer-group" style={{ marginRight: 5, fontSize: 10, opacity: .7 }} />}
                         {alt.label || `Alternativa ${ai + 1}`}
                       </button>
                       {ai === activeAltIdx && (
@@ -921,6 +964,57 @@ export default function Presupuesto() {
                     <i className="fa fa-plus" style={{ fontSize: 10 }} /> Nueva alternativa
                   </button>
                 </div>
+
+                {/* ── Banner de aprobación de la alternativa activa ── */}
+                {(() => {
+                  const isApproved = alternatives[activeAltIdx]?.approved === true
+                  const anyApproved = alternatives.some(a => a.approved)
+                  const approvedLabel = alternatives.find(a => a.approved)?.label
+                  return (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, marginBottom: 14,
+                      background: isApproved ? 'rgba(16,185,129,.08)' : 'var(--surface2)',
+                      border: `1.5px solid ${isApproved ? '#10B981' : 'var(--border)'}`,
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {isApproved ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <i className="fa fa-circle-check" style={{ color: '#10B981', fontSize: 15, flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: '#059669' }}>Aprobada para producción</div>
+                              <div style={{ fontSize: 10, color: 'var(--txt3)' }}>Al pasar a "En preparación", el stock se descontará solo de esta alternativa</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)' }}>
+                              {anyApproved ? `Alternativa no aprobada` : 'Sin alternativa aprobada'}
+                            </div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
+                              {anyApproved
+                                ? <><i className="fa fa-circle-check" style={{ color: '#10B981', marginRight: 3 }} />Aprobada: <b>{approvedLabel}</b></>
+                                : 'Aprobá una opción para conectar con el stock al pasar a producción'}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => approveAlt(activeAltIdx)}
+                        style={{
+                          flexShrink: 0, padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                          cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: isApproved ? 'rgba(16,185,129,.15)' : 'var(--primary, #7C3AED)',
+                          color: isApproved ? '#059669' : '#fff',
+                          transition: 'opacity .15s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '.82' }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+                      >
+                        {isApproved ? <><i className="fa fa-check" style={{ marginRight: 5 }} />Aprobada</> : 'Aprobar esta opción'}
+                      </button>
+                    </div>
+                  )
+                })()}
 
                 {items.map((kit, kitIdx) => (
                   <div key={kitIdx} style={{ marginBottom: 14, border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface2)' }}>
