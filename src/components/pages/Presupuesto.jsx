@@ -662,20 +662,18 @@ export default function Presupuesto() {
     const bg2 = bc + '07'
     const bdr = bc + '28'
 
-    /* ── Helper: sub-fila con cantidad, precio unitario y total ── */
-    const subRow = (label, qtyPerKit, kitQty, unitCost, tagTxt, tagBg, tagColor, isLast = false) => {
-      const totalUnits = num(qtyPerKit || 1) * num(kitQty)
-      const lineTotal  = num(unitCost) * totalUnits
-      const botBdr = isLast ? `2px solid ${bdr}` : `1px solid #EBEBF2`
+    /* ── Helper: sub-fila — qty y precio por kit individual (sin multiplicar por pedido) ── */
+    const subRow = (label, qtyPerKit, unitCost, isLast = false) => {
+      const qty       = num(qtyPerKit || 1)
+      const lineTotal = num(unitCost) * qty
+      const botBdr    = isLast ? `2px solid ${bdr}` : `1px solid #EBEBF2`
       return `
         <tr>
           <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:4px 9px 4px 30px">
-            <span style="color:${bc};opacity:.4;font-size:10px;margin-right:4px">↳</span>
+            <span style="color:${bc};opacity:.35;font-size:10px;margin-right:5px">↳</span>
             <span style="color:#374151;font-size:9.5px">${label}</span>
-            ${qtyPerKit > 1 ? `<span style="color:#9CA3AF;font-size:8.5px"> ×${qtyPerKit}/kit</span>` : ''}
-            <span style="background:${tagBg};color:${tagColor};font-size:7px;font-weight:700;padding:1.5px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px;margin-left:6px;vertical-align:middle">${tagTxt}</span>
           </td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:9px;color:#6B7280">${totalUnits}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:9px;color:#6B7280">${qty}</td>
           <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums">${unitCost > 0 ? fmt(unitCost) : ''}</td>
           <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums;font-weight:${lineTotal > 0 ? 600 : 400}">${lineTotal > 0 ? fmt(lineTotal) : ''}</td>
         </tr>`
@@ -753,7 +751,7 @@ export default function Presupuesto() {
         const packHdr   = packItems.length ? blockHdrRow('📦', 'A. Packaging / Insumos', '#F5F3FF') : ''
         const packRowsHtml = packItems.map((c, ci, arr) => {
           const isLast = ci === arr.length - 1 && !(i.products || []).some(p => p.name) && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
-          return subRow(c.name, num(c.qty || 1), num(i.qty), num(c.costUnit), 'Packaging', '#EDE9FE', '#5B21B6', isLast)
+          return subRow(c.name, num(c.qty || 1), num(c.costUnit), isLast)
         })
 
         /* ── Bloque B: Contenido del Kit ── */
@@ -761,7 +759,7 @@ export default function Presupuesto() {
         const prodHdr   = prodItems.length ? blockHdrRow('✨', 'B. Contenido del Kit', '#F0FDF4') : ''
         const prodRowsHtml = prodItems.map((c, ci, arr) => {
           const isLast = ci === arr.length - 1 && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
-          return subRow(c.name, num(c.qty || 1), num(i.qty), num(c.costUnit), 'Contenido', '#DCFCE7', '#065F46', isLast)
+          return subRow(c.name, num(c.qty || 1), num(c.costUnit), isLast)
         })
 
         /* ── Bloque C: Personalización ── */
@@ -769,8 +767,7 @@ export default function Presupuesto() {
         const persHdr = hasPers ? blockHdrRow('🎨', 'C. Personalización', '#FFFBEB') : ''
         const persRow = hasPers ? subRow(
           i.personalizacion?.desc || 'Personalización / Logo',
-          1, num(i.qty), num(i.personalizacion?.costUnit),
-          'Personalización', '#FEF3C7', '#92400E', true
+          1, num(i.personalizacion?.costUnit), true
         ) : ''
 
         /* Fila de cierre si no hay sub-filas */
@@ -812,16 +809,15 @@ export default function Presupuesto() {
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${budgetNum}</title>
     <style>
       *{box-sizing:border-box}
-      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;padding:22px 28px 70px;color:#1E1B4B;font-size:11.5px;line-height:1.45;background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
-      .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2.5px solid ${brandColor};margin-bottom:14px}
-      .brand{font-size:18px;font-weight:800;color:${brandColor};letter-spacing:-.3px}
-      .brand img{height:38px;display:block}
-      .hd-meta{text-align:right;font-size:10.5px;color:#555;line-height:1.5}
-      .hd-meta .num{font-size:15px;font-weight:800;color:#1E1B4B;margin-bottom:2px}
-      .vig{display:inline-block;margin-top:5px;padding:3px 8px;background:#FEF3C7;color:#92400E;font-size:9.5px;font-weight:700;border-radius:4px;letter-spacing:.2px}
-      .client-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;padding:10px 12px;background:#F8F9FC;border-radius:6px;margin-bottom:12px;font-size:11px}
-      .client-row .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#888;font-weight:700;margin-bottom:1px}
-      .client-row .val{font-weight:600;color:#1E1B4B}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;padding:18px 26px 70px;color:#1E1B4B;font-size:11.5px;line-height:1.45;background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+      .pdf-hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:9px;margin-bottom:0}
+      .pdf-brand .bname{font-size:22px;font-weight:800;color:${brandColor};letter-spacing:-.5px;line-height:1.1}
+      .pdf-brand img{height:34px;display:block}
+      .pdf-brand .bsub{font-size:9px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+      .pdf-meta{text-align:right;font-size:10.5px;color:#555;line-height:1.7}
+      .pdf-meta b{color:#1E1B4B;font-weight:700}
+      .pdf-div{height:1.5px;background:#b45309;opacity:.3;margin:8px 0 12px}
+      .vig{display:inline-block;margin-top:2px;padding:2px 7px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;border-radius:3px;letter-spacing:.2px}
       table{width:100%;border-collapse:collapse;margin:4px 0 0}
       th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
       td{padding:6px 9px;border-bottom:1px solid #EEF0F7;font-size:11px}
@@ -849,26 +845,21 @@ export default function Presupuesto() {
       .accept-fab:hover{background:#1da851}
       @media print{.accept-fab{display:none}body{padding:18px 22px}}
     </style></head><body>
-    <div class="header">
-      <div class="brand">${c.logo ? '<img src="' + c.logo + '" alt="' + bName + '">' : bName}</div>
-      <div class="hd-meta">
-        <div class="num">${budgetNum}</div>
-        ${c.razonSocial ? '<div style="font-weight:600">' + c.razonSocial + '</div>' : ''}
-        ${c.cuit ? '<div>CUIT: ' + c.cuit + '</div>' : ''}
-        ${c.ptoVenta ? '<div>Pto. Venta: ' + c.ptoVenta + '</div>' : ''}
-        ${c.condIva && c.ivaEnabled ? '<div>' + c.condIva + '</div>' : ''}
-        <div>Fecha de emisión: ${fmtD(new Date().toISOString().slice(0, 10))}</div>
-        ${form.deliveryDate ? '<div>Entrega: ' + fmtD(form.deliveryDate) + '</div>' : ''}
+    <div class="pdf-hd">
+      <div class="pdf-brand">
+        ${c.logo ? '<img src="' + c.logo + '" alt="' + bName + '">' : '<div class="bname">' + bName + '</div>'}
+        <div class="bsub">Regalos Corporativos</div>
+      </div>
+      <div class="pdf-meta">
+        <div><b>Presupuesto:</b> ${budgetNum}</div>
+        <div><b>Fecha:</b> ${fmtD(new Date().toISOString().slice(0, 10))}</div>
+        ${(form.contact || form.company) ? '<div><b>Cliente:</b> ' + [form.contact, form.company].filter(Boolean).join(' / ') + '</div>' : ''}
+        ${form.deliveryDate ? '<div><b>Entrega:</b> ' + fmtD(form.deliveryDate) + '</div>' : ''}
+        ${c.razonSocial ? '<div style="font-size:9.5px;color:#888">' + c.razonSocial + (c.cuit ? ' · CUIT: ' + c.cuit : '') + '</div>' : ''}
         <div class="vig">⏱ Válido hasta: ${fmtD(vigenciaISO)}</div>
       </div>
     </div>
-    <div class="client-row">
-      ${form.contact ? `<div><div class="lbl">Contacto</div><div class="val">${form.contact}</div></div>` : ''}
-      ${form.company ? `<div><div class="lbl">Empresa</div><div class="val">${form.company}</div></div>` : ''}
-      ${form.wa ? `<div><div class="lbl">WhatsApp</div><div class="val">${form.wa}</div></div>` : ''}
-      ${form.ocasion ? `<div><div class="lbl">Ocasión</div><div class="val">${form.ocasion}</div></div>` : ''}
-      ${form.delivery ? `<div><div class="lbl">Modalidad</div><div class="val">${form.delivery}</div></div>` : ''}
-    </div>
+    <div class="pdf-div"></div>
     <table>
       <thead><tr><th>Producto</th><th style="text-align:center;width:55px">Cant.</th><th style="text-align:right;width:90px">P. unit.</th><th style="text-align:right;width:95px">Subtotal</th></tr></thead>
       <tbody>${allAltRows}</tbody>
