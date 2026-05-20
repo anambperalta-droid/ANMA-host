@@ -528,19 +528,83 @@ export default function Presupuesto() {
     const prodRows = items.filter(i => i.type === 'kit'
       ? (i.name || i.packaging?.length || i.products?.length)
       : i.name
-    ).flatMap(i => {
+    ).flatMap((i, kitN) => {
+      /* ── Ítem legacy (sin estructura de kit) ── */
       if (i.type !== 'kit') {
         return [`<tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right">${fmt(num(i.qty) * num(i.priceUnit))}</td></tr>`]
       }
-      const rows = [`<tr style="background:#F5F3FF"><td><strong style="color:#1E1B4B">${i.name || 'Kit'}</strong></td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right;font-weight:700">${fmt(num(i.qty) * num(i.priceUnit))}</td></tr>`]
-      ;(i.packaging || []).filter(c => c.name).forEach(c => {
-        rows.push(`<tr><td style="padding-left:22px;color:#555;font-size:10.5px;background:#FAFBFE">↳ ${c.name}${c.qty > 1 ? ` ×${c.qty}` : ''}</td><td></td><td></td><td></td></tr>`)
+
+      const bc  = brandColor                          // color de marca
+      const bg  = bc + '0e'                           // fondo cabecera kit (6% opacidad)
+      const bg2 = bc + '07'                           // fondo sub-filas (3% opacidad)
+      const bdr = bc + '28'                           // borde separador inferior (16%)
+
+      /* ── Separador entre kits ── */
+      const sep = kitN > 0
+        ? `<tr><td colspan="4" style="height:12px;padding:0;background:#fff;border:none"></td></tr>`
+        : ''
+
+      /* ── Fila principal del kit ── */
+      const kitRow = `
+        <tr>
+          <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:9px 9px 5px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;background:${bc};color:#fff;border-radius:4px;font-size:8px;font-weight:800;letter-spacing:-.2px;flex-shrink:0">K</span>
+              <strong style="font-size:12px;color:#1E1B4B;letter-spacing:-.2px">${i.name || 'Kit sin nombre'}</strong>
+            </div>
+          </td>
+          <td style="background:${bg};border-bottom:none;text-align:center;font-weight:700;font-size:12px;padding:9px 9px 5px">${i.qty}</td>
+          <td style="background:${bg};border-bottom:none;text-align:right;padding:9px 9px 5px">${fmt(i.priceUnit)}</td>
+          <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:13px;color:${bc};padding:9px 9px 5px">${fmt(num(i.qty) * num(i.priceUnit))}</td>
+        </tr>`
+
+      /* ── Helper: genera una sub-fila ── */
+      const subRow = (label, qty, tagTxt, tagBg, tagColor, isLast = false) => {
+        const botBdr = isLast ? `2px solid ${bdr}` : `1px solid #EBEBF2`
+        return `
+          <tr>
+            <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:4px 9px 4px 30px">
+              <span style="color:${bc};opacity:.45;font-size:10px;margin-right:4px">↳</span>
+              <span style="color:#374151;font-size:9.5px">${label}</span>
+              ${qty ? `<span style="color:#9CA3AF;font-size:8.5px"> (×${qty}/kit)</span>` : ''}
+              <span style="background:${tagBg};color:${tagColor};font-size:7px;font-weight:700;padding:1.5px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px;margin-left:6px;vertical-align:middle">${tagTxt}</span>
+            </td>
+            <td style="background:${bg2};border-bottom:${botBdr}"></td>
+            <td style="background:${bg2};border-bottom:${botBdr}"></td>
+            <td style="background:${bg2};border-bottom:${botBdr}"></td>
+          </tr>`
+      }
+
+      /* ── Sub-filas: Packaging (A) ── */
+      const packingRows = (i.packaging || []).filter(c => c.name).map((c, ci, arr) => {
+        const isLast = ci === arr.length - 1 && !(i.products || []).some(p => p.name) && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
+        return subRow(c.name, num(c.qty) || 1, 'Packaging', '#EDE9FE', '#5B21B6', isLast)
       })
-      ;(i.products || []).filter(c => c.name).forEach(c => {
-        rows.push(`<tr><td style="padding-left:22px;color:#555;font-size:10.5px;background:#FAFBFE">↳ ${c.name}${c.qty > 1 ? ` ×${c.qty}` : ''}</td><td></td><td></td><td></td></tr>`)
+
+      /* ── Sub-filas: Contenido del kit (B) ── */
+      const productRows = (i.products || []).filter(c => c.name).map((c, ci, arr) => {
+        const isLast = ci === arr.length - 1 && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
+        return subRow(c.name, num(c.qty) || 1, 'Contenido', '#DCFCE7', '#065F46', isLast)
       })
-      if (i.personalizacion?.desc) rows.push(`<tr><td style="padding-left:22px;color:#92400E;font-size:10.5px;font-style:italic;background:#FFFBEB">↳ ${i.personalizacion.desc}</td><td></td><td></td><td></td></tr>`)
-      return rows
+
+      /* ── Sub-fila: Personalización (C) ── */
+      const hasPersonalizacion = i.personalizacion?.desc || num(i.personalizacion?.costUnit) > 0
+      const personalizacionRow = hasPersonalizacion
+        ? subRow(
+            i.personalizacion?.desc || 'Personalización / Logo',
+            null,
+            'Personalización',
+            '#FEF3C7', '#92400E',
+            true   // siempre última
+          )
+        : ''
+
+      /* ── Fila cierre si no hay sub-filas (padding visual) ── */
+      const closingRow = (packingRows.length + productRows.length === 0 && !hasPersonalizacion)
+        ? `<tr><td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:3px 0"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td></tr>`
+        : ''
+
+      return [sep, kitRow, ...packingRows, ...productRows, personalizacionRow, closingRow].filter(Boolean)
     }).join('')
     const validDays = num(c.budgetValidityDays) || 7
     const validUntil = new Date(); validUntil.setDate(validUntil.getDate() + validDays)
@@ -552,7 +616,7 @@ export default function Presupuesto() {
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${budgetNum}</title>
     <style>
       *{box-sizing:border-box}
-      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;padding:22px 28px 70px;color:#1E1B4B;font-size:11.5px;line-height:1.45;background:#fff}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;padding:22px 28px 70px;color:#1E1B4B;font-size:11.5px;line-height:1.45;background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
       .header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:2.5px solid ${brandColor};margin-bottom:14px}
       .brand{font-size:18px;font-weight:800;color:${brandColor};letter-spacing:-.3px}
       .brand img{height:38px;display:block}
