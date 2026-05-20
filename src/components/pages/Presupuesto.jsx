@@ -22,43 +22,6 @@ const emptyKit = () => ({
   personalizacion: { desc: '', costUnit: 0 },
 })
 
-/* ── Alternativa de cotización ── */
-const emptyAlt = (label = 'Alternativa A') => ({ label, kits: [emptyKit()], approved: false })
-
-/* ── Calcula totales para un array de kits + opciones de formulario ── */
-const calcKits = (kits, form = {}, marginLowThreshold = 10) => {
-  const n = (v) => { const x = Number(v); return isNaN(x) ? 0 : x }
-  let totalCost = 0, totalRevenue = 0, totalQty = 0
-  kits.forEach(item => {
-    if (item.type === 'kit') {
-      const q = n(item.qty)
-      let cu = n(item.personalizacion?.costUnit)
-      ;(item.packaging || []).forEach(p => { cu += n(p.costUnit) * n(p.qty) })
-      ;(item.products  || []).forEach(p => { cu += n(p.costUnit) * n(p.qty) })
-      totalCost    += q * cu
-      totalRevenue += q * n(item.priceUnit)
-      totalQty     += q
-    } else {
-      const q = n(item.qty)
-      totalCost    += q * n(item.costUnit)
-      totalRevenue += q * n(item.priceUnit)
-      totalQty     += q
-    }
-  })
-  const logTotal   = n(form.logoCost) * totalQty
-  const ship       = n(form.shipCost)
-  const shipCharged = form.shipCharged !== false
-  const baseCost   = totalCost + logTotal + ship
-  const discountPct = Math.min(Math.max(n(form.discount), 0), 100)
-  const discountAmt = Math.round(totalRevenue * discountPct / 100)
-  const total      = totalRevenue - discountAmt + (shipCharged ? ship : 0)
-  const gain       = total - baseCost
-  const marginReal = total > 0 ? ((gain / total) * 100).toFixed(1) : '0.0'
-  const marginLow  = total > 0 && Number(marginReal) < marginLowThreshold
-  const depositAmt = Math.round(total * n(form.deposit) / 100)
-  return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, depositAmt, totalQty, discountAmt, discountPct }
-}
-
 /* ── Selector de producto (BottomSheet / modal) ── */
 function ProductPicker({ open, onClose, products, onSelect }) {
   const [q, setQ] = useState('')
@@ -224,7 +187,7 @@ function ClientCombo({ clients, value, onSelect, onChange }) {
 export default function Presupuesto() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { get, config, saveBudget, deductStockForOrder } = useData()
+  const { get, config, saveBudget } = useData()
   const toast = useToast()
   const c = config()
   const feats = c.features || {}
@@ -234,8 +197,7 @@ export default function Presupuesto() {
     shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
     margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0, discount: 0,
   })
-  const [alternatives, setAlternatives] = useState([emptyAlt('Alternativa A')])
-  const [activeAltIdx, setActiveAltIdx] = useState(0)
+  const [items, setItems] = useState([emptyKit()])
   const [editId, setEditId] = useState(null)
   const [marginBudgetedSaved, setMarginBudgetedSaved] = useState(null)
   const [mpResult, setMpResult] = useState('')
@@ -269,13 +231,7 @@ export default function Presupuesto() {
           logoCost: b.logoCost || 0,
           discount: b.discount || 0,
         })
-        if (b.alternatives?.length) {
-          setAlternatives(b.alternatives)
-        } else if (b.items?.length) {
-          setAlternatives([{ label: 'Alternativa A', kits: b.items, approved: false }])
-        } else {
-          setAlternatives([emptyAlt('Alternativa A')])
-        }
+        setItems(b.items?.length ? b.items : [emptyItem()])
         setEditId(b.id)
         setMarginBudgetedSaved(typeof b.marginBudgeted === 'number' ? b.marginBudgeted : null)
       }
@@ -285,7 +241,7 @@ export default function Presupuesto() {
         if (saved) {
           const { f, it, step } = JSON.parse(saved)
           if (f) setForm(prev => ({ ...prev, ...f }))
-          if (it?.length) setAlternatives(it)
+          if (it?.length) setItems(it)
           if (step) setCurrentStep(step)
           setDraftRestored(true)
           toast('Borrador restaurado — tus datos anteriores están cargados', 'ok')
@@ -296,11 +252,11 @@ export default function Presupuesto() {
 
   useEffect(() => {
     if (id) return
-    const hasSomeData = form.contact || form.company || alternatives.some(a => a.kits.some(k => k.name))
+    const hasSomeData = form.contact || form.company || items.some(i => i.name)
     if (hasSomeData) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: alternatives, step: currentStep }))
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: items, step: currentStep }))
     }
-  }, [form, alternatives, currentStep]) // eslint-disable-line
+  }, [form, items, currentStep]) // eslint-disable-line
 
   const setF = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -308,37 +264,33 @@ export default function Presupuesto() {
     setForm(f => ({ ...f, contact: client.contact || '', company: client.company || '', wa: client.wa || '' }))
   }
 
-  /* ── Helpers de alternativas ── */
-  const updateActiveAlt = (fn) =>
-    setAlternatives(prev => prev.map((alt, i) => i !== activeAltIdx ? alt : { ...alt, kits: fn(alt.kits) }))
-
-  const addAlt = () => {
-    const label = `Alternativa ${String.fromCharCode(65 + alternatives.length)}`
-    setAlternatives(prev => [...prev, emptyAlt(label)])
-    setActiveAltIdx(alternatives.length)
+  const updateItem = (idx, key, val) => {
+    setItems(prev => prev.map((it, i) => {
+      if (i !== idx) return it
+      const updated = { ...it, [key]: val }
+      if (key === 'name') {
+        const match = products.find(p => p.name === val)
+        if (match) {
+          updated.costUnit = match.cost || 0
+          updated.priceUnit = Math.round(num(match.cost) * (1 + marginPct / 100))
+        }
+      }
+      return updated
+    }))
   }
-  const removeAlt = (altIdx) => {
-    if (alternatives.length <= 1) return
-    setAlternatives(prev => prev.filter((_, i) => i !== altIdx))
-    setActiveAltIdx(prev => Math.min(prev, alternatives.length - 2))
-  }
-  const updateAltLabel = (altIdx, label) =>
-    setAlternatives(prev => prev.map((a, i) => i !== altIdx ? a : { ...a, label }))
-  // Aprobar una alternativa (exclusivo: desaprueba las demás)
-  const approveAlt = (altIdx) =>
-    setAlternatives(prev => prev.map((a, i) => ({ ...a, approved: i === altIdx ? !a.approved : false })))
+  const addItem = () => setItems(prev => [...prev, emptyItem()])
+  const removeItem = (idx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)
 
-  /* ── Picker legacy (no usado actualmente, compat) ── */
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerIdx, setPickerIdx] = useState(null)
   const openPicker = (idx) => { setPickerIdx(idx); setPickerOpen(true) }
   const handlePickProduct = useCallback((p) => {
     if (pickerIdx === null) return
-    updateActiveAlt(kits => kits.map((it, i) => {
+    setItems(prev => prev.map((it, i) => {
       if (i !== pickerIdx) return it
       return { ...it, name: p.name, costUnit: p.cost || 0, priceUnit: Math.round(num(p.cost) * (1 + marginPct / 100)) }
     }))
-  }, [pickerIdx, marginPct]) // eslint-disable-line
+  }, [pickerIdx, marginPct])
 
   /* ── Kit builder — state para pickers ── */
   const [kitProdPickerOpen, setKitProdPickerOpen] = useState(false)
@@ -346,29 +298,29 @@ export default function Presupuesto() {
   const [insPickerOpen, setInsPickerOpen] = useState(false)
   const [insPickerTarget, setInsPickerTarget] = useState(null) // { kitIdx, cIdx }
 
-  /* ── Kit builder — funciones de manipulación (sobre la alternativa activa) ── */
-  const addKit = () => updateActiveAlt(kits => [...kits, emptyKit()])
-  const removeKit = (kitIdx) => updateActiveAlt(kits => kits.length > 1 ? kits.filter((_, i) => i !== kitIdx) : kits)
-  const updateKit = (kitIdx, key, val) => updateActiveAlt(kits => kits.map((k, i) => i !== kitIdx ? k : { ...k, [key]: val }))
+  /* ── Kit builder — funciones de manipulación ── */
+  const addKit = () => setItems(prev => [...prev, emptyKit()])
+  const removeKit = (kitIdx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== kitIdx) : prev)
+  const updateKit = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, [key]: val }))
 
   // Componente A — Packaging / Insumos
-  const addPackComp = (kitIdx) => updateActiveAlt(kits => kits.map((k, i) => i !== kitIdx ? k : { ...k, packaging: [...(k.packaging || []), emptyPackComp()] }))
-  const removePackComp = (kitIdx, cIdx) => updateActiveAlt(kits => kits.map((k, i) => i !== kitIdx ? k : { ...k, packaging: (k.packaging || []).filter((_, j) => j !== cIdx) }))
-  const updatePackComp = (kitIdx, cIdx, key, val) => updateActiveAlt(kits => kits.map((k, i) => {
+  const addPackComp = (kitIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, packaging: [...(k.packaging || []), emptyPackComp()] }))
+  const removePackComp = (kitIdx, cIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, packaging: (k.packaging || []).filter((_, j) => j !== cIdx) }))
+  const updatePackComp = (kitIdx, cIdx, key, val) => setItems(prev => prev.map((k, i) => {
     if (i !== kitIdx) return k
     return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }
   }))
 
   // Componente B — Productos del kit
-  const addProdComp = (kitIdx) => updateActiveAlt(kits => kits.map((k, i) => i !== kitIdx ? k : { ...k, products: [...(k.products || []), emptyProdComp()] }))
-  const removeProdComp = (kitIdx, cIdx) => updateActiveAlt(kits => kits.map((k, i) => i !== kitIdx ? k : { ...k, products: (k.products || []).filter((_, j) => j !== cIdx) }))
-  const updateProdComp = (kitIdx, cIdx, key, val) => updateActiveAlt(kits => kits.map((k, i) => {
+  const addProdComp = (kitIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, products: [...(k.products || []), emptyProdComp()] }))
+  const removeProdComp = (kitIdx, cIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, products: (k.products || []).filter((_, j) => j !== cIdx) }))
+  const updateProdComp = (kitIdx, cIdx, key, val) => setItems(prev => prev.map((k, i) => {
     if (i !== kitIdx) return k
     return { ...k, products: (k.products || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }
   }))
 
   // Componente C — Personalización
-  const updatePersonalizacion = (kitIdx, key, val) => updateActiveAlt(kits => kits.map((k, i) => {
+  const updatePersonalizacion = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => {
     if (i !== kitIdx) return k
     return { ...k, personalizacion: { ...(k.personalizacion || {}), [key]: val } }
   }))
@@ -385,8 +337,8 @@ export default function Presupuesto() {
     setDragOver(null)
     dragIdxRef.current = null
     if (from == null || from === idx) return
-    updateActiveAlt(kits => {
-      const copy = [...kits]
+    setItems(prev => {
+      const copy = [...prev]
       const [moved] = copy.splice(from, 1)
       copy.splice(idx, 0, moved)
       return copy
@@ -401,12 +353,39 @@ export default function Presupuesto() {
     return cu
   }
 
-  const activeKits = alternatives[activeAltIdx]?.kits || []
   const calc = useMemo(() => {
-    const threshold = num(c.marginLowThreshold) || 10
-    const r = calcKits(activeKits, form, threshold)
-    return { ...r, marginThreshold: threshold }
-  }, [activeKits, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, c.marginLowThreshold]) // eslint-disable-line
+    let totalCost = 0, totalRevenue = 0, totalQty = 0
+    items.forEach(item => {
+      if (item.type === 'kit') {
+        const q = num(item.qty)
+        const cu = (() => {
+          let c2 = num(item.personalizacion?.costUnit)
+          ;(item.packaging || []).forEach(p => { c2 += num(p.costUnit) * num(p.qty) })
+          ;(item.products || []).forEach(p => { c2 += num(p.costUnit) * num(p.qty) })
+          return c2
+        })()
+        totalCost += q * cu
+        totalRevenue += q * num(item.priceUnit)
+        totalQty += q
+      } else {
+        const q = num(item.qty), c2 = num(item.costUnit), p = num(item.priceUnit)
+        totalCost += q * c2; totalRevenue += q * p; totalQty += q
+      }
+    })
+    const logTotal = num(form.logoCost) * totalQty
+    const ship = num(form.shipCost)
+    const shipCharged = form.shipCharged !== false
+    const baseCost = totalCost + logTotal + ship
+    const discountPct = Math.min(Math.max(num(form.discount), 0), 100)
+    const discountAmt = Math.round(totalRevenue * discountPct / 100)
+    const total = totalRevenue - discountAmt + (shipCharged ? ship : 0)
+    const gain = total - baseCost
+    const marginReal = total > 0 ? ((gain / total) * 100).toFixed(1) : '0.0'
+    const marginThreshold = num(c.marginLowThreshold) || 10
+    const marginLow = total > 0 && Number(marginReal) < marginThreshold
+    const depositAmt = Math.round(total * num(form.deposit) / 100)
+    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct }
+  }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, c.marginLowThreshold])
 
   const budgetNum = useMemo(() => {
     if (editId) { const b = get('budgets').find(x => x.id === editId); return b?.num || '#—' }
@@ -417,67 +396,26 @@ export default function Presupuesto() {
   const handleSave = () => {
     if (!form.contact && !form.company) { toast('Falta el cliente. Cargá un nombre de contacto o empresa.', 'er'); return }
     if (form.wa && !isValidWA(form.wa)) { toast('El WhatsApp no tiene un formato válido. Ej: +54 351 1234567', 'er'); setWaTouched(true); return }
-
-    // Limpiar y validar alternativas
-    const cleanAlts = alternatives.map(alt => ({
-      ...alt,
-      kits: alt.kits
-        .filter(i => i.type === 'kit' ? (i.name || (i.packaging?.length > 0) || (i.products?.length > 0)) : i.name)
-        .map(i => i.type === 'kit'
-          ? { ...i, qty: num(i.qty), priceUnit: num(i.priceUnit) }
-          : { ...i, qty: num(i.qty), costUnit: num(i.costUnit), priceUnit: num(i.priceUnit) })
-    })).filter(alt => alt.kits.length > 0)
-
-    if (!cleanAlts.length) { toast('Completá al menos una Alternativa con kits o productos.', 'er'); return }
-
-    // Alt aprobada o primera alt como fallback
-    const approvedAlt = cleanAlts.find(a => a.approved) || cleanAlts[0]
-    const threshold = num(c.marginLowThreshold) || 10
-    const approvedCalc = calcKits(
-      approvedAlt.kits,
-      { logoCost: num(form.logoCost), shipCost: 0, shipCharged: false, deposit: num(form.deposit), discount: num(form.discount) },
-      threshold
+    const validItems = items.filter(i => i.type === 'kit'
+      ? (i.name || (i.packaging?.length > 0) || (i.products?.length > 0))
+      : i.name
+    ).map(i => i.type === 'kit'
+      ? { ...i, qty: num(i.qty), priceUnit: num(i.priceUnit) }
+      : { ...i, qty: num(i.qty), costUnit: num(i.costUnit), priceUnit: num(i.priceUnit) }
     )
-
-    const saveForm = {
-      ...form,
-      shipCost: 0, shipCharged: false,
-      envioACotizar: form.envioACotizar !== false,
-      logoCost: num(form.logoCost), margin: num(form.margin),
-      deposit: num(form.deposit), payStatus: form.payStatus || 'pending',
-    }
-    const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(approvedCalc.marginReal)
-
-    // Deducción de stock — solo si pasa a estado productivo por primera vez
-    const QUALIFYING = new Set(['inprogress', 'delivered', 'En preparación', 'En producción', 'Entregado'])
-    const qualifies = QUALIFYING.has(form.status) || form.payStatus === 'paid'
-    const prevBudget = editId ? get('budgets').find(x => x.id === editId) : null
-    const wasQualifying = prevBudget ? (QUALIFYING.has(prevBudget.status) || prevBudget.payStatus === 'paid') : false
-
-    const savedBudget = saveBudget({
-      ...(editId ? { id: editId } : {}),
-      ...saveForm,
-      alternatives: cleanAlts,
-      items: approvedAlt.kits,          // backward compat para Historial
-      approvedAltLabel: approvedAlt.label,
-      totalCost: approvedCalc.baseCost,
-      totalGain: approvedCalc.gain,
-      total: approvedCalc.total,
-      depositAmt: approvedCalc.depositAmt,
-      marginBudgeted,
-    })
-
-    if (qualifies && !wasQualifying && savedBudget) {
-      deductStockForOrder(approvedAlt.kits)
-    }
-
+    if (!validItems.length) { toast('Completá al menos un Kit o producto en el Paso 2.', 'er'); return }
+    const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
+    const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
+    const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
     setDraftRestored(false)
     localStorage.removeItem(DRAFT_KEY)
     toast('Presupuesto guardado', 'ok')
     const gs = getSheetsConfig()
     if (gs.enabled && gs.autoSync && gs.url && savedBudget) {
-      pushBudget(savedBudget).then(r => { if (r.ok) toast('Sincronizado con Google Sheets', 'ok') }).catch(() => {})
+      pushBudget(savedBudget).then(r => {
+        if (r.ok) toast('Sincronizado con Google Sheets', 'ok')
+      }).catch(() => {})
     }
     nav('/')
   }
@@ -490,10 +428,10 @@ export default function Presupuesto() {
       return null
     }
     if (step === 2) {
-      const hasItem = alternatives.some(alt => alt.kits.some(i => i.type === 'kit'
+      const hasItem = items.some(i => i.type === 'kit'
         ? (i.name || (i.packaging?.length > 0) || (i.products?.length > 0))
-        : i.name))
-      if (!hasItem) return 'Agregá al menos una Alternativa con nombre, insumos o productos.'
+        : i.name)
+      if (!hasItem) return 'Agregá al menos un Kit con nombre, insumos o productos.'
       return null
     }
     return null
@@ -515,25 +453,17 @@ export default function Presupuesto() {
 
   const waText = useMemo(() => {
     const bName = c.businessName || 'ANMA'
-    const threshold = num(c.marginLowThreshold) || 10
-    const altLines = alternatives.map(alt => {
-      const kits = alt.kits.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
-      if (!kits.length) return null
-      const altCalc = calcKits(alt.kits, form, threshold)
-      const kitList = kits.map(i => {
+    const prodList = items
+      .filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
+      .map(i => {
         if (i.type === 'kit') {
           const comps = (i.packaging?.length || 0) + (i.products?.length || 0)
-          return `  • ${i.qty}x ${i.name || 'Kit'}${comps > 0 ? ` (${comps} comp.)` : ''}`
+          return `• ${i.qty}x ${i.name || 'Kit'}${comps > 0 ? ` (${comps} componentes)` : ''}`
         }
-        return `  • ${i.qty}x ${i.name}`
+        return `• ${i.qty}x ${i.name}`
       }).join('\n')
-      return `*${alt.label}*\n${kitList}\n  Total: ${fmt(altCalc.total)}`
-    }).filter(Boolean)
-    const body = altLines.length === 1
-      ? altLines[0]
-      : altLines.join('\n\n')
-    return `Hola ${form.contact || '[NOMBRE]'}! Te envío ${altLines.length > 1 ? 'las opciones de presupuesto' : 'el presupuesto'} de *${bName}* para ${form.company || '[EMPRESA]'}:\n\n${body}\n\n*Entrega estimada:* ${form.deliveryDate ? fmtDate(form.deliveryDate) : 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\n¿Te queda alguna duda? ¡Quedamos a disposición!`
-  }, [form, alternatives, c.businessName, c.marginLowThreshold]) // eslint-disable-line
+    return `Hola ${form.contact || '[NOMBRE]'}! Te envio el presupuesto de *${bName}* para ${form.company || '[EMPRESA]'}:\n\n${prodList}\n\n*Total:* ${fmt(calc.total)}\n*Entrega estimada:* ${form.deliveryDate ? fmtDate(form.deliveryDate) : 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\nTe queda alguna duda? Quedamos a disposicion!`
+  }, [form, items, calc.total, c.businessName])
 
   const mpCfg = getMPConfig()
   const bankCfg = getBankConfig()
@@ -543,8 +473,7 @@ export default function Presupuesto() {
     if (!mp.enabled || !mp.token) { toast('Activá y configurá Mercado Pago en Configuración > Pagos.', 'er'); return }
     setMpLoading(true)
     try {
-      const approvedItems = (alternatives.find(a => a.approved) || alternatives[0])?.kits || []
-      const budget = { num: budgetNum, contact: form.contact, company: form.company, items: approvedItems, shipCost: form.shipCost }
+      const budget = { num: budgetNum, contact: form.contact, company: form.company, items, shipCost: form.shipCost }
       const result = await createPaymentLink({ budget, mp, depositPct: form.deposit })
       if (result.ok) {
         setMpResult(`<a href="${result.link}" target="_blank" style="color:#009EE3;word-break:break-all">${result.amountLabel}: ${fmt(result.amount)} — Abrir link</a>`)
@@ -596,10 +525,7 @@ export default function Presupuesto() {
     const fmtD = iso => { if (!iso) return ''; const p = String(iso).slice(0,10).split('-'); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : iso }
     const brandColor = c.brandColor || '#7C3AED'
     const bName = c.businessName || 'ANMA'
-    const threshold = num(c.marginLowThreshold) || 10
-
-    // Helper: genera las filas de tabla para un array de kits
-    const buildProdRows = (kitsArr) => kitsArr.filter(i => i.type === 'kit'
+    const prodRows = items.filter(i => i.type === 'kit'
       ? (i.name || i.packaging?.length || i.products?.length)
       : i.name
     ).flatMap((i, kitN) => {
@@ -679,72 +605,14 @@ export default function Presupuesto() {
         : ''
 
       return [sep, kitRow, ...packingRows, ...productRows, personalizacionRow, closingRow].filter(Boolean)
-    }).join('')  // fin buildProdRows
-
+    }).join('')
     const validDays = num(c.budgetValidityDays) || 7
     const validUntil = new Date(); validUntil.setDate(validUntil.getDate() + validDays)
     const vigenciaISO = validUntil.toISOString().slice(0, 10)
     const ownerWA = (c.ownerWA || c.businessWA || '').replace(/[^\d+]/g, '')
+    const acceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(calc.total)}.`)
+    const waLink = ownerWA ? `https://wa.me/${ownerWA.replace('+','')}?text=${acceptMsg}` : ''
     const showEnvioLeyenda = form.envioACotizar !== false
-    const multiAlt = alternatives.length > 1
-
-    // Genera el bloque HTML de una alternativa
-    const buildAltSection = (alt, altIdx) => {
-      const altKits = alt.kits.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
-      if (!altKits.length) return ''
-      const ac = calcKits(alt.kits, form, threshold)
-      const rows = buildProdRows(altKits)
-      const letterLabel = `Opción ${String.fromCharCode(65 + altIdx)}`
-      const acceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} — ${letterLabel}: ${alt.label} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(ac.total)}.`)
-      const waLink = ownerWA ? `https://wa.me/${ownerWA.replace('+', '')}?text=${acceptMsg}` : ''
-      return `
-      ${multiAlt ? `
-        <div style="margin-top:${altIdx === 0 ? '0' : '28'}px;padding:8px 14px;background:${brandColor}0d;border-left:4px solid ${brandColor};border-radius:0 6px 6px 0;display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <div>
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:${brandColor};opacity:.65">${letterLabel}</span>
-            <span style="font-size:13px;font-weight:700;color:#1E1B4B;margin-left:8px">${alt.label}</span>
-            ${alt.approved ? `<span style="margin-left:8px;background:#DCFCE7;color:#065F46;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase">✓ Aprobada</span>` : ''}
-          </div>
-          <span style="font-size:15px;font-weight:800;color:${brandColor}">${fmt(ac.total)}</span>
-        </div>` : ''}
-      <table style="margin-top:${multiAlt ? '8' : '4'}px">
-        <thead><tr>
-          <th>Producto</th>
-          <th style="text-align:center;width:55px">Cant.</th>
-          <th style="text-align:right;width:90px">P. unit.</th>
-          <th style="text-align:right;width:95px">Subtotal</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="totals"><div class="totals-box">
-        <div class="totals-row"><span>Subtotal productos</span><span>${fmt(ac.totalRevenue)}</span></div>
-        ${ac.discountAmt > 0 ? `<div class="totals-row" style="color:#DC2626"><span>Descuento (${ac.discountPct}%)</span><span>−${fmt(ac.discountAmt)}</span></div>` : ''}
-        ${showEnvioLeyenda ? `<div class="totals-row" style="font-size:10px;color:#92400E;font-style:italic"><span>🚚 Envío sujeto a pesaje y despacho</span><span>A cotizar</span></div>` : ''}
-        <div class="totals-row big"><span>Total</span><span>${fmt(ac.total)}</span></div>
-        <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(ac.depositAmt)}</span></div>
-        <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(ac.total - ac.depositAmt)}</span></div>
-      </div></div>
-      ${c.ivaEnabled ? (() => {
-        const ivaR = (Number(c.ivaRate) || 21) / 100
-        const otrosR = (Number(c.otrosImpuestosRate) || 0) / 100
-        return `<div class="iva-box">
-          <div class="iva-title">Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)</div>
-          <div class="iva-row"><span>IVA Contenido (${(ivaR*100).toFixed(0)}%)</span><span>${fmt(ac.total - (ac.total / (1 + ivaR)))}</span></div>
-          ${otrosR > 0 ? `<div class="iva-row"><span>Otros Impuestos Nacionales Indirectos</span><span>${fmt(ac.total * otrosR)}</span></div>` : ''}
-        </div>`
-      })() : ''}
-      ${multiAlt && waLink ? `<div style="margin-top:8px;text-align:right"><a href="${waLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;text-decoration:none;padding:7px 14px;border-radius:999px;font-size:11px;font-weight:700">✓ Aceptar ${letterLabel}</a></div>` : ''}
-      `
-    }
-
-    const allAltSections = alternatives.map((alt, ai) => buildAltSection(alt, ai)).filter(Boolean).join('')
-
-    // waLink para presupuesto de única alternativa
-    const singleAlt = alternatives[0]
-    const singleCalc = calcKits(singleAlt.kits, form, threshold)
-    const singleAcceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(singleCalc.total)}.`)
-    const singleWaLink = !multiAlt && ownerWA ? `https://wa.me/${ownerWA.replace('+', '')}?text=${singleAcceptMsg}` : ''
-
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${budgetNum}</title>
     <style>
       *{box-sizing:border-box}
@@ -805,8 +673,30 @@ export default function Presupuesto() {
       ${form.ocasion ? `<div><div class="lbl">Ocasión</div><div class="val">${form.ocasion}</div></div>` : ''}
       ${form.delivery ? `<div><div class="lbl">Modalidad</div><div class="val">${form.delivery}</div></div>` : ''}
     </div>
-    ${multiAlt ? `<div style="margin-bottom:14px;padding:8px 12px;background:#F0F4FF;border-radius:6px;font-size:11px;color:#374151">📋 Este presupuesto incluye <strong>${alternatives.length} alternativas</strong>. Elegí la opción que mejor se adapte y avisanos para confirmar.</div>` : ''}
-    ${allAltSections}
+    <table>
+      <thead><tr><th>Producto</th><th style="text-align:center;width:55px">Cant.</th><th style="text-align:right;width:90px">P. unit.</th><th style="text-align:right;width:95px">Subtotal</th></tr></thead>
+      <tbody>${prodRows}</tbody>
+    </table>
+    <div class="totals"><div class="totals-box">
+      <div class="totals-row"><span>Subtotal productos</span><span>${fmt(calc.totalRevenue)}</span></div>
+      ${calc.discountAmt > 0 ? `<div class="totals-row" style="color:#DC2626"><span>Descuento (${calc.discountPct}%)</span><span>−${fmt(calc.discountAmt)}</span></div>` : ''}
+      ${showEnvioLeyenda ? `<div class="totals-row" style="font-size:10px;color:#92400E;font-style:italic"><span>🚚 Costo de envío sujeto a pesaje y despacho</span><span>A cotizar</span></div>` : ''}
+      <div class="totals-row big"><span>Total</span><span>${fmt(calc.total)}</span></div>
+      <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(calc.depositAmt)}</span></div>
+      <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(calc.total - calc.depositAmt)}</span></div>
+    </div></div>
+    ${c.ivaEnabled ? (() => {
+      const total = calc.total
+      const ivaR = (Number(c.ivaRate) || 21) / 100
+      const otrosR = (Number(c.otrosImpuestosRate) || 0) / 100
+      const ivaContenido = total - (total / (1 + ivaR))
+      const otrosImpAmt = total * otrosR
+      return `<div class="iva-box">
+        <div class="iva-title">Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)</div>
+        <div class="iva-row"><span>IVA Contenido (${(ivaR*100).toFixed(0)}%)</span><span>${fmt(ivaContenido)}</span></div>
+        ${otrosR > 0 ? `<div class="iva-row"><span>Otros Impuestos Nacionales Indirectos</span><span>${fmt(otrosImpAmt)}</span></div>` : ''}
+      </div>`
+    })() : ''}
     ${form.noteCli ? `<div class="note">${form.noteCli}</div>` : ''}
     ${(() => {
       const bank = getBankConfig ? getBankConfig() : null
@@ -824,7 +714,7 @@ export default function Presupuesto() {
       </div>`
     })()}
     ${(c.paymentConditions || c.legalNote) ? `<div class="footer">${c.paymentConditions ? '<div>' + c.paymentConditions + '</div>' : ''}${c.legalNote ? '<div style="margin-top:2px">' + c.legalNote + '</div>' : ''}</div>` : ''}
-    ${singleWaLink ? `<a class="accept-fab" href="${singleWaLink}" target="_blank" rel="noopener"><span style="font-size:15px">✓</span> Aceptar Presupuesto</a>` : ''}
+    ${waLink ? `<a class="accept-fab" href="${waLink}" target="_blank" rel="noopener"><span style="font-size:15px">✓</span> Aceptar Presupuesto</a>` : ''}
     </body></html>`
   }
 
@@ -944,78 +834,12 @@ export default function Presupuesto() {
               </>
             )}
 
-            {/* ─── PASO 2: ALTERNATIVAS DE COTIZACIÓN ─── */}
+            {/* ─── PASO 2: KIT BUILDER ─── */}
             {currentStep === 2 && (
               <>
-                <PaneHeader icon="fa-gift" title="Paso 2 · Alternativas de Cotización" subtitle="Cada pestaña es una opción independiente — el resumen muestra los números de la activa" />
+                <PaneHeader icon="fa-gift" title="Paso 2 · Kit / Box" subtitle="Construí cada regalo combinando packaging, productos y personalización" />
 
-                {/* ── TABS ── */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 14, overflowX: 'auto', paddingBottom: 2, flexWrap: 'nowrap' }}>
-                  {alternatives.map((alt, altIdx) => {
-                    const isActive = altIdx === activeAltIdx
-                    const altCalc = calcKits(alt.kits, form, num(c.marginLowThreshold) || 10)
-                    return (
-                      <button key={altIdx}
-                        onClick={() => setActiveAltIdx(altIdx)}
-                        style={{
-                          flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5,
-                          padding: '6px 12px', borderRadius: 8, fontFamily: 'inherit', cursor: 'pointer',
-                          border: isActive ? '1.5px solid var(--brand)' : '1.5px solid var(--border)',
-                          background: isActive ? 'var(--brand-xlt, #F5F3FF)' : 'var(--surface)',
-                          color: isActive ? 'var(--brand)' : 'var(--txt2)',
-                          fontWeight: isActive ? 700 : 500, fontSize: 12.5,
-                          transition: 'all .15s',
-                        }}>
-                        {alt.approved && <i className="fa fa-circle-check" style={{ color: '#059669', fontSize: 10 }} />}
-                        <span style={{ whiteSpace: 'nowrap' }}>{alt.label}</span>
-                        {altCalc.total > 0 && (
-                          <span style={{ fontSize: 10, opacity: .65, fontWeight: 600, marginLeft: 2, whiteSpace: 'nowrap' }}>
-                            {fmt(altCalc.total)}
-                          </span>
-                        )}
-                        {alternatives.length > 1 && (
-                          <span
-                            onClick={e => { e.stopPropagation(); removeAlt(altIdx) }}
-                            title="Eliminar alternativa"
-                            style={{ marginLeft: 2, fontSize: 11, opacity: .45, cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
-                            onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--red)' }}
-                            onMouseLeave={e => { e.currentTarget.style.opacity = '.45'; e.currentTarget.style.color = '' }}>
-                            <i className="fa fa-xmark" />
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                  <button onClick={addAlt}
-                    style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, padding: '6px 11px', borderRadius: 8, border: '1.5px dashed var(--border)', background: 'transparent', color: 'var(--txt3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', whiteSpace: 'nowrap' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; e.currentTarget.style.color = 'var(--brand)' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--txt3)' }}>
-                    <i className="fa fa-plus" style={{ fontSize: 10 }} /> Nueva Alternativa
-                  </button>
-                </div>
-
-                {/* ── LABEL EDITABLE DE LA ALTERNATIVA ACTIVA ── */}
-                {(() => {
-                  const alt = alternatives[activeAltIdx]
-                  if (!alt) return null
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
-                      <i className="fa fa-tag" style={{ fontSize: 12, color: 'var(--brand)', opacity: .6 }} />
-                      <input
-                        type="text" value={alt.label}
-                        onChange={e => updateAltLabel(activeAltIdx, e.target.value)}
-                        placeholder="Nombre de la alternativa..."
-                        style={{ flex: 1, maxWidth: 300, fontSize: 13, fontWeight: 600, background: 'transparent', border: 'none', borderBottom: '1.5px solid var(--border)', padding: '2px 4px', fontFamily: 'inherit', color: 'var(--txt)', outline: 'none' }}
-                      />
-                      <span style={{ fontSize: 10, color: 'var(--txt3)', flexShrink: 0 }}>
-                        {alternatives.length > 1 ? `${activeAltIdx + 1} / ${alternatives.length}` : 'Única opción'}
-                      </span>
-                    </div>
-                  )
-                })()}
-
-                {/* ── KITS DE LA ALTERNATIVA ACTIVA ── */}
-                {(alternatives[activeAltIdx]?.kits || []).map((kit, kitIdx) => (
+                {items.map((kit, kitIdx) => (
                   <div key={kitIdx} style={{ marginBottom: 14, border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface2)' }}>
 
                     {/* ─ Cabecera del kit ─ */}
@@ -1024,7 +848,7 @@ export default function Presupuesto() {
                         type="text"
                         value={kit.name || ''}
                         onChange={e => updateKit(kitIdx, 'name', e.target.value)}
-                        placeholder={`${alternatives[activeAltIdx]?.label || 'Kit'} #${kitIdx + 1} — nombre del regalo...`}
+                        placeholder={`Kit #${kitIdx + 1} — nombre del regalo...`}
                         style={{ flex: 1, minWidth: 160, background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 8, color: '#fff', fontWeight: 700, fontSize: 13, padding: '6px 10px', fontFamily: 'inherit' }}
                       />
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
@@ -1044,7 +868,7 @@ export default function Presupuesto() {
                           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.55)', marginBottom: 1 }}>Subtotal</div>
                           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{fmt(num(kit.qty) * num(kit.priceUnit))}</div>
                         </div>
-                        {(alternatives[activeAltIdx]?.kits?.length ?? 0) > 1 && (
+                        {items.length > 1 && (
                           <button onClick={() => removeKit(kitIdx)} title="Eliminar kit"
                             style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid rgba(255,255,255,.22)', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.75)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <i className="fa fa-xmark" />
@@ -1234,7 +1058,7 @@ export default function Presupuesto() {
                   onSelect={(p) => {
                     if (!kitProdPickerTarget) return
                     const { kitIdx, cIdx } = kitProdPickerTarget
-                    updateActiveAlt(kits => kits.map((k, i) => {
+                    setItems(prev => prev.map((k, i) => {
                       if (i !== kitIdx) return k
                       return { ...k, products: (k.products || []).map((c, j) => j !== cIdx ? c : { ...c, id: p.id || '', name: p.name || '', costUnit: num(p.cost) }) }
                     }))
@@ -1247,7 +1071,7 @@ export default function Presupuesto() {
                   onSelect={(ins) => {
                     if (!insPickerTarget) return
                     const { kitIdx, cIdx } = insPickerTarget
-                    updateActiveAlt(kits => kits.map((k, i) => {
+                    setItems(prev => prev.map((k, i) => {
                       if (i !== kitIdx) return k
                       return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, id: ins.id || '', name: ins.name || '', costUnit: num(ins.cost) }) }
                     }))
@@ -1255,47 +1079,11 @@ export default function Presupuesto() {
                   }}
                 />
 
-                {/* ── Agregar sub-kit a esta alternativa ── */}
                 <button className="btn btn-ghost btn-sm" style={{ width: '100%', marginTop: 6, justifyContent: 'center' }} onClick={addKit}>
-                  <i className="fa fa-plus" /> Agregar kit a &ldquo;{alternatives[activeAltIdx]?.label || 'esta alternativa'}&rdquo;
+                  <i className="fa fa-plus" /> Agregar otro Kit / Box
                 </button>
-
-                {/* ── Aprobación para producción ── */}
-                {(() => {
-                  const alt = alternatives[activeAltIdx]
-                  if (!alt) return null
-                  return (
-                    <div
-                      onClick={() => approveAlt(activeAltIdx)}
-                      style={{
-                        marginTop: 12, padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
-                        background: alt.approved ? 'rgba(5,150,105,.05)' : 'var(--surface)',
-                        border: alt.approved ? '1.5px solid #6EE7B7' : '1.5px solid var(--border)',
-                        display: 'flex', alignItems: 'center', gap: 10, transition: 'all .2s',
-                      }}>
-                      <div style={{
-                        width: 20, height: 20, borderRadius: 5, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s',
-                        border: alt.approved ? 'none' : '2px solid var(--border)',
-                        background: alt.approved ? '#059669' : 'transparent',
-                      }}>
-                        {alt.approved && <i className="fa fa-check" style={{ color: '#fff', fontSize: 9 }} />}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: alt.approved ? '#065F46' : 'var(--txt2)' }}>
-                          Aprobar &ldquo;{alt.label}&rdquo; para producción
-                        </div>
-                        <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 2 }}>
-                          {alt.approved
-                            ? '✓ Aprobada — al guardar se descontarán los insumos de esta opción del inventario.'
-                            : 'Al guardar en "En preparación", solo los materiales de la opción aprobada se descuentan del stock.'}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })()}
-
                 <div className="wiz-tip" style={{ marginTop: 8 }}>
-                  <i className="fa fa-lightbulb" /> Cada pestaña es una propuesta independiente. El Resumen de la derecha refleja los números de la opción activa. Aprobá la elegida para descontar stock.
+                  <i className="fa fa-lightbulb" /> La cantidad global del Kit multiplica el costo de todos sus componentes. El margen real se refleja en el panel derecho en tiempo real.
                 </div>
               </>
             )}
@@ -1378,42 +1166,29 @@ export default function Presupuesto() {
                   </div>
                   <div className="wiz-rev-card">
                     <div className="wiz-rev-card-h">
-                      <i className="fa fa-gift" /> Alternativas ({alternatives.length})
+                      <i className="fa fa-gift" /> Kits / Productos ({items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).length})
                       <button className="wiz-rev-edit" onClick={() => goStep(2)}>Editar</button>
                     </div>
                     <div className="wiz-rev-body">
-                      {alternatives.map((alt, aIdx) => {
-                        const altKits = alt.kits.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
-                        if (!altKits.length) return null
-                        const ac = calcKits(alt.kits, form, num(c.marginLowThreshold) || 10)
-                        return (
-                          <div key={aIdx} style={{ marginBottom: aIdx < alternatives.length - 1 ? 8 : 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                                {alt.approved && <i className="fa fa-circle-check" style={{ color: '#059669', fontSize: 10 }} />}
-                                {alt.label}
-                              </span>
-                              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)' }}>{fmt(ac.total)}</span>
-                            </div>
-                            {altKits.map((it, idx) => (
-                              <div key={idx}>
-                                <div className="wiz-rev-item">
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                    <i className="fa fa-gift" style={{ fontSize: 9, color: 'var(--brand)', opacity: .5 }} />
-                                    {it.qty}× {it.type === 'kit' ? (it.name || 'Kit sin nombre') : it.name}
-                                    {it.type === 'kit' && ((it.packaging?.length || 0) + (it.products?.length || 0)) > 0 && (
-                                      <span style={{ fontSize: 9, color: 'var(--txt3)', background: 'var(--surface2)', borderRadius: 4, padding: '1px 5px' }}>
-                                        {(it.packaging?.length || 0) + (it.products?.length || 0)} comp.
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span>{fmt(num(it.qty) * num(it.priceUnit))}</span>
-                                </div>
-                              </div>
-                            ))}
+                      {items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).map((it, idx) => (
+                        <div key={idx}>
+                          <div className="wiz-rev-item">
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              {it.type === 'kit' && <i className="fa fa-gift" style={{ fontSize: 9, color: 'var(--brand)', opacity: .7 }} />}
+                              {it.qty}× {it.type === 'kit' ? (it.name || 'Kit sin nombre') : it.name}
+                              {it.type === 'kit' && ((it.packaging?.length || 0) + (it.products?.length || 0)) > 0 && (
+                                <span style={{ fontSize: 9, color: 'var(--txt3)', background: 'var(--surface2)', borderRadius: 4, padding: '1px 5px' }}>
+                                  {(it.packaging?.length || 0) + (it.products?.length || 0)} comp.
+                                </span>
+                              )}
+                            </span>
+                            <span>{fmt(num(it.qty) * num(it.priceUnit))}</span>
                           </div>
-                        )
-                      })}
+                          {it.type === 'kit' && ((it.packaging || []).concat(it.products || [])).filter(c => c.name).map((c, ci) => (
+                            <div key={ci} style={{ fontSize: 10, color: 'var(--txt3)', paddingLeft: 20, paddingBottom: 1 }}>↳ {c.name}{c.qty > 1 ? ` ×${c.qty}` : ''}</div>
+                          ))}
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div className="wiz-rev-card">

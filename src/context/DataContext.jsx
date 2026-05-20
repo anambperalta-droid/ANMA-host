@@ -77,39 +77,6 @@ export function DataProvider({ children }) {
     logAudit('delete', 'budget', id, existing ? { num: existing.num, total: existing.total } : null)
   }, [refresh])
 
-  // Deduce insumos y productos del inventario según los kits de la alternativa aprobada
-  const deductStockForOrder = useCallback((kits) => {
-    const insList  = db('insumos',   [])
-    const prodList = db('products',  [])
-    let insChanged = false, prodChanged = false
-    kits.forEach(kit => {
-      if (kit.type !== 'kit') return
-      const qty = Number(kit.qty) || 1
-      ;(kit.packaging || []).forEach(comp => {
-        if (!comp.id) return
-        const idx = insList.findIndex(x => x.id === comp.id || x.id === Number(comp.id))
-        if (idx > -1) {
-          const prev = Number(insList[idx].stock ?? insList[idx].qty ?? 0)
-          insList[idx] = { ...insList[idx], stock: Math.max(0, prev - (Number(comp.qty) || 1) * qty) }
-          insChanged = true
-        }
-      })
-      ;(kit.products || []).forEach(comp => {
-        if (!comp.id) return
-        const idx = prodList.findIndex(x => x.id === comp.id || x.id === Number(comp.id))
-        if (idx > -1) {
-          const prev = Number(prodList[idx].stock ?? prodList[idx].qty ?? 0)
-          prodList[idx] = { ...prodList[idx], stock: Math.max(0, prev - (Number(comp.qty) || 1) * qty) }
-          prodChanged = true
-        }
-      })
-    })
-    if (insChanged)  dbW('insumos',  insList)
-    if (prodChanged) dbW('products', prodList)
-    if (insChanged || prodChanged) refresh()
-    logAudit('stock_deduct', 'order', null, { kitsCount: kits.length })
-  }, [refresh])
-
   const updateBudgetStatus = useCallback((id, status) => {
     const bud = db('budgets', [])
     const i = bud.findIndex((b) => b.id === id)
@@ -150,7 +117,7 @@ export function DataProvider({ children }) {
     <Ctx.Provider value={{
       get, set, config, updateConfig, refresh, tick,
       saveBudget, deleteBudget, updateBudgetStatus,
-      saveEntity, deleteEntity, deductStockForOrder,
+      saveEntity, deleteEntity,
     }}>
       {children}
     </Ctx.Provider>
