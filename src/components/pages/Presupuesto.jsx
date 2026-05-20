@@ -22,6 +22,9 @@ const emptyKit = () => ({
   personalizacion: { desc: '', costUnit: 0 },
 })
 
+/* ── Alternativa de cotización ── */
+const emptyAlt = (label = 'Alternativa 1') => ({ label, kits: [emptyKit()] })
+
 /* ── Selector de producto (BottomSheet / modal) ── */
 function ProductPicker({ open, onClose, products, onSelect }) {
   const [q, setQ] = useState('')
@@ -197,7 +200,14 @@ export default function Presupuesto() {
     shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
     margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0, discount: 0,
   })
-  const [items, setItems] = useState([emptyKit()])
+  const [alternatives, setAlternatives] = useState([emptyAlt()])
+  const [activeAltIdx, setActiveAltIdx] = useState(0)
+  // Vista derivada: todo el código que LEE `items` funciona sin cambios
+  const items = alternatives[activeAltIdx]?.kits ?? [emptyKit()]
+  // Adaptador: todo el código que ESCRIBE con setItems opera sobre la alt activa
+  const setItems = (fn) => setAlternatives(prev => prev.map((alt, i) =>
+    i !== activeAltIdx ? alt : { ...alt, kits: typeof fn === 'function' ? fn(alt.kits) : fn }
+  ))
   const [editId, setEditId] = useState(null)
   const [marginBudgetedSaved, setMarginBudgetedSaved] = useState(null)
   const [mpResult, setMpResult] = useState('')
@@ -231,7 +241,12 @@ export default function Presupuesto() {
           logoCost: b.logoCost || 0,
           discount: b.discount || 0,
         })
-        setItems(b.items?.length ? b.items : [emptyItem()])
+        // Backward compat: si ya tiene alternatives las carga; si no, envuelve items en Alternativa 1
+        if (b.alternatives?.length) {
+          setAlternatives(b.alternatives)
+        } else {
+          setAlternatives([{ label: 'Alternativa 1', kits: b.items?.length ? b.items : [emptyKit()] }])
+        }
         setEditId(b.id)
         setMarginBudgetedSaved(typeof b.marginBudgeted === 'number' ? b.marginBudgeted : null)
       }
@@ -241,7 +256,14 @@ export default function Presupuesto() {
         if (saved) {
           const { f, it, step } = JSON.parse(saved)
           if (f) setForm(prev => ({ ...prev, ...f }))
-          if (it?.length) setItems(it)
+          if (it?.length) {
+            // it puede ser formato nuevo (array de alternatives) o viejo (array plano de kits)
+            if (it[0]?.kits) {
+              setAlternatives(it)
+            } else {
+              setAlternatives([{ label: 'Alternativa 1', kits: it }])
+            }
+          }
           if (step) setCurrentStep(step)
           setDraftRestored(true)
           toast('Borrador restaurado — tus datos anteriores están cargados', 'ok')
@@ -252,9 +274,9 @@ export default function Presupuesto() {
 
   useEffect(() => {
     if (id) return
-    const hasSomeData = form.contact || form.company || items.some(i => i.name)
+    const hasSomeData = form.contact || form.company || alternatives.some(a => a.kits.some(i => i.name))
     if (hasSomeData) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: items, step: currentStep }))
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ f: form, it: alternatives, step: currentStep }))
     }
   }, [form, items, currentStep]) // eslint-disable-line
 
@@ -286,11 +308,31 @@ export default function Presupuesto() {
   const openPicker = (idx) => { setPickerIdx(idx); setPickerOpen(true) }
   const handlePickProduct = useCallback((p) => {
     if (pickerIdx === null) return
-    setItems(prev => prev.map((it, i) => {
-      if (i !== pickerIdx) return it
-      return { ...it, name: p.name, costUnit: p.cost || 0, priceUnit: Math.round(num(p.cost) * (1 + marginPct / 100)) }
+    setAlternatives(prev => prev.map((alt, ai) => {
+      if (ai !== activeAltIdx) return alt
+      return {
+        ...alt,
+        kits: alt.kits.map((it, i) => {
+          if (i !== pickerIdx) return it
+          return { ...it, name: p.name, costUnit: p.cost || 0, priceUnit: Math.round(num(p.cost) * (1 + marginPct / 100)) }
+        })
+      }
     }))
-  }, [pickerIdx, marginPct])
+  }, [pickerIdx, marginPct, activeAltIdx])
+
+  /* ── Gestión de alternativas ── */
+  const addAlt = () => {
+    const label = `Alternativa ${alternatives.length + 1}`
+    setAlternatives(prev => [...prev, emptyAlt(label)])
+    setActiveAltIdx(alternatives.length)
+  }
+  const removeAlt = (altIdx) => {
+    if (alternatives.length <= 1) return
+    setAlternatives(prev => prev.filter((_, i) => i !== altIdx))
+    setActiveAltIdx(prev => Math.min(prev, alternatives.length - 2))
+  }
+  const updateAltLabel = (altIdx, label) =>
+    setAlternatives(prev => prev.map((a, i) => i !== altIdx ? a : { ...a, label }))
 
   /* ── Kit builder — state para pickers ── */
   const [kitProdPickerOpen, setKitProdPickerOpen] = useState(false)
@@ -406,7 +448,7 @@ export default function Presupuesto() {
     if (!validItems.length) { toast('Completá al menos un Kit o producto en el Paso 2.', 'er'); return }
     const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
-    const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
+    const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, alternatives, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
     setDraftRestored(false)
     localStorage.removeItem(DRAFT_KEY)
@@ -428,9 +470,9 @@ export default function Presupuesto() {
       return null
     }
     if (step === 2) {
-      const hasItem = items.some(i => i.type === 'kit'
+      const hasItem = alternatives.some(a => a.kits.some(i => i.type === 'kit'
         ? (i.name || (i.packaging?.length > 0) || (i.products?.length > 0))
-        : i.name)
+        : i.name))
       if (!hasItem) return 'Agregá al menos un Kit con nombre, insumos o productos.'
       return null
     }
@@ -838,6 +880,47 @@ export default function Presupuesto() {
             {currentStep === 2 && (
               <>
                 <PaneHeader icon="fa-gift" title="Paso 2 · Kit / Box" subtitle="Construí cada regalo combinando packaging, productos y personalización" />
+
+                {/* ── Tabs de alternativas ── */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+                  {alternatives.map((alt, ai) => (
+                    <div key={ai} style={{ display: 'flex', alignItems: 'center', gap: 0, borderRadius: 10, overflow: 'hidden', border: ai === activeAltIdx ? '1.5px solid var(--primary)' : '1.5px solid var(--border)', background: ai === activeAltIdx ? 'var(--primary-light, #F5F3FF)' : 'var(--surface2)', flexShrink: 0 }}>
+                      <button
+                        onClick={() => setActiveAltIdx(ai)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 4px 5px 10px', fontWeight: ai === activeAltIdx ? 700 : 500, fontSize: 12, color: ai === activeAltIdx ? 'var(--primary)' : 'var(--txt2)', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                      >
+                        <i className="fa fa-layer-group" style={{ marginRight: 5, fontSize: 10, opacity: .7 }} />
+                        {alt.label || `Alternativa ${ai + 1}`}
+                      </button>
+                      {ai === activeAltIdx && (
+                        <input
+                          type="text"
+                          value={alt.label}
+                          onChange={e => updateAltLabel(ai, e.target.value)}
+                          onClick={e => e.stopPropagation()}
+                          placeholder={`Alternativa ${ai + 1}`}
+                          style={{ border: 'none', borderLeft: '1px solid var(--border)', background: 'transparent', fontSize: 11, color: 'var(--primary)', fontWeight: 600, width: 110, padding: '4px 8px', fontFamily: 'inherit', outline: 'none' }}
+                        />
+                      )}
+                      {alternatives.length > 1 && (
+                        <button
+                          onClick={e => { e.stopPropagation(); removeAlt(ai) }}
+                          title="Eliminar alternativa"
+                          style={{ background: 'none', border: 'none', borderLeft: '1px solid var(--border)', cursor: 'pointer', padding: '5px 8px', color: 'var(--txt2)', fontSize: 11, lineHeight: 1 }}
+                        >
+                          <i className="fa fa-xmark" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={addAlt}
+                    title="Agregar alternativa"
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: '1.5px dashed var(--border)', borderRadius: 10, cursor: 'pointer', padding: '5px 12px', fontSize: 12, color: 'var(--txt2)', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                  >
+                    <i className="fa fa-plus" style={{ fontSize: 10 }} /> Nueva alternativa
+                  </button>
+                </div>
 
                 {items.map((kit, kitIdx) => (
                   <div key={kitIdx} style={{ marginBottom: 14, border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface2)' }}>
