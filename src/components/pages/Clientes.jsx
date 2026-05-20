@@ -113,7 +113,7 @@ export default function Clientes() {
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c', discount: 0 })
+  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2b', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' })
   const [newNote, setNewNote] = useState('')
   const [previewBudget, setPreviewBudget] = useState(null)
   const fileRef = useRef(null)
@@ -132,7 +132,7 @@ export default function Clientes() {
   ) : clients
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2c', discount: 0 }); setModal(true) }
+  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2b', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' }); setModal(true) }
   const save = () => {
     if (!form.company) { toast('Ingresá el nombre de la empresa.', 'er'); return }
     saveEntity('clients', form); setModal(false); toast('Cliente guardado', 'ok')
@@ -699,17 +699,18 @@ export default function Clientes() {
       {/* MODAL EDITAR */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal">
+          <div className="modal" style={{ maxWidth: 680 }}>
             <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} cliente</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
+
+            {/* Datos de contacto */}
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Datos de contacto</div>
             <div className="grid2">
-              <div className="fg"><label>Empresa *</label><input type="text" value={form.company} onChange={e => setF('company', e.target.value)} placeholder="Empresa S.A." /></div>
-              <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} placeholder="Nombre" /></div>
+              <div className="fg"><label>Empresa *</label><input type="text" value={form.company} onChange={e => setF('company', e.target.value)} placeholder="Empresa S.A." autoFocus /></div>
+              <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} placeholder="Nombre y apellido" /></div>
               <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} placeholder="+54 ..." /></div>
               <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
-            </div>
-            <div className="grid2">
               <div className="fg" style={!config().features?.descuentoCliente ? { gridColumn: '1 / -1' } : undefined}>
-                <label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud..." />
+                <label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud, Eventos..." />
               </div>
               {config().features?.descuentoCliente && (
                 <div className="fg">
@@ -718,7 +719,37 @@ export default function Clientes() {
                 </div>
               )}
             </div>
-            <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} placeholder="Observaciones..." /></div>
+
+            {/* Datos fiscales — siempre visibles en ANMA Regalos (foco B2B) */}
+            <div style={{ borderTop: '1px solid var(--border)', margin: '14px 0 10px', paddingTop: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                <i className="fa fa-landmark" style={{ color: 'var(--brand)', fontSize: 11 }} />
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Datos Fiscales (Facturación)</span>
+              </div>
+              <div className="grid2">
+                <div className="fg">
+                  <label>CUIT / CUIL</label>
+                  <input type="text" value={form.cuit || ''} onChange={e => setF('cuit', e.target.value)} placeholder="20-12345678-9" maxLength={13} />
+                </div>
+                <div className="fg">
+                  <label>Condición frente al IVA</label>
+                  <select value={form.ivaCondition || ''} onChange={e => setF('ivaCondition', e.target.value)}>
+                    <option value="">— seleccionar —</option>
+                    <option value="Responsable Inscripto">Responsable Inscripto</option>
+                    <option value="Monotributista">Monotributista</option>
+                    <option value="Exento">Exento</option>
+                    <option value="No Responsable">No Responsable</option>
+                    <option value="Consumidor Final">Consumidor Final</option>
+                  </select>
+                </div>
+                <div className="fg" style={{ gridColumn: '1 / -1' }}>
+                  <label>Razón Social</label>
+                  <input type="text" value={form.razonSocial || ''} onChange={e => setF('razonSocial', e.target.value)} placeholder="Razón social completa según AFIP" />
+                </div>
+              </div>
+            </div>
+
+            <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} placeholder="Observaciones internas..." /></div>
             <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
           </div>
         </div>

@@ -292,9 +292,11 @@ export default function Presupuesto() {
     }))
   }, [pickerIdx, marginPct])
 
-  /* ── Kit builder — state para picker de productos de kit ── */
+  /* ── Kit builder — state para pickers ── */
   const [kitProdPickerOpen, setKitProdPickerOpen] = useState(false)
   const [kitProdPickerTarget, setKitProdPickerTarget] = useState(null) // { kitIdx, cIdx }
+  const [insPickerOpen, setInsPickerOpen] = useState(false)
+  const [insPickerTarget, setInsPickerTarget] = useState(null) // { kitIdx, cIdx }
 
   /* ── Kit builder — funciones de manipulación ── */
   const addKit = () => setItems(prev => [...prev, emptyKit()])
@@ -832,34 +834,37 @@ export default function Presupuesto() {
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                             {(kit.packaging || []).map((comp, cIdx) => (
-                              <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', borderRadius: 8, padding: '5px 8px', border: '1px solid var(--border)' }}>
+                              <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', borderRadius: 8, padding: '5px 8px', border: '1px solid var(--border)', flexWrap: 'wrap' }}>
                                 <i className="fa fa-box" style={{ fontSize: 11, color: 'var(--brand)', flexShrink: 0, opacity: .65 }} />
-                                <select value={comp.id || ''} onChange={e => {
-                                  const ins = insumos.find(x => x.id === e.target.value)
-                                  setItems(prev => prev.map((k, i) => {
-                                    if (i !== kitIdx) return k
-                                    return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : {
-                                      ...c, id: ins?.id || '', name: ins?.name || '',
-                                      costUnit: ins ? num(ins.costUnit || ins.cost || ins.costo || 0) : 0,
-                                    }) }
-                                  }))
-                                }}
-                                  style={{ flex: 1, fontSize: 12, padding: '4px 6px', height: 30, minWidth: 0 }}>
-                                  <option value="">— Seleccionar insumo —</option>
-                                  {insumos.map(ins => (
-                                    <option key={ins.id} value={ins.id}>
-                                      {ins.name}{ins.unit ? ` (${ins.unit})` : ''} — {fmt(num(ins.costUnit || ins.cost || ins.costo || 0))}
-                                    </option>
-                                  ))}
-                                </select>
-                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <span style={{ fontSize: 10, color: 'var(--txt3)' }}>×</span>
+                                {/* Nombre libre + picker opcional de DB */}
+                                <div style={{ flex: 1, display: 'flex', gap: 4, minWidth: 140 }}>
+                                  <input type="text" value={comp.name || ''}
+                                    onChange={e => updatePackComp(kitIdx, cIdx, 'name', e.target.value)}
+                                    placeholder="Ej: Caja kraft, Bolsa organza..."
+                                    style={{ flex: 1, fontSize: 12, padding: '4px 8px', height: 30, minWidth: 0 }} />
+                                  {insumos.length > 0 && (
+                                    <button onClick={() => { setInsPickerTarget({ kitIdx, cIdx }); setInsPickerOpen(true) }} type="button" title="Elegir de Insumos"
+                                      style={{ width: 30, height: 30, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
+                                      <i className="fa fa-list" />
+                                    </button>
+                                  )}
+                                </div>
+                                {/* Costo unitario editable */}
+                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
+                                  <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
+                                  <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                    onChange={e => { const r = parseTbl(e.target.value); updatePackComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                    style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                                </div>
+                                {/* Qty por kit */}
+                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                                  <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>/kit</span>
                                   <input type="number" min="1" value={comp.qty || 1} onFocus={selectOnFocus}
                                     onChange={e => updatePackComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
-                                    style={{ width: 46, textAlign: 'center', height: 30, fontSize: 12, padding: '0 4px' }} />
+                                    style={{ width: 42, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1 }} />
                                 </div>
                                 {num(comp.costUnit) > 0 && (
-                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 54, textAlign: 'right' }}>
+                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 52, textAlign: 'right' }}>
                                     {fmt(num(comp.costUnit) * num(comp.qty))}
                                   </span>
                                 )}
@@ -894,9 +899,9 @@ export default function Presupuesto() {
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                             {(kit.products || []).map((comp, cIdx) => (
-                              <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', borderRadius: 8, padding: '5px 8px', border: '1px solid var(--border)' }}>
+                              <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', borderRadius: 8, padding: '5px 8px', border: '1px solid var(--border)', flexWrap: 'wrap' }}>
                                 <i className="fa fa-gift" style={{ fontSize: 11, color: '#059669', flexShrink: 0, opacity: .65 }} />
-                                <div style={{ flex: 1, display: 'flex', gap: 4, minWidth: 0 }}>
+                                <div style={{ flex: 1, display: 'flex', gap: 4, minWidth: 140 }}>
                                   <input type="text" value={comp.name || ''} onChange={e => updateProdComp(kitIdx, cIdx, 'name', e.target.value)}
                                     placeholder="Nombre del producto..."
                                     style={{ flex: 1, fontSize: 12, padding: '4px 8px', height: 30, minWidth: 0 }} />
@@ -905,14 +910,22 @@ export default function Presupuesto() {
                                     <i className="fa fa-list" />
                                   </button>
                                 </div>
-                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <span style={{ fontSize: 10, color: 'var(--txt3)' }}>×</span>
+                                {/* Costo unitario editable */}
+                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
+                                  <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
+                                  <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                    onChange={e => { const r = parseTbl(e.target.value); updateProdComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                    style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                                </div>
+                                {/* Qty por kit */}
+                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                                  <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>/kit</span>
                                   <input type="number" min="1" value={comp.qty || 1} onFocus={selectOnFocus}
                                     onChange={e => updateProdComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
-                                    style={{ width: 46, textAlign: 'center', height: 30, fontSize: 12, padding: '0 4px' }} />
+                                    style={{ width: 42, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1 }} />
                                 </div>
                                 {num(comp.costUnit) > 0 && (
-                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 54, textAlign: 'right' }}>
+                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 52, textAlign: 'right' }}>
                                     {fmt(num(comp.costUnit) * num(comp.qty))}
                                   </span>
                                 )}
@@ -983,9 +996,22 @@ export default function Presupuesto() {
                     const { kitIdx, cIdx } = kitProdPickerTarget
                     setItems(prev => prev.map((k, i) => {
                       if (i !== kitIdx) return k
-                      return { ...k, products: (k.products || []).map((c, j) => j !== cIdx ? c : { ...c, id: p.id || '', name: p.name || '', costUnit: p.cost || 0 }) }
+                      return { ...k, products: (k.products || []).map((c, j) => j !== cIdx ? c : { ...c, id: p.id || '', name: p.name || '', costUnit: num(p.cost) }) }
                     }))
                     setKitProdPickerTarget(null)
+                  }}
+                />
+                {/* Picker de insumos para componente A */}
+                <ProductPicker open={insPickerOpen} onClose={() => setInsPickerOpen(false)}
+                  products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
+                  onSelect={(ins) => {
+                    if (!insPickerTarget) return
+                    const { kitIdx, cIdx } = insPickerTarget
+                    setItems(prev => prev.map((k, i) => {
+                      if (i !== kitIdx) return k
+                      return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, id: ins.id || '', name: ins.name || '', costUnit: num(ins.cost) }) }
+                    }))
+                    setInsPickerTarget(null)
                   }}
                 />
 
