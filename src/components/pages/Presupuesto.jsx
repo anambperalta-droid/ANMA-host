@@ -536,17 +536,65 @@ export default function Presupuesto() {
 
   const waText = useMemo(() => {
     const bName = c.businessName || 'ANMA'
-    const prodList = items
-      .filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
-      .map(i => {
-        if (i.type === 'kit') {
-          const comps = (i.packaging?.length || 0) + (i.products?.length || 0)
-          return `• ${i.qty}x ${i.name || 'Kit'}${comps > 0 ? ` (${comps} componentes)` : ''}`
+    const discPct = Math.min(Math.max(num(form.discount), 0), 100)
+    const multiAlt = alternatives.length > 1
+
+    const altBlocks = alternatives.map((alt, ai) => {
+      const validKits = alt.kits.filter(k => k.type === 'kit'
+        ? (k.name || k.packaging?.length || k.products?.length) : k.name)
+      if (!validKits.length) return null
+      const altLabel = alt.label || `Alternativa ${ai + 1}`
+      const lines = []
+      let altRev = 0
+
+      validKits.forEach(kit => {
+        const kQty = num(kit.qty)
+        altRev += kQty * num(kit.priceUnit)
+        lines.push(`\n*🎁 ${kit.name || 'Kit sin nombre'}* ×${kQty}  →  ${fmt(kQty * num(kit.priceUnit))}`)
+
+        const packItems = (kit.packaging || []).filter(c => c.name)
+        if (packItems.length) {
+          lines.push('  📦 *Packaging / Insumos:*')
+          packItems.forEach(c => {
+            const totalU = num(c.qty || 1) * kQty
+            lines.push(`    • ${totalU}x ${c.name}${num(c.costUnit) > 0 ? ` — ${fmt(num(c.costUnit))} u. — ${fmt(num(c.costUnit) * totalU)}` : ''}`)
+          })
         }
-        return `• ${i.qty}x ${i.name}`
-      }).join('\n')
-    return `Hola ${form.contact || '[NOMBRE]'}! Te envio el presupuesto de *${bName}* para ${form.company || '[EMPRESA]'}:\n\n${prodList}\n\n*Total:* ${fmt(calc.total)}\n*Entrega estimada:* ${form.deliveryDate ? fmtDate(form.deliveryDate) : 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\nTe queda alguna duda? Quedamos a disposicion!`
-  }, [form, items, calc.total, c.businessName])
+
+        const prodItems = (kit.products || []).filter(c => c.name)
+        if (prodItems.length) {
+          lines.push('  ✨ *Contenido del Kit:*')
+          prodItems.forEach(c => {
+            const totalU = num(c.qty || 1) * kQty
+            lines.push(`    • ${totalU}x ${c.name}${num(c.costUnit) > 0 ? ` — ${fmt(num(c.costUnit))} u. — ${fmt(num(c.costUnit) * totalU)}` : ''}`)
+          })
+        }
+
+        const hasPers = kit.personalizacion?.desc || num(kit.personalizacion?.costUnit) > 0
+        if (hasPers) {
+          const persTotal = num(kit.personalizacion?.costUnit) * kQty
+          lines.push(`  🎨 *Personalización:* ${kit.personalizacion?.desc || ''}${persTotal > 0 ? ` — ${fmt(persTotal)}` : ''}`)
+        }
+      })
+
+      const discAmt = Math.round(altRev * discPct / 100)
+      const altTotal = altRev - discAmt
+      const isApproved = multiAlt && alt.approved
+      return [
+        `*${multiAlt ? `${ai + 1}. ` : ''}${altLabel}*${isApproved ? ' ✅' : ''}`,
+        ...lines,
+        ``,
+        `💰 *Total: ${fmt(altTotal)}*${discAmt > 0 ? ` _(descuento ${discPct}%)_` : ''}`,
+      ].join('\n')
+    }).filter(Boolean)
+
+    const intro = `Hola ${form.contact || '[NOMBRE]'}! Te envío el presupuesto de *${bName}* para ${form.company || '[EMPRESA]'}.`
+    const body = multiAlt
+      ? `\n\nTe mando *${altBlocks.length} opciones* para que elijas la que mejor te quede:\n\n${altBlocks.join('\n\n────────────────────\n\n')}`
+      : `\n\n${altBlocks[0] || ''}`
+    const footer = `\n\n*Entrega estimada:* ${form.deliveryDate ? fmtDate(form.deliveryDate) : 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\n¿Te quedó alguna duda? ¡Quedamos a disposición!`
+    return intro + body + footer
+  }, [form, alternatives, c.businessName])
 
   const mpCfg = getMPConfig()
   const bankCfg = getBankConfig()
@@ -608,87 +656,152 @@ export default function Presupuesto() {
     const fmtD = iso => { if (!iso) return ''; const p = String(iso).slice(0,10).split('-'); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : iso }
     const brandColor = c.brandColor || '#7C3AED'
     const bName = c.businessName || 'ANMA'
-    const prodRows = items.filter(i => i.type === 'kit'
-      ? (i.name || i.packaging?.length || i.products?.length)
-      : i.name
-    ).flatMap((i, kitN) => {
-      /* ── Ítem legacy (sin estructura de kit) ── */
-      if (i.type !== 'kit') {
-        return [`<tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.priceUnit)}</td><td style="text-align:right">${fmt(num(i.qty) * num(i.priceUnit))}</td></tr>`]
-      }
+    /* ── Colores de marca ── */
+    const bc  = brandColor
+    const bg  = bc + '0e'
+    const bg2 = bc + '07'
+    const bdr = bc + '28'
 
-      const bc  = brandColor                          // color de marca
-      const bg  = bc + '0e'                           // fondo cabecera kit (6% opacidad)
-      const bg2 = bc + '07'                           // fondo sub-filas (3% opacidad)
-      const bdr = bc + '28'                           // borde separador inferior (16%)
-
-      /* ── Separador entre kits ── */
-      const sep = kitN > 0
-        ? `<tr><td colspan="4" style="height:12px;padding:0;background:#fff;border:none"></td></tr>`
-        : ''
-
-      /* ── Fila principal del kit ── */
-      const kitRow = `
+    /* ── Helper: sub-fila con cantidad, precio unitario y total ── */
+    const subRow = (label, qtyPerKit, kitQty, unitCost, tagTxt, tagBg, tagColor, isLast = false) => {
+      const totalUnits = num(qtyPerKit || 1) * num(kitQty)
+      const lineTotal  = num(unitCost) * totalUnits
+      const botBdr = isLast ? `2px solid ${bdr}` : `1px solid #EBEBF2`
+      return `
         <tr>
-          <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:9px 9px 5px">
-            <div style="display:flex;align-items:center;gap:7px">
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;background:${bc};color:#fff;border-radius:4px;font-size:8px;font-weight:800;letter-spacing:-.2px;flex-shrink:0">K</span>
-              <strong style="font-size:12px;color:#1E1B4B;letter-spacing:-.2px">${i.name || 'Kit sin nombre'}</strong>
+          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:4px 9px 4px 30px">
+            <span style="color:${bc};opacity:.4;font-size:10px;margin-right:4px">↳</span>
+            <span style="color:#374151;font-size:9.5px">${label}</span>
+            ${qtyPerKit > 1 ? `<span style="color:#9CA3AF;font-size:8.5px"> ×${qtyPerKit}/kit</span>` : ''}
+            <span style="background:${tagBg};color:${tagColor};font-size:7px;font-weight:700;padding:1.5px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px;margin-left:6px;vertical-align:middle">${tagTxt}</span>
+          </td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:9px;color:#6B7280">${totalUnits}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums">${unitCost > 0 ? fmt(unitCost) : ''}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums;font-weight:${lineTotal > 0 ? 600 : 400}">${lineTotal > 0 ? fmt(lineTotal) : ''}</td>
+        </tr>`
+    }
+
+    /* ── Helper: fila de encabezado de bloque A / B / C ── */
+    const blockHdrRow = (emoji, label, blockBg) => `
+      <tr>
+        <td colspan="4" style="background:${blockBg};border-left:3px solid ${bc};padding:4px 9px 3px 20px;font-size:8px;font-weight:700;color:#374151;letter-spacing:.35px;text-transform:uppercase;border-bottom:1px solid #EBEBF2">
+          ${emoji}&nbsp; ${label}
+        </td>
+      </tr>`
+
+    /* ── Helper: cálculo de totales para una lista de kits ── */
+    const calcAltTotals = (kits) => {
+      let rev = 0
+      kits.forEach(k => { rev += num(k.qty) * num(k.priceUnit) })
+      const dp = Math.min(Math.max(num(form.discount), 0), 100)
+      const da = Math.round(rev * dp / 100)
+      const tot = rev - da
+      return { revenue: rev, total: tot, discAmt: da, discPct: dp, depositAmt: Math.round(tot * num(form.deposit) / 100) }
+    }
+
+    const isMultiAlt = alternatives.length > 1
+
+    /* ── Generar filas de todas las alternativas ── */
+    const allAltRows = alternatives.map((alt, altIdx) => {
+      const altKits = alt.kits.filter(i => i.type === 'kit'
+        ? (i.name || i.packaging?.length || i.products?.length) : i.name)
+      if (!altKits.length) return ''
+      const altLabel  = alt.label || `Alternativa ${altIdx + 1}`
+      const altTotals = calcAltTotals(altKits)
+
+      /* Separador entre alternativas */
+      const altSep = (altIdx > 0 && isMultiAlt)
+        ? `<tr><td colspan="4" style="height:16px;padding:0;background:#fff;border:none"></td></tr>` : ''
+
+      /* Encabezado de alternativa (solo si hay más de una) */
+      const altHdr = isMultiAlt ? `
+        <tr>
+          <td colspan="4" style="background:${bc};padding:8px 12px;border:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:rgba(255,255,255,.2);color:#fff;border-radius:4px;font-size:9px;font-weight:800">${altIdx + 1}</span>
+                <span style="font-size:12px;font-weight:800;color:#fff;letter-spacing:-.1px">${altLabel}</span>
+                ${alt.approved ? '<span style="font-size:8px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px">✓ Aprobada</span>' : ''}
+              </div>
+              <span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.9)">${fmt(altTotals.total)}</span>
             </div>
           </td>
-          <td style="background:${bg};border-bottom:none;text-align:center;font-weight:700;font-size:12px;padding:9px 9px 5px">${i.qty}</td>
-          <td style="background:${bg};border-bottom:none;text-align:right;padding:9px 9px 5px">${fmt(i.priceUnit)}</td>
-          <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:13px;color:${bc};padding:9px 9px 5px">${fmt(num(i.qty) * num(i.priceUnit))}</td>
-        </tr>`
+        </tr>` : ''
 
-      /* ── Helper: genera una sub-fila ── */
-      const subRow = (label, qty, tagTxt, tagBg, tagColor, isLast = false) => {
-        const botBdr = isLast ? `2px solid ${bdr}` : `1px solid #EBEBF2`
-        return `
+      /* Filas de kits dentro de la alternativa */
+      const kitRows = altKits.flatMap((i, kitN) => {
+        /* Separador entre kits */
+        const kitSep = kitN > 0
+          ? `<tr><td colspan="4" style="height:10px;padding:0;background:${isMultiAlt ? '#FAFAFA' : '#fff'};border:none"></td></tr>` : ''
+
+        /* Fila principal del kit */
+        const kitRow = `
           <tr>
-            <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:4px 9px 4px 30px">
-              <span style="color:${bc};opacity:.45;font-size:10px;margin-right:4px">↳</span>
-              <span style="color:#374151;font-size:9.5px">${label}</span>
-              ${qty ? `<span style="color:#9CA3AF;font-size:8.5px"> (×${qty}/kit)</span>` : ''}
-              <span style="background:${tagBg};color:${tagColor};font-size:7px;font-weight:700;padding:1.5px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px;margin-left:6px;vertical-align:middle">${tagTxt}</span>
+            <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:9px 9px 5px">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;background:${bc};color:#fff;border-radius:4px;font-size:8px;font-weight:800;letter-spacing:-.2px;flex-shrink:0">K</span>
+                <strong style="font-size:12px;color:#1E1B4B;letter-spacing:-.2px">${i.name || 'Kit sin nombre'}</strong>
+              </div>
             </td>
-            <td style="background:${bg2};border-bottom:${botBdr}"></td>
-            <td style="background:${bg2};border-bottom:${botBdr}"></td>
-            <td style="background:${bg2};border-bottom:${botBdr}"></td>
+            <td style="background:${bg};border-bottom:none;text-align:center;font-weight:700;font-size:12px;padding:9px 9px 5px">${i.qty}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;padding:9px 9px 5px">${fmt(i.priceUnit)}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:13px;color:${bc};padding:9px 9px 5px">${fmt(num(i.qty) * num(i.priceUnit))}</td>
           </tr>`
-      }
 
-      /* ── Sub-filas: Packaging (A) ── */
-      const packingRows = (i.packaging || []).filter(c => c.name).map((c, ci, arr) => {
-        const isLast = ci === arr.length - 1 && !(i.products || []).some(p => p.name) && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
-        return subRow(c.name, num(c.qty) || 1, 'Packaging', '#EDE9FE', '#5B21B6', isLast)
-      })
+        /* ── Bloque A: Packaging / Insumos ── */
+        const packItems = (i.packaging || []).filter(c => c.name)
+        const packHdr   = packItems.length ? blockHdrRow('📦', 'A. Packaging / Insumos', '#F5F3FF') : ''
+        const packRowsHtml = packItems.map((c, ci, arr) => {
+          const isLast = ci === arr.length - 1 && !(i.products || []).some(p => p.name) && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
+          return subRow(c.name, num(c.qty || 1), num(i.qty), num(c.costUnit), 'Packaging', '#EDE9FE', '#5B21B6', isLast)
+        })
 
-      /* ── Sub-filas: Contenido del kit (B) ── */
-      const productRows = (i.products || []).filter(c => c.name).map((c, ci, arr) => {
-        const isLast = ci === arr.length - 1 && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
-        return subRow(c.name, num(c.qty) || 1, 'Contenido', '#DCFCE7', '#065F46', isLast)
-      })
+        /* ── Bloque B: Contenido del Kit ── */
+        const prodItems = (i.products || []).filter(c => c.name)
+        const prodHdr   = prodItems.length ? blockHdrRow('✨', 'B. Contenido del Kit', '#F0FDF4') : ''
+        const prodRowsHtml = prodItems.map((c, ci, arr) => {
+          const isLast = ci === arr.length - 1 && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
+          return subRow(c.name, num(c.qty || 1), num(i.qty), num(c.costUnit), 'Contenido', '#DCFCE7', '#065F46', isLast)
+        })
 
-      /* ── Sub-fila: Personalización (C) ── */
-      const hasPersonalizacion = i.personalizacion?.desc || num(i.personalizacion?.costUnit) > 0
-      const personalizacionRow = hasPersonalizacion
-        ? subRow(
-            i.personalizacion?.desc || 'Personalización / Logo',
-            null,
-            'Personalización',
-            '#FEF3C7', '#92400E',
-            true   // siempre última
-          )
-        : ''
+        /* ── Bloque C: Personalización ── */
+        const hasPers = i.personalizacion?.desc || num(i.personalizacion?.costUnit) > 0
+        const persHdr = hasPers ? blockHdrRow('🎨', 'C. Personalización', '#FFFBEB') : ''
+        const persRow = hasPers ? subRow(
+          i.personalizacion?.desc || 'Personalización / Logo',
+          1, num(i.qty), num(i.personalizacion?.costUnit),
+          'Personalización', '#FEF3C7', '#92400E', true
+        ) : ''
 
-      /* ── Fila cierre si no hay sub-filas (padding visual) ── */
-      const closingRow = (packingRows.length + productRows.length === 0 && !hasPersonalizacion)
-        ? `<tr><td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:3px 0"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td></tr>`
-        : ''
+        /* Fila de cierre si no hay sub-filas */
+        const closingRow = (!packItems.length && !prodItems.length && !hasPers)
+          ? `<tr><td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:3px 0"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td></tr>` : ''
 
-      return [sep, kitRow, ...packingRows, ...productRows, personalizacionRow, closingRow].filter(Boolean)
+        return [kitSep, kitRow, packHdr, ...packRowsHtml, prodHdr, ...prodRowsHtml, persHdr, persRow, closingRow].filter(Boolean)
+      }).join('')
+
+      /* Fila de total por alternativa (solo si hay más de una) */
+      const altTotalRow = isMultiAlt ? `
+        <tr>
+          <td colspan="2" style="padding:7px 12px;background:${bc}1a;font-size:10px;color:#6B7280;font-style:italic">
+            ${alt.approved ? '✓ Opción aprobada para producción' : `Opción ${altIdx + 1} de ${alternatives.length}`}
+          </td>
+          <td style="text-align:right;padding:7px 12px;background:${bc}1a;font-weight:700;font-size:11px;color:#1E1B4B">Total ${altLabel}</td>
+          <td style="text-align:right;padding:7px 12px;background:${bc}1a;font-weight:800;font-size:14px;color:${bc};font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</td>
+        </tr>` : ''
+
+      return altSep + altHdr + kitRows + altTotalRow
     }).join('')
+
+    /* ── Totales del footer: usar alt aprobada (o primera) ── */
+    const mainAlt    = alternatives.find(a => a.approved) || alternatives[0]
+    const mainKits   = (mainAlt?.kits || []).filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
+    const mainTotals = calcAltTotals(mainKits)
+    const pdfRevenue = isMultiAlt ? mainTotals.revenue    : calc.totalRevenue
+    const pdfTotal   = isMultiAlt ? mainTotals.total      : calc.total
+    const pdfDiscAmt = isMultiAlt ? mainTotals.discAmt    : calc.discountAmt
+    const pdfDiscPct = isMultiAlt ? mainTotals.discPct    : calc.discountPct
+    const pdfDeposit = isMultiAlt ? mainTotals.depositAmt : calc.depositAmt
     const validDays = num(c.budgetValidityDays) || 7
     const validUntil = new Date(); validUntil.setDate(validUntil.getDate() + validDays)
     const vigenciaISO = validUntil.toISOString().slice(0, 10)
@@ -758,18 +871,19 @@ export default function Presupuesto() {
     </div>
     <table>
       <thead><tr><th>Producto</th><th style="text-align:center;width:55px">Cant.</th><th style="text-align:right;width:90px">P. unit.</th><th style="text-align:right;width:95px">Subtotal</th></tr></thead>
-      <tbody>${prodRows}</tbody>
+      <tbody>${allAltRows}</tbody>
     </table>
     <div class="totals"><div class="totals-box">
-      <div class="totals-row"><span>Subtotal productos</span><span>${fmt(calc.totalRevenue)}</span></div>
-      ${calc.discountAmt > 0 ? `<div class="totals-row" style="color:#DC2626"><span>Descuento (${calc.discountPct}%)</span><span>−${fmt(calc.discountAmt)}</span></div>` : ''}
+      ${isMultiAlt ? `<div class="totals-row" style="font-size:9.5px;color:#6B7280;font-style:italic;margin-bottom:2px"><span>Totales de: ${(alternatives.find(a => a.approved) || alternatives[0])?.label || 'Alternativa 1'}${alternatives.some(a => a.approved) ? ' ✓' : ''}</span></div>` : ''}
+      <div class="totals-row"><span>Subtotal productos</span><span>${fmt(pdfRevenue)}</span></div>
+      ${pdfDiscAmt > 0 ? `<div class="totals-row" style="color:#DC2626"><span>Descuento (${pdfDiscPct}%)</span><span>−${fmt(pdfDiscAmt)}</span></div>` : ''}
       ${showEnvioLeyenda ? `<div class="totals-row" style="font-size:10px;color:#92400E;font-style:italic"><span>🚚 Costo de envío sujeto a pesaje y despacho</span><span>A cotizar</span></div>` : ''}
-      <div class="totals-row big"><span>Total</span><span>${fmt(calc.total)}</span></div>
-      <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(calc.depositAmt)}</span></div>
-      <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(calc.total - calc.depositAmt)}</span></div>
+      <div class="totals-row big"><span>Total</span><span>${fmt(pdfTotal)}</span></div>
+      <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(pdfDeposit)}</span></div>
+      <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(pdfTotal - pdfDeposit)}</span></div>
     </div></div>
     ${c.ivaEnabled ? (() => {
-      const total = calc.total
+      const total = pdfTotal
       const ivaR = (Number(c.ivaRate) || 21) / 100
       const otrosR = (Number(c.otrosImpuestosRate) || 0) / 100
       const ivaContenido = total - (total / (1 + ivaR))
