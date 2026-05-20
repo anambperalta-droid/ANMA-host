@@ -1130,8 +1130,8 @@ export default function Presupuesto() {
                   )
                 })()}
 
-                {items.map((kit, kitIdx) => (
-                  <div key={kitIdx} style={{ marginBottom: 14, border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface2)' }}>
+                {(() => { const kit = items[0]; const kitIdx = 0; if (!kit) return null; return (
+                  <div style={{ marginBottom: 14, border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface2)' }}>
 
                     {/* ─ Cabecera del kit ─ */}
                     <div style={{ background: 'var(--grad)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -1159,12 +1159,6 @@ export default function Presupuesto() {
                           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.55)', marginBottom: 1 }}>Subtotal</div>
                           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{fmt(num(kit.qty) * num(kit.priceUnit))}</div>
                         </div>
-                        {items.length > 1 && (
-                          <button onClick={() => removeKit(kitIdx)} title="Eliminar kit"
-                            style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid rgba(255,255,255,.22)', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.75)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <i className="fa fa-xmark" />
-                          </button>
-                        )}
                       </div>
                     </div>
 
@@ -1342,7 +1336,7 @@ export default function Presupuesto() {
                       )}
                     </div>
                   </div>
-                ))}
+                )})()}
 
                 {/* Picker de productos para componente B */}
                 <ProductPicker open={kitProdPickerOpen} onClose={() => setKitProdPickerOpen(false)} products={products}
@@ -1370,12 +1364,6 @@ export default function Presupuesto() {
                   }}
                 />
 
-                <button className="btn btn-ghost btn-sm" style={{ width: '100%', marginTop: 6, justifyContent: 'center' }} onClick={addKit}>
-                  <i className="fa fa-plus" /> Agregar otro Kit / Box
-                </button>
-                <div className="wiz-tip" style={{ marginTop: 8 }}>
-                  <i className="fa fa-lightbulb" /> La cantidad global del Kit multiplica el costo de todos sus componentes. El margen real se refleja en el panel derecho en tiempo real.
-                </div>
               </>
             )}
 
