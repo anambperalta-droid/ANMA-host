@@ -213,51 +213,41 @@ export default function Config() {
   const [gsShowScript, setGsShowScript] = useState(false)
   const [gsBulkLoading, setGsBulkLoading] = useState(false)
 
-  /* ── Email (Resend) ── */
-  const [resendKey, setResendKey] = useState(c.resendApiKey || '')
-  const [resendFrom, setResendFrom] = useState(c.resendFrom || '')
-  const [resendEnabled, setResendEnabled] = useState(c.resendEnabled === true)
-  const [resendTesting, setResendTesting] = useState(false)
-  const [resendTestResult, setResendTestResult] = useState(null) // null | 'ok' | 'error'
-  const [resendShowInstructions, setResendShowInstructions] = useState(!c.resendApiKey)
+  /* ── Email (EmailJS) ── */
+  const [ejsServiceId, setEjsServiceId] = useState(c.ejsServiceId || '')
+  const [ejsTemplateId, setEjsTemplateId] = useState(c.ejsTemplateId || '')
+  const [ejsPublicKey, setEjsPublicKey] = useState(c.ejsPublicKey || '')
+  const [ejsEnabled, setEjsEnabled] = useState(c.ejsEnabled === true)
+  const [ejsTesting, setEjsTesting] = useState(false)
+  const [ejsTestResult, setEjsTestResult] = useState(null)
+  const [ejsShowInstructions, setEjsShowInstructions] = useState(!c.ejsPublicKey)
   const [gsTesting, setGsTesting] = useState(false)
   const [gsShowInstructions, setGsShowInstructions] = useState(!initSheets.url)
   const [mpTesting, setMpTesting] = useState(false)
-  const testResend = async () => {
-    const key   = resendKey.trim()
-    const email = resendFrom.trim()
-    if (!key || !email) { toast('Completá API Key y email de envío primero.', 'er'); return }
-    setResendTesting(true)
-    setResendTestResult(null)
+  const testEmailJS = async () => {
+    const svc = ejsServiceId.trim(), tpl = ejsTemplateId.trim(), pub = ejsPublicKey.trim()
+    if (!svc || !tpl || !pub) { toast('Completá los 3 campos: Service ID, Template ID y Public Key.', 'er'); return }
+    setEjsTesting(true)
+    setEjsTestResult(null)
     try {
-      // /resend-api → proxy transparente (Vite en dev, Vercel en prod) — sin CORS
-      const res = await fetch('/resend-api/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'onboarding@resend.dev',
-          to: [email],
-          subject: 'Test de conexión — ANMA Regalos',
-          html: '<p>✅ Conexión con Resend verificada correctamente desde ANMA Regalos.</p>',
-        }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok) {
-        setResendTestResult('ok')
-        updateConfig({ resendApiKey: key, resendFrom: email, resendEnabled: true })
-        setResendEnabled(true)
-        setResendShowInstructions(false)
-      } else {
-        const msg = data.message || data.name || data.error || `Error ${res.status}`
-        setResendTestResult(msg)
-      }
+      const emailjs = (await import('@emailjs/browser')).default
+      await emailjs.send(svc, tpl, {
+        to_email: c.contactEmail || c.email || '',
+        subject: 'Test de conexión — ANMA Regalos',
+        html_body: '<p>✅ EmailJS configurado correctamente en ANMA Regalos.</p>',
+        from_name: c.businessName || 'ANMA Regalos',
+      }, pub)
+      setEjsTestResult('ok')
+      updateConfig({ ejsServiceId: svc, ejsTemplateId: tpl, ejsPublicKey: pub, ejsEnabled: true })
+      setEjsEnabled(true)
+      setEjsShowInstructions(false)
     } catch (e) {
-      setResendTestResult(e.message || 'Error de red inesperado')
+      setEjsTestResult(e?.text || e?.message || 'Error al conectar con EmailJS')
     }
-    setResendTesting(false)
+    setEjsTesting(false)
   }
-  const saveResend = () => {
-    updateConfig({ resendApiKey: resendKey.trim(), resendFrom: resendFrom.trim(), resendEnabled })
+  const saveEmailJS = () => {
+    updateConfig({ ejsServiceId: ejsServiceId.trim(), ejsTemplateId: ejsTemplateId.trim(), ejsPublicKey: ejsPublicKey.trim(), ejsEnabled })
     flushSync()
     toast('Configuración de email guardada', 'ok')
   }
@@ -1006,68 +996,78 @@ export default function Config() {
           </div>
 
           {/* ── EMAIL (RESEND) CARD ── */}
-          <div className={`pay-card ${resendEnabled ? 'on' : ''}`}>
-            <div className="pay-card-head" onClick={() => setResendEnabled(!resendEnabled)}>
-              <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#000,#333)' }}>
+          <div className={`pay-card ${ejsEnabled ? 'on' : ''}`}>
+            <div className="pay-card-head" onClick={() => setEjsEnabled(!ejsEnabled)}>
+              <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#1a73e8,#4285f4)' }}>
                 <i className="fa fa-envelope" />
               </div>
               <div className="pay-head-txt">
-                <div className="pay-head-title">Email — Resend <span style={{ fontSize: 9, padding: '2px 7px', background: 'var(--brand-xlt)', color: 'var(--brand)', borderRadius: 20, marginLeft: 6, fontWeight: 700, letterSpacing: '.3px', textTransform: 'uppercase' }}>Nuevo</span></div>
-                <div className="pay-head-sub">Enviá presupuestos en PDF directamente por email desde la app</div>
+                <div className="pay-head-title">Email — EmailJS</div>
+                <div className="pay-head-sub">Enviá presupuestos desde tu propio Gmail u Outlook — sin dominio</div>
               </div>
-              <div className={`pay-status ${resendEnabled ? 'on' : ''}`}>
-                {resendEnabled ? <><i className="fa fa-circle-check" /> ACTIVO</> : <><i className="fa fa-circle" /> INACTIVO</>}
+              <div className={`pay-status ${ejsEnabled ? 'on' : ''}`}>
+                {ejsEnabled ? <><i className="fa fa-circle-check" /> ACTIVO</> : <><i className="fa fa-circle" /> INACTIVO</>}
               </div>
-              <button className={`toggle ${resendEnabled ? 'on' : ''}`} onClick={e => { e.stopPropagation(); setResendEnabled(!resendEnabled) }} />
+              <button className={`toggle ${ejsEnabled ? 'on' : ''}`} onClick={e => { e.stopPropagation(); setEjsEnabled(!ejsEnabled) }} />
             </div>
-            {resendEnabled && (
+            {ejsEnabled && (
               <div className="pay-card-body">
-                {resendShowInstructions ? (
-                  <div style={{ background: 'rgba(0,0,0,.04)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, fontSize: 11, color: 'var(--txt2)', lineHeight: 1.6 }}>
-                    <div style={{ fontWeight: 700, marginBottom: 4 }}>Cómo obtener tu API Key gratis:</div>
+                {ejsShowInstructions ? (
+                  <div style={{ background: 'rgba(26,115,232,.05)', border: '1px solid rgba(26,115,232,.2)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, fontSize: 11, color: 'var(--txt2)', lineHeight: 1.7 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 6, fontSize: 12 }}>Configuración gratis en 5 minutos:</div>
                     <ol style={{ margin: 0, paddingLeft: 18 }}>
-                      <li>Entrá a <b>resend.com</b> y creá una cuenta gratuita (hasta 3.000 emails/mes gratis).</li>
-                      <li>En el dashboard: <b>API Keys → Create API Key</b>.</li>
-                      <li>Copiá la key y pegala abajo.</li>
-                      <li>En "Email de envío" usá <b>onboarding@resend.dev</b> si no verificaste tu dominio todavía.</li>
+                      <li>Entrá a <b>emailjs.com</b> → creá cuenta gratuita (200 emails/mes).</li>
+                      <li><b>Email Services → Add New Service</b> → elegí Gmail u Outlook → conectá tu cuenta → copiá el <b>Service ID</b>.</li>
+                      <li><b>Email Templates → Create New Template</b> → en el template poné:<br/>
+                        <span style={{ fontFamily:'monospace', fontSize:10, background:'rgba(0,0,0,.06)', padding:'2px 6px', borderRadius:4, display:'inline-block', marginTop:3 }}>
+                          To: {'{{to_email}}'} &nbsp;·&nbsp; Subject: {'{{subject}}'} &nbsp;·&nbsp; Body (HTML): {'{{html_body}}'}
+                        </span><br/>
+                        Guardá y copiá el <b>Template ID</b>.
+                      </li>
+                      <li><b>Account → General → Public Key</b> → copiá tu <b>Public Key</b>.</li>
+                      <li>Pegá los 3 valores abajo y tocá <b>"Probar conexión"</b>.</li>
                     </ol>
                   </div>
                 ) : (
-                  <button onClick={() => setResendShowInstructions(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--brand)', padding: '0 0 14px', display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'inherit' }}>
+                  <button onClick={() => setEjsShowInstructions(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--brand)', padding: '0 0 14px', display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'inherit' }}>
                     <i className="fa fa-circle-info" style={{ fontSize: 10 }} /> Ver instrucciones de configuración ▾
                   </button>
                 )}
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
                   <div className="fg" style={{ marginBottom: 0 }}>
-                    <label><i className="fa fa-key" style={{ marginRight: 4, color: '#000' }} />API Key de Resend</label>
-                    <input type="password" value={resendKey} onChange={e => setResendKey(e.target.value)}
-                      placeholder="re_xxxxxxxxxxxxxxxxxxxx"
-                      style={{ fontFamily: 'monospace', fontSize: 12 }} />
+                    <label><i className="fa fa-server" style={{ marginRight: 4 }} />Service ID</label>
+                    <input type="text" value={ejsServiceId} onChange={e => setEjsServiceId(e.target.value)}
+                      placeholder="service_xxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
                   </div>
                   <div className="fg" style={{ marginBottom: 0 }}>
-                    <label><i className="fa fa-at" style={{ marginRight: 4 }} />Email de envío</label>
-                    <input type="email" value={resendFrom} onChange={e => setResendFrom(e.target.value)}
-                      placeholder="tu@empresa.com" />
+                    <label><i className="fa fa-file-lines" style={{ marginRight: 4 }} />Template ID</label>
+                    <input type="text" value={ejsTemplateId} onChange={e => setEjsTemplateId(e.target.value)}
+                      placeholder="template_xxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
+                  </div>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label><i className="fa fa-key" style={{ marginRight: 4 }} />Public Key</label>
+                    <input type="password" value={ejsPublicKey} onChange={e => setEjsPublicKey(e.target.value)}
+                      placeholder="xxxxxxxxxxxxxxxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
                   </div>
                 </div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button className="btn btn-ghost" onClick={testResend} disabled={resendTesting} style={{minHeight:44}}>
-                    <i className={`fa ${resendTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
-                    {resendTesting ? ' Enviando...' : ' Probar conexión'}
+                  <button className="btn btn-ghost" onClick={testEmailJS} disabled={ejsTesting} style={{minHeight:44}}>
+                    <i className={`fa ${ejsTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
+                    {ejsTesting ? ' Enviando...' : ' Probar conexión'}
                   </button>
-                  <button className="btn btn-primary btn-sm" onClick={saveResend}>
+                  <button className="btn btn-primary btn-sm" onClick={saveEmailJS}>
                     <i className="fa fa-floppy-disk" /> Guardar
                   </button>
-                  {resendTestResult && (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, fontSize: 11.5, fontWeight: 700, background: resendTestResult === 'ok' ? 'rgba(16,185,129,.1)' : 'rgba(220,38,38,.1)', color: resendTestResult === 'ok' ? '#059669' : 'var(--red)', border: `1.5px solid ${resendTestResult === 'ok' ? 'rgba(16,185,129,.35)' : 'rgba(220,38,38,.35)'}` }}>
-                      <i className={`fa ${resendTestResult === 'ok' ? 'fa-circle-check' : 'fa-circle-xmark'}`} />
-                      {resendTestResult === 'ok' ? 'Conexión exitosa' : 'Error de credenciales'}
+                  {ejsTestResult && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, fontSize: 11.5, fontWeight: 700, background: ejsTestResult === 'ok' ? 'rgba(16,185,129,.1)' : 'rgba(220,38,38,.1)', color: ejsTestResult === 'ok' ? '#059669' : 'var(--red)', border: `1.5px solid ${ejsTestResult === 'ok' ? 'rgba(16,185,129,.35)' : 'rgba(220,38,38,.35)'}`, maxWidth: 340, whiteSpace: 'normal', lineHeight: 1.4 }}>
+                      <i className={`fa ${ejsTestResult === 'ok' ? 'fa-circle-check' : 'fa-circle-xmark'}`} style={{ flexShrink: 0 }} />
+                      {ejsTestResult === 'ok' ? '¡Conexión exitosa! El email de prueba fue enviado.' : ejsTestResult}
                     </div>
                   )}
                 </div>
-                <div style={{ marginTop: 12, padding: '9px 13px', borderRadius: 9, background: 'rgba(124,58,237,.07)', border: '1px solid rgba(124,58,237,.2)', fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
-                  <i className="fa fa-circle-check" style={{ color: 'var(--brand)', marginRight: 6 }} />
-                  Una vez configurado, en cada presupuesto aparece el botón <b>"Enviar por email"</b> que manda el PDF al cliente automáticamente.
+                <div style={{ marginTop: 12, padding: '9px 13px', borderRadius: 9, background: 'rgba(26,115,232,.07)', border: '1px solid rgba(26,115,232,.2)', fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
+                  <i className="fa fa-circle-check" style={{ color: '#1a73e8', marginRight: 6 }} />
+                  Los emails salen desde tu Gmail/Outlook. El cliente los recibe como si los mandaras vos directamente. Sin dominio propio.
                 </div>
               </div>
             )}

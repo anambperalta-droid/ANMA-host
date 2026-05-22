@@ -918,31 +918,22 @@ export default function Presupuesto() {
   const sendByEmail = async () => {
     const clientEmail = get('clients').find(cl => cl.company === form.company || cl.contact === form.contact)?.email || ''
     if (!clientEmail) { toast('Este cliente no tiene email cargado. Agregalo en Clientes.', 'er'); return }
-    const apiKey = (c.resendApiKey || '').trim()
-    if (!apiKey) { toast('Configurá el email en Configuración → Integraciones → Email.', 'er'); return }
+    const svc = (c.ejsServiceId || '').trim()
+    const tpl = (c.ejsTemplateId || '').trim()
+    const pub = (c.ejsPublicKey || '').trim()
+    if (!svc || !tpl || !pub) { toast('Configurá el email en Configuración → Integraciones → Email.', 'er'); return }
     setEmailSending(true)
     try {
-      const html = buildPdfHtml()
-      // /resend-api → proxy transparente (Vite en dev, Vercel en prod) — sin CORS
-      const res = await fetch('/resend-api/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: (c.resendFrom || '').trim() || 'onboarding@resend.dev',
-          to: [clientEmail],
-          subject: `Presupuesto ${form.number ? `#${form.number} ` : ''}— ${c.businessName || 'ANMA'}`,
-          html,
-        }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok) {
-        toast(`✅ Presupuesto enviado a ${clientEmail}`, 'ok')
-      } else {
-        const msg = data.message || data.name || data.error || `Error ${res.status}`
-        toast(`Error Resend: ${msg}`, 'er')
-      }
+      const emailjs = (await import('@emailjs/browser')).default
+      await emailjs.send(svc, tpl, {
+        to_email: clientEmail,
+        subject: `Presupuesto ${budgetNum} — ${c.businessName || 'ANMA'}`,
+        html_body: buildPdfHtml(),
+        from_name: c.businessName || 'ANMA',
+      }, pub)
+      toast(`Presupuesto enviado a ${clientEmail}`, 'ok')
     } catch (e) {
-      toast(`Error de red: ${e.message || 'intentá de nuevo'}`, 'er')
+      toast(`Error al enviar: ${e?.text || e?.message || 'intentá de nuevo'}`, 'er')
     }
     setEmailSending(false)
   }
@@ -1617,7 +1608,7 @@ export default function Presupuesto() {
                     <i className="fa fa-file-pdf" style={{ fontSize: 12 }} /> PDF
                   </button>
                 </div>
-                {c.resendEnabled && (
+                {c.ejsEnabled && (
                   <button onClick={sendByEmail} disabled={emailSending}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', marginTop: 5, padding: '7px', background: 'rgba(100,116,139,.12)', border: '1px solid rgba(100,116,139,.22)', borderRadius: 7, color: 'rgba(255,255,255,.55)', fontSize: 11, fontWeight: 500, cursor: emailSending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: emailSending ? .6 : 1, transition: 'background .15s' }}
                     onMouseEnter={e => { if (!emailSending) e.currentTarget.style.background = 'rgba(100,116,139,.22)' }}
