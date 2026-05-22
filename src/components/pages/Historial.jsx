@@ -373,6 +373,7 @@ export default function Historial() {
   const [showLossReason, setShowLossReason] = useState(false)
   const [selectedCliente, setSelectedCliente] = useState(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewBudget, setPreviewBudget] = useState(null)
   const [todayCollapsed, setTodayCollapsed] = useState(() => {
     try { return localStorage.getItem('anma_today_collapsed') === '1' } catch { return false }
   })
@@ -1086,7 +1087,7 @@ export default function Historial() {
                             const cliName = b.company || b.contact || '—'
                             const matchedCli = (clients || []).find(c => (b.company && c.company === b.company) || (b.contact && c.contact === b.contact))
                             return (
-                            <tr key={b.id}>
+                            <tr key={b.id} style={{ cursor: 'pointer' }} onClick={() => setPreviewBudget(b)}>
                               <td className="c-num"><b>{b.num || '—'}</b></td>
                               <td className="c-cli">
                                 {matchedCli ? (
@@ -1601,6 +1602,56 @@ export default function Historial() {
       {resendBudget && (
         <ResendModal budget={resendBudget} onClose={() => setResendBudget(null)} onSend={handleResendSent} />
       )}
+
+      {/* ═══ Budget Preview Modal ═══ */}
+      {previewBudget && (() => {
+        const b = previewBudget
+        const cfg = config()
+        const brandColor = cfg.brandColor || '#7C3AED'
+        const bName = cfg.businessName || 'ANMA'
+        const numV = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
+        const rows = (b.items || []).filter(i => i.name).map(i =>
+          `<tr><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7">${i.name}${i.variant ? ` <span style="color:#888;font-size:10px">· ${i.variant}</span>` : ''}</td><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:center">${numV(i.qty)}</td><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:right">${fmt(numV(i.priceUnit))}</td><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:right;font-weight:700">${fmt(numV(i.qty) * numV(i.priceUnit))}</td></tr>`
+        ).join('')
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:28px;color:#1E1B4B;font-size:12px}table{width:100%;border-collapse:collapse}th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px}@media print{body{margin:16px}}</style></head><body>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:3px solid ${brandColor};margin-bottom:16px">
+            <div>${cfg.logo ? `<img src="${cfg.logo}" style="height:36px">` : `<div style="font-size:20px;font-weight:800;color:${brandColor}">${bName}</div>`}</div>
+            <div style="text-align:right"><div style="font-size:16px;font-weight:800">${b.num || '—'}</div><div style="font-size:11px;color:#666">Fecha: ${b.date || '—'}</div>${b.deliveryDate ? `<div style="font-size:11px;color:#666">Entrega: ${b.deliveryDate}</div>` : ''}</div>
+          </div>
+          <div style="background:#F8F9FC;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+            ${b.contact ? `<div style="font-weight:700">${b.contact}</div>` : ''}
+            ${b.company ? `<div style="color:#666">${b.company}</div>` : ''}
+            ${b.wa ? `<div style="color:#666">${b.wa}</div>` : ''}
+          </div>
+          <table><thead><tr><th>Producto</th><th style="width:55px;text-align:center">Cant.</th><th style="width:95px;text-align:right">P.unit</th><th style="width:100px;text-align:right">Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px"><div style="min-width:220px;padding:10px 14px;background:${brandColor}10;border-radius:8px;border:1px solid ${brandColor}30">
+            <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:${brandColor}"><span>Total</span><span>${fmt(numV(b.total))}</span></div>
+            ${numV(b.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:${brandColor};font-weight:600;margin-top:4px"><span>Seña</span><span>${fmt(numV(b.depositAmt))}</span></div>` : ''}
+          </div></div>
+          ${b.noteCli ? `<div style="margin-top:14px;background:#F4F6FD;border-radius:8px;padding:10px 14px;font-size:11px;color:#4B5280">${b.noteCli}</div>` : ''}
+        </body></html>`
+        return (
+          <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setPreviewBudget(null) }}>
+            <div className="modal modal-lg" style={{ maxWidth: 740, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+              <div className="mh">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <i className="fa fa-file-invoice-dollar" style={{ color: brandColor }} />
+                  <span style={{ fontWeight: 700 }}>{b.num || '—'}</span>
+                  <span className={`badge ${STATUS_CLS[b.status] || 'b-draft'}`}>{STATUS_MAP[b.status] || 'Borrador'}</span>
+                </div>
+                <button className="mclose" onClick={() => setPreviewBudget(null)}><i className="fa fa-xmark" /></button>
+              </div>
+              <iframe srcDoc={html} style={{ flex: 1, border: 'none', minHeight: 420, borderRadius: 8 }} title="Vista previa" />
+              <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid var(--border)', justifyContent: 'flex-end' }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => setPreviewBudget(null)}>Cerrar</button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setPreviewBudget(null); nav(`/presupuesto/${b.id}`) }}>
+                  <i className="fa fa-pen" /> Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ═══ Loss Reason Modal ═══ */}
       {pendingLossId && (

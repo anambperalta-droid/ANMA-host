@@ -304,6 +304,7 @@ export default function Config() {
       ivaEnabled, ivaRate: Number(ivaRate), otrosImpuestosRate: Number(otrosImp),
       cuit, ptoVenta, razonSocial, condIva,
       portalIntroCopy, portalShareMsg,
+      ejsServiceId: ejsServiceId.trim(), ejsTemplateId: ejsTemplateId.trim(), ejsPublicKey: ejsPublicKey.trim(), ejsEnabled,
     })
     applyThemeColors(bcolor, acolor)
     flushSync()

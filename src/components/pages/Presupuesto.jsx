@@ -916,7 +916,11 @@ export default function Presupuesto() {
 
   const [emailSending, setEmailSending] = useState(false)
   const sendByEmail = async () => {
-    const clientEmail = get('clients').find(cl => cl.company === form.company || cl.contact === form.contact)?.email || ''
+    const norm = s => (s || '').trim().toLowerCase()
+    const clientEmail = get('clients').find(cl =>
+      (norm(form.company) && norm(cl.company) === norm(form.company)) ||
+      (norm(form.contact) && norm(cl.contact) === norm(form.contact))
+    )?.email || ''
     if (!clientEmail) { toast('Este cliente no tiene email cargado. Agregalo en Clientes.', 'er'); return }
     const svc = (c.ejsServiceId || '').trim()
     const tpl = (c.ejsTemplateId || '').trim()
