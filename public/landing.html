@@ -15,8 +15,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:'Inter',sans-serif;color:#1F1338;background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{margin:0;font-family:'Inter',sans-serif;color:#1F1338;background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
@@ -287,15 +287,50 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 @media(max-width:780px){.foot-grid{grid-template-columns:1fr 1fr;gap:30px}}
 @media(max-width:480px){.foot-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.mock-notify{font-size:10px;right:10px}.mock-badge{display:none}}
+/* TABLET */
+@media(max-width:920px){
+  .h1{font-size:36px!important;letter-spacing:-.8px!important}
+  .hero-grid{gap:28px!important}
+}
+
+/* MOBILE 680px */
+@media(max-width:680px){
+  .wrap{padding:0 16px!important}
+  .feat-grid{grid-template-columns:1fr!important}
+  .app-nav{display:none!important}
+  .app-layout{height:360px!important}
+  .demo-tabs{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
+  .demo-tab{white-space:nowrap!important;font-size:11px!important;padding:7px 12px!important}
+  .dtable td,.dtable th{font-size:11px!important;padding:7px 10px!important}
+}
+
+/* MOBILE 540px */
 @media(max-width:540px){
   .h1{font-size:28px!important;letter-spacing:-.4px!important;line-height:1.1!important}
-  .lead{font-size:16px!important}
+  .lead{font-size:15px!important;max-width:100%!important}
   .hero{padding:36px 0 48px!important}
-  section{padding:40px 0!important}
-  .h2{font-size:26px!important;letter-spacing:-.4px!important}
+  section{padding:36px 0!important}
+  .h2{font-size:24px!important;letter-spacing:-.4px!important}
+  .sub{font-size:15px!important}
   .hero-ctas{flex-direction:column!important;align-items:center!important}
-  .hero-cta-btn{width:220px!important}
-  .hero-demo-group{width:220px!important}
+  .hero-cta-btn{width:240px!important}
+  .hero-demo-group{width:240px!important}
+  .wa-cta-btn{font-size:15px!important;padding:16px 24px!important;width:100%!important;max-width:340px!important;justify-content:center!important}
+  .faq summary{font-size:14px!important;padding:14px 16px!important}
+  .faq-body{padding:14px 16px!important}
+  .form{padding:20px!important}
+  .pillar-card{padding:20px!important}
+  .nav-cta .btn{font-size:12px!important;padding:8px 12px!important}
+}
+
+/* MOBILE 400px */
+@media(max-width:400px){
+  .h1{font-size:24px!important}
+  .hero-cta-btn{width:100%!important;max-width:280px!important}
+  .hero-demo-group{width:100%!important;max-width:280px!important}
+  .pq-grid{grid-template-columns:1fr!important}
+  .foot-grid{grid-template-columns:1fr!important}
+  .hero-trust{gap:10px!important;font-size:12px!important}
 }
 </style>
 </head>
