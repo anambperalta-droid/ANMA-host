@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/resend-api/:path*", "destination": "https://api.resend.com/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

@@ -918,28 +918,31 @@ export default function Presupuesto() {
   const sendByEmail = async () => {
     const clientEmail = get('clients').find(cl => cl.company === form.company || cl.contact === form.contact)?.email || ''
     if (!clientEmail) { toast('Este cliente no tiene email cargado. Agregalo en Clientes.', 'er'); return }
-    if (!c.resendApiKey) { toast('Configurá el email en Configuración → Integraciones → Email.', 'er'); return }
+    const apiKey = (c.resendApiKey || '').trim()
+    if (!apiKey) { toast('Configurá el email en Configuración → Integraciones → Email.', 'er'); return }
     setEmailSending(true)
     try {
       const html = buildPdfHtml()
-      const res = await fetch('https://api.resend.com/emails', {
+      // /resend-api → proxy transparente (Vite en dev, Vercel en prod) — sin CORS
+      const res = await fetch('/resend-api/emails', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${c.resendApiKey}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: c.resendFrom || 'onboarding@resend.dev',
+          from: (c.resendFrom || '').trim() || 'onboarding@resend.dev',
           to: [clientEmail],
-          subject: `Presupuesto de ${c.businessName || 'ANMA'}`,
+          subject: `Presupuesto ${form.number ? `#${form.number} ` : ''}— ${c.businessName || 'ANMA'}`,
           html,
         }),
       })
+      const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        toast(`Presupuesto enviado a ${clientEmail}`, 'ok')
+        toast(`✅ Presupuesto enviado a ${clientEmail}`, 'ok')
       } else {
-        const d = await res.json().catch(() => ({}))
-        toast(`Error al enviar: ${d.message || 'verificá la configuración de email'}`, 'er')
+        const msg = data.message || data.name || data.error || `Error ${res.status}`
+        toast(`Error Resend: ${msg}`, 'er')
       }
-    } catch {
-      toast('No se pudo enviar el email. Verificá tu conexión.', 'er')
+    } catch (e) {
+      toast(`Error de red: ${e.message || 'intentá de nuevo'}`, 'er')
     }
     setEmailSending(false)
   }

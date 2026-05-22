@@ -224,30 +224,35 @@ export default function Config() {
   const [gsShowInstructions, setGsShowInstructions] = useState(!initSheets.url)
   const [mpTesting, setMpTesting] = useState(false)
   const testResend = async () => {
-    if (!resendKey.trim() || !resendFrom.trim()) { toast('Completá API Key y email de envío primero.', 'er'); return }
+    const key   = resendKey.trim()
+    const email = resendFrom.trim()
+    if (!key || !email) { toast('Completá API Key y email de envío primero.', 'er'); return }
     setResendTesting(true)
     setResendTestResult(null)
     try {
-      const res = await fetch('https://api.resend.com/emails', {
+      // /resend-api → proxy transparente (Vite en dev, Vercel en prod) — sin CORS
+      const res = await fetch('/resend-api/emails', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey.trim()}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: resendFrom.trim(),
-          to: [resendFrom.trim()],
+          from: 'onboarding@resend.dev',
+          to: [email],
           subject: 'Test de conexión — ANMA Regalos',
-          html: '<p>✅ La integración de email está funcionando correctamente.</p>',
+          html: '<p>✅ Conexión con Resend verificada correctamente desde ANMA Regalos.</p>',
         }),
       })
+      const data = await res.json().catch(() => ({}))
       if (res.ok) {
         setResendTestResult('ok')
-        updateConfig({ resendApiKey: resendKey.trim(), resendFrom: resendFrom.trim(), resendEnabled: true })
+        updateConfig({ resendApiKey: key, resendFrom: email, resendEnabled: true })
         setResendEnabled(true)
         setResendShowInstructions(false)
       } else {
-        setResendTestResult('error')
+        const msg = data.message || data.name || data.error || `Error ${res.status}`
+        setResendTestResult(msg)
       }
     } catch (e) {
-      setResendTestResult('error')
+      setResendTestResult(e.message || 'Error de red inesperado')
     }
     setResendTesting(false)
   }
