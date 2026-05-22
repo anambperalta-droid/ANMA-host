@@ -196,7 +196,7 @@ export default function Clientes() {
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2b', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' })
+  const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' })
   const [newNote, setNewNote] = useState('')
   const [previewBudget, setPreviewBudget] = useState(null)
   const fileRef = useRef(null)
@@ -215,7 +215,7 @@ export default function Clientes() {
   ) : clients
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', clientType: 'b2b', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' }); setModal(true) }
+  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' }); setModal(true) }
   const save = () => {
     if (!form.company) { toast('Ingresá el nombre de la empresa.', 'er'); return }
     saveEntity('clients', form); setModal(false); toast('Cliente guardado', 'ok')
