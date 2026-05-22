@@ -196,7 +196,7 @@ export default function Presupuesto() {
   const feats = c.features || {}
 
   const [form, setForm] = useState({
-    contact: '', company: '', wa: '', ocasion: '', delivery: '', deliveryDate: '',
+    contact: '', company: '', wa: '', clientEmail: '', ocasion: '', delivery: '', deliveryDate: '',
     shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
     margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0, discount: 0,
   })
@@ -230,7 +230,7 @@ export default function Presupuesto() {
       const b = get('budgets').find(x => x.id === Number(id))
       if (b) {
         setForm({
-          contact: b.contact || '', company: b.company || '', wa: b.wa || '',
+          contact: b.contact || '', company: b.company || '', wa: b.wa || '', clientEmail: b.clientEmail || '',
           ocasion: b.ocasion || '', delivery: b.delivery || '', deliveryDate: b.deliveryDate || '',
           shipCost: b.shipCost || 0, shipCharged: b.shipCharged !== false,
           status: b.status || 'draft',
@@ -283,7 +283,7 @@ export default function Presupuesto() {
   const setF = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
   const handleClientSelect = (client) => {
-    setForm(f => ({ ...f, contact: client.contact || '', company: client.company || '', wa: client.wa || '' }))
+    setForm(f => ({ ...f, contact: client.contact || '', company: client.company || '', wa: client.wa || '', clientEmail: client.email || '' }))
   }
 
   const updateItem = (idx, key, val) => {
@@ -916,12 +916,8 @@ export default function Presupuesto() {
 
   const [emailSending, setEmailSending] = useState(false)
   const sendByEmail = async () => {
-    const norm = s => (s || '').trim().toLowerCase()
-    const clientEmail = get('clients').find(cl =>
-      (norm(form.company) && norm(cl.company) === norm(form.company)) ||
-      (norm(form.contact) && norm(cl.contact) === norm(form.contact))
-    )?.email || ''
-    if (!clientEmail) { toast('Este cliente no tiene email cargado. Agregalo en Clientes.', 'er'); return }
+    const clientEmail = form.clientEmail.trim()
+    if (!clientEmail) { toast('Agregá el email del cliente en el Paso 1.', 'er'); return }
     const svc = (c.ejsServiceId || '').trim()
     const tpl = (c.ejsTemplateId || '').trim()
     const pub = (c.ejsPublicKey || '').trim()
@@ -1006,6 +1002,10 @@ export default function Presupuesto() {
                     {waTouched && form.wa && !isValidWA(form.wa) && (
                       <div className="fg-err"><i className="fa fa-circle-exclamation" /> Formato no válido. Ej: <b>+54 351 1234567</b> (8 a 15 dígitos)</div>
                     )}
+                  </div>
+                  <div className="fg">
+                    <label>Email del cliente</label>
+                    <input type="email" value={form.clientEmail} onChange={e => setF('clientEmail', e.target.value)} placeholder="cliente@email.com" />
                   </div>
                   <div className="fg"><label>Ocasión</label>
                     <select value={form.ocasion} onChange={e => setF('ocasion', e.target.value)}>

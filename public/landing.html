@@ -56,7 +56,10 @@ a{color:inherit;text-decoration:none}
 .h1{font-size:54px;line-height:1.05;font-weight:900;letter-spacing:-1.5px;margin:0 0 14px}
 .h1 em{font-style:normal;background:linear-gradient(90deg,#fbcfe8,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{font-size:18px;color:rgba(255,255,255,.78);max-width:540px;margin:0 0 20px;line-height:1.6}
-.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end}
+.hero-cta-btn{width:200px;justify-content:center}
+.hero-demo-group{display:flex;flex-direction:column;align-items:center;gap:5px}
+.hero-demo-tag{font-size:11px;color:rgba(255,255,255,.62);font-weight:600;margin:0;font-style:italic;letter-spacing:.2px}
 .hero-trust{display:flex;align-items:center;gap:18px;font-size:13px;color:rgba(255,255,255,.65);flex-wrap:wrap;margin-top:4px}
 .hero-trust i{color:#f472b6}
 .mock{position:relative;background:#1F1338;border-radius:18px;padding:14px;box-shadow:0 30px 80px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);transform:rotate(-1.5deg);transition:transform .4s}
@@ -284,6 +287,16 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 @media(max-width:780px){.foot-grid{grid-template-columns:1fr 1fr;gap:30px}}
 @media(max-width:480px){.foot-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.mock-notify{font-size:10px;right:10px}.mock-badge{display:none}}
+@media(max-width:540px){
+  .h1{font-size:28px!important;letter-spacing:-.4px!important;line-height:1.1!important}
+  .lead{font-size:16px!important}
+  .hero{padding:36px 0 48px!important}
+  section{padding:40px 0!important}
+  .h2{font-size:26px!important;letter-spacing:-.4px!important}
+  .hero-ctas{flex-direction:column!important;align-items:center!important}
+  .hero-cta-btn{width:220px!important}
+  .hero-demo-group{width:220px!important}
+}
 </style>
 </head>
 <body>
@@ -314,8 +327,11 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
       <h1 class="h1">Hacé que cada regalo cuente,<br>sin que te cueste la <em>paz</em>.</h1>
       <p class="lead">ANMA Regalos es el soporte invisible detrás de cada entrega. Centralizá tus pedidos, stock de insumos y mensajes en un solo lugar. Diseñado especialmente para quienes crean experiencias, porque para diseñar con amor, primero necesitás respirar tranquila con tu orden.</p>
       <div class="hero-ctas">
-        <a href="https://anma-host.vercel.app/login" class="btn btn-action"><i class="fa-solid fa-rocket"></i> Empezar hoy</a>
-        <a href="/demo.html" class="btn btn-ghost"><i class="fa-solid fa-circle-play"></i> Quiero mi respiro</a>
+        <a href="https://anma-host.vercel.app/login" class="btn btn-action hero-cta-btn"><i class="fa-solid fa-rocket"></i> Comenzar Ahora →</a>
+        <div class="hero-demo-group">
+          <span class="hero-demo-tag">Trae aire fresco a tu gestión</span>
+          <a href="/demo.html" class="btn btn-ghost hero-cta-btn"><i class="fa-solid fa-play"></i> Ver Demo</a>
+        </div>
       </div>
       <div class="hero-trust">
         <span><i class="fa-solid fa-heart"></i> Sin tarjeta</span>
