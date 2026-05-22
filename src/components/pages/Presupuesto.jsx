@@ -715,14 +715,16 @@ export default function Presupuesto() {
       const altHdr = isMultiAlt ? `
         <tr>
           <td colspan="4" style="background:${bc};padding:8px 12px;border:none">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:rgba(255,255,255,.2);color:#fff;border-radius:4px;font-size:9px;font-weight:800">${altIdx + 1}</span>
+            <table width="100%" cellpadding="0" cellspacing="0"><tr>
+              <td style="vertical-align:middle">
+                <span style="display:inline-block;text-align:center;width:18px;height:18px;line-height:18px;background:rgba(255,255,255,.2);color:#fff;border-radius:4px;font-size:9px;font-weight:800">${altIdx + 1}</span>
                 <span style="font-size:12px;font-weight:800;color:#fff;letter-spacing:-.1px">${altLabel}</span>
                 ${alt.approved ? '<span style="font-size:8px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px">✓ Aprobada</span>' : ''}
-              </div>
-              <span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.9)">${fmt(altTotals.total)}</span>
-            </div>
+              </td>
+              <td style="text-align:right;vertical-align:middle">
+                <span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.9)">${fmt(altTotals.total)}</span>
+              </td>
+            </tr></table>
           </td>
         </tr>` : ''
 
@@ -736,10 +738,8 @@ export default function Presupuesto() {
         const kitRow = `
           <tr>
             <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:9px 9px 5px">
-              <div style="display:flex;align-items:center;gap:7px">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;background:${bc};color:#fff;border-radius:4px;font-size:8px;font-weight:800;letter-spacing:-.2px;flex-shrink:0">K</span>
-                <strong style="font-size:12px;color:#1E1B4B;letter-spacing:-.2px">${i.name || 'Kit sin nombre'}</strong>
-              </div>
+              <span style="display:inline-block;text-align:center;width:17px;height:17px;line-height:17px;background:${bc};color:#fff;border-radius:4px;font-size:8px;font-weight:800;letter-spacing:-.2px">K</span>
+              <strong style="font-size:12px;color:#1E1B4B;letter-spacing:-.2px">${i.name || 'Kit sin nombre'}</strong>
             </td>
             <td style="background:${bg};border-bottom:none;text-align:center;font-weight:700;font-size:12px;padding:9px 9px 5px">${i.qty}</td>
             <td style="background:${bg};border-bottom:none;text-align:right;padding:9px 9px 5px">${fmt(i.priceUnit)}</td>
@@ -810,7 +810,8 @@ export default function Presupuesto() {
     <style>
       *{box-sizing:border-box}
       body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;padding:18px 26px 70px;color:#1E1B4B;font-size:11.5px;line-height:1.45;background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
-      .pdf-hd{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:9px;margin-bottom:0}
+      .pdf-hd{width:100%;border-collapse:collapse;margin-bottom:0}
+      .pdf-hd td{padding-bottom:9px;vertical-align:top}
       .pdf-brand .bname{font-size:22px;font-weight:800;color:${brandColor};letter-spacing:-.5px;line-height:1.1}
       .pdf-brand img{height:34px;display:block}
       .pdf-brand .bsub{font-size:9px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
@@ -822,56 +823,61 @@ export default function Presupuesto() {
       th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
       td{padding:6px 9px;border-bottom:1px solid #EEF0F7;font-size:11px}
       tr:last-child td{border-bottom:none}
-      .totals{margin-top:6px;display:flex;justify-content:flex-end}
-      .totals-box{min-width:240px;padding:10px 14px;background:linear-gradient(135deg,${brandColor}0d,${brandColor}1a);border-radius:8px;border:1px solid ${brandColor}33}
-      .totals-row{display:flex;justify-content:space-between;padding:2px 0;font-size:11px;color:#555}
-      .totals-row.big{font-size:16px;font-weight:800;color:${brandColor};padding-top:6px;margin-top:4px;border-top:1px solid ${brandColor}33}
-      .totals-row.senia{font-size:11.5px;font-weight:700;color:${brandColor}}
+      .totals{margin-top:6px}
+      .totals-box{width:260px;margin-left:auto;padding:10px 14px;background:linear-gradient(135deg,${brandColor}0d,${brandColor}1a);border-radius:8px;border:1px solid ${brandColor}33}
+      .totals-row{width:100%;border-collapse:collapse;font-size:11px;color:#555;margin:2px 0}
+      .totals-row td{padding:2px 0}
+      .totals-row .tv{text-align:right;font-family:monospace;font-weight:600;white-space:nowrap}
+      .tr-big td{font-size:16px;font-weight:800;color:${brandColor};padding-top:6px;border-top:1px solid ${brandColor}33}
+      .tr-big .tv{font-size:16px;font-weight:800}
+      .tr-senia td{font-size:11.5px;font-weight:700;color:${brandColor}}
       .note{margin-top:12px;padding:9px 12px;background:#F4F6FD;border-left:3px solid ${brandColor};border-radius:4px;font-size:11px;color:#333}
       .footer{margin-top:14px;padding-top:8px;border-top:1px solid #E5E7F0;font-size:9.5px;color:#999;line-height:1.5}
       .cobro-block{margin-top:12px;padding:10px 14px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:8px}
       .cobro-title{font-size:10px;font-weight:700;color:#065F46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-      .cobro-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
+      .cobro-tbl{width:100%;border-collapse:collapse;font-size:11px}
+      .cobro-tbl td{padding:3px 0}
       .cobro-lbl{color:#666;font-weight:500}
-      .cobro-val{font-weight:700;color:#1E1B4B;font-family:monospace}
-      .copy-cbu{background:#fff;border:1px solid #86EFAC;border-radius:5px;padding:2px 8px;font-size:9.5px;color:#065F46;cursor:pointer;margin-left:8px;font-family:inherit;display:inline-flex;align-items:center;gap:3px;flex-shrink:0}
+      .cobro-val{font-weight:700;color:#1E1B4B;font-family:monospace;text-align:right}
+      .copy-cbu{background:#fff;border:1px solid #86EFAC;border-radius:5px;padding:2px 8px;font-size:9.5px;color:#065F46;cursor:pointer;margin-left:8px;font-family:inherit}
       .copy-cbu:hover{background:#DCFCE7}
       @media print{.copy-cbu{display:none}}
       .iva-box{margin-top:10px;padding:10px 14px;background:#FAFBFD;border:1px solid #E5E7F0;border-radius:6px;font-size:10.5px;color:#374151}
       .iva-title{font-weight:700;margin-bottom:5px;font-size:10px;color:#1E1B4B;text-transform:uppercase;letter-spacing:.3px}
-      .iva-row{display:flex;justify-content:space-between;padding:1.5px 0}
-      .iva-row span:last-child{font-family:monospace;font-weight:600}
+      .iva-tbl{width:100%;border-collapse:collapse}
+      .iva-tbl td{padding:1.5px 0}
+      .iva-tbl .iv{text-align:right;font-family:monospace;font-weight:600}
       .accept-fab{position:fixed;bottom:18px;right:18px;background:#25D366;color:#fff;padding:13px 20px;border-radius:999px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(37,211,102,.4);font-size:12.5px;display:inline-flex;align-items:center;gap:7px}
       .accept-fab:hover{background:#1da851}
       @media print{.accept-fab{display:none}body{padding:18px 22px}}
     </style></head><body>
-    <div class="pdf-hd">
-      <div class="pdf-brand">
+    <table class="pdf-hd" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td class="pdf-brand">
         ${c.logo ? '<img src="' + c.logo + '" alt="' + bName + '">' : '<div class="bname">' + bName + '</div>'}
         <div class="bsub">Regalos Corporativos</div>
-      </div>
-      <div class="pdf-meta">
+      </td>
+      <td class="pdf-meta" style="text-align:right">
         <div><b>Presupuesto:</b> ${budgetNum}</div>
         <div><b>Fecha:</b> ${fmtD(new Date().toISOString().slice(0, 10))}</div>
         ${(form.contact || form.company) ? '<div><b>Cliente:</b> ' + [form.contact, form.company].filter(Boolean).join(' / ') + '</div>' : ''}
         ${form.deliveryDate ? '<div><b>Entrega:</b> ' + fmtD(form.deliveryDate) + '</div>' : ''}
         ${c.razonSocial ? '<div style="font-size:9.5px;color:#888">' + c.razonSocial + (c.cuit ? ' · CUIT: ' + c.cuit : '') + '</div>' : ''}
         <div class="vig">⏱ Válido hasta: ${fmtD(vigenciaISO)}</div>
-      </div>
-    </div>
+      </td>
+    </tr></table>
     <div class="pdf-div"></div>
     <table>
       <thead><tr><th>Producto</th><th style="text-align:center;width:55px">Cant.</th><th style="text-align:right;width:90px">P. unit.</th><th style="text-align:right;width:95px">Subtotal</th></tr></thead>
       <tbody>${allAltRows}</tbody>
     </table>
     <div class="totals"><div class="totals-box">
-      ${isMultiAlt ? `<div class="totals-row" style="font-size:9.5px;color:#6B7280;font-style:italic;margin-bottom:2px"><span>Totales de: ${(alternatives.find(a => a.approved) || alternatives[0])?.label || 'Alternativa 1'}${alternatives.some(a => a.approved) ? ' ✓' : ''}</span></div>` : ''}
-      <div class="totals-row"><span>Subtotal productos</span><span>${fmt(pdfRevenue)}</span></div>
-      ${pdfDiscAmt > 0 ? `<div class="totals-row" style="color:#DC2626"><span>Descuento (${pdfDiscPct}%)</span><span>−${fmt(pdfDiscAmt)}</span></div>` : ''}
-      ${showEnvioLeyenda ? `<div class="totals-row" style="font-size:10px;color:#92400E;font-style:italic"><span>🚚 Costo de envío sujeto a pesaje y despacho</span><span>A cotizar</span></div>` : ''}
-      <div class="totals-row big"><span>Total</span><span>${fmt(pdfTotal)}</span></div>
-      <div class="totals-row senia"><span>Seña (${form.deposit}%)</span><span>${fmt(pdfDeposit)}</span></div>
-      <div class="totals-row" style="color:#059669;font-weight:700"><span>Saldo contra entrega</span><span>${fmt(pdfTotal - pdfDeposit)}</span></div>
+      ${isMultiAlt ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:9.5px;color:#6B7280;font-style:italic;margin-bottom:2px"><tr><td>Totales de: ${(alternatives.find(a => a.approved) || alternatives[0])?.label || 'Alternativa 1'}${alternatives.some(a => a.approved) ? ' ✓' : ''}</td></tr></table>` : ''}
+      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0"><tr><td>Subtotal productos</td><td class="tv">${fmt(pdfRevenue)}</td></tr></table>
+      ${pdfDiscAmt > 0 ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#DC2626"><tr><td>Descuento (${pdfDiscPct}%)</td><td class="tv">−${fmt(pdfDiscAmt)}</td></tr></table>` : ''}
+      ${showEnvioLeyenda ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:10px;color:#92400E;font-style:italic"><tr><td>🚚 Costo de envío sujeto a pesaje y despacho</td><td class="tv">A cotizar</td></tr></table>` : ''}
+      <table class="totals-row tr-big" width="100%" cellpadding="0" cellspacing="0"><tr><td>Total</td><td class="tv">${fmt(pdfTotal)}</td></tr></table>
+      <table class="totals-row tr-senia" width="100%" cellpadding="0" cellspacing="0"><tr><td>Seña (${form.deposit}%)</td><td class="tv">${fmt(pdfDeposit)}</td></tr></table>
+      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#059669;font-weight:700"><tr><td>Saldo contra entrega</td><td class="tv">${fmt(pdfTotal - pdfDeposit)}</td></tr></table>
     </div></div>
     ${c.ivaEnabled ? (() => {
       const total = pdfTotal
@@ -881,8 +887,8 @@ export default function Presupuesto() {
       const otrosImpAmt = total * otrosR
       return `<div class="iva-box">
         <div class="iva-title">Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)</div>
-        <div class="iva-row"><span>IVA Contenido (${(ivaR*100).toFixed(0)}%)</span><span>${fmt(ivaContenido)}</span></div>
-        ${otrosR > 0 ? `<div class="iva-row"><span>Otros Impuestos Nacionales Indirectos</span><span>${fmt(otrosImpAmt)}</span></div>` : ''}
+        <table class="iva-tbl" width="100%" cellpadding="0" cellspacing="0"><tr><td>IVA Contenido (${(ivaR*100).toFixed(0)}%)</td><td class="iv">${fmt(ivaContenido)}</td></tr></table>
+        ${otrosR > 0 ? `<table class="iva-tbl" width="100%" cellpadding="0" cellspacing="0"><tr><td>Otros Impuestos Nacionales Indirectos</td><td class="iv">${fmt(otrosImpAmt)}</td></tr></table>` : ''}
       </div>`
     })() : ''}
     ${form.noteCli ? `<div class="note">${form.noteCli}</div>` : ''}
@@ -894,10 +900,12 @@ export default function Presupuesto() {
       return `<div class="cobro-block">
         <div class="cobro-title">💳 Datos para el pago</div>
         ${bank && bank.enabled && (bank.cbu || bank.alias) ? `
-          ${bank.cbu ? '<div class="cobro-row"><span class="cobro-lbl">CBU</span><div style="display:flex;align-items:center"><span class="cobro-val">' + bank.cbu + '</span><button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.cbu + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></div></div>' : ''}
-          ${bank.alias ? '<div class="cobro-row"><span class="cobro-lbl">Alias</span><div style="display:flex;align-items:center"><span class="cobro-val">' + bank.alias + '</span><button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.alias + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></div></div>' : ''}
-          ${bank.accountName ? '<div class="cobro-row"><span class="cobro-lbl">Titular</span><span class="cobro-val">' + bank.accountName + '</span></div>' : ''}
-          ${bank.bank ? '<div class="cobro-row"><span class="cobro-lbl">Banco</span><span class="cobro-val">' + bank.bank + '</span></div>' : ''}
+          <table class="cobro-tbl" width="100%" cellpadding="0" cellspacing="0">
+          ${bank.cbu ? '<tr><td class="cobro-lbl">CBU</td><td class="cobro-val">' + bank.cbu + '<button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.cbu + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></td></tr>' : ''}
+          ${bank.alias ? '<tr><td class="cobro-lbl">Alias</td><td class="cobro-val">' + bank.alias + '<button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.alias + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></td></tr>' : ''}
+          ${bank.accountName ? '<tr><td class="cobro-lbl">Titular</td><td class="cobro-val">' + bank.accountName + '</td></tr>' : ''}
+          ${bank.bank ? '<tr><td class="cobro-lbl">Banco</td><td class="cobro-val">' + bank.bank + '</td></tr>' : ''}
+          </table>
         ` : ''}
       </div>`
     })()}
