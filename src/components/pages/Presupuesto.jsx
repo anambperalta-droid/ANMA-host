@@ -930,6 +930,8 @@ export default function Presupuesto() {
         subject: `Presupuesto ${budgetNum} — ${c.businessName || 'ANMA'}`,
         html_body: buildPdfHtml(),
         from_name: c.businessName || 'ANMA',
+        client_name: form.contact || form.company || 'Cliente',
+        budget_num: budgetNum,
       }, pub)
       toast(`Presupuesto enviado a ${clientEmail}`, 'ok')
     } catch (e) {
