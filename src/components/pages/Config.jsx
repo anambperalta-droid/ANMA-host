@@ -217,6 +217,7 @@ export default function Config() {
   const [ejsServiceId, setEjsServiceId] = useState(c.ejsServiceId || '')
   const [ejsTemplateId, setEjsTemplateId] = useState(c.ejsTemplateId || '')
   const [ejsPublicKey, setEjsPublicKey] = useState(c.ejsPublicKey || '')
+  const [ejsTestEmail, setEjsTestEmail] = useState(c.contactEmail || c.email || '')
   const [ejsEnabled, setEjsEnabled] = useState(c.ejsEnabled === true)
   const [ejsTesting, setEjsTesting] = useState(false)
   const [ejsTestResult, setEjsTestResult] = useState(null)
@@ -227,12 +228,13 @@ export default function Config() {
   const testEmailJS = async () => {
     const svc = ejsServiceId.trim(), tpl = ejsTemplateId.trim(), pub = ejsPublicKey.trim()
     if (!svc || !tpl || !pub) { toast('Completá los 3 campos: Service ID, Template ID y Public Key.', 'er'); return }
+    if (!ejsTestEmail.trim()) { toast('Ingresá un email de prueba para verificar la conexión.', 'er'); return }
     setEjsTesting(true)
     setEjsTestResult(null)
     try {
       const emailjs = (await import('@emailjs/browser')).default
       await emailjs.send(svc, tpl, {
-        to_email: c.contactEmail || c.email || '',
+        to_email: ejsTestEmail.trim(),
         subject: 'Test de conexión — ANMA Regalos',
         html_body: '<p>✅ EmailJS configurado correctamente en ANMA Regalos.</p>',
         from_name: c.businessName || 'ANMA Regalos',
@@ -1050,6 +1052,10 @@ export default function Config() {
                       placeholder="xxxxxxxxxxxxxxxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
                   </div>
                 </div>
+                <div className="fg" style={{ marginBottom: 10, maxWidth: 320 }}>
+                  <label><i className="fa fa-paper-plane" style={{ marginRight: 4 }} />Email de prueba (para verificar)</label>
+                  <input type="email" value={ejsTestEmail} onChange={e => setEjsTestEmail(e.target.value)} placeholder="tu@gmail.com" />
+                </div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <button className="btn btn-ghost" onClick={testEmailJS} disabled={ejsTesting} style={{minHeight:44}}>
                     <i className={`fa ${ejsTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
@@ -1061,7 +1067,7 @@ export default function Config() {
                   {ejsTestResult && (
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, fontSize: 11.5, fontWeight: 700, background: ejsTestResult === 'ok' ? 'rgba(16,185,129,.1)' : 'rgba(220,38,38,.1)', color: ejsTestResult === 'ok' ? '#059669' : 'var(--red)', border: `1.5px solid ${ejsTestResult === 'ok' ? 'rgba(16,185,129,.35)' : 'rgba(220,38,38,.35)'}`, maxWidth: 340, whiteSpace: 'normal', lineHeight: 1.4 }}>
                       <i className={`fa ${ejsTestResult === 'ok' ? 'fa-circle-check' : 'fa-circle-xmark'}`} style={{ flexShrink: 0 }} />
-                      {ejsTestResult === 'ok' ? '¡Conexión exitosa! El email de prueba fue enviado.' : ejsTestResult}
+                      {ejsTestResult === 'ok' ? '¡Conexión exitosa! Revisá tu bandeja de entrada.' : ejsTestResult}
                     </div>
                   )}
                 </div>
