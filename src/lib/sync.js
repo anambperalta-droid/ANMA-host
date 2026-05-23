@@ -11,19 +11,26 @@ function collectData() {
 }
 
 /**
- * Merge two arrays by `id`.
- * – Cloud items are authoritative (used as-is).
- * – Local-only items (id not present in cloud) are appended.
- * This guarantees we NEVER lose a record that exists locally.
+ * Merge two arrays by `id` using last-write-wins per item.
+ * – Items only in remote: included as-is.
+ * – Items only in local: always included (never lose local-only records).
+ * – Items in both: the version with the higher `updatedAt` wins.
+ *   Items without `updatedAt` (legacy) default to 0 → remote wins (safe).
  */
 function mergeArraysById(local, remote) {
   if (!Array.isArray(remote)) return Array.isArray(local) ? local : []
   if (!Array.isArray(local) || local.length === 0) return remote
-  const remoteIds = new Set(
-    remote.map(x => (x?.id != null ? String(x.id) : null)).filter(Boolean)
-  )
-  const localOnly = local.filter(x => x?.id != null && !remoteIds.has(String(x.id)))
-  return localOnly.length > 0 ? [...remote, ...localOnly] : remote
+  const merged = new Map()
+  remote.forEach(x => { if (x?.id != null) merged.set(String(x.id), x) })
+  local.forEach(x => {
+    if (x?.id == null) return
+    const k = String(x.id)
+    const existing = merged.get(k)
+    if (!existing || (x.updatedAt || 0) > (existing.updatedAt || 0)) {
+      merged.set(k, x)
+    }
+  })
+  return Array.from(merged.values())
 }
 
 let _uid    = null   // current auth user id
@@ -145,7 +152,13 @@ export async function pullFromCloud(userId) {
         dbW(k, merged)
       } else if (Array.isArray(cloud[k]) && Array.isArray(local)) {
         const merged = mergeArraysById(local, cloud[k])
-        if (merged.length > cloud[k].length) needsPushBack = true
+        const cloudMap = new Map(cloud[k].map(x => [String(x?.id), x]).filter(([id]) => id !== 'null'))
+        const localWon = merged.some(item => {
+          if (item?.id == null) return false
+          const cv = cloudMap.get(String(item.id))
+          return !cv || (item.updatedAt || 0) > (cv.updatedAt || 0)
+        })
+        if (merged.length !== cloud[k].length || localWon) needsPushBack = true
         dbW(k, merged)
       } else {
         dbW(k, cloud[k])
