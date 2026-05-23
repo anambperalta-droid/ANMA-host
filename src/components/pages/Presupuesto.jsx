@@ -880,16 +880,17 @@ export default function Presupuesto() {
       <thead><tr><th>Producto</th><th style="text-align:center;width:55px">Cant.</th><th style="text-align:right;width:90px">P. unit.</th><th style="text-align:right;width:95px">Subtotal</th></tr></thead>
       <tbody>${allAltRows}</tbody>
     </table>
+    ${showPayPdf ? `
     <div class="totals"><div class="totals-box">
-      ${isMultiAlt ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:9.5px;color:#6B7280;font-style:italic;margin-bottom:2px"><tr><td>Totales de: ${(alternatives.find(a => a.approved) || alternatives[0])?.label || 'Alternativa 1'}${alternatives.some(a => a.approved) ? ' ✓' : ''}</td></tr></table>` : ''}
+      ${isMultiAlt && approvedAltPdf ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:9.5px;color:#059669;font-style:italic;margin-bottom:3px"><tr><td>✓ Aprobada: ${approvedAltPdf.label}</td><td class="tv"></td></tr></table>` : ''}
       <table class="totals-row" width="100%" cellpadding="0" cellspacing="0"><tr><td>Subtotal productos</td><td class="tv">${fmt(pdfRevenue)}</td></tr></table>
       ${pdfDiscAmt > 0 ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#DC2626"><tr><td>Descuento (${pdfDiscPct}%)</td><td class="tv">−${fmt(pdfDiscAmt)}</td></tr></table>` : ''}
       ${showEnvioLeyenda ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:10px;color:#92400E;font-style:italic"><tr><td>🚚 Costo de envío sujeto a pesaje y despacho</td><td class="tv">A cotizar</td></tr></table>` : ''}
-      ${isMultiAlt && approvedAltPdf ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:9.5px;color:#059669;font-style:italic;margin-bottom:3px"><tr><td>✓ Aprobada: ${approvedAltPdf.label}</td><td class="tv"></td></tr></table>` : ''}
       <table class="totals-row tr-big" width="100%" cellpadding="0" cellspacing="0"><tr><td>Total</td><td class="tv">${fmt(pdfTotal)}</td></tr></table>
-      ${showPayPdf ? `<table class="totals-row tr-senia" width="100%" cellpadding="0" cellspacing="0"><tr><td>Seña (${form.deposit}%)</td><td class="tv">${fmt(pdfDeposit)}</td></tr></table>
-      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#059669;font-weight:700"><tr><td>Saldo contra entrega</td><td class="tv">${fmt(pdfTotal - pdfDeposit)}</td></tr></table>` : ''}
+      <table class="totals-row tr-senia" width="100%" cellpadding="0" cellspacing="0"><tr><td>Seña (${form.deposit}%)</td><td class="tv">${fmt(pdfDeposit)}</td></tr></table>
+      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#059669;font-weight:700"><tr><td>Saldo contra entrega</td><td class="tv">${fmt(pdfTotal - pdfDeposit)}</td></tr></table>
     </div></div>
+    ` : ''}
     ${c.ivaEnabled && showPayPdf ? (() => {
       const total = pdfTotal
       const ivaR = (Number(c.ivaRate) || 21) / 100
