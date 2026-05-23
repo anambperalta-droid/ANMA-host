@@ -383,9 +383,9 @@ export default function Catalogo() {
                 </div>
                 <span className="cat-mob-item-price">{fmt(suggestedPrice(p.cost))}</span>
               </div>
-              <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()}>
-                <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
-                <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>
+              <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5,alignItems:'center',flexShrink:0 }}>
+                <button onClick={() => open(p)} title="Editar" style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
+                <button onClick={() => del(p.id)} title="Eliminar" style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-trash" /></button>
               </div>
             </div>
           )
@@ -464,9 +464,9 @@ export default function Catalogo() {
                       </td>
                     )}
                     <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
-                    <td><div className="acts">
-                      <button className="act edit" onClick={() => open(p)} title="Editar"><i className="fa fa-pen" /></button>
-                      <button className="act del" onClick={() => del(p.id)} title="Eliminar"><i className="fa fa-trash" /></button>
+                    <td><div className="acts" style={{ display:'flex',gap:5 }}>
+                      <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
+                      <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-trash" /></button>
                     </div></td>
                   </tr>
                 )

@@ -606,9 +606,9 @@ export default function Proveedores() {
                 </div>
                 <div className="prov-mob-prods">{np} prod{np !== 1 ? 's.' : '.'}</div>
               </div>
-              <div className="prov-mob-acts" onClick={e => e.stopPropagation()}>
-                <button className="prov-mob-act" title="Editar" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
-                <button className="prov-mob-act prov-mob-act-del" title="Eliminar" onClick={() => del(s.id)}><i className="fa fa-trash" /></button>
+              <div className="prov-mob-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5,alignItems:'center',flexShrink:0 }}>
+                <button title="Editar" onClick={() => openEdit(s)} style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
+                <button title="Eliminar" onClick={() => del(s.id)} style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-trash" /></button>
               </div>
             </div>
           )
@@ -676,10 +676,10 @@ export default function Proveedores() {
                   </td>
                   <td onClick={e => e.stopPropagation()}>
                     <div className="zt-acts">
-                      <button title="Editar" className="zt-icon-btn" style={{ background: 'var(--surface2)', color: 'var(--txt2)' }} onClick={() => openEdit(s)}>
+                      <button title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }} onClick={() => openEdit(s)}>
                         <i className="fa fa-pen" />
                       </button>
-                      <button title="Eliminar" className="zt-icon-btn" style={{ background: '#FEF2F2', color: '#DC2626' }} onClick={() => del(s.id)}>
+                      <button title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }} onClick={() => del(s.id)}>
                         <i className="fa fa-trash" />
                       </button>
                     </div>
@@ -713,9 +713,9 @@ export default function Proveedores() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
                 <span style={{ fontSize: 10, color: 'var(--txt3)' }}>{supplierProducts(s).length} producto{supplierProducts(s).length !== 1 ? 's' : ''}</span>
-                <div className="acts" onClick={e => e.stopPropagation()}>
-                  <button className="act edit" onClick={() => openEdit(s)}><i className="fa fa-pen" /></button>
-                  <button className="act del" onClick={() => del(s.id)}><i className="fa fa-trash" /></button>
+                <div className="acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5 }}>
+                  <button onClick={() => openEdit(s)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}><i className="fa fa-pen" /></button>
+                  <button onClick={() => del(s.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}><i className="fa fa-trash" /></button>
                 </div>
               </div>
             </div>

@@ -571,16 +571,15 @@ export default function Clientes() {
                         {c.wa && (
                           <button
                             title={isCold ? 'Recontactar — sin actividad >30d' : 'Re-vincular por WhatsApp'}
-                            className="zt-icon-btn"
-                            style={{ background: isCold ? '#FEF9C3' : 'var(--surface2)', color: isCold ? '#EAB308' : 'var(--txt3)' }}
+                            style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:isCold?'#FEF9C3':'var(--surface2)',color:isCold?'#EAB308':'var(--txt3)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}
                             onClick={e => openRevincul(c, e)}>
                             <i className="fa fa-bolt" />
                           </button>
                         )}
-                        <button title="Editar" className="zt-icon-btn" style={{ background: 'var(--surface2)', color: 'var(--txt2)' }} onClick={() => openEdit(c)}>
+                        <button title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }} onClick={() => openEdit(c)}>
                           <i className="fa fa-pen" />
                         </button>
-                        <button title="Eliminar" className="zt-icon-btn" style={{ background: '#FEF2F2', color: '#DC2626' }} onClick={() => del(c.id)}>
+                        <button title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }} onClick={() => del(c.id)}>
                           <i className="fa fa-trash" />
                         </button>
                       </div>
@@ -625,18 +624,21 @@ export default function Clientes() {
                     </div>
                   )}
                 </div>
-                <div className="nc-qact" onClick={e => e.stopPropagation()}>
+                <div className="nc-qact" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:4 }}>
                   {c.wa && (
-                    <button className="ibtn ibtn-wa ibtn-sm" title={`WhatsApp · ${c.wa}`} onClick={() => openWA(c)}>
+                    <button title={`WhatsApp · ${c.wa}`} onClick={() => openWA(c)}
+                      style={{ width:30,height:30,borderRadius:'50%',border:'none',background:'#DCFCE7',color:'#16A34A',cursor:'pointer',fontSize:13,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}>
                       <i className="fa-brands fa-whatsapp" />
                     </button>
                   )}
                   {c.email && (
-                    <a href={`mailto:${c.email}`} className="ibtn ibtn-email ibtn-sm" title={c.email} onClick={e => e.stopPropagation()}>
+                    <a href={`mailto:${c.email}`} title={c.email} onClick={e => e.stopPropagation()}
+                      style={{ width:30,height:30,borderRadius:'50%',border:'none',background:'#DBEAFE',color:'#2563EB',cursor:'pointer',fontSize:12,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,textDecoration:'none' }}>
                       <i className="fa fa-envelope" />
                     </a>
                   )}
-                  <button className="ibtn ibtn-edit ibtn-sm" title="Editar cliente" onClick={() => openEdit(c)}>
+                  <button title="Editar cliente" onClick={() => openEdit(c)}
+                    style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}>
                     <i className="fa fa-pen" />
                   </button>
                 </div>
@@ -720,22 +722,23 @@ export default function Clientes() {
               </div>
 
               {/* SECTOR DERECHO: action bar */}
-              <div className="cli-mob-acts" onClick={e => e.stopPropagation()}>
+              <div className="cli-mob-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5,alignItems:'center',flexShrink:0 }}>
                 {c.wa && (
-                  <button className="cli-mob-act"
+                  <button
                     title={isCold ? 'Recontactar — sin actividad >30d' : 'Re-vincular por WhatsApp'}
-                    style={{ background: isCold ? '#FEF9C3' : 'var(--surface2)', color: isCold ? '#EAB308' : 'var(--txt3)' }}
+                    style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:isCold?'#FEF9C3':'var(--surface2)',color:isCold?'#EAB308':'var(--txt3)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}
                     onClick={e => openRevincul(c, e)}>
                     <i className="fa fa-bolt" />
                   </button>
                 )}
-                <button className="cli-mob-act"
-                  style={{ background: 'var(--surface2)', color: 'var(--txt2)' }}
-                  title="Editar" onClick={() => openEdit(c)}>
+                <button
+                  title="Editar" onClick={() => openEdit(c)}
+                  style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
                   <i className="fa fa-pen" />
                 </button>
-                <button className="cli-mob-act cli-mob-act-del"
-                  title="Eliminar" onClick={() => del(c.id)}>
+                <button
+                  title="Eliminar" onClick={() => del(c.id)}
+                  style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
                   <i className="fa fa-trash" />
                 </button>
               </div>
