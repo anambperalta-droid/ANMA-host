@@ -184,7 +184,7 @@ export default function Config() {
   const [mpName, setMpName] = useState(c.mpName || '')
   const [mpCurrency, setMpCurrency] = useState(c.mpCurrency || 'ARS')
   const [mpSena, setMpSena] = useState(c.mpUseSena || false)
-  const [mpTestResult, setMpTestResult] = useState('')
+  const [mpTestResult, setMpTestResult] = useState(null)
   const [showMpToken, setShowMpToken] = useState(false)
   const [opShowMetrics, setOpShowMetrics] = useState(c.opShowMetrics !== false)
   const [opShowCosts, setOpShowCosts] = useState(c.opShowCosts !== false)
@@ -209,7 +209,7 @@ export default function Config() {
   const [gsAuto, setGsAuto] = useState(initSheets.autoSync !== false)
   const [gsLastSync, setGsLastSync] = useState(initSheets.lastSync)
   const [gsLastStatus, setGsLastStatus] = useState(initSheets.lastStatus)
-  const [gsTestResult, setGsTestResult] = useState('')
+  const [gsTestResult, setGsTestResult] = useState(null)
   const [gsShowScript, setGsShowScript] = useState(false)
   const [gsBulkLoading, setGsBulkLoading] = useState(false)
 
@@ -330,15 +330,14 @@ export default function Config() {
   }
   const testSheets = async () => {
     setGsTesting(true)
-    setGsTestResult('<span style="color:var(--amber)"><i class="fa fa-spinner fa-spin"></i> Enviando ping...</span>')
     const r = await testSheetsConnection(gsUrl.trim())
     if (r.ok) {
-      setGsTestResult(`<span style="color:var(--green)"><i class="fa fa-circle-check"></i> ${r.message}</span>`)
+      setGsTestResult({ ok: true, message: r.message })
       setSheetsConfig({ enabled: gsEnabled, url: gsUrl.trim(), autoSync: gsAuto, lastSync: new Date().toISOString(), lastStatus: 'ok' })
       setGsLastSync(new Date().toISOString()); setGsLastStatus('ok')
       setGsShowInstructions(false)
     } else {
-      setGsTestResult(`<span style="color:var(--red)"><i class="fa fa-circle-xmark"></i> ${r.message}</span>`)
+      setGsTestResult({ ok: false, message: r.message })
     }
     setGsTesting(false)
   }
@@ -363,10 +362,9 @@ export default function Config() {
   const testMP = async () => {
     if (!mpToken) { toast('Ingresá un Access Token.', 'er'); return }
     setMpTesting(true)
-    setMpTestResult('<span style="color:var(--amber)"><i class="fa fa-spinner fa-spin"></i> Probando...</span>')
     const r = await testMPConnection(mpToken)
-    if (r.ok) setMpTestResult(`<span style="color:var(--green)"><i class="fa fa-circle-check"></i> Conexión exitosa — ${r.count} métodos disponibles</span>`)
-    else setMpTestResult(`<span style="color:var(--red)"><i class="fa fa-circle-xmark"></i> Error: ${r.message}</span>`)
+    if (r.ok) setMpTestResult({ ok: true, count: r.count })
+    else setMpTestResult({ ok: false, message: r.message })
     setMpTesting(false)
   }
 
@@ -876,7 +874,13 @@ export default function Config() {
                     {mpTesting ? ' Probando...' : ' Probar conexión'}
                   </button>
                 </div>
-                {mpTestResult && <div style={{ marginTop: 12, fontSize: 12 }} dangerouslySetInnerHTML={{ __html: mpTestResult }} />}
+                {mpTestResult && (
+                  <div style={{ marginTop: 12, fontSize: 12 }}>
+                    {mpTestResult.ok
+                      ? <span style={{ color: 'var(--green)' }}><i className="fa fa-circle-check" /> Conexión exitosa — {mpTestResult.count} métodos disponibles</span>
+                      : <span style={{ color: 'var(--red)' }}><i className="fa fa-circle-xmark" /> Error: {mpTestResult.message}</span>}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1158,7 +1162,13 @@ export default function Config() {
                   </button>
                 </div>
 
-                {gsTestResult && <div style={{ marginTop: 12, fontSize: 12 }} dangerouslySetInnerHTML={{ __html: gsTestResult }} />}
+                {gsTestResult && (
+                  <div style={{ marginTop: 12, fontSize: 12 }}>
+                    {gsTestResult.ok
+                      ? <span style={{ color: 'var(--green)' }}><i className="fa fa-circle-check" /> {gsTestResult.message}</span>
+                      : <span style={{ color: 'var(--red)' }}><i className="fa fa-circle-xmark" /> {gsTestResult.message}</span>}
+                  </div>
+                )}
 
                 <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1283,7 +1293,7 @@ export default function Config() {
               <label className="f-lbl">¿Qué puede hacer?</label>
               <select value={invRole} onChange={e => setInvRole(e.target.value)} disabled={invLoading}
                 style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: 9, fontSize: 13, background: 'var(--surface)', color: 'var(--txt)' }}>
-                <option value="admin">Administrador — acceso total</option>
+                <option value="owner">Administrador — acceso total</option>
                 <option value="operator">Operador — operación diaria sin configuración</option>
                 <option value="viewer">Solo lectura — consulta sin editar</option>
               </select>

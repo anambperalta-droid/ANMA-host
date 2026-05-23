@@ -33,10 +33,11 @@ function mergeArraysById(local, remote) {
   return Array.from(merged.values())
 }
 
-let _uid    = null   // current auth user id
-let _wsId   = null   // workspace id (owner's user_id, resolved via memberships)
-let _role   = null   // 'owner' | 'operator' | 'viewer'
-let _timer  = null
+let _uid              = null   // current auth user id
+let _wsId             = null   // workspace id (owner's user_id, resolved via memberships)
+let _role             = null   // 'owner' | 'operator' | 'viewer'
+let _timer            = null
+let _beforeunloadFn   = null   // reference kept to allow removal on logout
 
 /** Resolve the workspace the user belongs to.
  *  Falls back to self-workspace (userId) for legacy / no-membership users. */
@@ -89,7 +90,19 @@ async function doPush(retryCount = 0) {
 /** Call once after login. Sets up the debounced write-hook. */
 export function initSync(userId) {
   _uid = userId
+
+  // Remove any previous beforeunload listener (handles logout + user switch)
+  if (_beforeunloadFn) {
+    window.removeEventListener('beforeunload', _beforeunloadFn)
+    _beforeunloadFn = null
+  }
+
   if (!userId) { _wsId = null; _role = null; setWriteHook(null); return }
+
+  // Flush immediately on tab close — avoids losing the last write during the 1500ms debounce
+  _beforeunloadFn = () => flushSync()
+  window.addEventListener('beforeunload', _beforeunloadFn)
+
   resolveWorkspace(userId).then(({ wsId, role }) => {
     _wsId = wsId
     _role = role

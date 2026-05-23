@@ -210,7 +210,7 @@ export default function Presupuesto() {
   ))
   const [editId, setEditId] = useState(null)
   const [marginBudgetedSaved, setMarginBudgetedSaved] = useState(null)
-  const [mpResult, setMpResult] = useState('')
+  const [mpResult, setMpResult] = useState(null)
   const [mpLoading, setMpLoading] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [waTouched, setWaTouched] = useState(false)
@@ -614,12 +614,12 @@ export default function Presupuesto() {
       const budget = { num: budgetNum, contact: form.contact, company: form.company, items, shipCost: form.shipCost }
       const result = await createPaymentLink({ budget, mp, depositPct: form.deposit })
       if (result.ok) {
-        setMpResult(`<a href="${result.link}" target="_blank" style="color:#009EE3;word-break:break-all">${result.amountLabel}: ${fmt(result.amount)} — Abrir link</a>`)
+        setMpResult({ ok: true, link: result.link, label: `${result.amountLabel}: ${fmt(result.amount)}` })
         toast('Link de pago creado', 'ok')
       } else {
-        setMpResult(`<span style="color:var(--red)">Error: ${result.message}</span>`)
+        setMpResult({ ok: false, message: result.message })
       }
-    } catch { setMpResult('<span style="color:var(--red)">Error de conexión</span>') }
+    } catch { setMpResult({ ok: false, message: 'Error de conexión' }) }
     setMpLoading(false)
   }
 
@@ -1705,7 +1705,13 @@ export default function Presupuesto() {
                 )}
               </div>
 
-              {mpResult && <div style={{ marginTop: 6, fontSize: 10, wordBreak: 'break-all', color: 'rgba(255,255,255,.65)' }} dangerouslySetInnerHTML={{ __html: mpResult }} />}
+              {mpResult && (
+                <div style={{ marginTop: 6, fontSize: 10, wordBreak: 'break-all' }}>
+                  {mpResult.ok
+                    ? <a href={mpResult.link} target="_blank" rel="noopener noreferrer" style={{ color: '#009EE3' }}>{mpResult.label} — Abrir link</a>
+                    : <span style={{ color: 'var(--red)' }}>Error: {mpResult.message}</span>}
+                </div>
+              )}
             </div>
 
             {/* ── 4. PAGO ONLINE ── Mercado Pago */}

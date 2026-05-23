@@ -1,19 +1,29 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { db, dbW } from '../lib/storage'
+import { useAuth } from './AuthContext'
 
-const STORAGE_KEY = 'anma3_tasks'
+const STORAGE_KEY = 'tasks'
 const TaskFabCtx = createContext(null)
 
 export function TaskFabProvider({ children }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [panelOpen, setPanelOpen] = useState(false)
-  const [tasks, setTasks] = useState([])
+  // Lazy init reads from user-scoped key if auth already resolved (session restore),
+  // or from global key on first load before auth — re-read on userId change below.
+  const [tasks, setTasks] = useState(() => db(STORAGE_KEY, []))
   const [focusMode, setFocusMode] = useState(false)
 
+  // Re-read from the correct user-scoped key whenever the logged-in user changes.
+  // Covers: login, logout, account switch.
   useEffect(() => {
-    try { setTasks(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []) } catch { setTasks([]) }
-  }, [])
+    setTasks(db(STORAGE_KEY, []))
+  }, [userId])
 
+  // Persist on every change. Fires after reads too, but that's idempotent.
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
+    dbW(STORAGE_KEY, tasks)
   }, [tasks])
 
   const activeTasks = tasks.filter(t => !t.done)

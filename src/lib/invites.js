@@ -50,10 +50,10 @@ export function getSiteByKey(key) {
  * @param {string} params.email          Email del invitado
  * @param {string} params.siteKey        'hub' | 'host'
  * @param {string} [params.fullName]     Nombre visible (metadata)
- * @param {string} [params.role]         'admin' | 'user' | 'viewer' (metadata)
+ * @param {string} [params.role]         'owner' | 'operator' | 'viewer' (metadata)
  * @returns {Promise<{ok: boolean, user: object}>}
  */
-export async function sendInvite({ email, siteKey, fullName = '', role = 'user' }) {
+export async function sendInvite({ email, siteKey, fullName = '', role = 'operator' }) {
   if (!email || !email.includes('@')) throw new Error('Email inválido')
   const site = getSiteByKey(siteKey)
   if (!site) throw new Error('Sitio inválido')
