@@ -190,7 +190,7 @@ function ClientCombo({ clients, value, onSelect, onChange }) {
 export default function Presupuesto() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { get, set, config, saveBudget } = useData()
+  const { get, config, saveBudget, deductKitStock } = useData()
   const toast = useToast()
   const c = config()
   const feats = c.features || {}
@@ -409,15 +409,18 @@ export default function Presupuesto() {
           ;(item.products || []).forEach(p => { c2 += num(p.costUnit) * num(p.qty) })
           return c2
         })()
-        totalCost += q * cu
-        totalRevenue += q * num(item.priceUnit)
-        totalQty += q
+        // Round per-item to avoid floating-point accumulation across kit components
+        totalCost    += Math.round(q * cu)
+        totalRevenue += Math.round(q * num(item.priceUnit))
+        totalQty     += q
       } else {
         const q = num(item.qty), c2 = num(item.costUnit), p = num(item.priceUnit)
-        totalCost += q * c2; totalRevenue += q * p; totalQty += q
+        totalCost    += Math.round(q * c2)
+        totalRevenue += Math.round(q * p)
+        totalQty     += q
       }
     })
-    const logTotal = num(form.logoCost) * totalQty
+    const logTotal = Math.round(num(form.logoCost) * totalQty)
     const ship = num(form.shipCost)
     const shipCharged = form.shipCharged !== false
     const baseCost = totalCost + logTotal + ship
@@ -445,36 +448,6 @@ export default function Presupuesto() {
     return `${c.budgetPrefix || 'AN'}-${String(num).padStart(4, '0')}`
   }, [editId, c.nextNum, c.budgetPrefix])
 
-  /* ── Descuento de stock para la alternativa aprobada ── */
-  const deductStockForApprovedAlt = () => {
-    // Si ninguna alt está marcada como aprobada, usa la primera
-    const approvedAlt = alternatives.find(a => a.approved) || alternatives[0]
-    if (!approvedAlt?.kits?.length) return
-    const allInsumos = [...get('insumos', [])]
-    const allProducts = [...get('products', [])]
-    approvedAlt.kits.forEach(kit => {
-      const kitQty = num(kit.qty)
-      // Packaging / Insumos (componente A)
-      ;(kit.packaging || []).forEach(comp => {
-        if (!comp.name) return
-        const i = allInsumos.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-        if (i > -1 && typeof allInsumos[i].stock === 'number') {
-          allInsumos[i] = { ...allInsumos[i], stock: Math.max(0, allInsumos[i].stock - num(comp.qty) * kitQty) }
-        }
-      })
-      // Productos del kit (componente B)
-      ;(kit.products || []).forEach(comp => {
-        if (!comp.name) return
-        const i = allProducts.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-        if (i > -1 && typeof allProducts[i].stock === 'number') {
-          allProducts[i] = { ...allProducts[i], stock: Math.max(0, allProducts[i].stock - num(comp.qty) * kitQty) }
-        }
-      })
-    })
-    set('insumos', allInsumos)
-    set('products', allProducts)
-  }
-
   const handleSave = () => {
     if (!form.contact && !form.company) { toast('Falta el cliente. Cargá un nombre de contacto o empresa.', 'er'); return }
     if (form.wa && !isValidWA(form.wa)) { toast('El WhatsApp no tiene un formato válido. Ej: +54 351 1234567', 'er'); setWaTouched(true); return }
@@ -488,15 +461,37 @@ export default function Presupuesto() {
     if (!validItems.length) { toast('Completá al menos un Kit o producto en el Paso 2.', 'er'); return }
     const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
     const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
+
     // Descuento de stock: solo al pasar a "En preparación" y solo una vez
-    const wasStockDeducted = editId ? (get('budgets').find(b => b.id === editId)?.stockDeducted === true) : false
+    const prevBudget = editId ? get('budgets').find(b => b.id === editId) : null
+    const wasStockDeducted = prevBudget?.stockDeducted === true
     const willDeductStock = form.status === 'inprogress' && !wasStockDeducted
+
+    // ── Cost freeze ──────────────────────────────────────────────────────────────
+    // Kit component costs are stored frozen in the alternatives structure.
+    // Preserve totalCost from the confirmed budget to prevent retroactive
+    // gain changes if product/insumo costs are updated later.
+    const frozenTotalCost = wasStockDeducted ? (prevBudget.totalCost ?? calc.baseCost) : calc.baseCost
+    const totalGain       = calc.total - frozenTotalCost
+
+    const savedBudget = saveBudget({
+      ...(editId ? { id: editId } : {}), ...saveForm,
+      items: validItems, alternatives,
+      stockDeducted: wasStockDeducted || willDeductStock,
+      totalCost: frozenTotalCost,
+      totalGain,
+      total: calc.total,
+      depositAmt: calc.depositAmt,
+      marginBudgeted,
+      ...(willDeductStock ? { costSnapshot: { date: new Date().toISOString().slice(0, 10), baseCost: calc.baseCost } } : {}),
+    })
+
     if (willDeductStock) {
-      deductStockForApprovedAlt()
-      const approvedLabel = (alternatives.find(a => a.approved) || alternatives[0])?.label || 'Alternativa 1'
+      const approvedAlt = alternatives.find(a => a.approved) || alternatives[0]
+      deductKitStock(approvedAlt, savedBudget?.num || '')
+      const approvedLabel = approvedAlt?.label || 'Alternativa 1'
       toast(`Stock descontado — ${approvedLabel}`, 'ok')
     }
-    const savedBudget = saveBudget({ ...(editId ? { id: editId } : {}), ...saveForm, items: validItems, alternatives, stockDeducted: wasStockDeducted || willDeductStock, totalCost: calc.baseCost, totalGain: calc.gain, total: calc.total, depositAmt: calc.depositAmt, marginBudgeted })
     if (!editId) setMarginBudgetedSaved(marginBudgeted)
     setDraftRestored(false)
     localStorage.removeItem(DRAFT_KEY)

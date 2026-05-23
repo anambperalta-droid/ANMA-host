@@ -163,11 +163,70 @@ export function DataProvider({ children }) {
     logAudit('delete', key, id, existing ? { name: existing.name || existing.title || null } : null)
   }, [refresh])
 
+  /* ── Descuento de stock de kit (batch atómico + registro de movimientos) ──
+     Recibe la alternativa aprobada, lee todos los stores de una vez, aplica todos
+     los cambios en memoria y escribe en un solo bloque. Registra cada deducción
+     como un stockMove para trazabilidad completa. */
+  const deductKitStock = useCallback((approvedAlt, budgetRef = '') => {
+    if (!approvedAlt?.kits?.length) return
+    const today    = new Date().toISOString().slice(0, 10)
+    const moves    = db('stockMoves', [])
+    const insumos  = db('insumos', [])
+    const products = db('products', [])
+    const numV = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
+
+    approvedAlt.kits.forEach(kit => {
+      const kitQty = numV(kit.qty)
+      if (!kitQty) return
+
+      // Packaging / Insumos (componente A)
+      ;(kit.packaging || []).forEach(comp => {
+        if (!comp.name) return
+        const qty = numV(comp.qty) * kitQty
+        if (!qty) return
+        const idx = insumos.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
+        moves.push({
+          id: nextId(), type: 'sale', date: today,
+          insumoId: idx > -1 ? insumos[idx].id : null,
+          qty, costUnit: numV(comp.costUnit),
+          ref: budgetRef || 'Kit', note: `${kit.name || 'Kit'} — ${comp.name}`,
+        })
+        if (idx > -1 && typeof insumos[idx].stock === 'number') {
+          insumos[idx] = { ...insumos[idx], stock: Math.max(0, insumos[idx].stock - qty), lastMove: today, updatedAt: Date.now() }
+        }
+      })
+
+      // Productos del kit (componente B)
+      ;(kit.products || []).forEach(comp => {
+        if (!comp.name) return
+        const qty = numV(comp.qty) * kitQty
+        if (!qty) return
+        const idx = products.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
+        moves.push({
+          id: nextId(), type: 'sale', date: today,
+          productId: idx > -1 ? products[idx].id : null,
+          qty, costUnit: numV(comp.costUnit),
+          ref: budgetRef || 'Kit', note: `${kit.name || 'Kit'} — ${comp.name}`,
+        })
+        if (idx > -1 && typeof products[idx].stock === 'number') {
+          products[idx] = { ...products[idx], stock: Math.max(0, products[idx].stock - qty), lastMove: today, updatedAt: Date.now() }
+        }
+      })
+    })
+
+    // Batch write — single window for all three stores
+    dbW('stockMoves', moves)
+    dbW('insumos', insumos)
+    dbW('products', products)
+    refresh()
+  }, [refresh])
+
   return (
     <Ctx.Provider value={{
       get, set, config, updateConfig, refresh, tick,
       saveBudget, deleteBudget, updateBudgetStatus,
       saveEntity, deleteEntity,
+      deductKitStock,
     }}>
       {children}
     </Ctx.Provider>
