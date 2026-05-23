@@ -78,7 +78,12 @@ const getTrackingUrl = (carrier, code) => {
 
 export default function Logistica() {
   const { get, saveEntity, deleteEntity, config } = useData()
-  const feats = config().features || {}
+  const cfg = config()
+  const feats = cfg.features || {}
+  const companyName = cfg.companyName || cfg.company || ''
+  const viaMsg = companyName
+    ? `¡Hola! El costo de envío para tu pedido de ${companyName} es de $_______ a través de Vía Cargo. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
+    : `¡Hola! El costo de envío para tu pedido es de $_______ a través de Vía Cargo. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
   const toast = useToast()
   const [tab, setTab] = useState('envios')
   const [sFilter, setSFilter] = useState('all')
@@ -351,6 +356,17 @@ export default function Logistica() {
         .logi-act-circ.del{background:#FEF2F2;color:#DC2626}
         /* Status quick-select */
         .logi-status-sel{border-radius:20px;padding:3px 22px 3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;background-repeat:no-repeat;background-position:right 7px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%236B7280' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E")}
+        /* ── COTIZAR TAB ── */
+        .cotiz-layout{display:grid;grid-template-columns:1fr;gap:12px;grid-template-areas:"cliente" "tools" "despacho"}
+        .cotiz-area-cliente{grid-area:cliente}
+        .cotiz-area-tools{grid-area:tools}
+        .cotiz-area-despacho{grid-area:despacho}
+        @media(min-width:768px){.cotiz-layout{grid-template-columns:1fr 1.2fr;gap:16px;grid-template-areas:"cliente tools" "despacho tools"}}
+        .cotiz-vc-badge{display:flex;align-items:center;gap:12px;background:#F0FDF4;border:1.5px solid #A7F3D0;border-radius:14px;padding:12px 16px}
+        .cotiz-preview{margin:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--txt2);line-height:1.7;font-style:italic}
+        .cotiz-desp-field{position:relative}
+        .cotiz-desp-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--txt3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:11px;transition:background .15s}
+        .cotiz-desp-copy:hover{background:var(--surface3)}
       `}</style>
 
       {/* Header desktop — hidden on mobile */}
@@ -622,180 +638,160 @@ export default function Logistica() {
 
       {/* ── TAB COTIZAR ────────────────────────────────────────────── */}
       {tab === 'cotizar' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 16, alignItems: 'start' }}>
+        <div className="cotiz-layout">
 
-            {/* ── Panel izquierdo: Selector de cliente ── */}
-            <div className="card" style={{ borderRadius: 24, padding: '18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                <i className="fa fa-user" style={{ color: 'var(--brand)', marginRight: 6 }} />Cliente a cotizar
-              </div>
-
-              {/* Buscador */}
-              <div style={{ position: 'relative' }}>
-                <i className="fa fa-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
-                <input
-                  type="text"
-                  value={cotizSearch}
-                  onChange={e => { setCotizSearch(e.target.value); setCotizClient(null) }}
-                  placeholder="Buscar empresa o contacto…"
-                  style={{ paddingLeft: 30 }}
-                />
-              </div>
-
-              {/* Resultados del buscador */}
-              {cotizSearch && !cotizClient && cotizFilteredClients.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
-                  {cotizFilteredClients.map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => { setCotizClient(c); setCotizSearch(c.company || c.contact || '') }}
-                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s, background .15s' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand-xlt)'; e.currentTarget.style.borderColor = 'var(--brand)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
-                      <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{c.company || c.contact}</span>
-                      {c.company && c.contact && <span style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{c.contact}</span>}
-                      {c.wa && <span style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}><i className="fa-brands fa-whatsapp" style={{ marginRight: 4 }} />{c.wa}</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {cotizSearch && !cotizClient && cotizFilteredClients.length === 0 && (
-                <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: '12px 0' }}>Sin resultados</div>
-              )}
-
-              {/* Cliente seleccionado */}
-              {cotizClient && (
-                <div style={{ background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: 16, padding: '14px 16px' }}>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--txt)' }}>{cotizClient.company || cotizClient.contact}</div>
-                  {cotizClient.company && cotizClient.contact && <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>{cotizClient.contact}</div>}
-                  {cotizClient.wa ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 13, fontWeight: 700, color: '#15803D' }}>
-                      <i className="fa-brands fa-whatsapp" />
-                      <span>{cotizClient.wa}</span>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 11, color: 'var(--amber)', marginTop: 6 }}><i className="fa fa-triangle-exclamation" style={{ marginRight: 4 }} />Sin número de WhatsApp</div>
-                  )}
-                  <button
-                    onClick={() => { setCotizClient(null); setCotizSearch('') }}
-                    style={{ marginTop: 10, fontSize: 11, color: 'var(--txt3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <i className="fa fa-xmark" />Cambiar cliente
-                  </button>
-                </div>
-              )}
-
-              {!cotizClient && !cotizSearch && (
-                <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: '16px 0', lineHeight: 1.6 }}>
-                  Buscá un cliente para activar el envío directo por WhatsApp
-                </div>
-              )}
+          {/* ── ÁREA: CLIENTE ── */}
+          <div className="cotiz-area-cliente card" style={{ borderRadius: 20, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <i className="fa fa-user" style={{ color: 'var(--brand)', marginRight: 6 }} />Cliente a cotizar
             </div>
 
-            {/* ── Panel derecho: Herramientas ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Buscador */}
+            <div style={{ position: 'relative' }}>
+              <i className="fa fa-magnifying-glass" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 11, pointerEvents: 'none', zIndex: 1 }} />
+              <input
+                type="text"
+                value={cotizSearch}
+                onChange={e => { setCotizSearch(e.target.value); setCotizClient(null) }}
+                placeholder="Buscar empresa o contacto…"
+                style={{ paddingLeft: 30 }}
+              />
+            </div>
 
-              {/* Cotizadores oficiales */}
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', flexShrink: 0 }}>
-                  <i className="fa fa-arrow-up-right-from-square" style={{ marginRight: 6 }} />Cotizar en:
-                </span>
-                {[
-                  { name: 'OCA', url: 'https://www.oca.com.ar', cls: 'b-blue' },
-                  { name: 'Vía Cargo', url: 'https://www.viacargo.com.ar', cls: 'b-confirmed' },
-                  { name: 'Andreani', url: 'https://www.andreani.com', cls: 'b-purple' },
-                  { name: 'Correo Argentino', url: 'https://www.correoargentino.com.ar', cls: 'b-amber' },
-                ].map(c => (
-                  <a key={c.name} href={c.url} target="_blank" rel="noreferrer"
-                    className={`badge ${c.cls}`}
-                    style={{ fontSize: 12, padding: '6px 14px', borderRadius: 12, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fa fa-globe" style={{ fontSize: 10 }} />
-                    {c.name}
-                  </a>
+            {/* Resultados */}
+            {cotizSearch && !cotizClient && cotizFilteredClients.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+                {cotizFilteredClients.map(c => (
+                  <button key={c.id}
+                    onClick={() => { setCotizClient(c); setCotizSearch(c.company || c.contact || '') }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 12px', cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s, background .15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand-xlt)'; e.currentTarget.style.borderColor = 'var(--brand)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)' }}>{c.company || c.contact}</span>
+                    {c.company && c.contact && <span style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{c.contact}</span>}
+                    {c.wa && <span style={{ fontSize: 11, color: '#16A34A', marginTop: 2 }}><i className="fa-brands fa-whatsapp" style={{ marginRight: 4 }} />{c.wa}</span>}
+                  </button>
                 ))}
               </div>
+            )}
+            {cotizSearch && !cotizClient && cotizFilteredClients.length === 0 && (
+              <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: '12px 0' }}>Sin resultados</div>
+            )}
 
-              {/* Botón WhatsApp dinámico */}
-              <button
-                onClick={() => {
-                  const msg = '¡Hola! El costo de envío para tu pedido es de $________ a través de ________. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!'
-                  if (cotizClient?.wa) {
-                    const num = cotizClient.wa.replace(/\D/g, '')
-                    window.open(`https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}`, '_blank')
-                  } else {
-                    navigator.clipboard.writeText(msg)
-                    window.open('https://web.whatsapp.com/', '_blank')
-                    toast('Texto copiado. Seleccioná el contacto en WhatsApp Web.', 'ok')
-                  }
-                }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  background: cotizClient?.wa ? '#16A34A' : '#F0FDF4',
-                  border: `2px solid ${cotizClient?.wa ? '#15803D' : '#86EFAC'}`,
-                  color: cotizClient?.wa ? '#fff' : '#15803D',
-                  borderRadius: 20, padding: '16px 24px', fontSize: 15, fontWeight: 800,
-                  cursor: 'pointer', width: '100%', transition: 'all .2s',
-                }}>
-                <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} />
-                {cotizClient?.wa
-                  ? `Enviar cotización a ${cotizClient.company || cotizClient.contact}`
-                  : 'Abrir WhatsApp Web + Copiar texto'}
-              </button>
-
-              {/* Vista previa del mensaje */}
-              <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 16px' }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>
-                  <i className="fa fa-eye" style={{ marginRight: 5 }} />Vista previa del mensaje
-                </div>
-                <p style={{ fontSize: 12, color: 'var(--txt2)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>
-                  "¡Hola! El costo de envío para tu pedido es de $________ a través de ________. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!"
-                </p>
+            {/* Cliente seleccionado */}
+            {cotizClient && (
+              <div style={{ background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: 16, padding: '14px 16px' }}>
+                <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--txt)' }}>{cotizClient.company || cotizClient.contact}</div>
+                {cotizClient.company && cotizClient.contact && <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>{cotizClient.contact}</div>}
+                {cotizClient.wa ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 13, fontWeight: 700, color: '#15803D' }}>
+                    <i className="fa-brands fa-whatsapp" /><span>{cotizClient.wa}</span>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: 'var(--amber)', marginTop: 6 }}><i className="fa fa-triangle-exclamation" style={{ marginRight: 4 }} />Sin número de WhatsApp</div>
+                )}
+                <button onClick={() => { setCotizClient(null); setCotizSearch('') }}
+                  style={{ marginTop: 10, fontSize: 11, color: 'var(--txt3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <i className="fa fa-xmark" />Cambiar cliente
+                </button>
               </div>
+            )}
 
+            {!cotizClient && !cotizSearch && (
+              <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: '16px 0', lineHeight: 1.6 }}>
+                Buscá un cliente para activar el envío directo por WhatsApp
+              </div>
+            )}
+          </div>
+
+          {/* ── ÁREA: TOOLS ── */}
+          <div className="cotiz-area-tools" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+            {/* Badge Vía Cargo */}
+            <div className="cotiz-vc-badge">
+              <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', flexShrink: 0 }}>
+                <i className="fa fa-arrow-up-right-from-square" style={{ marginRight: 5 }} />Cotizar en:
+              </span>
+              <a href="https://www.viacargo.com.ar" target="_blank" rel="noreferrer"
+                className="badge b-confirmed"
+                style={{ fontSize: 12, padding: '7px 16px', borderRadius: 12, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <i className="fa fa-globe" style={{ fontSize: 10 }} />Vía Cargo
+              </a>
+            </div>
+
+            {/* Botón WhatsApp dinámico */}
+            <button
+              onClick={() => {
+                const msg = viaMsg
+                if (cotizClient?.wa) {
+                  const num = cotizClient.wa.replace(/\D/g, '')
+                  window.open(`https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}`, '_blank')
+                } else {
+                  navigator.clipboard.writeText(msg)
+                  window.open('https://web.whatsapp.com/', '_blank')
+                  toast('Texto copiado. Seleccioná el contacto en WhatsApp Web.', 'ok')
+                }
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                background: cotizClient?.wa ? '#16A34A' : '#F0FDF4',
+                border: `2px solid ${cotizClient?.wa ? '#15803D' : '#86EFAC'}`,
+                color: cotizClient?.wa ? '#fff' : '#15803D',
+                borderRadius: 20, padding: '16px 24px', fontSize: 15, fontWeight: 800,
+                cursor: 'pointer', width: '100%', transition: 'all .2s',
+              }}>
+              <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} />
+              {cotizClient?.wa
+                ? `Enviar cotización a ${cotizClient.company || cotizClient.contact}`
+                : 'Abrir WhatsApp Web + Copiar texto'}
+            </button>
+
+            {/* Vista previa del mensaje */}
+            <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 16, padding: '12px 16px' }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>
+                <i className="fa fa-eye" style={{ marginRight: 5 }} />Vista previa del mensaje
+              </div>
+              <p className="cotiz-preview">"{viaMsg}"</p>
             </div>
           </div>
 
-          {/* ── Mis Datos de Despacho ── */}
-          <div style={{ marginTop: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '14px 18px' }}>
+          {/* ── ÁREA: DESPACHO ── */}
+          <div className="cotiz-area-despacho card" style={{ borderRadius: 20, padding: '14px 18px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
               <i className="fa fa-box-archive" style={{ marginRight: 6, color: 'var(--brand)' }} />Mis Datos de Despacho
             </div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: 200, display: 'flex', gap: 8, alignItems: 'center' }}>
-                <i className="fa fa-location-dot" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="cotiz-desp-field">
+                <i className="fa fa-location-dot" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 12, pointerEvents: 'none' }} />
                 <input
                   type="text"
                   value={despachoDir}
                   onChange={e => { setDespachoDir(e.target.value); localStorage.setItem('anma_desp_dir', e.target.value) }}
                   placeholder="Dirección de retiro…"
-                  style={{ flex: 1, fontSize: 12 }}
+                  style={{ width: '100%', paddingLeft: 28, paddingRight: 38, boxSizing: 'border-box', fontSize: 12 }}
                 />
-                <button
-                  onClick={() => { if (despachoDir) { navigator.clipboard.writeText(despachoDir); toast('Dirección copiada ✓', 'ok') } }}
-                  title="Copiar dirección"
-                  style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className="fa fa-copy" style={{ fontSize: 11 }} />
+                <button className="cotiz-desp-copy" title="Copiar dirección"
+                  onClick={() => { if (despachoDir) { navigator.clipboard.writeText(despachoDir); toast('Dirección copiada ✓', 'ok') } }}>
+                  <i className="fa fa-copy" />
                 </button>
               </div>
-              <div style={{ flex: '0 0 220px', display: 'flex', gap: 8, alignItems: 'center' }}>
-                <i className="fa fa-id-card" style={{ color: 'var(--txt4)', fontSize: 12, flexShrink: 0 }} />
+              <div className="cotiz-desp-field">
+                <i className="fa fa-id-card" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--txt4)', fontSize: 12, pointerEvents: 'none' }} />
                 <input
                   type="text"
                   value={despachoCUIT}
                   onChange={e => { setDespachoCUIT(e.target.value); localStorage.setItem('anma_desp_cuit', e.target.value) }}
                   placeholder="CUIT…"
-                  style={{ flex: 1, fontSize: 12 }}
+                  style={{ width: '100%', paddingLeft: 28, paddingRight: 38, boxSizing: 'border-box', fontSize: 12 }}
                 />
-                <button
-                  onClick={() => { if (despachoCUIT) { navigator.clipboard.writeText(despachoCUIT); toast('CUIT copiado ✓', 'ok') } }}
-                  title="Copiar CUIT"
-                  style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className="fa fa-copy" style={{ fontSize: 11 }} />
+                <button className="cotiz-desp-copy" title="Copiar CUIT"
+                  onClick={() => { if (despachoCUIT) { navigator.clipboard.writeText(despachoCUIT); toast('CUIT copiado ✓', 'ok') } }}>
+                  <i className="fa fa-copy" />
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* ── TAB RESUMEN ────────────────────────────────────────────── */}
