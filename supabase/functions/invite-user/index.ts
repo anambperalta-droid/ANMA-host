@@ -63,16 +63,45 @@ serve(async (req) => {
 
     // ── RBAC: determine the invoker's workspace and seat headroom ──
     // The invoker is always inviting into their OWN workspace (workspace_id = user.id).
-    // Global admin (ana.mbperalta) bypasses seat limit.
+    // Global admin (ana.mbperalta) bypasses all checks.
     const isGlobalAdmin = (user.email || '').toLowerCase() === 'ana.mbperalta@gmail.com'
     const workspaceId: string = user.id
 
-    const requestedRole = String(metadata.role || 'operator').toLowerCase()
-    const normalizedRole = ['admin', 'owner', 'operator', 'viewer'].includes(requestedRole)
-      ? requestedRole
-      : 'operator'
+    // ── FIX 1: Validate invited_to_site before anything else ──────
+    const invitedToSite = metadata.invited_to_site
+    if (invitedToSite !== undefined && !['hub', 'host'].includes(String(invitedToSite))) {
+      return json({ error: 'Site inválido.' }, 400)
+    }
 
-    // Only seat-count operators (not admins invited as co-owners — rare case).
+    // ── FIX 2: Clamp allowed roles — owners cannot be created via invite ──
+    // Non-admins can only assign 'operator' or 'viewer'.
+    // Global admin can also assign 'owner' for cross-workspace management.
+    const requestedRole = String(metadata.role || 'operator').toLowerCase()
+    const normalizedRole = isGlobalAdmin
+      ? (['owner', 'operator', 'viewer'].includes(requestedRole) ? requestedRole : 'operator')
+      : (['operator', 'viewer'].includes(requestedRole) ? requestedRole : 'operator')
+
+    // ── FIX 3: Verify caller is owner of their workspace ──────────
+    // Seat-limit check alone is not a sufficient gate — an operator with
+    // extra seats would otherwise be able to invite. Explicit role check.
+    if (!isGlobalAdmin) {
+      const { data: callerMem, error: memErr } = await admin
+        .from('memberships')
+        .select('role')
+        .eq('workspace_id', workspaceId)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (memErr || !callerMem) {
+        return json({ error: 'No encontramos tu workspace. Cerrá sesión e ingresá de nuevo.' }, 400)
+      }
+      if (callerMem.role !== 'owner') {
+        return json({ error: 'Solo el dueño del workspace puede invitar miembros.' }, 403)
+      }
+    }
+
+    // Only seat-count non-owner roles.
     const countsAgainstSeats = normalizedRole === 'operator' || normalizedRole === 'viewer'
 
     if (!isGlobalAdmin && countsAgainstSeats) {
