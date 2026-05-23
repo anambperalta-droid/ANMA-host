@@ -432,6 +432,13 @@ export default function Presupuesto() {
     return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct }
   }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, c.marginLowThreshold])
 
+  /* ── Lógica de flujo: venta directa vs. cotización ──
+     showPaymentDetails = true  → 1 sola opción  O  hay una opción aprobada
+     showPaymentDetails = false → múltiples opciones sin aprobar (modo cotización)          */
+  const isMultiAlt = alternatives.length > 1
+  const approvedAlt = alternatives.find(a => a.approved) || null
+  const showPaymentDetails = !isMultiAlt || approvedAlt !== null
+
   const budgetNum = useMemo(() => {
     if (editId) { const b = get('budgets').find(x => x.id === editId); return b?.num || '#—' }
     const num = c.nextNum || 1
@@ -698,6 +705,9 @@ export default function Presupuesto() {
     }
 
     const isMultiAlt = alternatives.length > 1
+    const approvedAltPdf = alternatives.find(a => a.approved) || null
+    /* showPayPdf: muestra seña, saldo e IVA solo en venta directa o con opción aprobada */
+    const showPayPdf = !isMultiAlt || approvedAltPdf !== null
 
     /* ── Generar filas de todas las alternativas ── */
     const allAltRows = alternatives.map((alt, altIdx) => {
@@ -875,11 +885,12 @@ export default function Presupuesto() {
       <table class="totals-row" width="100%" cellpadding="0" cellspacing="0"><tr><td>Subtotal productos</td><td class="tv">${fmt(pdfRevenue)}</td></tr></table>
       ${pdfDiscAmt > 0 ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#DC2626"><tr><td>Descuento (${pdfDiscPct}%)</td><td class="tv">−${fmt(pdfDiscAmt)}</td></tr></table>` : ''}
       ${showEnvioLeyenda ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:10px;color:#92400E;font-style:italic"><tr><td>🚚 Costo de envío sujeto a pesaje y despacho</td><td class="tv">A cotizar</td></tr></table>` : ''}
+      ${isMultiAlt && approvedAltPdf ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:9.5px;color:#059669;font-style:italic;margin-bottom:3px"><tr><td>✓ Aprobada: ${approvedAltPdf.label}</td><td class="tv"></td></tr></table>` : ''}
       <table class="totals-row tr-big" width="100%" cellpadding="0" cellspacing="0"><tr><td>Total</td><td class="tv">${fmt(pdfTotal)}</td></tr></table>
-      <table class="totals-row tr-senia" width="100%" cellpadding="0" cellspacing="0"><tr><td>Seña (${form.deposit}%)</td><td class="tv">${fmt(pdfDeposit)}</td></tr></table>
-      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#059669;font-weight:700"><tr><td>Saldo contra entrega</td><td class="tv">${fmt(pdfTotal - pdfDeposit)}</td></tr></table>
+      ${showPayPdf ? `<table class="totals-row tr-senia" width="100%" cellpadding="0" cellspacing="0"><tr><td>Seña (${form.deposit}%)</td><td class="tv">${fmt(pdfDeposit)}</td></tr></table>
+      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#059669;font-weight:700"><tr><td>Saldo contra entrega</td><td class="tv">${fmt(pdfTotal - pdfDeposit)}</td></tr></table>` : ''}
     </div></div>
-    ${c.ivaEnabled ? (() => {
+    ${c.ivaEnabled && showPayPdf ? (() => {
       const total = pdfTotal
       const ivaR = (Number(c.ivaRate) || 21) / 100
       const otrosR = (Number(c.otrosImpuestosRate) || 0) / 100
@@ -1595,14 +1606,41 @@ export default function Presupuesto() {
                 </div>
               )
             })()}
+            {/* ── Chip de modo: cotización ↔ venta directa ── */}
+            {isMultiAlt && !approvedAlt && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(124,58,237,.13)', border: '1px solid rgba(124,58,237,.24)', borderRadius: 9, padding: '8px 12px', marginBottom: 10 }}>
+                <i className="fa fa-layer-group" style={{ fontSize: 12, color: 'rgba(167,139,250,.9)', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.78)', lineHeight: 1.2 }}>Modo cotización</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,.38)', lineHeight: 1.3, marginTop: 2 }}>Aprobá una alternativa para ver seña e IVA</div>
+                </div>
+              </div>
+            )}
+            {isMultiAlt && approvedAlt && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.22)', borderRadius: 9, padding: '8px 12px', marginBottom: 10 }}>
+                <i className="fa fa-circle-check" style={{ fontSize: 12, color: '#34D399', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6EE7B7', lineHeight: 1.2 }}>Venta directa activa</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,.38)', lineHeight: 1.3, marginTop: 2 }}>{approvedAlt.label}</div>
+                </div>
+              </div>
+            )}
             <div className="cp-total-row">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)' }}>Total</span>
                 <div style={{ textAlign: 'right' }}>
                   <div className="cp-total-val">{fmt(calc.total)}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>Seña: {fmt(calc.depositAmt)}</div>
+                  {showPaymentDetails && (
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>Seña: {fmt(calc.depositAmt)}</div>
+                  )}
                 </div>
               </div>
+              {showPaymentDetails && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,.08)' }}>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>Saldo contra entrega</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#6EE7B7', fontVariantNumeric: 'tabular-nums' }}>{fmt(calc.total - calc.depositAmt)}</span>
+                </div>
+              )}
             </div>
             <div className="cp-actions">
 
