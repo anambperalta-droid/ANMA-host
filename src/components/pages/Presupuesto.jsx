@@ -950,6 +950,23 @@ export default function Presupuesto() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
+    <style>{`
+      /* ── Kit builder responsive ── */
+      .kit-comp-row{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:8px;padding:5px 8px;border:1px solid var(--border);flex-wrap:wrap}
+      .kit-comp-name-group{flex:1;display:flex;gap:4px;min-width:140px}
+      .kit-comp-nums{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:nowrap}
+      .kit-qty-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);borderRadius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--brand);margin-left:4px;flex-shrink:0}
+      @media(max-width:640px){
+        .kit-comp-row{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
+        .kit-comp-name-group{min-width:0;width:100%}
+        .kit-comp-nums{width:100%;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:6px;margin-top:0}
+        .kit-comp-nums input[type=number]{width:64px!important}
+        .kit-comp-nums input[type=text]{width:80px!important}
+        .kit-hdr{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
+        .kit-hdr-right{flex-wrap:wrap;gap:6px!important}
+        .kit-hdr input{min-width:0}
+      }
+    `}</style>
       <div className="ph ph-pres">
         <div className="ph-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '.01em', color: 'var(--txt)' }}>{budgetNum}</span>
@@ -1133,7 +1150,7 @@ export default function Presupuesto() {
                   <div style={{ marginBottom: 14, border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: 'var(--surface2)' }}>
 
                     {/* ─ Cabecera del kit ─ */}
-                    <div style={{ background: 'var(--grad)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <div className="kit-hdr" style={{ background: 'var(--grad)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                       <input
                         type="text"
                         value={kit.name || ''}
@@ -1141,9 +1158,9 @@ export default function Presupuesto() {
                         placeholder={`Kit #${kitIdx + 1} — nombre del regalo...`}
                         style={{ flex: 1, minWidth: 160, background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 8, color: '#fff', fontWeight: 700, fontSize: 13, padding: '6px 10px', fontFamily: 'inherit' }}
                       />
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                      <div className="kit-hdr-right" style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2 }}>Cant.</div>
+                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2 }}>Cant. kits</div>
                           <input type="number" min="1" value={kit.qty || 1} onFocus={selectOnFocus}
                             onChange={e => updateKit(kitIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
                             style={{ background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 7, color: '#fff', fontWeight: 700, fontSize: 13, textAlign: 'center', width: 58, padding: '5px 6px', fontFamily: 'inherit' }} />
@@ -1182,10 +1199,10 @@ export default function Presupuesto() {
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                             {(kit.packaging || []).map((comp, cIdx) => (
-                              <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', borderRadius: 8, padding: '5px 8px', border: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                              <div key={cIdx} className="kit-comp-row">
                                 <i className="fa fa-box" style={{ fontSize: 11, color: 'var(--brand)', flexShrink: 0, opacity: .65 }} />
                                 {/* Nombre libre + picker opcional de DB */}
-                                <div style={{ flex: 1, display: 'flex', gap: 4, minWidth: 140 }}>
+                                <div className="kit-comp-name-group">
                                   <input type="text" value={comp.name || ''}
                                     onChange={e => updatePackComp(kitIdx, cIdx, 'name', e.target.value)}
                                     placeholder="Ej: Caja kraft, Bolsa organza..."
@@ -1197,31 +1214,39 @@ export default function Presupuesto() {
                                     </button>
                                   )}
                                 </div>
-                                {/* Costo unitario editable */}
-                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
-                                  <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
-                                    onChange={e => { const r = parseTbl(e.target.value); updatePackComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
-                                    style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                                <div className="kit-comp-nums">
+                                  {/* Costo unitario */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                                    <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
+                                    <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                      onChange={e => { const r = parseTbl(e.target.value); updatePackComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                      style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                                  </div>
+                                  {/* Qty — muestra TOTAL (kit.qty × comp.qty), guarda por-kit */}
+                                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                                    <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>cant. total</span>
+                                    <input type="number" min="1"
+                                      value={(num(comp.qty) || 1) * (num(kit.qty) || 1)}
+                                      onFocus={selectOnFocus}
+                                      onChange={e => {
+                                        const total = Math.max(1, parseInt(e.target.value) || 1)
+                                        updatePackComp(kitIdx, cIdx, 'qty', Math.max(1, Math.round(total / (num(kit.qty) || 1))))
+                                      }}
+                                      style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700 }} />
+                                  </div>
+                                  {/* Subtotal total (costUnit × qty/kit × kit.qty) */}
+                                  {num(comp.costUnit) > 0 && (
+                                    <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 58, textAlign: 'right' }}>
+                                      {fmt(num(comp.costUnit) * num(comp.qty) * num(kit.qty))}
+                                    </span>
+                                  )}
+                                  <button onClick={() => removePackComp(kitIdx, cIdx)}
+                                    style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
+                                    <i className="fa fa-xmark" />
+                                  </button>
                                 </div>
-                                {/* Qty por kit */}
-                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                                  <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>/kit</span>
-                                  <input type="number" min="1" value={comp.qty || 1} onFocus={selectOnFocus}
-                                    onChange={e => updatePackComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
-                                    style={{ width: 42, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1 }} />
-                                </div>
-                                {num(comp.costUnit) > 0 && (
-                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 52, textAlign: 'right' }}>
-                                    {fmt(num(comp.costUnit) * num(comp.qty))}
-                                  </span>
-                                )}
-                                <button onClick={() => removePackComp(kitIdx, cIdx)}
-                                  style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
-                                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
-                                  <i className="fa fa-xmark" />
-                                </button>
                               </div>
                             ))}
                           </div>
@@ -1247,9 +1272,9 @@ export default function Presupuesto() {
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                             {(kit.products || []).map((comp, cIdx) => (
-                              <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', borderRadius: 8, padding: '5px 8px', border: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                              <div key={cIdx} className="kit-comp-row">
                                 <i className="fa fa-gift" style={{ fontSize: 11, color: '#059669', flexShrink: 0, opacity: .65 }} />
-                                <div style={{ flex: 1, display: 'flex', gap: 4, minWidth: 140 }}>
+                                <div className="kit-comp-name-group">
                                   <input type="text" value={comp.name || ''} onChange={e => updateProdComp(kitIdx, cIdx, 'name', e.target.value)}
                                     placeholder="Nombre del producto..."
                                     style={{ flex: 1, fontSize: 12, padding: '4px 8px', height: 30, minWidth: 0 }} />
@@ -1258,31 +1283,39 @@ export default function Presupuesto() {
                                     <i className="fa fa-list" />
                                   </button>
                                 </div>
-                                {/* Costo unitario editable */}
-                                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
-                                  <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
-                                    onChange={e => { const r = parseTbl(e.target.value); updateProdComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
-                                    style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                                <div className="kit-comp-nums">
+                                  {/* Costo unitario */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                                    <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
+                                    <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                      onChange={e => { const r = parseTbl(e.target.value); updateProdComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                      style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                                  </div>
+                                  {/* Qty — muestra TOTAL (kit.qty × comp.qty), guarda por-kit */}
+                                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                                    <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>cant. total</span>
+                                    <input type="number" min="1"
+                                      value={(num(comp.qty) || 1) * (num(kit.qty) || 1)}
+                                      onFocus={selectOnFocus}
+                                      onChange={e => {
+                                        const total = Math.max(1, parseInt(e.target.value) || 1)
+                                        updateProdComp(kitIdx, cIdx, 'qty', Math.max(1, Math.round(total / (num(kit.qty) || 1))))
+                                      }}
+                                      style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700 }} />
+                                  </div>
+                                  {/* Subtotal total */}
+                                  {num(comp.costUnit) > 0 && (
+                                    <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 58, textAlign: 'right' }}>
+                                      {fmt(num(comp.costUnit) * num(comp.qty) * num(kit.qty))}
+                                    </span>
+                                  )}
+                                  <button onClick={() => removeProdComp(kitIdx, cIdx)}
+                                    style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
+                                    <i className="fa fa-xmark" />
+                                  </button>
                                 </div>
-                                {/* Qty por kit */}
-                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                                  <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>/kit</span>
-                                  <input type="number" min="1" value={comp.qty || 1} onFocus={selectOnFocus}
-                                    onChange={e => updateProdComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
-                                    style={{ width: 42, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1 }} />
-                                </div>
-                                {num(comp.costUnit) > 0 && (
-                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 52, textAlign: 'right' }}>
-                                    {fmt(num(comp.costUnit) * num(comp.qty))}
-                                  </span>
-                                )}
-                                <button onClick={() => removeProdComp(kitIdx, cIdx)}
-                                  style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
-                                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
-                                  <i className="fa fa-xmark" />
-                                </button>
                               </div>
                             ))}
                           </div>
