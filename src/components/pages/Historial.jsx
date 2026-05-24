@@ -447,7 +447,7 @@ export default function Historial() {
   // ── KPIs (memoized on period slice) ──
   const {
     totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate,
-    deltaBrutas, deltaCaja
+    deltaBrutas, deltaCaja, prevPeriodBudgets, prevTotBudgeted
   } = useMemo(() => {
     const n = now
     const prevYM = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
@@ -477,7 +477,7 @@ export default function Historial() {
     const prevTotCobrado   = prevPagados.reduce((s, b) => s + cobrado(b), 0)
     const deltaBrutas      = prevTotBudgeted > 0 ? Math.round((totBudgeted - prevTotBudgeted) / prevTotBudgeted * 100) : null
     const deltaCaja        = prevTotCobrado  > 0 ? Math.round((totCobrado  - prevTotCobrado)  / prevTotCobrado  * 100) : null
-    return { totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate, deltaBrutas, deltaCaja }
+    return { totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate, deltaBrutas, deltaCaja, prevPeriodBudgets, prevTotBudgeted }
   }, [periodBudgets, budgets, period]) // eslint-disable-line
 
   // ── Sparklines: últimos 14 días (memoized) ──
