@@ -4,7 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
-import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS } from '../../lib/storage'
+import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
 import { usePrivacy } from '../../context/PrivacyContext'
 
 function Badge({ status }) {
@@ -376,13 +376,11 @@ export default function Historial() {
   const [selectedCliente, setSelectedCliente] = useState(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewBudget, setPreviewBudget] = useState(null)
-  const [todayCollapsed, setTodayCollapsed] = useState(() => {
-    try { return localStorage.getItem('anma_today_collapsed') === '1' } catch { return false }
-  })
+  const [todayCollapsed, setTodayCollapsed] = useState(() => db('todayCollapsed', false))
   const toggleTodayCollapsed = () => {
     setTodayCollapsed(c => {
       const next = !c
-      try { localStorage.setItem('anma_today_collapsed', next ? '1' : '0') } catch { /* ignorar */ }
+      dbW('todayCollapsed', next)
       return next
     })
   }

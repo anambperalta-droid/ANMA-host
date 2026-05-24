@@ -3,7 +3,7 @@ import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
-import { fmt } from '../../lib/storage'
+import { fmt, db, dbW } from '../../lib/storage'
 
 const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
   const reader = new FileReader()
@@ -73,8 +73,8 @@ export default function Catalogo() {
   const [bulkSupplierValue, setBulkSupplierValue] = useState('')
   const [catMgmtModal, setCatMgmtModal] = useState(false)
   const [editingCat, setEditingCat] = useState(null)
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem('anma_product_view_mode') || 'grid')
-  const switchView = (mode) => { setViewMode(mode); localStorage.setItem('anma_product_view_mode', mode) }
+  const [viewMode, setViewMode] = useState(() => db('productViewMode', 'grid'))
+  const switchView = (mode) => { setViewMode(mode); dbW('productViewMode', mode) }
   const [productMode, setProductMode] = useState('buy')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [marginInput, setMarginInput] = useState('')

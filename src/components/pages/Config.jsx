@@ -3,6 +3,7 @@ import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
+import { dbW, dbDel } from '../../lib/storage'
 import { testMPConnection } from '../../lib/mercadopago'
 import { applyThemeColors } from '../../lib/theme'
 import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets, APPS_SCRIPT_TEMPLATE } from '../../lib/sheets'
@@ -395,7 +396,7 @@ export default function Config() {
       title: 'Eliminar TODOS los datos',
       message: 'Esta acción es irreversible. Se eliminarán todos los presupuestos, clientes, productos, proveedores y plantillas. No se puede deshacer.',
       onConfirm: () => {
-        ['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates'].forEach(k => localStorage.removeItem('anma3_' + k))
+        ;['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates'].forEach(k => dbDel(k))
         toast('Datos eliminados', 'in'); window.location.reload()
       },
     })
@@ -419,7 +420,7 @@ export default function Config() {
             else updateConfig({ [k]: v })
           })
           const arrayKeys = ['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates']
-          arrayKeys.forEach(k => { if (data[k]) localStorage.setItem('anma3_u_' + (JSON.parse(localStorage.getItem('anma3_currentUserId') || '""')) + '_' + k, JSON.stringify(data[k])) })
+          arrayKeys.forEach(k => { if (data[k]) dbW(k, data[k]) })
           toast('Backup importado', 'ok')
           setTimeout(() => window.location.reload(), 800)
         })

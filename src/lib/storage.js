@@ -3,7 +3,8 @@
    Modelo: Presupuestos / Clientes / Catálogo
    Datos aislados por usuario (userId)
 ═══════════════════════════════════════ */
-const BASE = 'anma3_'
+export const STORAGE_BASE = 'anma3_'
+const BASE = STORAGE_BASE
 
 // userId se setea al loguearse (ver AuthContext)
 let _userId = null
@@ -30,6 +31,10 @@ export function setWriteHook(fn) { _writeHook = fn }
 export function dbW(key, value) {
   localStorage.setItem(K() + key, JSON.stringify(value))
   _writeHook?.()
+}
+
+export function dbDel(key) {
+  localStorage.removeItem(K() + key)
 }
 
 export function cfg() {
