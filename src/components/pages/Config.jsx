@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { testMPConnection } from '../../lib/mercadopago'
 import { applyThemeColors } from '../../lib/theme'
 import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets, APPS_SCRIPT_TEMPLATE } from '../../lib/sheets'
@@ -148,7 +149,8 @@ function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', ite
 export default function Config() {
   const { get, config, updateConfig } = useData()
   const { logout, changePassword, isGlobalAdmin, role } = useAuth()
-  const toast = useToast()
+  const toast   = useToast()
+  const confirm = useConfirm()
   const [tab, setTab] = useState('identidad')
   const c = config()
 
@@ -411,15 +413,16 @@ export default function Config() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result)
-        if (!window.confirm('Esto va a SOBRESCRIBIR los datos actuales con el backup. ¿Confirmás?')) return
-        Object.entries(data).forEach(([k, v]) => {
-          if (k === 'cfg') updateConfig(v)
-          else updateConfig({ [k]: v })
+        confirm({ body: 'Esto va a SOBRESCRIBIR los datos actuales con el backup. ¿Confirmás?', danger: true, confirmLabel: 'Importar backup' }, () => {
+          Object.entries(data).forEach(([k, v]) => {
+            if (k === 'cfg') updateConfig(v)
+            else updateConfig({ [k]: v })
+          })
+          const arrayKeys = ['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates']
+          arrayKeys.forEach(k => { if (data[k]) localStorage.setItem('anma3_u_' + (JSON.parse(localStorage.getItem('anma3_currentUserId') || '""')) + '_' + k, JSON.stringify(data[k])) })
+          toast('Backup importado', 'ok')
+          setTimeout(() => window.location.reload(), 800)
         })
-        const arrayKeys = ['budgets', 'clients', 'products', 'suppliers', 'tariffs', 'shipments', 'waTemplates']
-        arrayKeys.forEach(k => { if (data[k]) localStorage.setItem('anma3_u_' + (JSON.parse(localStorage.getItem('anma3_currentUserId') || '""')) + '_' + k, JSON.stringify(data[k])) })
-        toast('Backup importado', 'ok')
-        setTimeout(() => window.location.reload(), 800)
       } catch (err) {
         toast('Error al importar: ' + err.message, 'err')
       }
@@ -433,12 +436,13 @@ export default function Config() {
     const { listSnapshots } = await import('../../lib/safeBackup')
     setSnapshots(await listSnapshots())
   }
-  const doRestoreSnap = async (ts) => {
-    if (!window.confirm('Esto va a restaurar el snapshot automático. Los datos actuales serán reemplazados. ¿Confirmás?')) return
-    const { restoreSnapshot } = await import('../../lib/safeBackup')
-    const ok = await restoreSnapshot(ts)
-    if (ok) { toast('Snapshot restaurado', 'ok'); setTimeout(() => window.location.reload(), 800) }
-    else toast('No se pudo restaurar', 'err')
+  const doRestoreSnap = (ts) => {
+    confirm({ body: 'Esto va a restaurar el snapshot automático. Los datos actuales serán reemplazados. ¿Confirmás?', danger: true, confirmLabel: 'Restaurar snapshot' }, async () => {
+      const { restoreSnapshot } = await import('../../lib/safeBackup')
+      const ok = await restoreSnapshot(ts)
+      if (ok) { toast('Snapshot restaurado', 'ok'); setTimeout(() => window.location.reload(), 800) }
+      else toast('No se pudo restaurar', 'err')
+    })
   }
 
   const handleListAdd = (configKey, val) => { updateConfig({ [configKey]: [...(c[configKey] || []), val] }); flushSync() }
@@ -456,8 +460,9 @@ export default function Config() {
     updateConfig({ customLists: [...(c.customLists || []), { key, label, items: [] }] }); flushSync()
   }
   const handleDeleteCustomList = (key) => {
-    if (!window.confirm('¿Eliminar esta lista y todos sus elementos?')) return
-    updateConfig({ customLists: (c.customLists || []).filter(cl => cl.key !== key) }); flushSync()
+    confirm({ body: '¿Eliminar esta lista y todos sus elementos?', danger: true, confirmLabel: 'Eliminar lista' }, () => {
+      updateConfig({ customLists: (c.customLists || []).filter(cl => cl.key !== key) }); flushSync()
+    })
   }
 
   const userName = (c.email || '').split('@')[0] || 'Administrador'

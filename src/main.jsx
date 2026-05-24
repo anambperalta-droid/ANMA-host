@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { DataProvider } from './context/DataContext'
 import { ToastProvider } from './context/ToastContext'
+import { ConfirmProvider } from './context/ConfirmContext'
 import App from './App'
 import './index.css'
 import { bootstrapSafeBackup } from './lib/safeBackup'
@@ -22,11 +23,13 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
-        <AuthProvider>
-          <DataProvider>
-            <App />
-          </DataProvider>
-        </AuthProvider>
+        <ConfirmProvider>
+          <AuthProvider>
+            <DataProvider>
+              <App />
+            </DataProvider>
+          </AuthProvider>
+        </ConfirmProvider>
       </ToastProvider>
     </BrowserRouter>
   </StrictMode>

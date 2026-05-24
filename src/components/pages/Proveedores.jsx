@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, cfg, db, dbW } from '../../lib/storage'
 
 export default function Proveedores() {
   const { get, set, saveEntity, deleteEntity } = useData()
-  const toast = useToast()
+  const toast   = useToast()
+  const confirm = useConfirm()
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
   const [importModal, setImportModal] = useState(false)
@@ -124,12 +126,10 @@ export default function Proveedores() {
     saveEntity('suppliers', form); setModal(false); toast('Proveedor guardado', 'ok')
     if (detailSupplier && form.id === detailSupplier.id) setDetailSupplier({ ...detailSupplier, ...form })
   }
-  const del = (id) => {
-    if (window.confirm('¿Eliminar proveedor?')) {
-      deleteEntity('suppliers', id); toast('Proveedor eliminado', 'in')
-      if (detailSupplier?.id === id) setDetailSupplier(null)
-    }
-  }
+  const del = (id) => confirm('¿Eliminar proveedor?', () => {
+    deleteEntity('suppliers', id); toast('Proveedor eliminado', 'in')
+    if (detailSupplier?.id === id) setDetailSupplier(null)
+  })
 
   const supplierProducts = (s) => products.filter(p => Number(p.supplierId) === s.id)
 
@@ -275,11 +275,12 @@ export default function Proveedores() {
   const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(s => s.id)))
   const bulkDelete = () => {
-    if (!window.confirm(`¿Eliminar ${selectedIds.size} proveedor(es)?`)) return
-    selectedIds.forEach(id => deleteEntity('suppliers', id))
-    toast(`${selectedIds.size} proveedores eliminados`, 'ok')
-    if (detailSupplier && selectedIds.has(detailSupplier.id)) setDetailSupplier(null)
-    setSelectedIds(new Set())
+    confirm({ body: `¿Eliminar ${selectedIds.size} proveedor(es)?`, danger: true, confirmLabel: 'Eliminar' }, () => {
+      selectedIds.forEach(id => deleteEntity('suppliers', id))
+      toast(`${selectedIds.size} proveedores eliminados`, 'ok')
+      if (detailSupplier && selectedIds.has(detailSupplier.id)) setDetailSupplier(null)
+      setSelectedIds(new Set())
+    })
   }
   const bulkExportCSV = () => {
     const sel = suppliers.filter(s => selectedIds.has(s.id))

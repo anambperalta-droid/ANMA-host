@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
 
 const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
@@ -41,7 +42,8 @@ const CAT_PALETTE = [
 
 export default function Catalogo() {
   const { get, config, updateConfig, saveEntity, deleteEntity } = useData()
-  const toast = useToast()
+  const toast   = useToast()
+  const confirm = useConfirm()
   const c = config()
   const { role } = useAuth()
   const opHideCosts = role === 'operator' && c.opShowCosts === false
@@ -123,7 +125,7 @@ export default function Catalogo() {
     setModal(false)
     toast('Producto guardado', 'ok')
   }
-  const del = (id) => { if (window.confirm('¿Eliminar producto?')) { deleteEntity('products', id); toast('Producto eliminado', 'in') } }
+  const del = (id) => confirm('¿Eliminar producto?', () => { deleteEntity('products', id); toast('Producto eliminado', 'in') })
   const doBulk = () => {
     const lines = bulkData.split('\n').filter(l => l.trim())
     let count = 0
@@ -188,10 +190,11 @@ export default function Catalogo() {
 
   const doBulkDelete = () => {
     if (!selectedIds.size) return
-    if (!window.confirm(`¿Eliminar ${selectedIds.size} producto${selectedIds.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
-    selectedIds.forEach(id => deleteEntity('products', id))
-    toast(`${selectedIds.size} productos eliminados`, 'in')
-    setSelectedIds(new Set())
+    confirm({ body: `¿Eliminar ${selectedIds.size} producto${selectedIds.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`, danger: true, confirmLabel: 'Eliminar' }, () => {
+      selectedIds.forEach(id => deleteEntity('products', id))
+      toast(`${selectedIds.size} productos eliminados`, 'in')
+      setSelectedIds(new Set())
+    })
   }
 
   const doBulkCat = () => {
@@ -223,10 +226,11 @@ export default function Catalogo() {
 
   const doDeleteCat = (cat) => {
     const affected = products.filter(p => p.cat === cat).length
-    if (!window.confirm(`¿Eliminar categoría "${cat}"?${affected > 0 ? `\n${affected} producto${affected !== 1 ? 's' : ''} quedarán sin categoría.` : ''}`)) return
-    updateConfig({ productCats: cats.filter(c => c !== cat) })
-    products.filter(p => p.cat === cat).forEach(p => saveEntity('products', { ...p, cat: '' }))
-    toast(`Categoría eliminada`, 'in')
+    confirm({ body: `¿Eliminar categoría "${cat}"?${affected > 0 ? `\n${affected} producto${affected !== 1 ? 's' : ''} quedarán sin categoría.` : ''}`, danger: true, confirmLabel: 'Eliminar' }, () => {
+      updateConfig({ productCats: cats.filter(c => c !== cat) })
+      products.filter(p => p.cat === cat).forEach(p => saveEntity('products', { ...p, cat: '' }))
+      toast(`Categoría eliminada`, 'in')
+    })
   }
 
   const doPriceUpdate = () => {

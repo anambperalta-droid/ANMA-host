@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, db, dbW } from '../../lib/storage'
 
 const SERVICE_MULTIPLIER = {
@@ -84,7 +85,8 @@ export default function Logistica() {
   const viaMsg = companyName
     ? `¡Hola! El costo de envío para tu pedido de ${companyName} es de $_______ a través de Vía Cargo. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
     : `¡Hola! El costo de envío para tu pedido es de $_______ a través de Vía Cargo. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
-  const toast = useToast()
+  const toast   = useToast()
+  const confirm = useConfirm()
   const [tab, setTab] = useState('envios')
   const [sFilter, setSFilter] = useState('all')
   const [search, setSearch] = useState('')
@@ -189,9 +191,7 @@ export default function Logistica() {
     if (!form.remito && !form.client) { toast('Completá remito o cliente.', 'er'); return }
     saveEntity('shipments', form); setModal(false); toast('Envío guardado', 'ok')
   }
-  const delShip = (id) => {
-    if (window.confirm('¿Eliminar envío?')) { deleteEntity('shipments', id); toast('Envío eliminado', 'in') }
-  }
+  const delShip = (id) => confirm('¿Eliminar envío?', () => { deleteEntity('shipments', id); toast('Envío eliminado', 'in') })
 
   const cotizFilteredClients = useMemo(() => {
     if (!cotizSearch.trim()) return []

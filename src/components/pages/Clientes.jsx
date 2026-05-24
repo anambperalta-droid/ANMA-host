@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, STATUS_MAP, STATUS_CLS } from '../../lib/storage'
 
 /* ── Modal de vista previa de presupuesto (solo lectura, mobile-first) ── */
@@ -187,7 +188,8 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
 
 export default function Clientes() {
   const { get, saveEntity, deleteEntity, config } = useData()
-  const toast = useToast()
+  const toast   = useToast()
+  const confirm = useConfirm()
   const nav = useNavigate()
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
@@ -221,12 +223,10 @@ export default function Clientes() {
     saveEntity('clients', form); setModal(false); toast('Cliente guardado', 'ok')
     if (detailClient && form.id === detailClient.id) setDetailClient({ ...detailClient, ...form })
   }
-  const del = (id) => {
-    if (window.confirm('¿Eliminar cliente?')) {
-      deleteEntity('clients', id); toast('Cliente eliminado', 'in')
-      if (detailClient?.id === id) setDetailClient(null)
-    }
-  }
+  const del = (id) => confirm('¿Eliminar cliente?', () => {
+    deleteEntity('clients', id); toast('Cliente eliminado', 'in')
+    if (detailClient?.id === id) setDetailClient(null)
+  })
 
   const exportCSV = () => {
     const rows = [['Empresa', 'Contacto', 'WhatsApp', 'Email', 'Rubro', 'Notas'].join(',')]
@@ -353,11 +353,12 @@ export default function Clientes() {
   const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(c => c.id)))
   const bulkDelete = () => {
-    if (!window.confirm(`¿Eliminar ${selectedIds.size} cliente${selectedIds.size > 1 ? 's' : ''}?`)) return
-    selectedIds.forEach(id => deleteEntity('clients', id))
-    toast(`${selectedIds.size} clientes eliminados`, 'in')
-    if (detailClient && selectedIds.has(detailClient.id)) setDetailClient(null)
-    setSelectedIds(new Set())
+    confirm({ body: `¿Eliminar ${selectedIds.size} cliente${selectedIds.size > 1 ? 's' : ''}?`, danger: true, confirmLabel: 'Eliminar' }, () => {
+      selectedIds.forEach(id => deleteEntity('clients', id))
+      toast(`${selectedIds.size} clientes eliminados`, 'in')
+      if (detailClient && selectedIds.has(detailClient.id)) setDetailClient(null)
+      setSelectedIds(new Set())
+    })
   }
   const bulkExportCSV = () => {
     const sel = clients.filter(c => selectedIds.has(c.id))

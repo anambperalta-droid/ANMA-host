@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
 
 /* ═══ 5 Solapas de venta ═══ */
@@ -223,7 +224,8 @@ function VariablesPanel({ client, config, budget }) {
 ═══════════════════════════════ */
 export default function Mensajes() {
   const { get, saveEntity, deleteEntity, set, config } = useData()
-  const toast = useToast()
+  const toast   = useToast()
+  const confirm = useConfirm()
   const c = config()
   const [activeStage, setActiveStage] = useState('Captación')
   const [modal, setModal] = useState(false)
@@ -297,15 +299,12 @@ export default function Mensajes() {
     setModal(false); setEditModal(false); toast('Mensaje guardado', 'ok')
   }
 
-  const deleteMsg = (id) => {
-    if (window.confirm('¿Eliminar este mensaje?')) { deleteEntity('waTemplates', id); toast('Mensaje eliminado', 'in') }
-  }
+  const deleteMsg = (id) => confirm('¿Eliminar este mensaje?', () => { deleteEntity('waTemplates', id); toast('Mensaje eliminado', 'in') })
 
-  const restoreDefaults = () => {
-    if (!window.confirm('¿Restaurar los mensajes originales?')) return
+  const restoreDefaults = () => confirm('¿Restaurar los mensajes originales?', () => {
     const withIds = DEFAULT_TEMPLATES.map((t, i) => ({ ...t, id: Date.now() + i }))
     set('waTemplates', withIds); toast('Mensajes restaurados', 'ok')
-  }
+  })
 
   const copyText = (text) => {
     const final = replaceVars(text)

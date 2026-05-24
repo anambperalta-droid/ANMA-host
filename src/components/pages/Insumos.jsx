@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
 
 // Formateo con hasta 2 decimales para costos fraccionados
@@ -73,7 +74,8 @@ const relTime = (iso) => {
 
 export default function Insumos() {
   const { get, config, updateConfig, saveEntity, deleteEntity } = useData()
-  const toast = useToast()
+  const toast   = useToast()
+  const confirm = useConfirm()
   const c = config()
   const cats = c.insumoCats || []
   const units = c.units || ['un', 'kg', 'lt', 'm', 'cm', 'rollo', 'hoja', 'caja', 'pack']
@@ -193,9 +195,7 @@ export default function Insumos() {
     toast(form.id ? 'Material actualizado' : 'Material creado', 'ok')
   }
 
-  const remove = (id) => {
-    if (window.confirm('¿Eliminar este material?')) { deleteEntity('insumos', id); toast('Eliminado', 'in') }
-  }
+  const remove = (id) => confirm('¿Eliminar este material?', () => { deleteEntity('insumos', id); toast('Eliminado', 'in') })
 
   const quickAdjust = (item, delta) => {
     const newQty = Math.max(0, (item.stock || 0) + delta)
