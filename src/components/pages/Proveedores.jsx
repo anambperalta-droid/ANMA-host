@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
@@ -114,10 +114,26 @@ export default function Proveedores() {
   const suppliers = get('suppliers')
   const products = get('products')
   const budgets = get('budgets')
-  const sq = search.toLowerCase()
-  const filtered = search ? suppliers.filter(s =>
-    (s.name || '').toLowerCase().includes(sq) || (s.contact || '').toLowerCase().includes(sq) || (s.rubro || '').toLowerCase().includes(sq)
-  ) : suppliers
+
+  /* ── Precompute: product lookup by supplier id — O(N_products) once, O(1) per row ── */
+  const productsBySupplier = useMemo(() => {
+    const map = new Map()
+    products.forEach(p => {
+      const sid = String(p.supplierId)
+      if (!map.has(sid)) map.set(sid, [])
+      map.get(sid).push(p)
+    })
+    return map
+  }, [products])
+
+  /* ── Search filter — only re-runs when suppliers or search changes ── */
+  const filtered = useMemo(() => {
+    if (!search) return suppliers
+    const sq = search.toLowerCase()
+    return suppliers.filter(s =>
+      (s.name || '').toLowerCase().includes(sq) || (s.contact || '').toLowerCase().includes(sq) || (s.rubro || '').toLowerCase().includes(sq)
+    )
+  }, [suppliers, search])
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const openEdit = (s) => { setForm(s ? { ...s } : { name: '', contact: '', wa: '', rubro: '', email: '', notes: '', cuit: '', ivaCondition: '', paymentTerm: '', cbu: '', leadTime: '' }); setModal(true) }
@@ -131,21 +147,20 @@ export default function Proveedores() {
     if (detailSupplier?.id === id) setDetailSupplier(null)
   })
 
-  const supplierProducts = (s) => products.filter(p => Number(p.supplierId) === s.id)
+  /* ── Helper: O(1) lookup using the precomputed map ── */
+  const supplierProducts = (s) => productsBySupplier.get(String(s.id)) || []
 
-  /* ── Re-orden ── */
-  const supplierLowStock = (s) => supplierProducts(s).filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock)
-
-  const allLowStockBySupplier = (() => {
+  /* ── Re-orden: low-stock products grouped by supplier ── */
+  const { allLowStockBySupplier, totalLowStock } = useMemo(() => {
     const groups = []
     suppliers.forEach(s => {
-      const items = supplierLowStock(s)
+      const items = (productsBySupplier.get(String(s.id)) || []).filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock)
       if (items.length) groups.push({ s, items })
     })
-    return groups.sort((a, b) => b.items.length - a.items.length)
-  })()
-
-  const totalLowStock = allLowStockBySupplier.reduce((sum, g) => sum + g.items.length, 0)
+    groups.sort((a, b) => b.items.length - a.items.length)
+    const total = groups.reduce((sum, g) => sum + g.items.length, 0)
+    return { allLowStockBySupplier: groups, totalLowStock: total }
+  }, [suppliers, productsBySupplier])
 
   const sendReorderWA = (s, items) => {
     if (!s.wa) { toast('Esta proveedora no tiene WhatsApp cargado', 'er'); return }
@@ -156,15 +171,19 @@ export default function Proveedores() {
   }
 
   /* ── Concentración de compras ── */
-  const concentration = (() => {
+  const concentration = useMemo(() => {
     if (!suppliers.length || !products.length) return null
-    const counts = suppliers.map(s => ({ s, n: supplierProducts(s).length })).filter(x => x.n > 0).sort((a, b) => b.n - a.n)
+    const counts = suppliers
+      .map(s => ({ s, n: (productsBySupplier.get(String(s.id)) || []).length }))
+      .filter(x => x.n > 0)
+      .sort((a, b) => b.n - a.n)
     if (!counts.length) return null
     const total = counts.reduce((sum, x) => sum + x.n, 0)
     const top = counts[0]
     const top3 = counts.slice(0, 3).reduce((sum, x) => sum + x.n, 0)
     return { topName: top.s.name, topPct: (top.n / total) * 100, top3Pct: (top3 / total) * 100, total }
-  })()
+  }, [suppliers, products.length, productsBySupplier])
+
   const supplierCostTotal = (s) => supplierProducts(s).reduce((sum, p) => sum + (Number(p.cost) || 0), 0)
 
   /* ── Score de performance del proveedor (0–100) ── */
@@ -194,15 +213,27 @@ export default function Proveedores() {
     return { score, factors }
   }
 
-  const supplierLastActivity = (s) => {
-    const supplierProds = products.filter(p => String(p.supplierId) === String(s.id)).map(p => p.name)
-    if (!supplierProds.length) return null
-    const relevant = budgets
-      .filter(b => b.items?.some(it => supplierProds.includes(it.name)) && b.date)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-    if (!relevant.length) return null
-    return Math.floor((Date.now() - new Date(relevant[0].date)) / 86400000)
-  }
+  /* ── Precompute last-activity map — one O(N_suppliers × N_budgets) pass → O(1) per row ── */
+  const lastActivityBySupplierId = useMemo(() => {
+    const map = new Map()
+    suppliers.forEach(s => {
+      const prods = productsBySupplier.get(String(s.id)) || []
+      if (!prods.length) { map.set(s.id, null); return }
+      const prodNames = new Set(prods.map(p => p.name))
+      let maxDate = 0
+      budgets.forEach(b => {
+        if (!b.date) return
+        if (b.items?.some(it => prodNames.has(it.name))) {
+          const t = new Date(b.date).getTime()
+          if (t > maxDate) maxDate = t
+        }
+      })
+      map.set(s.id, maxDate > 0 ? Math.floor((Date.now() - maxDate) / 86400000) : null)
+    })
+    return map
+  }, [suppliers, productsBySupplier, budgets])
+
+  const supplierLastActivity = (s) => lastActivityBySupplierId.get(s.id) ?? null
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
@@ -707,7 +738,7 @@ export default function Proveedores() {
                 {s.wa && <span><i className="fa-brands fa-whatsapp" style={{ marginRight: 3 }} />{s.wa}</span>}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-                <span style={{ fontSize: 10, color: 'var(--txt3)' }}>{supplierProducts(s).length} producto{supplierProducts(s).length !== 1 ? 's' : ''}</span>
+                {(() => { const np = supplierProducts(s).length; return <span style={{ fontSize: 10, color: 'var(--txt3)' }}>{np} producto{np !== 1 ? 's' : ''}</span> })()}
                 <div className="acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5 }}>
                   <button onClick={() => openEdit(s)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}><i className="fa fa-pen" /></button>
                   <button onClick={() => del(s.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}><i className="fa fa-trash" /></button>

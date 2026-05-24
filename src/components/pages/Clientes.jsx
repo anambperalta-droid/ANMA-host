@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
@@ -211,10 +211,32 @@ export default function Clientes() {
 
   const clients = get('clients')
   const budgets = get('budgets')
-  const sq = search.toLowerCase()
-  const filtered = search ? clients.filter(c =>
-    (c.company || '').toLowerCase().includes(sq) || (c.contact || '').toLowerCase().includes(sq) || (c.rubro || '').toLowerCase().includes(sq)
-  ) : clients
+
+  /* ── Precompute: budget lookup by company/contact — O(M) once, O(matches) per client ── */
+  const budgetsByClientKey = useMemo(() => {
+    const byCompany = new Map()
+    const byContact = new Map()
+    budgets.forEach(b => {
+      if (b.company) {
+        if (!byCompany.has(b.company)) byCompany.set(b.company, [])
+        byCompany.get(b.company).push(b)
+      }
+      if (b.contact) {
+        if (!byContact.has(b.contact)) byContact.set(b.contact, [])
+        byContact.get(b.contact).push(b)
+      }
+    })
+    return { byCompany, byContact }
+  }, [budgets])
+
+  /* ── Search filter — only re-runs when clients or search changes ── */
+  const filtered = useMemo(() => {
+    if (!search) return clients
+    const sq = search.toLowerCase()
+    return clients.filter(c =>
+      (c.company || '').toLowerCase().includes(sq) || (c.contact || '').toLowerCase().includes(sq) || (c.rubro || '').toLowerCase().includes(sq)
+    )
+  }, [clients, search])
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' }); setModal(true) }
@@ -284,7 +306,16 @@ export default function Clientes() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  const clientBudgets = (c) => budgets.filter(b => b.company === c.company || b.contact === c.contact)
+  /* ── O(1) client-budget lookup using precomputed map ── */
+  const clientBudgets = (c) => {
+    const { byCompany, byContact } = budgetsByClientKey
+    const seen = new Set()
+    const result = []
+    const add = (b) => { if (!seen.has(b.id)) { seen.add(b.id); result.push(b) } }
+    if (c.company) (byCompany.get(c.company) || []).forEach(add)
+    if (c.contact) (byContact.get(c.contact) || []).forEach(add)
+    return result
+  }
 
   const clientTotalVendido = (c) => clientBudgets(c)
     .filter(b => ['confirmed', 'paid', 'partial'].includes(b.status))
