@@ -3,10 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { fmt } from '../../lib/storage'
-
-const NOTIF_KEY = 'anma3_notif_read'
-const NOTIF_DISMISS_KEY = 'anma3_notif_dismissed'
+import { fmt, db, dbW } from '../../lib/storage'
 
 /* ═══════════════════════════════════════════════════════════════
    ACTION ENGINE — Mapeo dinámico de categoría → acción primaria.
@@ -326,12 +323,8 @@ export default function NotificationBell() {
   const { user } = useAuth()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
-  const [readIds, setReadIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]')) } catch { return new Set() }
-  })
-  const [dismissedIds, setDismissedIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(NOTIF_DISMISS_KEY) || '[]')) } catch { return new Set() }
-  })
+  const [readIds, setReadIds] = useState(() => new Set(db('notifRead', [])))
+  const [dismissedIds, setDismissedIds] = useState(() => new Set(db('notifDismissed', [])))
 
   const budgets  = get('budgets')
   const products = get('products')
@@ -343,32 +336,32 @@ export default function NotificationBell() {
   const hasCritical = unread.some(a => a.level === 'critical')
   const unreadCount = unread.length
 
-  /* ── Mark single as read — localStorage + Supabase ── */
+  /* ── Mark single as read — storage + Supabase ── */
   const markRead = useCallback((id) => {
     const newIds = new Set([...readIds, id])
     setReadIds(newIds)
-    localStorage.setItem(NOTIF_KEY, JSON.stringify([...newIds]))
+    dbW('notifRead', [...newIds])
     persistReadToSupabase(user?.id, id)
   }, [readIds, user])
 
-  /* ── Mark all as read — localStorage + Supabase batch ── */
+  /* ── Mark all as read — storage + Supabase batch ── */
   const markAllRead = useCallback(() => {
     const unreadAlerts = alerts.filter(a => !readIds.has(a.id))
     const newIds = new Set([...readIds, ...alerts.map(a => a.id)])
     setReadIds(newIds)
-    localStorage.setItem(NOTIF_KEY, JSON.stringify([...newIds]))
+    dbW('notifRead', [...newIds])
     persistBatchReadToSupabase(user?.id, unreadAlerts.map(a => a.id))
   }, [readIds, alerts, user])
 
   const dismissAlert = useCallback((id) => {
     const newIds = new Set([...dismissedIds, id])
     setDismissedIds(newIds)
-    localStorage.setItem(NOTIF_DISMISS_KEY, JSON.stringify([...newIds]))
+    dbW('notifDismissed', [...newIds])
   }, [dismissedIds])
 
   const restoreDismissed = useCallback(() => {
     setDismissedIds(new Set())
-    localStorage.setItem(NOTIF_DISMISS_KEY, '[]')
+    dbW('notifDismissed', [])
   }, [])
 
   /* ── Execute action: mark read → close drawer → run handler ── */

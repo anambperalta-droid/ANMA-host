@@ -9,16 +9,14 @@
  * 5) ANMA envía un POST fire-and-forget por cada presupuesto guardado
  */
 
-const LS_KEY = 'anma3_sheets_cfg'
+import { db, dbW } from './storage'
 
-export const getSheetsConfig = () => {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) || { enabled: false, url: '', autoSync: true, lastSync: null, lastStatus: null } }
-  catch { return { enabled: false, url: '', autoSync: true, lastSync: null, lastStatus: null } }
-}
+const SHEETS_DEFAULTS = { enabled: false, url: '', autoSync: true, lastSync: null, lastStatus: null }
+
+export const getSheetsConfig = () => db('sheetsCfg', SHEETS_DEFAULTS)
 export const setSheetsConfig = (patch) => {
-  const cur = getSheetsConfig()
-  const next = { ...cur, ...patch }
-  localStorage.setItem(LS_KEY, JSON.stringify(next))
+  const next = { ...getSheetsConfig(), ...patch }
+  dbW('sheetsCfg', next)
   return next
 }
 
