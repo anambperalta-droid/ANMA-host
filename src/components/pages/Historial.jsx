@@ -352,6 +352,22 @@ function StatusDonut({ statuses, budgets, onSegmentClick }) {
   )
 }
 
+// ── Pure helpers (module-level — no state deps) ──────────────────
+const cobrado = (b) => {
+  if (b.payStatus === 'paid') return b.total || 0
+  if (b.payStatus === 'partial') return b.depositAmt || Math.round((b.total || 0) * (b.deposit || 50) / 100)
+  return 0
+}
+const ganCobrada = (b) => {
+  if (b.payStatus === 'paid') return b.totalGain || 0
+  if (b.payStatus === 'partial') {
+    const pct = (b.depositAmt || 0) / ((b.total || 1))
+    return Math.round((b.totalGain || 0) * pct)
+  }
+  return 0
+}
+// ─────────────────────────────────────────────────────────────────
+
 export default function Historial() {
   const { get, config, updateBudgetStatus, deleteBudget, saveBudget, deductKitStock } = useData()
   const toast   = useToast()
@@ -411,123 +427,92 @@ export default function Historial() {
     return () => clearTimeout(t)
   }, [period, customFrom, customTo])
 
-  // Period filter
-  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const prevYM2 = (() => { const d = new Date(now.getFullYear(), now.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
-  let periodBudgets
-  if (period === 'custom' && customFrom && customTo) {
-    const from = new Date(customFrom)
-    const to = new Date(customTo + 'T23:59:59')
-    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= from && new Date(b.date) <= to)
-  } else if (period === 'thismonth') {
-    periodBudgets = budgets.filter(b => b.date?.startsWith(ym))
-  } else if (period === 'prevmonth') {
-    periodBudgets = budgets.filter(b => b.date?.startsWith(prevYM2))
-  } else if (period === 'year') {
-    periodBudgets = budgets.filter(b => b.date?.startsWith(String(now.getFullYear())))
-  } else if (period === '3m') {
-    const s = new Date(now.getFullYear(), now.getMonth() - 3, 1)
-    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s)
-  } else if (period === '6m') {
-    const s = new Date(now.getFullYear(), now.getMonth() - 6, 1)
-    periodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s)
-  } else {
-    periodBudgets = budgets
-  }
-
-  // Helper: dinero real cobrado segun estado de pago
-  const cobrado = (b) => {
-    if (b.payStatus === 'paid') return b.total || 0
-    if (b.payStatus === 'partial') return b.depositAmt || Math.round((b.total || 0) * (b.deposit || 50) / 100)
-    return 0
-  }
-  const ganCobrada = (b) => {
-    if (b.payStatus === 'paid') return b.totalGain || 0
-    if (b.payStatus === 'partial') {
-      const pct = (b.depositAmt || 0) / ((b.total || 1))
-      return Math.round((b.totalGain || 0) * pct)
+  // ── Period filter (memoized) ──
+  const periodBudgets = useMemo(() => {
+    const n = now
+    const ym = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`
+    const prevYM = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
+    if (period === 'custom' && customFrom && customTo) {
+      const from = new Date(customFrom); const to = new Date(customTo + 'T23:59:59')
+      return budgets.filter(b => b.date && new Date(b.date) >= from && new Date(b.date) <= to)
     }
-    return 0
-  }
+    if (period === 'thismonth') return budgets.filter(b => b.date?.startsWith(ym))
+    if (period === 'prevmonth') return budgets.filter(b => b.date?.startsWith(prevYM))
+    if (period === 'year') return budgets.filter(b => b.date?.startsWith(String(n.getFullYear())))
+    if (period === '3m') { const s = new Date(n.getFullYear(), n.getMonth() - 3, 1); return budgets.filter(b => b.date && new Date(b.date) >= s) }
+    if (period === '6m') { const s = new Date(n.getFullYear(), n.getMonth() - 6, 1); return budgets.filter(b => b.date && new Date(b.date) >= s) }
+    return budgets
+  }, [budgets, period, customFrom, customTo]) // eslint-disable-line
 
-  // KPI calculations
-  const totBudgeted = periodBudgets.reduce((s, b) => s + (b.total || 0), 0)
-  const confirmed = periodBudgets.filter(b => b.status === 'confirmed')
-  const pagados = periodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
-  const totCobrado = pagados.reduce((s, b) => s + cobrado(b), 0)
-  const avgTicket = periodBudgets.length ? Math.round(totBudgeted / periodBudgets.length) : 0
-  const convRate = periodBudgets.length ? Math.round(confirmed.length / periodBudgets.length * 100) + '%' : '—'
-
-  // Prev period budgets for delta comparisons
-  let prevPeriodBudgets = []
-  if (period === 'thismonth') {
-    prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(prevYM2))
-  } else if (period === 'prevmonth') {
-    const twoAgo = (() => { const d = new Date(now.getFullYear(), now.getMonth() - 2, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
-    prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(twoAgo))
-  } else if (period === '3m') {
-    const s3 = new Date(now.getFullYear(), now.getMonth() - 6, 1)
-    const e3 = new Date(now.getFullYear(), now.getMonth() - 3, 1)
-    prevPeriodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s3 && new Date(b.date) < e3)
-  } else if (period === '6m') {
-    const s6 = new Date(now.getFullYear(), now.getMonth() - 12, 1)
-    const e6 = new Date(now.getFullYear(), now.getMonth() - 6, 1)
-    prevPeriodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s6 && new Date(b.date) < e6)
-  } else if (period === 'year') {
-    prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(String(now.getFullYear() - 1)))
-  }
-  const prevPagados = prevPeriodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
-  const prevTotBudgeted = prevPeriodBudgets.reduce((s, b) => s + (b.total || 0), 0)
-  const prevTotCobrado = prevPagados.reduce((s, b) => s + cobrado(b), 0)
-  const deltaBrutas = prevTotBudgeted > 0 ? Math.round((totBudgeted - prevTotBudgeted) / prevTotBudgeted * 100) : null
-  const deltaCaja = prevTotCobrado > 0 ? Math.round((totCobrado - prevTotCobrado) / prevTotCobrado * 100) : null
-
-  // ── Sparklines: últimos 14 días ──
-  const sparkBrutas = (() => {
-    const arr = []
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0)
-      const ds = d.toISOString().slice(0, 10)
-      arr.push(budgets.filter(b => b.date === ds).reduce((s, b) => s + (b.total || 0), 0))
+  // ── KPIs (memoized on period slice) ──
+  const {
+    totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate,
+    deltaBrutas, deltaCaja
+  } = useMemo(() => {
+    const n = now
+    const prevYM = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
+    const totBudgeted = periodBudgets.reduce((s, b) => s + (b.total || 0), 0)
+    const confirmed   = periodBudgets.filter(b => b.status === 'confirmed')
+    const pagados     = periodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
+    const totCobrado  = pagados.reduce((s, b) => s + cobrado(b), 0)
+    const avgTicket   = periodBudgets.length ? Math.round(totBudgeted / periodBudgets.length) : 0
+    const convRate    = periodBudgets.length ? Math.round(confirmed.length / periodBudgets.length * 100) + '%' : '—'
+    let prevPeriodBudgets = []
+    if (period === 'thismonth') {
+      prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(prevYM))
+    } else if (period === 'prevmonth') {
+      const twoAgo = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 2, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
+      prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(twoAgo))
+    } else if (period === '3m') {
+      const s3 = new Date(n.getFullYear(), n.getMonth() - 6, 1); const e3 = new Date(n.getFullYear(), n.getMonth() - 3, 1)
+      prevPeriodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s3 && new Date(b.date) < e3)
+    } else if (period === '6m') {
+      const s6 = new Date(n.getFullYear(), n.getMonth() - 12, 1); const e6 = new Date(n.getFullYear(), n.getMonth() - 6, 1)
+      prevPeriodBudgets = budgets.filter(b => b.date && new Date(b.date) >= s6 && new Date(b.date) < e6)
+    } else if (period === 'year') {
+      prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(String(n.getFullYear() - 1)))
     }
-    return arr
-  })()
-  const sparkCaja = (() => {
-    const arr = []
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0)
-      const ds = d.toISOString().slice(0, 10)
-      arr.push(budgets.filter(b => b.date === ds).reduce((s, b) => s + cobrado(b), 0))
-    }
-    return arr
-  })()
-  const sparkTicket = (() => {
-    const arr = []
+    const prevPagados      = prevPeriodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
+    const prevTotBudgeted  = prevPeriodBudgets.reduce((s, b) => s + (b.total || 0), 0)
+    const prevTotCobrado   = prevPagados.reduce((s, b) => s + cobrado(b), 0)
+    const deltaBrutas      = prevTotBudgeted > 0 ? Math.round((totBudgeted - prevTotBudgeted) / prevTotBudgeted * 100) : null
+    const deltaCaja        = prevTotCobrado  > 0 ? Math.round((totCobrado  - prevTotCobrado)  / prevTotCobrado  * 100) : null
+    return { totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate, deltaBrutas, deltaCaja }
+  }, [periodBudgets, budgets, period]) // eslint-disable-line
+
+  // ── Sparklines: últimos 14 días (memoized) ──
+  const { sparkBrutas, sparkCaja, sparkTicket } = useMemo(() => {
+    const brutas = []; const caja = []; const ticket = []
     for (let i = 13; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0)
       const ds = d.toISOString().slice(0, 10)
       const dayBs = budgets.filter(b => b.date === ds)
-      arr.push(dayBs.length ? dayBs.reduce((s, b) => s + (b.total || 0), 0) / dayBs.length : 0)
+      brutas.push(dayBs.reduce((s, b) => s + (b.total || 0), 0))
+      caja.push(dayBs.reduce((s, b) => s + cobrado(b), 0))
+      ticket.push(dayBs.length ? dayBs.reduce((s, b) => s + (b.total || 0), 0) / dayBs.length : 0)
     }
-    return arr
-  })()
+    return { sparkBrutas: brutas, sparkCaja: caja, sparkTicket: ticket }
+  }, [budgets])
 
-  // ── MODO HOY ──
-  const today = new Date(); today.setHours(0,0,0,0)
-  const todayStr = today.toISOString().slice(0, 10)
-  const cobrosVencidos = budgets.filter(b => {
-    if (b.status !== 'confirmed') return false
-    if (b.payStatus === 'paid') return false
-    if (!b.deliveryDate) return false
-    return new Date(b.deliveryDate + 'T00:00') <= today
-  })
-  const cobrosVencidosMonto = cobrosVencidos.reduce((s, b) => s + ((b.total || 0) - cobrado(b)), 0)
-  const entregasHoy = budgets.filter(b => b.deliveryDate === todayStr && !['lost'].includes(b.status))
-  const aConfirmar = budgets.filter(b => {
-    if (!['sent', 'negotiating'].includes(b.status)) return false
-    const days = b.date ? Math.floor((today - new Date(b.date + 'T00:00')) / 86400000) : 0
-    return days >= 3
-  })
+  // ── MODO HOY (memoized) ──
+  const { cobrosVencidos, cobrosVencidosMonto, entregasHoy, aConfirmar } = useMemo(() => {
+    const today = new Date(); today.setHours(0,0,0,0)
+    const todayStr = today.toISOString().slice(0, 10)
+    const cobrosVencidos = budgets.filter(b => {
+      if (b.status !== 'confirmed') return false
+      if (b.payStatus === 'paid') return false
+      if (!b.deliveryDate) return false
+      return new Date(b.deliveryDate + 'T00:00') <= today
+    })
+    const cobrosVencidosMonto = cobrosVencidos.reduce((s, b) => s + ((b.total || 0) - cobrado(b)), 0)
+    const entregasHoy = budgets.filter(b => b.deliveryDate === todayStr && !['lost'].includes(b.status))
+    const aConfirmar = budgets.filter(b => {
+      if (!['sent', 'negotiating'].includes(b.status)) return false
+      const days = b.date ? Math.floor((today - new Date(b.date + 'T00:00')) / 86400000) : 0
+      return days >= 3
+    })
+    return { cobrosVencidos, cobrosVencidosMonto, entregasHoy, aConfirmar }
+  }, [budgets])
 
   // Insight banner
   const insightIcon = deltaBrutas !== null && deltaBrutas > 20 ? 'fa-rocket' : deltaBrutas !== null && deltaBrutas > 0 ? 'fa-chart-line' : deltaBrutas !== null && deltaBrutas < -20 ? 'fa-triangle-exclamation' : deltaBrutas !== null && deltaBrutas < 0 ? 'fa-arrow-trend-down' : convRate !== '—' && parseInt(convRate) >= 60 ? 'fa-star' : periodBudgets.length === 0 ? 'fa-circle-info' : 'fa-chart-bar'
@@ -546,59 +531,42 @@ export default function Historial() {
               ? `Conversión del ${convRate} — cerrás más de la mitad de los presupuestos que enviás.`
               : `${periodBudgets.length} presupuesto${periodBudgets.length !== 1 ? 's' : ''} en el período · Ticket promedio ${money(avgTicket)} · Conversión ${convRate}`
 
-  // Chart data — daily for thismonth/prevmonth, monthly otherwise
+  // ── Chart data (memoized) ──
   const barMonths = period === '3m' ? 3 : period === 'year' ? 12 : 6
   const isDaily = period === 'thismonth' || period === 'prevmonth'
-  let chartData = []
-  let prevChartData = []
-  if (period === 'thismonth') {
-    const cy = now.getFullYear(); const cmo = now.getMonth()
-    const cymStr = `${cy}-${String(cmo + 1).padStart(2, '0')}`
-    const [py, pmo] = cmo === 0 ? [cy - 1, 11] : [cy, cmo - 1]
-    const pymStr = `${py}-${String(pmo + 1).padStart(2, '0')}`
-    const daysInMonth = new Date(cy, cmo + 1, 0).getDate()
-    const daysInPrev = new Date(py, pmo + 1, 0).getDate()
-    for (let d = 1; d <= daysInMonth; d++) {
-      const ds = String(d).padStart(2, '0')
-      chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${cymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
+  const { chartData, prevChartData, gainData } = useMemo(() => {
+    const n = now; const bm = period === '3m' ? 3 : period === 'year' ? 12 : 6
+    const chartData = []; const prevChartData = []; const gainData = []
+    if (period === 'thismonth') {
+      const cy = n.getFullYear(); const cmo = n.getMonth()
+      const cymStr = `${cy}-${String(cmo + 1).padStart(2, '0')}`
+      const [py, pmo] = cmo === 0 ? [cy - 1, 11] : [cy, cmo - 1]
+      const pymStr = `${py}-${String(pmo + 1).padStart(2, '0')}`
+      const daysInMonth = new Date(cy, cmo + 1, 0).getDate()
+      const daysInPrev = new Date(py, pmo + 1, 0).getDate()
+      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${cymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
+      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
+    } else if (period === 'prevmonth') {
+      const pmd = new Date(n.getFullYear(), n.getMonth() - 1, 1); const pymStr1 = `${pmd.getFullYear()}-${String(pmd.getMonth() + 1).padStart(2, '0')}`
+      const pmd2 = new Date(n.getFullYear(), n.getMonth() - 2, 1); const pymStr2 = `${pmd2.getFullYear()}-${String(pmd2.getMonth() + 1).padStart(2, '0')}`
+      const daysInMonth = new Date(pmd.getFullYear(), pmd.getMonth() + 1, 0).getDate()
+      const daysInPrev = new Date(pmd2.getFullYear(), pmd2.getMonth() + 1, 0).getDate()
+      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr1}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
+      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr2}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
+    } else {
+      for (let i = bm - 1; i >= 0; i--) {
+        const d = new Date(n.getFullYear(), n.getMonth() - i, 1); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        chartData.push({ lbl: MONTHS[d.getMonth()], val: budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + cobrado(b), 0) })
+        const pd = new Date(n.getFullYear(), n.getMonth() - i - bm, 1); const pkey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`
+        prevChartData.push({ lbl: MONTHS[pd.getMonth()], val: budgets.filter(b => b.date?.startsWith(pkey)).reduce((s, b) => s + cobrado(b), 0) })
+      }
     }
-    for (let d = 1; d <= daysInPrev; d++) {
-      const ds = String(d).padStart(2, '0')
-      prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
+    for (let i = bm - 1; i >= 0; i--) {
+      const d = new Date(n.getFullYear(), n.getMonth() - i, 1); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      gainData.push({ lbl: MONTHS[d.getMonth()], val: budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + ganCobrada(b), 0) })
     }
-  } else if (period === 'prevmonth') {
-    const pmd = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    const pymStr1 = `${pmd.getFullYear()}-${String(pmd.getMonth() + 1).padStart(2, '0')}`
-    const pmd2 = new Date(now.getFullYear(), now.getMonth() - 2, 1)
-    const pymStr2 = `${pmd2.getFullYear()}-${String(pmd2.getMonth() + 1).padStart(2, '0')}`
-    const daysInMonth = new Date(pmd.getFullYear(), pmd.getMonth() + 1, 0).getDate()
-    const daysInPrev = new Date(pmd2.getFullYear(), pmd2.getMonth() + 1, 0).getDate()
-    for (let d = 1; d <= daysInMonth; d++) {
-      const ds = String(d).padStart(2, '0')
-      chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr1}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
-    }
-    for (let d = 1; d <= daysInPrev; d++) {
-      const ds = String(d).padStart(2, '0')
-      prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr2}-${ds}`).reduce((s, b) => s + cobrado(b), 0) })
-    }
-  } else {
-    for (let i = barMonths - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      chartData.push({ lbl: MONTHS[d.getMonth()], val: budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + cobrado(b), 0) })
-      const pd = new Date(now.getFullYear(), now.getMonth() - i - barMonths, 1)
-      const pkey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`
-      prevChartData.push({ lbl: MONTHS[pd.getMonth()], val: budgets.filter(b => b.date?.startsWith(pkey)).reduce((s, b) => s + cobrado(b), 0) })
-    }
-  }
-
-  const gainData = []
-  for (let i = barMonths - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    const val = budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + ganCobrada(b), 0)
-    gainData.push({ lbl: MONTHS[d.getMonth()], val })
-  }
+    return { chartData, prevChartData, gainData }
+  }, [budgets, period]) // eslint-disable-line
 
   // Status
   const statuses = [
@@ -609,43 +577,43 @@ export default function Historial() {
     { k: 'lost', l: 'Perdido', c: 'var(--red)' },
   ]
 
-  // Filtered budgets for list tab
-  let filteredBudgets = [...periodBudgets]
-  if (filter !== 'all') filteredBudgets = filteredBudgets.filter(b => b.status === filter)
-  if (search) {
-    const sq = search.toLowerCase()
-    filteredBudgets = filteredBudgets.filter(b =>
-      (b.company || '').toLowerCase().includes(sq) ||
-      (b.contact || '').toLowerCase().includes(sq) ||
-      (b.num || '').toLowerCase().includes(sq)
-    )
-  }
-  // Ordenamiento dinámico
-  filteredBudgets.sort((a, b) => {
-    const dir = sortDir === 'asc' ? 1 : -1
-    if (sortKey === 'date') return ((a.date || '') > (b.date || '') ? 1 : -1) * dir
-    if (sortKey === 'total') return ((a.total || 0) - (b.total || 0)) * dir
-    if (sortKey === 'gain') return ((a.totalGain || 0) - (b.totalGain || 0)) * dir
-    return (a.id - b.id) * dir
-  })
+  // ── Filtered + sorted budget list (memoized) ──
+  const deliveryDays = (iso) => { if (!iso) return null; const t = new Date(); t.setHours(0,0,0,0); const d = new Date(iso + 'T00:00'); return Math.ceil((d - t) / 86400000) }
+  const filteredBudgets = useMemo(() => {
+    let list = periodBudgets
+    if (filter !== 'all') list = list.filter(b => b.status === filter)
+    if (search) {
+      const sq = search.toLowerCase()
+      list = list.filter(b =>
+        (b.company || '').toLowerCase().includes(sq) ||
+        (b.contact || '').toLowerCase().includes(sq) ||
+        (b.num || '').toLowerCase().includes(sq)
+      )
+    }
+    list = [...list].sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1
+      if (sortKey === 'date') return ((a.date || '') > (b.date || '') ? 1 : -1) * dir
+      if (sortKey === 'total') return ((a.total || 0) - (b.total || 0)) * dir
+      if (sortKey === 'gain') return ((a.totalGain || 0) - (b.totalGain || 0)) * dir
+      return (a.id - b.id) * dir
+    })
+    if (quickFilter === 'atrasados') {
+      list = list.filter(b => { const dd = deliveryDays(b.deliveryDate); return dd !== null && dd <= 0 && !['confirmed', 'lost'].includes(b.status) })
+    } else if (quickFilter === 'sin_cobrar') {
+      list = list.filter(b => b.status === 'confirmed' && (!b.payStatus || b.payStatus === 'pending'))
+    } else if (quickFilter === 'alta_ganancia') {
+      const gs = [...periodBudgets].filter(b => (b.totalGain || 0) > 0).sort((a, b) => (b.totalGain || 0) - (a.totalGain || 0))
+      const cutoff = gs[Math.floor(gs.length / 3)]?.totalGain || 0
+      if (cutoff > 0) list = list.filter(b => (b.totalGain || 0) >= cutoff)
+    }
+    return list
+  }, [periodBudgets, filter, search, sortKey, sortDir, quickFilter]) // eslint-disable-line
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortKey(key); setSortDir('desc') }
   }
   const sortArrow = (key) => sortKey !== key ? <i className="fa fa-sort" style={{ opacity: .3, marginLeft: 4, fontSize: 10 }} /> : <i className={`fa fa-sort-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ marginLeft: 4, fontSize: 10 }} />
-
-  // días hasta entrega
-  const deliveryDays = (iso) => { if (!iso) return null; const t = new Date(); t.setHours(0,0,0,0); const d = new Date(iso + 'T00:00'); return Math.ceil((d - t) / 86400000) }
-  if (quickFilter === 'atrasados') {
-    filteredBudgets = filteredBudgets.filter(b => { const dd = deliveryDays(b.deliveryDate); return dd !== null && dd <= 0 && !['confirmed', 'lost'].includes(b.status) })
-  } else if (quickFilter === 'sin_cobrar') {
-    filteredBudgets = filteredBudgets.filter(b => b.status === 'confirmed' && (!b.payStatus || b.payStatus === 'pending'))
-  } else if (quickFilter === 'alta_ganancia') {
-    const gs = [...periodBudgets].filter(b => (b.totalGain || 0) > 0).sort((a, b) => (b.totalGain || 0) - (a.totalGain || 0))
-    const cutoff = gs[Math.floor(gs.length / 3)]?.totalGain || 0
-    if (cutoff > 0) filteredBudgets = filteredBudgets.filter(b => (b.totalGain || 0) >= cutoff)
-  }
 
   // Seguimiento: ALL pending budgets (sent/negotiating), grouped by tier
   const seguimiento = useMemo(() => {
