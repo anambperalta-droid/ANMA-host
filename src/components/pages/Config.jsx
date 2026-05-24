@@ -232,6 +232,7 @@ export default function Config() {
     const svc = ejsServiceId.trim(), tpl = ejsTemplateId.trim(), pub = ejsPublicKey.trim()
     if (!svc || !tpl || !pub) { toast('Completá los 3 campos: Service ID, Template ID y Public Key.', 'er'); return }
     if (!ejsTestEmail.trim()) { toast('Ingresá un email de prueba para verificar la conexión.', 'er'); return }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ejsTestEmail.trim())) { toast('El email de prueba no tiene un formato válido.', 'er'); return }
     setEjsTesting(true)
     setEjsTestResult(null)
     try {
