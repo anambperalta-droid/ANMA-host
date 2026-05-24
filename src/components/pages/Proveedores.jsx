@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
-import { fmt, cfg } from '../../lib/storage'
+import { fmt, cfg, db, dbW } from '../../lib/storage'
 
 export default function Proveedores() {
   const { get, set, saveEntity, deleteEntity } = useData()
@@ -13,12 +13,10 @@ export default function Proveedores() {
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
   const [loading, setLoading] = useState(true)
-  const [dismissed, setDismissed] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('anma_prov_alerts_dismissed') || '{}') } catch { return {} }
-  })
+  const [dismissed, setDismissed] = useState(() => db('provAlertsDismissed', {}))
   const persistDismissed = (next) => {
     setDismissed(next)
-    try { localStorage.setItem('anma_prov_alerts_dismissed', JSON.stringify(next)) } catch { /* ignorar */ }
+    dbW('provAlertsDismissed', next)
   }
   const dismissAlert = (key) => persistDismissed({ ...dismissed, [key]: Date.now() })
   const restoreAlerts = () => persistDismissed({})
@@ -36,11 +34,7 @@ export default function Proveedores() {
   // Auto-fix: dedupe + corrige rubro/email invertidos (one-time migration, idempotente)
   // SEGURO: usa `set` de DataContext (tiene userId correcto), sin reload ni dbW directo
   useEffect(() => {
-    // Idempotencia: si ya corrió para este usuario, salir
-    try {
-      const ranKey = 'anma_prov_mig_v3'
-      if (localStorage.getItem(ranKey) === 'done') return
-    } catch { /* ignorar */ }
+    if (db('provMigV3', null) === 'done') return
 
     const list = get('suppliers') || []
     if (list.length === 0) return
@@ -98,7 +92,7 @@ export default function Proveedores() {
     })
 
     // Marcar como ejecutado ANTES de escribir (evita bucles si algo falla a mitad)
-    try { localStorage.setItem('anma_prov_mig_v3', 'done') } catch { /* ignorar */ }
+    dbW('provMigV3', 'done')
 
     if (dupesRemoved > 0 || swapsApplied > 0) {
       const finalList = dedupedList.map((s, i) => ({

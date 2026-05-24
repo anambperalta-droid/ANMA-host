@@ -352,7 +352,7 @@ function StatusDonut({ statuses, budgets, onSegmentClick }) {
 }
 
 export default function Historial() {
-  const { get, config, updateBudgetStatus, deleteBudget, saveBudget } = useData()
+  const { get, config, updateBudgetStatus, deleteBudget, saveBudget, deductKitStock } = useData()
   const toast = useToast()
   const nav = useNavigate()
   const [tab, setTab] = useState('resumen')
@@ -397,6 +397,7 @@ export default function Historial() {
 
   const budgets = get('budgets')
   const products = get('products')
+  const insumos  = get('insumos')
   const clients = get('clients')
   const c = config()
   const { role } = useAuth()
@@ -681,9 +682,23 @@ export default function Historial() {
       .slice(0, 3)
   }, [budgets])
 
+  // Stock crítico para carousel
+  const lowStockProducts = useMemo(() => {
+    return products
+      .filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock)
+      .sort((a, b) => ((a.stock || 0) / (a.minStock || 1)) - ((b.stock || 0) / (b.minStock || 1)))
+      .slice(0, 3)
+  }, [products])
+  const lowStockInsumos = useMemo(() => {
+    return insumos
+      .filter(i => i.minStock > 0 && (i.stock || 0) <= i.minStock)
+      .sort((a, b) => ((a.stock || 0) / (a.minStock || 1)) - ((b.stock || 0) / (b.minStock || 1)))
+      .slice(0, 3)
+  }, [insumos])
+
   // Auto-advance carousel cada 7s
   useEffect(() => {
-    const t = setInterval(() => setCarouselSlide(s => (s + 1) % 2), 7000)
+    const t = setInterval(() => setCarouselSlide(s => (s + 1) % 3), 7000)
     return () => clearInterval(t)
   }, [])
 
@@ -724,9 +739,19 @@ export default function Historial() {
     const b = budgets.find(x => x.id === id)
     if (b) { saveBudget({ ...b, payStatus }); toast('Pago actualizado', 'ok') }
   }
+  const REGALOS_QUALIFYING = new Set(['inprogress', 'delivered'])
   const handleStatusChange = (id, status) => {
     if (status === 'lost') {
       setPendingLossId(id)
+      return
+    }
+    const b = budgets.find(x => x.id === id)
+    if (b && REGALOS_QUALIFYING.has(status) && !b.stockDeducted) {
+      const approvedAlt = (b.alternatives || []).find(a => a.approved) || (b.alternatives || [])[0]
+      if (approvedAlt) deductKitStock(approvedAlt, b.num || '')
+      const frozenCost = b.totalCost ?? (b.baseCost || 0)
+      saveBudget({ ...b, status, stockDeducted: true, totalCost: frozenCost, totalGain: (b.total || 0) - frozenCost })
+      toast('Estado actualizado', 'ok')
       return
     }
     updateBudgetStatus(id, status); toast('Estado actualizado', 'ok')
@@ -752,7 +777,18 @@ export default function Historial() {
       toast('Marcá los presupuestos como "Perdido" uno a uno para registrar el motivo', 'in')
       return
     }
-    selectedIds.forEach(id => updateBudgetStatus(id, bulkStatus))
+    const isQualifying = REGALOS_QUALIFYING.has(bulkStatus)
+    selectedIds.forEach(id => {
+      const b = budgets.find(x => x.id === id)
+      if (b && isQualifying && !b.stockDeducted) {
+        const approvedAlt = (b.alternatives || []).find(a => a.approved) || (b.alternatives || [])[0]
+        if (approvedAlt) deductKitStock(approvedAlt, b.num || '')
+        const frozenCost = b.totalCost ?? (b.baseCost || 0)
+        saveBudget({ ...b, status: bulkStatus, stockDeducted: true, totalCost: frozenCost, totalGain: (b.total || 0) - frozenCost })
+      } else {
+        updateBudgetStatus(id, bulkStatus)
+      }
+    })
     toast(`${selectedIds.size} presupuestos actualizados`, 'ok')
     setSelectedIds(new Set()); setBulkStatus('')
   }
@@ -1156,11 +1192,11 @@ export default function Historial() {
                   <div className="bento-chart bento-chart-noflex">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <i className={`fa ${carouselSlide === 0 ? 'fa-fire' : 'fa-truck-fast'}`} style={{ color: carouselSlide === 0 ? 'var(--brand)' : 'var(--amber)' }} />
-                        {carouselSlide === 0 ? 'Seguimiento activo' : 'Próximas entregas'}
+                        <i className={`fa ${carouselSlide === 0 ? 'fa-fire' : carouselSlide === 1 ? 'fa-truck-fast' : 'fa-triangle-exclamation'}`} style={{ color: carouselSlide === 0 ? 'var(--brand)' : carouselSlide === 1 ? 'var(--amber)' : 'var(--red)' }} />
+                        {carouselSlide === 0 ? 'Seguimiento activo' : carouselSlide === 1 ? 'Próximas entregas' : 'Alertas de stock'}
                       </div>
                       <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                        {[0, 1].map(i => (
+                        {[0, 1, 2].map(i => (
                           <button key={i} onClick={() => setCarouselSlide(i)}
                             style={{ width: 6, height: 6, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
                               background: carouselSlide === i ? 'var(--brand)' : 'var(--border)', transition: 'background .25s' }}
@@ -1243,6 +1279,37 @@ export default function Historial() {
                         <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 4 }}>No hay pedidos con entrega en los próximos 14 días</div>
                       </div>
                     ))}
+
+                    {carouselSlide === 2 && (() => {
+                      const alerts = [
+                        ...lowStockProducts.map(p => ({ ...p, _type: 'product' })),
+                        ...lowStockInsumos.map(i => ({ ...i, _type: 'insumo' })),
+                      ]
+                      if (!alerts.length) return (
+                        <div style={{ textAlign: 'center', padding: '18px 0' }}>
+                          <i className="fa fa-boxes-stacked" style={{ fontSize: 24, display: 'block', color: 'var(--green)', marginBottom: 8 }} />
+                          <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--txt3)' }}>Stock saludable</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 4 }}>No hay alertas de stock</div>
+                        </div>
+                      )
+                      return alerts.map(item => (
+                        <div key={`${item._type}-${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 7 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                            {item._type === 'product' && item.image
+                              ? <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover' }} />
+                              : <i className={`fa ${item._type === 'product' ? 'fa-box-open' : 'fa-flask'}`} style={{ fontSize: 14, color: '#FB923C' }} />
+                            }
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                            <div style={{ fontSize: 10, color: 'var(--red)', fontWeight: 600 }}>Stock: {item.stock || 0} / mín {item.minStock}</div>
+                          </div>
+                          <span style={{ flexShrink: 0, background: '#FEF2F2', color: 'var(--red)', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6 }}>
+                            {item._type === 'insumo' ? 'INSUMO' : 'PROD'}
+                          </span>
+                        </div>
+                      ))
+                    })()}
                   </div>
                 </div>
               </div>}

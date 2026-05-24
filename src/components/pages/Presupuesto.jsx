@@ -933,6 +933,7 @@ export default function Presupuesto() {
   const sendByEmail = async () => {
     const clientEmail = form.clientEmail.trim()
     if (!clientEmail) { toast('Agregá el email del cliente en el Paso 1.', 'er'); return }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) { toast('El email del cliente no es válido.', 'er'); return }
     const svc = (c.ejsServiceId || '').trim()
     const tpl = (c.ejsTemplateId || '').trim()
     const pub = (c.ejsPublicKey || '').trim()

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
-import { fmt, fmtDate } from '../../lib/storage'
+import { fmt, fmtDate, db, dbW } from '../../lib/storage'
 
 const SERVICE_MULTIPLIER = {
   'Estándar': 1,
@@ -96,8 +96,8 @@ export default function Logistica() {
   const [hoveredStatus, setHoveredStatus] = useState(null)
   const [cotizSearch, setCotizSearch] = useState('')
   const [cotizClient, setCotizClient] = useState(null)
-  const [despachoDir, setDespachoDir] = useState(() => localStorage.getItem('anma_desp_dir') || '')
-  const [despachoCUIT, setDespachoCUIT] = useState(() => localStorage.getItem('anma_desp_cuit') || '')
+  const [despachoDir, setDespachoDir] = useState(() => db('despDir', ''))
+  const [despachoCUIT, setDespachoCUIT] = useState(() => db('despCuit', ''))
   const dismissLateAlert = () => {
     try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
     setLateAlertDismissed(true)
@@ -791,7 +791,7 @@ export default function Logistica() {
                   <input
                     type="text"
                     value={despachoDir}
-                    onChange={e => { setDespachoDir(e.target.value); localStorage.setItem('anma_desp_dir', e.target.value) }}
+                    onChange={e => { setDespachoDir(e.target.value); dbW('despDir', e.target.value) }}
                     placeholder="Av. Ejemplo 1234, Localidad…"
                     style={{ width: '100%', boxSizing: 'border-box', paddingRight: 44 }}
                   />
@@ -811,7 +811,7 @@ export default function Logistica() {
                   <input
                     type="text"
                     value={despachoCUIT}
-                    onChange={e => { setDespachoCUIT(e.target.value); localStorage.setItem('anma_desp_cuit', e.target.value) }}
+                    onChange={e => { setDespachoCUIT(e.target.value); dbW('despCuit', e.target.value) }}
                     placeholder="20-12345678-9"
                     style={{ width: '100%', boxSizing: 'border-box', paddingRight: 44 }}
                   />
