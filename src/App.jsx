@@ -4,6 +4,7 @@ import Login from './components/layout/Login'
 import AppShell from './components/layout/AppShell'
 import Bienvenida from './components/pages/Bienvenida'
 import PortalProveedor from './components/pages/PortalProveedor'
+import ErrorBoundary from './components/layout/ErrorBoundary'
 
 function AuthRedirect() {
   const loc = useLocation()
@@ -26,17 +27,19 @@ export default function App() {
   if (loading && !hasAuthParams) return <div className="sk sk-kpi" style={{ height: '100vh' }} />
 
   return (
-    <Routes>
-      <Route path="/portal-proveedor" element={<PortalProveedor />} />
-      <Route path="/bienvenida" element={<Bienvenida />} />
-      <Route path="/login" element={
-        hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
-        authed ? <Navigate to="/" /> : <Login />
-      } />
-      <Route path="/*" element={
-        hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
-        authed ? <AppShell /> : <Navigate to="/login" />
-      } />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/portal-proveedor" element={<PortalProveedor />} />
+        <Route path="/bienvenida" element={<Bienvenida />} />
+        <Route path="/login" element={
+          hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
+          authed ? <Navigate to="/" /> : <Login />
+        } />
+        <Route path="/*" element={
+          hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
+          authed ? <AppShell /> : <Navigate to="/login" />
+        } />
+      </Routes>
+    </ErrorBoundary>
   )
 }
