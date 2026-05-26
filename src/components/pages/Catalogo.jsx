@@ -735,7 +735,7 @@ export default function Catalogo() {
       ══════════════════════════════════════════════════ */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 800, width: '96vw', display: 'flex', flexDirection: 'column', maxHeight: '92vh', padding: 0, overflow: 'hidden' }}>
+          <div className="modal" style={{ maxWidth: productMode === 'kit' ? 980 : 780, width: '98vw', display: 'flex', flexDirection: 'column', maxHeight: '94vh', padding: 0, overflow: 'hidden' }}>
             {/* ── HEADER FIJO ── */}
             <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -757,7 +757,7 @@ export default function Catalogo() {
                   background: productMode === 'producto' ? 'var(--brand)' : 'transparent',
                   color: productMode === 'producto' ? '#fff' : 'var(--txt3)',
                 }}>
-                <i className="fa fa-box" style={{ fontSize: 13 }} /> Producto terminado
+                <i className="fa fa-box" style={{ fontSize: 13 }} /> Producto
               </button>
               <button onClick={() => setProductMode('kit')}
                 style={{
@@ -770,6 +770,13 @@ export default function Catalogo() {
                 <i className="fa fa-gift" style={{ fontSize: 13 }} /> Kit / Box
               </button>
             </div>
+
+            {/* ══ KIT: 2 columnas │ PRODUCTO: 1 columna ══ */}
+            {productMode === 'kit' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
+
+              {/* ── COL IZQUIERDA: datos + componentes ── */}
+              <div>
 
             {/* ── CARD 1: Datos del producto ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
@@ -837,7 +844,7 @@ export default function Catalogo() {
             {/* ══════════════════════════════════════════════
                 CARD 2 KIT: CONSTRUCTOR DE COMPONENTES
             ══════════════════════════════════════════════ */}
-            {productMode === 'kit' && (
+            {true && (
               <div style={{
                 background: 'linear-gradient(135deg, #FAF5FF, #FDF2F8)',
                 borderRadius: 12, padding: '14px 16px', marginBottom: 12,
@@ -1086,6 +1093,11 @@ export default function Catalogo() {
               </div>
             )}
 
+              </div>{/* /col izquierda */}
+
+              {/* ── COL DERECHA: precio + imagen ── */}
+              <div>
+
             {/* ── CARD COSTO · MARGEN · PRECIO ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1168,6 +1180,98 @@ export default function Catalogo() {
                   </div>
                 </div>
               </div>
+            )}
+
+              </div>
+              </div>
+            ) : (
+              /* ══ PRODUCTO MODE: datos + precio + imagen ══ */
+              <>
+                {/* Card datos producto */}
+                <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="fa fa-tag" /> Datos del producto
+                  </div>
+                  <div className="fg"><label>Nombre *</label>
+                    <input autoFocus type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" />
+                  </div>
+                  <div className="modal-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 12px' }}>
+                    <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
+                      <select value={form.cat} onChange={e => setF('cat', e.target.value)}>
+                        {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
+                      </select>
+                    </div>
+                    <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor</label>
+                      <select value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}>
+                        <option value="">Sin asignar</option>
+                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="fg" style={{ marginBottom: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 11 }} />
+                        Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ paddingRight: form.stock !== '' ? 52 : undefined }} />
+                        {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Card costo producto */}
+                <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="fa fa-coins" /> Costo · Margen · Precio
+                  </div>
+                  <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr 28px 1fr', gap: '0 6px', alignItems: 'end' }}>
+                    <div className="fg" style={{ marginBottom: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} /> Costo del producto
+                      </label>
+                      <input type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
+                    <div className="fg" style={{ marginBottom: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <i className="fa fa-percent" style={{ color: 'var(--txt3)', fontSize: 10 }} /> Margen (%)
+                      </label>
+                      <input type="number" value={marginInput} onChange={e => onMarginChange(e.target.value)} placeholder="%" min="0" />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
+                    <div className="fg" style={{ marginBottom: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <i className="fa fa-tag" style={{ color: 'var(--green)', fontSize: 10 }} /> Precio de Venta
+                      </label>
+                      <input type="number" value={form.price || ''} onChange={e => onPriceChange(e.target.value)} placeholder="0" min="0" style={{ borderColor: 'var(--green)', borderWidth: 2 }} />
+                    </div>
+                  </div>
+                  {num(form.cost) > 0 && num(form.price) > 0 && (
+                    <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > num(form.cost) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > num(form.cost) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > num(form.cost) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <i className={`fa fa-arrow-trend-${num(form.price) > num(form.cost) ? 'up' : 'down'}`} />
+                      Ganancia: ${(num(form.price) - num(form.cost)).toLocaleString('es-AR')} · Margen: {marginInput || 0}%
+                    </div>
+                  )}
+                </div>
+                {/* Imagen producto */}
+                <button onClick={() => setShowAdvanced(s => !s)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: showAdvanced ? '10px 10px 0 0' : 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: 'var(--txt2)' }}>
+                  <span><i className="fa fa-image" style={{ marginRight: 6, color: 'var(--brand)' }} />Imagen del producto <span style={{ fontWeight: 400, color: 'var(--txt4)' }}>(opcional)</span></span>
+                  <i className={`fa fa-chevron-${showAdvanced ? 'up' : 'down'}`} style={{ fontSize: 11 }} />
+                </button>
+                {showAdvanced && (
+                  <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {form.image ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} /> : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-image" style={{ color: 'var(--txt4)', fontSize: 20, opacity: .5 }} /></div>}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <input ref={imgRef} type="file" accept="image/*" onChange={handleImgUpload} style={{ display: 'none' }} />
+                        <button className="btn btn-ghost btn-sm" type="button" onClick={() => imgRef.current?.click()}><i className="fa fa-upload" /> {form.image ? 'Cambiar' : 'Subir imagen'}</button>
+                        {form.image && <button className="btn btn-ghost btn-sm" type="button" style={{ color: 'var(--red)' }} onClick={() => setF('image', '')}><i className="fa fa-trash" /> Quitar</button>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             </div>{/* /body scrollable */}
