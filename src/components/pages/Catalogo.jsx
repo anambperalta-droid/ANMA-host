@@ -40,6 +40,23 @@ const CAT_PALETTE = [
   { bg: '#F1F5F9', color: '#94A3B8' },
 ]
 
+// ── Badge KIT ───────────────────────────────────────────────────────
+function KitBadge({ small }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      background: 'linear-gradient(135deg, #FDF2F8, #F5F3FF)',
+      color: '#8B5CF6', border: '1px solid #DDD6FE',
+      fontSize: small ? 8.5 : 9.5, fontWeight: 800,
+      padding: small ? '1px 5px' : '2px 7px',
+      borderRadius: 20, letterSpacing: 0.3, flexShrink: 0,
+    }}>
+      <i className="fa fa-gift" style={{ fontSize: small ? 7 : 9 }} />
+      KIT
+    </span>
+  )
+}
+
 export default function Catalogo() {
   const { get, config, updateConfig, saveEntity, deleteEntity } = useData()
   const toast   = useToast()
@@ -80,6 +97,23 @@ export default function Catalogo() {
   const [marginInput, setMarginInput] = useState('')
   const imgRef = useRef(null)
 
+  // ── Estado del Kit Builder ────────────────────────────────────────
+  const [componentes, setComponentes] = useState([])
+  const [compForm, setCompForm]       = useState({ nombre: '', qty: 1, costoUnit: '' })
+  const [compSearch, setCompSearch]   = useState('')
+  const [compDropdown, setCompDropdown] = useState(false)
+  const compInputRef = useRef(null)
+
+  const kitCost = componentes.reduce((s, c) => s + (num(c.qty) * num(c.costoUnit)), 0)
+
+  // Sincronizar costo del kit → form.cost y recalcular precio
+  useEffect(() => {
+    if (productMode !== 'kit') return
+    setF('cost', kitCost)
+    const m = parseFloat(marginInput)
+    if (!isNaN(m) && kitCost > 0) setF('price', Math.round(kitCost * (1 + m / 100)))
+  }, [componentes, productMode]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
   const products = get('products')
@@ -98,13 +132,20 @@ export default function Catalogo() {
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const safeCat = (val) => (val && cats.includes(val)) ? val : (cats[0] || '')
+
   const open = (p) => {
-    setProductMode('buy')
+    const isKit = p?.tipo === 'kit'
+    setProductMode(isKit ? 'kit' : 'buy')
     setShowAdvanced(false)
+    // Inicializar componentes del kit
+    setComponentes(isKit && p.componentes ? p.componentes : [])
+    setCompForm({ nombre: '', qty: 1, costoUnit: '' })
+    setCompSearch('')
+
     if (p) {
       setForm({ ...p, cat: p.cat ?? '', image: p.image || '' })
-      const c = num(p.cost); const pr = num(p.price || 0)
-      setMarginInput(c > 0 && pr > 0 ? String(Math.round((pr - c) / c * 100)) : String(margin))
+      const cv = num(p.cost); const pr = num(p.price || 0)
+      setMarginInput(cv > 0 && pr > 0 ? String(Math.round((pr - cv) / cv * 100)) : String(margin))
     } else {
       setMarginInput(String(margin))
       setForm({ name: '', cat: cats[0] || '', cost: '', supplierId: '', image: '', price: '' })
@@ -119,13 +160,62 @@ export default function Catalogo() {
     setF('image', compressed)
     e.target.value = ''
   }
+
   const save = () => {
     if (!form.name) { toast('Ingresá el nombre del producto.', 'er'); return }
-    saveEntity('products', { ...form, cat: form.cat ?? '', cost: num(form.cost), price: num(form.price), updatedAt: new Date().toISOString().slice(0,10) })
+    if (productMode === 'kit' && componentes.length === 0) {
+      toast('Agregá al menos un componente al kit.', 'er'); return
+    }
+    const finalCost = productMode === 'kit' ? kitCost : num(form.cost)
+    saveEntity('products', {
+      ...form,
+      cat:         form.cat ?? '',
+      cost:        finalCost,
+      price:       num(form.price),
+      tipo:        productMode === 'kit' ? 'kit' : (form.tipo === 'kit' ? 'producto' : (form.tipo || 'producto')),
+      componentes: productMode === 'kit' ? componentes : [],
+      updatedAt:   new Date().toISOString().slice(0, 10),
+    })
     setModal(false)
     toast('Producto guardado', 'ok')
   }
+
   const del = (id) => confirm('¿Eliminar producto?', () => { deleteEntity('products', id); toast('Producto eliminado', 'in') })
+
+  // ── Funciones del Kit Builder ─────────────────────────────────────
+  const compSuggestions = useMemo(() => {
+    if (!compSearch.trim()) return products.slice(0, 6)
+    const sq = compSearch.toLowerCase()
+    return products.filter(p => p.name.toLowerCase().includes(sq)).slice(0, 6)
+  }, [products, compSearch])
+
+  const addComp = () => {
+    const nombre = compForm.nombre.trim()
+    if (!nombre) { toast('Ingresá el nombre del componente', 'er'); return }
+    setComponentes(prev => [...prev, {
+      _cid:     Date.now(),
+      nombre,
+      qty:      num(compForm.qty) || 1,
+      costoUnit: num(compForm.costoUnit) || 0,
+      productId: compForm.productId || null,
+    }])
+    setCompForm({ nombre: '', qty: 1, costoUnit: '' })
+    setCompSearch('')
+    setCompDropdown(false)
+    setTimeout(() => compInputRef.current?.focus(), 50)
+  }
+
+  const selectFromCatalog = (p) => {
+    setCompForm({ nombre: p.name, qty: 1, costoUnit: p.cost, productId: p.id })
+    setCompSearch(p.name)
+    setCompDropdown(false)
+    setTimeout(() => compInputRef.current?.focus(), 50)
+  }
+
+  const removeComp = (cid) => setComponentes(prev => prev.filter(c => c._cid !== cid))
+  const updateComp = (cid, field, val) =>
+    setComponentes(prev => prev.map(c => c._cid === cid ? { ...c, [field]: val } : c))
+
   const doBulk = () => {
     const lines = bulkData.split('\n').filter(l => l.trim())
     let count = 0
@@ -144,23 +234,23 @@ export default function Catalogo() {
 
   const onCostChange = (v) => {
     setF('cost', v)
-    const c = parseFloat(v)
+    const cv = parseFloat(v)
     const m = parseFloat(marginInput)
-    if (!isNaN(c) && c > 0 && !isNaN(m) && marginInput !== '') {
-      setF('price', Math.round(c * (1 + m / 100)))
+    if (!isNaN(cv) && cv > 0 && !isNaN(m) && marginInput !== '') {
+      setF('price', Math.round(cv * (1 + m / 100)))
     }
   }
   const onMarginChange = (v) => {
     setMarginInput(v)
-    const c = num(form.cost)
+    const cv = productMode === 'kit' ? kitCost : num(form.cost)
     const m = parseFloat(v)
-    if (c > 0 && !isNaN(m)) setF('price', Math.round(c * (1 + m / 100)))
+    if (cv > 0 && !isNaN(m)) setF('price', Math.round(cv * (1 + m / 100)))
   }
   const onPriceChange = (v) => {
     setF('price', v)
-    const c = num(form.cost)
+    const cv = productMode === 'kit' ? kitCost : num(form.cost)
     const p = parseFloat(v)
-    if (c > 0 && !isNaN(p) && p > 0) setMarginInput(String(Math.round((p - c) / c * 100)))
+    if (cv > 0 && !isNaN(p) && p > 0) setMarginInput(String(Math.round((p - cv) / cv * 100)))
   }
 
   const catColor = (cat) => {
@@ -247,10 +337,11 @@ export default function Catalogo() {
     if (selectedIds.size > 0) setSelectedIds(new Set())
   }
 
-  /* ── ESC cierra modales (prioridad: topmost primero) ── */
+  /* ── ESC cierra modales ── */
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
+        if (compDropdown) { setCompDropdown(false); return }
         if (catMgmtModal) { setCatMgmtModal(false); setEditingCat(null); return }
         if (bulkCatModal) { setBulkCatModal(false); return }
         if (bulkSupplierModal) { setBulkSupplierModal(false); return }
@@ -262,7 +353,7 @@ export default function Catalogo() {
     }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
-  }, [catMgmtModal, bulkCatModal, bulkSupplierModal, csvModal, bulkModal, priceUpdateModal, modal])
+  }, [catMgmtModal, bulkCatModal, bulkSupplierModal, csvModal, bulkModal, priceUpdateModal, modal, compDropdown])
 
   const handleCsvFile = (e) => {
     const file = e.target.files?.[0]
@@ -317,6 +408,11 @@ export default function Catalogo() {
               </button>
             </div>
           </div>
+          {/* ── Botón Nuevo Kit ── */}
+          <button className="cli-pill" onClick={() => { setProductMode('kit'); open() }}
+            style={{ background: 'linear-gradient(135deg,#FDF2F8,#F5F3FF)', borderColor: '#DDD6FE', color: '#8B5CF6' }}>
+            <i className="fa fa-gift" /><span>Nuevo Kit</span>
+          </button>
           <button className="cli-pill-new" onClick={() => open()}>
             <i className="fa fa-plus" /><span>Nuevo</span>
           </button>
@@ -335,11 +431,15 @@ export default function Catalogo() {
         .cli-pill-new i{font-size:11px}
         @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}.cat-ph{display:none!important}}
         @media(max-width:480px){.cat-price-calc{grid-template-columns:1fr!important}.cat-price-arrow{display:none!important}}
+        .comp-row{display:grid;grid-template-columns:1fr 56px 80px 30px;gap:6px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:5px}
+        .comp-row input{padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--txt);background:var(--surface);outline:none;width:100%;box-sizing:border-box}
+        .comp-row input:focus{border-color:var(--brand)}
+        .comp-add-row{display:grid;grid-template-columns:1fr 64px 88px auto;gap:6px;align-items:end;margin-top:8px}
+        @media(max-width:520px){.comp-add-row{grid-template-columns:1fr 52px 72px auto}.comp-row{grid-template-columns:1fr 48px 72px 28px}}
       `}</style>
 
       <div className="pill-row cat-pill-row">
         <div className="search-row" style={{ maxWidth: 280 }}><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} /></div>
-        {/* Contenedor scroll-horizontal en mobile, flex-wrap normal en desktop */}
         <div className="cat-scroll-row">
           <div className="cat-scroll-pills">
             {cats.length > 6 ? (
@@ -358,12 +458,12 @@ export default function Catalogo() {
               </>
             )}
           </div>
-          {/* Gestionar: fijo en extremo derecho con degradado en mobile */}
           <button className="cat-gestionar" onClick={() => setCatMgmtModal(true)} title="Gestionar categorías">
             <i className="fa fa-sliders" /> Gestionar
           </button>
         </div>
       </div>
+
       {/* ── MOBILE CARD LIST (≤640px) ── */}
       <div className="cat-mob-list">
         {loading ? [1,2,3,4].map(i => (
@@ -372,6 +472,7 @@ export default function Catalogo() {
           </div>
         )) : filtered.length ? filtered.map(p => {
           const cc = catColor(p.cat)
+          const isKit = p.tipo === 'kit'
           return (
             <div key={p.id} className="cat-mob-item" onClick={() => open(p)}>
               <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
@@ -380,10 +481,15 @@ export default function Catalogo() {
               <div className="cat-mob-item-l">
                 {p.image
                   ? <img src={p.image} className="cat-mob-item-img" alt={p.name} />
-                  : <div className="cat-mob-item-noimg"><i className="fa fa-box-open" style={{ color: cc.color, fontSize: 16, opacity: .6 }} /></div>
+                  : <div className="cat-mob-item-noimg">
+                      <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ color: isKit ? '#8B5CF6' : cc.color, fontSize: 16, opacity: .6 }} />
+                    </div>
                 }
                 <div className="cat-mob-item-info">
-                  <span className="cat-mob-item-name">{p.name}</span>
+                  <span className="cat-mob-item-name" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    {p.name}
+                    {isKit && <KitBadge small />}
+                  </span>
                   {p.cat && <span className="cat-mob-item-cat">{p.cat}</span>}
                 </div>
                 <span className="cat-mob-item-price">{fmt(suggestedPrice(p.cost))}</span>
@@ -440,6 +546,7 @@ export default function Catalogo() {
               )) : filtered.length ? filtered.map(p => {
                 const pct = marginPct(p)
                 const cc = catColor(p.cat)
+                const isKit = p.tipo === 'kit'
                 return (
                   <tr key={p.id}>
                     <td style={{ textAlign: 'center' }}>
@@ -447,13 +554,20 @@ export default function Catalogo() {
                     </td>
                     <td>
                       {p.image && <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
+                      {!p.image && isKit && <i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 8, fontSize: 16, verticalAlign: 'middle' }} />}
                       <span style={{ fontWeight: 800 }}>{p.name}</span>
+                      {isKit && <span style={{ marginLeft: 6, verticalAlign: 'middle' }}><KitBadge small /></span>}
                     </td>
                     <td className="col-hide-mobile">
                       <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: cc.bg, color: cc.color, letterSpacing: 0.2 }}>{p.cat}</span>
                     </td>
                     <td className="col-hide-mobile">{supplierName(p.supplierId)}</td>
-                    {!opHideCosts && <td>{fmt(p.cost)}</td>}
+                    {!opHideCosts && <td>
+                      <span>{fmt(p.cost)}</span>
+                      {isKit && p.componentes?.length > 0 && (
+                        <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 4 }}>({p.componentes.length} comp.)</span>
+                      )}
+                    </td>}
                     {!opHideCosts && <td className="col-hide-mobile">
                       {pct !== null ? (
                         <span style={{ fontWeight: 800, fontSize: 13, color: marginColor(pct) }}>{pct}%</span>
@@ -495,22 +609,34 @@ export default function Catalogo() {
           )) : filtered.length ? filtered.map(p => {
             const pct = marginPct(p)
             const cc = catColor(p.cat)
+            const isKit = p.tipo === 'kit'
             return (
               <div key={p.id} className="prod-card" onClick={() => open(p)}>
                 {/* IMAGE */}
-                <div className="prod-card-img" style={{ background: cc.bg }}>
+                <div className="prod-card-img" style={{ background: isKit ? '#F5F3FF' : cc.bg }}>
                   {p.image
                     ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <i className="fa fa-box-open" style={{ fontSize: 38, color: cc.color, opacity: .5 }} />
+                    : <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ fontSize: 38, color: isKit ? '#8B5CF6' : cc.color, opacity: .5 }} />
                   }
                   <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
                     style={{ position: 'absolute', top: 8, left: 8, width: 16, height: 16, cursor: 'pointer' }}
                     onClick={e => e.stopPropagation()} />
+                  {isKit && (
+                    <div style={{ position: 'absolute', top: 8, right: 8 }}>
+                      <KitBadge />
+                    </div>
+                  )}
                 </div>
                 {/* BODY */}
                 <div className="prod-card-body">
                   <div className="prod-card-name" title={p.name}>{p.name}</div>
-                  <span className="prod-card-cat" style={{ background: cc.bg, color: cc.color }}>{p.cat || '—'}</span>
+                  <span className="prod-card-cat" style={{ background: isKit ? '#F5F3FF' : cc.bg, color: isKit ? '#8B5CF6' : cc.color }}>{p.cat || '—'}</span>
+                  {isKit && p.componentes?.length > 0 && (
+                    <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 2 }}>
+                      <i className="fa fa-layer-group" style={{ marginRight: 3 }} />
+                      {p.componentes.length} componente{p.componentes.length !== 1 ? 's' : ''}
+                    </div>
+                  )}
                   <div className="prod-card-price">{fmt(suggestedPrice(p.cost))}</div>
                   {!opHideCosts && <div className="prod-card-cost">Costo: {fmt(p.cost)}</div>}
                   {pct !== null && (
@@ -575,17 +701,38 @@ export default function Catalogo() {
         </div>
       )}
 
+      {/* ══════════════════════════════════════════════════
+          MODAL PRODUCTO / KIT
+      ══════════════════════════════════════════════════ */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 640 }}>
-            <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} producto</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
+          <div className="modal" style={{ maxWidth: 680 }}>
+            <div className="mh">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {productMode === 'kit' && <i className="fa fa-gift" style={{ color: '#8B5CF6' }} />}
+                {form.id ? 'Editar' : 'Agregar'} {productMode === 'kit' ? 'Kit / Box' : 'producto'}
+              </h3>
+              <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
+            </div>
 
             {/* ── TIPO DE OPERACIÓN ── */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, background: 'var(--surface2)', borderRadius: 12, padding: 5, border: '1px solid var(--border)' }}>
-              {[['buy', 'fa-box', 'Compro Producto Terminado'], ['make', 'fa-screwdriver-wrench', 'Fabrico / Armo el Producto']].map(([m, icon, label]) => (
+            <div style={{ display: 'flex', gap: 5, marginBottom: 16, background: 'var(--surface2)', borderRadius: 12, padding: 5, border: '1px solid var(--border)' }}>
+              {[
+                ['buy',  'fa-box',              'Compro Terminado'],
+                ['make', 'fa-screwdriver-wrench','Fabrico / Armo'],
+                ['kit',  'fa-gift',              '🎁 Kit / Box'],
+              ].map(([m, icon, label]) => (
                 <button key={m} onClick={() => setProductMode(m)}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 12px', borderRadius: 9, border: 'none', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .15s', background: productMode === m ? 'var(--brand)' : 'transparent', color: productMode === m ? '#fff' : 'var(--txt3)' }}>
-                  <i className={`fa ${icon}`} style={{ fontSize: 13 }} />{label}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '9px 10px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
+                    fontSize: 11.5, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
+                    background: productMode === m
+                      ? (m === 'kit' ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'var(--brand)')
+                      : 'transparent',
+                    color: productMode === m ? '#fff' : 'var(--txt3)',
+                  }}>
+                  <i className={`fa ${icon}`} style={{ fontSize: 12 }} />{label}
                 </button>
               ))}
             </div>
@@ -593,9 +740,13 @@ export default function Catalogo() {
             {/* ── CARD 1: Datos del producto ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fa fa-tag" /> Datos del producto
+                <i className="fa fa-tag" /> {productMode === 'kit' ? 'Datos del Kit' : 'Datos del producto'}
               </div>
-              <div className="fg"><label>Nombre *</label><input autoFocus tabIndex={1} type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" /></div>
+              <div className="fg"><label>{productMode === 'kit' ? 'Nombre del Kit *' : 'Nombre *'}</label>
+                <input autoFocus tabIndex={1} type="text" value={form.name}
+                  onChange={e => setF('name', e.target.value)}
+                  placeholder={productMode === 'kit' ? 'Ej: Kit Bienestar Premium, Box Emprendedor...' : 'Taza sublimada 11oz'} />
+              </div>
               <div className="grid2">
                 <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
                   <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
@@ -603,7 +754,7 @@ export default function Catalogo() {
                     {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
                   </select>
                 </div>
-                <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor</label>
+                <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor / Armador</label>
                   <select tabIndex={3} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}>
                     <option value="">Sin asignar</option>
                     {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -612,18 +763,258 @@ export default function Catalogo() {
               </div>
             </div>
 
-            {/* ── CARD 2: Costo · Margen · Precio ── */}
+            {/* ══════════════════════════════════════════════
+                CARD 2 KIT: CONSTRUCTOR DE COMPONENTES
+            ══════════════════════════════════════════════ */}
+            {productMode === 'kit' && (
+              <div style={{
+                background: 'linear-gradient(135deg, #FAF5FF, #FDF2F8)',
+                borderRadius: 12, padding: '14px 16px', marginBottom: 12,
+                border: '1.5px solid #DDD6FE',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '.7px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="fa fa-layer-group" /> Componentes del Kit
+                    <span style={{ background: '#EDE9FE', color: '#8B5CF6', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
+                      {componentes.length}
+                    </span>
+                  </div>
+                  {componentes.length > 0 && (
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#8B5CF6' }}>
+                      Costo total: <span style={{ color: '#059669' }}>{fmt(kitCost)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Lista de componentes agregados */}
+                {componentes.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    {/* Headers */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 80px 30px', gap: 6, padding: '0 10px 4px', fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      <span>Componente</span><span style={{ textAlign: 'center' }}>Cant.</span><span style={{ textAlign: 'right' }}>Costo/u</span><span />
+                    </div>
+                    {componentes.map((comp, idx) => {
+                      const lineCost = num(comp.qty) * num(comp.costoUnit)
+                      return (
+                        <div key={comp._cid} className="comp-row" style={{ background: idx % 2 === 0 ? 'var(--surface)' : 'var(--surface2)' }}>
+                          <div style={{ minWidth: 0 }}>
+                            <input
+                              value={comp.nombre}
+                              onChange={e => updateComp(comp._cid, 'nombre', e.target.value)}
+                              style={{ fontWeight: 600 }}
+                              placeholder="Componente"
+                            />
+                            {lineCost > 0 && (
+                              <div style={{ fontSize: 9, color: 'var(--txt3)', marginTop: 1 }}>
+                                Subtotal: <span style={{ fontWeight: 700, color: '#059669' }}>{fmt(lineCost)}</span>
+                                {comp.productId && <span style={{ marginLeft: 4, color: '#8B5CF6' }}><i className="fa fa-link" /></span>}
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            type="number" min="0.1" step="0.1"
+                            value={comp.qty}
+                            onChange={e => updateComp(comp._cid, 'qty', e.target.value)}
+                            onFocus={selectOnFocus}
+                            style={{ textAlign: 'center' }}
+                          />
+                          <input
+                            type="number" min="0"
+                            value={comp.costoUnit}
+                            onChange={e => updateComp(comp._cid, 'costoUnit', e.target.value)}
+                            onFocus={selectOnFocus}
+                            style={{ textAlign: 'right' }}
+                          />
+                          <button
+                            onClick={() => removeComp(comp._cid)}
+                            style={{ width: 26, height: 26, border: '1px solid #FECACA', background: '#FFF1F2', color: '#DC2626', borderRadius: 6, cursor: 'pointer', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                          >
+                            <i className="fa fa-xmark" />
+                          </button>
+                        </div>
+                      )
+                    })}
+                    {/* Barra de costo total */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                      padding: '6px 10px 0', gap: 6,
+                    }}>
+                      <span style={{ fontSize: 11, color: 'var(--txt3)' }}>
+                        {componentes.length} componente{componentes.length !== 1 ? 's' : ''} ·
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#059669' }}>
+                        Costo kit: {fmt(kitCost)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulario para agregar componente */}
+                <div style={{
+                  background: 'rgba(255,255,255,.7)', borderRadius: 10, padding: '10px 12px',
+                  border: '1px dashed #DDD6FE', marginTop: componentes.length > 0 ? 8 : 0,
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', marginBottom: 7, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <i className="fa fa-plus-circle" style={{ marginRight: 4 }} />Agregar componente
+                  </div>
+                  <div className="comp-add-row">
+                    {/* Campo nombre con dropdown de catálogo */}
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        ref={compInputRef}
+                        type="text"
+                        value={compSearch}
+                        onChange={e => {
+                          const v = e.target.value
+                          setCompSearch(v)
+                          setCompForm(f => ({ ...f, nombre: v, productId: null }))
+                          setCompDropdown(true)
+                        }}
+                        onFocus={() => setCompDropdown(true)}
+                        onBlur={() => setTimeout(() => setCompDropdown(false), 150)}
+                        placeholder="Nombre o buscar del catálogo…"
+                        style={{
+                          width: '100%', padding: '7px 10px',
+                          border: '1.5px solid #DDD6FE', borderRadius: 8,
+                          fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
+                          background: 'var(--surface)', outline: 'none', boxSizing: 'border-box',
+                        }}
+                        onFocusCapture={e => e.target.style.borderColor = '#8B5CF6'}
+                        onBlurCapture={e  => e.target.style.borderColor = '#DDD6FE'}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addComp() } }}
+                      />
+                      {/* Dropdown de sugerencias */}
+                      {compDropdown && compSuggestions.length > 0 && (
+                        <div style={{
+                          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 400,
+                          background: 'var(--surface)', border: '1.5px solid #DDD6FE',
+                          borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+                          maxHeight: 200, overflowY: 'auto', marginTop: 2,
+                        }}>
+                          {compSearch && (
+                            <div
+                              onMouseDown={() => { setCompForm(f => ({ ...f, nombre: compSearch, productId: null })); setCompDropdown(false) }}
+                              style={{ padding: '8px 12px', fontSize: 11.5, cursor: 'pointer', color: 'var(--txt3)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6 }}
+                            >
+                              <i className="fa fa-pen" style={{ color: '#94A3B8' }} />
+                              Usar "<b>{compSearch}</b>" como componente libre
+                            </div>
+                          )}
+                          {compSuggestions.map(p => (
+                            <div
+                              key={p.id}
+                              onMouseDown={() => selectFromCatalog(p)}
+                              style={{
+                                padding: '9px 12px', fontSize: 12, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                borderBottom: '1px solid var(--border)',
+                                transition: 'background .1s',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#F5F3FF'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                              <span style={{ fontWeight: 600, color: 'var(--txt)' }}>
+                                <i className="fa fa-link" style={{ color: '#8B5CF6', marginRight: 6, fontSize: 9 }} />
+                                {p.name}
+                              </span>
+                              <span style={{ fontSize: 11, color: '#059669', fontWeight: 700 }}>{fmt(p.cost)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Cantidad */}
+                    <input
+                      type="number" min="0.1" step="0.1"
+                      value={compForm.qty}
+                      onChange={e => setCompForm(f => ({ ...f, qty: e.target.value }))}
+                      onFocus={selectOnFocus}
+                      placeholder="Cant."
+                      style={{
+                        padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8,
+                        fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
+                        background: 'var(--surface)', textAlign: 'center', width: '100%', boxSizing: 'border-box',
+                      }}
+                    />
+
+                    {/* Costo unitario */}
+                    <input
+                      type="number" min="0"
+                      value={compForm.costoUnit}
+                      onChange={e => setCompForm(f => ({ ...f, costoUnit: e.target.value }))}
+                      onFocus={selectOnFocus}
+                      placeholder="$ Costo"
+                      style={{
+                        padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8,
+                        fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
+                        background: 'var(--surface)', textAlign: 'right', width: '100%', boxSizing: 'border-box',
+                      }}
+                    />
+
+                    {/* Botón Agregar */}
+                    <button
+                      onClick={addComp}
+                      disabled={!compForm.nombre.trim()}
+                      style={{
+                        height: 34, padding: '0 12px', borderRadius: 8, border: 'none',
+                        background: compForm.nombre.trim() ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'var(--surface3)',
+                        color: compForm.nombre.trim() ? '#fff' : 'var(--txt4)',
+                        fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                        whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4,
+                        transition: 'all .15s',
+                      }}
+                    >
+                      <i className="fa fa-plus" /> Agregar
+                    </button>
+                  </div>
+
+                  {/* Subtotal en tiempo real del form */}
+                  {compForm.costoUnit && num(compForm.qty) > 0 && num(compForm.costoUnit) > 0 && (
+                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 6, textAlign: 'right' }}>
+                      Subtotal: <span style={{ color: '#059669', fontWeight: 700 }}>
+                        {fmt(num(compForm.qty) * num(compForm.costoUnit))}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mensaje vacío */}
+                {componentes.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '10px 0 4px', fontSize: 11, color: 'var(--txt4)' }}>
+                    <i className="fa fa-arrow-up" style={{ marginRight: 4 }} />
+                    Buscá en el catálogo o escribí un componente libre
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── CARD COSTO · MARGEN · PRECIO ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fa fa-coins" /> Costo · Margen · Precio
+                <i className="fa fa-coins" /> {productMode === 'kit' ? 'Costo del Kit · Margen · Precio' : 'Costo · Margen · Precio'}
               </div>
               <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr 28px 1fr', gap: '0 6px', alignItems: 'end' }}>
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} />
-                    {productMode === 'buy' ? 'Precio de Compra' : 'Costo de Fabricación'}
+                    {productMode === 'kit' ? 'Costo del Kit (auto)' : productMode === 'buy' ? 'Precio de Compra' : 'Costo de Fabricación'}
                   </label>
-                  <input tabIndex={4} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
+                  {productMode === 'kit' ? (
+                    // Costo auto-calculado — read only con indicador visual
+                    <div style={{
+                      padding: '8px 10px', background: componentes.length > 0 ? '#F0FDF4' : 'var(--surface)',
+                      border: `1.5px solid ${componentes.length > 0 ? '#86EFAC' : 'var(--border)'}`,
+                      borderRadius: 8, fontSize: 13, fontWeight: 800,
+                      color: componentes.length > 0 ? '#059669' : 'var(--txt4)',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      <i className="fa fa-calculator" style={{ fontSize: 10 }} />
+                      {componentes.length > 0 ? fmt(kitCost) : '— Agregá componentes'}
+                    </div>
+                  ) : (
+                    <input tabIndex={4} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
+                  )}
                 </div>
                 <div className="cat-price-arrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
                 <div className="fg" style={{ marginBottom: 0 }}>
@@ -642,28 +1033,28 @@ export default function Catalogo() {
                   <input tabIndex={6} type="number" value={form.price || ''} onChange={e => onPriceChange(e.target.value)} placeholder="0" min="0" style={{ borderColor: 'var(--green)', borderWidth: 2 }} />
                 </div>
               </div>
-              {num(form.cost) > 0 && num(form.price) > 0 && (
-                <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > num(form.cost) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > num(form.cost) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > num(form.cost) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className={`fa fa-arrow-${num(form.price) > num(form.cost) ? 'trend-up' : 'trend-down'}`} />
-                  Ganancia por unidad: ${(num(form.price) - num(form.cost)).toLocaleString('es-AR')} · Margen real: {marginInput || 0}%
+              {(productMode === 'kit' ? kitCost : num(form.cost)) > 0 && num(form.price) > 0 && (
+                <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className={`fa fa-arrow-${num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'trend-up' : 'trend-down'}`} />
+                  Ganancia por unidad: ${(num(form.price) - (productMode === 'kit' ? kitCost : num(form.cost))).toLocaleString('es-AR')} · Margen real: {marginInput || 0}%
                 </div>
               )}
             </div>
 
             {/* ── ACORDEÓN: Configuración avanzada ── */}
             <button onClick={() => setShowAdvanced(s => !s)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: showAdvanced ? 0 : 4 }}>
-              <span><i className="fa fa-sliders" style={{ marginRight: 6, color: 'var(--brand)' }} />Configuración avanzada y logística</span>
+              <span><i className="fa fa-sliders" style={{ marginRight: 6, color: 'var(--brand)' }} />Imagen y configuración avanzada</span>
               <i className={`fa fa-chevron-${showAdvanced ? 'up' : 'down'}`} style={{ fontSize: 11 }} />
             </button>
             {showAdvanced && (
               <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px 16px', marginBottom: 4 }}>
                 <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>Imagen del producto <span style={{ fontWeight: 400, color: 'var(--txt3)' }}>(opcional)</span></label>
+                  <label>Imagen {productMode === 'kit' ? 'del kit' : 'del producto'} <span style={{ fontWeight: 400, color: 'var(--txt3)' }}>(opcional)</span></label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {form.image
                       ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} />
-                      : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <i className="fa fa-image" style={{ color: 'var(--txt4)', fontSize: 20 }} />
+                      : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: productMode === 'kit' ? '#F5F3FF' : 'transparent' }}>
+                          <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-image'}`} style={{ color: productMode === 'kit' ? '#8B5CF6' : 'var(--txt4)', fontSize: 20, opacity: .5 }} />
                         </div>
                     }
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -682,10 +1073,19 @@ export default function Catalogo() {
               </div>
             )}
 
-            <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
+            <div className="mfooter">
+              <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={save}
+                style={productMode === 'kit' ? { background: 'linear-gradient(135deg,#8B5CF6,#DB2777)', border: 'none' } : {}}>
+                <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-floppy-disk'}`} />
+                {' '}{productMode === 'kit' ? 'Guardar Kit' : 'Guardar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+      {/* ══ RESTO DE MODALES (sin cambios) ══ */}
 
       {priceUpdateModal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setPriceUpdateModal(false) }}>
