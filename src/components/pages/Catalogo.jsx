@@ -334,6 +334,7 @@ export default function Catalogo() {
         .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
         @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}.cat-ph{display:none!important}}
+        @media(max-width:480px){.cat-price-calc{grid-template-columns:1fr!important}.cat-price-arrow{display:none!important}}
       `}</style>
 
       <div className="pill-row cat-pill-row">
@@ -545,7 +546,7 @@ export default function Catalogo() {
       </div>{/* /cat-desk-view */}
 
       {selectedIds.size > 0 && (
-        <div style={{
+        <div className="bulk-float" style={{
           position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
           background: 'var(--surface)', border: '2px solid var(--brand)', borderRadius: 14,
           boxShadow: '0 8px 32px rgba(0,0,0,.18)', padding: '10px 16px',
@@ -616,7 +617,7 @@ export default function Catalogo() {
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <i className="fa fa-coins" /> Costo · Margen · Precio
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr 28px 1fr', gap: '0 6px', alignItems: 'end' }}>
+              <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr 28px 1fr', gap: '0 6px', alignItems: 'end' }}>
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} />
@@ -624,7 +625,7 @@ export default function Catalogo() {
                   </label>
                   <input tabIndex={4} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
+                <div className="cat-price-arrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <i className="fa fa-percent" style={{ color: 'var(--txt3)', fontSize: 10 }} />
@@ -632,7 +633,7 @@ export default function Catalogo() {
                   </label>
                   <input tabIndex={5} type="number" value={marginInput} onChange={e => onMarginChange(e.target.value)} placeholder="%" min="0" />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
+                <div className="cat-price-arrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <i className="fa fa-tag" style={{ color: 'var(--green)', fontSize: 10 }} />
