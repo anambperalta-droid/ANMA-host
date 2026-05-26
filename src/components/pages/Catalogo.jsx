@@ -102,17 +102,19 @@ export default function Catalogo() {
   const [compForm, setCompForm]       = useState({ nombre: '', qty: 1, costoUnit: '' })
   const [compSearch, setCompSearch]   = useState('')
   const [compDropdown, setCompDropdown] = useState(false)
+  const [costoExtra, setCostoExtra]   = useState('')   // packaging / presentación
   const compInputRef = useRef(null)
 
-  const kitCost = componentes.reduce((s, c) => s + (num(c.qty) * num(c.costoUnit)), 0)
+  const kitCost  = componentes.reduce((s, c) => s + (num(c.qty) * num(c.costoUnit)), 0)
+  const kitTotal = kitCost + num(costoExtra)           // costo real = componentes + packaging
 
   // Sincronizar costo del kit → form.cost y recalcular precio
   useEffect(() => {
     if (productMode !== 'kit') return
-    setF('cost', kitCost)
+    setF('cost', kitTotal)
     const m = parseFloat(marginInput)
-    if (!isNaN(m) && kitCost > 0) setF('price', Math.round(kitCost * (1 + m / 100)))
-  }, [componentes, productMode]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!isNaN(m) && kitTotal > 0) setF('price', Math.round(kitTotal * (1 + m / 100)))
+  }, [componentes, costoExtra, productMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -141,6 +143,7 @@ export default function Catalogo() {
     setComponentes(isKit && p.componentes ? p.componentes : [])
     setCompForm({ nombre: '', qty: 1, costoUnit: '' })
     setCompSearch('')
+    setCostoExtra(isKit && p.costoExtra ? String(p.costoExtra) : '')
 
     if (p) {
       setForm({ ...p, cat: p.cat ?? '', image: p.image || '', stock: p.stock ?? '' })
@@ -166,7 +169,7 @@ export default function Catalogo() {
     if (productMode === 'kit' && componentes.length === 0) {
       toast('Agregá al menos un componente al kit.', 'er'); return
     }
-    const finalCost = productMode === 'kit' ? kitCost : num(form.cost)
+    const finalCost = productMode === 'kit' ? kitTotal : num(form.cost)
     saveEntity('products', {
       ...form,
       cat:         form.cat ?? '',
@@ -175,6 +178,7 @@ export default function Catalogo() {
       stock:       form.stock === '' ? null : num(form.stock),
       tipo:        productMode === 'kit' ? 'kit' : 'producto',
       componentes: productMode === 'kit' ? componentes : [],
+      costoExtra:  productMode === 'kit' ? (costoExtra === '' ? 0 : num(costoExtra)) : 0,
       updatedAt:   new Date().toISOString().slice(0, 10),
     })
     setModal(false)
@@ -243,13 +247,13 @@ export default function Catalogo() {
   }
   const onMarginChange = (v) => {
     setMarginInput(v)
-    const cv = productMode === 'kit' ? kitCost : num(form.cost)
+    const cv = productMode === 'kit' ? kitTotal : num(form.cost)
     const m = parseFloat(v)
     if (cv > 0 && !isNaN(m)) setF('price', Math.round(cv * (1 + m / 100)))
   }
   const onPriceChange = (v) => {
     setF('price', v)
-    const cv = productMode === 'kit' ? kitCost : num(form.cost)
+    const cv = productMode === 'kit' ? kitTotal : num(form.cost)
     const p = parseFloat(v)
     if (cv > 0 && !isNaN(p) && p > 0) setMarginInput(String(Math.round((p - cv) / cv * 100)))
   }
@@ -731,14 +735,17 @@ export default function Catalogo() {
       ══════════════════════════════════════════════════ */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 800, width: '96vw' }}>
-            <div className="mh">
+          <div className="modal" style={{ maxWidth: 800, width: '96vw', display: 'flex', flexDirection: 'column', maxHeight: '92vh', padding: 0, overflow: 'hidden' }}>
+            {/* ── HEADER FIJO ── */}
+            <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-box'}`} style={{ color: productMode === 'kit' ? '#8B5CF6' : 'var(--brand)', fontSize: 15 }} />
                 {form.id ? 'Editar' : 'Nuevo'} {productMode === 'kit' ? 'Kit / Box' : 'producto'}
               </h3>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
+            {/* ── BODY SCROLLABLE ── */}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '16px 20px 8px' }}>
 
             {/* ── TIPO: Producto terminado vs Kit/Box ── */}
             <div style={{ display: 'flex', gap: 5, marginBottom: 16, background: 'var(--surface2)', borderRadius: 12, padding: 5, border: '1px solid var(--border)' }}>
@@ -767,56 +774,65 @@ export default function Catalogo() {
             {/* ── CARD 1: Datos del producto ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fa fa-tag" /> {productMode === 'kit' ? 'Datos del Kit' : 'Datos del producto'}
+                <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-tag'}`} />
+                {productMode === 'kit' ? 'Datos del Kit' : 'Datos del producto'}
               </div>
               <div className="fg"><label>{productMode === 'kit' ? 'Nombre del Kit *' : 'Nombre *'}</label>
                 <input autoFocus tabIndex={1} type="text" value={form.name}
                   onChange={e => setF('name', e.target.value)}
-                  placeholder={productMode === 'kit' ? 'Ej: Kit Bienestar Premium, Box Emprendedor...' : 'Taza sublimada 11oz'} />
+                  placeholder={productMode === 'kit' ? 'Ej: Kit Bienestar, Box Día del Padre...' : 'Taza sublimada 11oz'} />
               </div>
-              <div className="modal-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 12px' }}>
-                <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
-                  <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
-                    {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
-                  </select>
-                </div>
-                <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor</label>
-                  <select tabIndex={3} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}>
-                    <option value="">Sin asignar</option>
-                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 11 }} />
-                    Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      tabIndex={4}
-                      type="number" min="0" step="1"
-                      value={form.stock}
-                      onChange={e => setF('stock', e.target.value)}
-                      onFocus={selectOnFocus}
-                      placeholder="—"
-                      style={{ paddingRight: form.stock !== '' ? 52 : undefined }}
-                    />
-                    {form.stock !== '' && (
-                      <span style={{
-                        position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                        fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6,
-                        background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4',
-                        color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669',
-                        pointerEvents: 'none',
-                      }}>
-                        {num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}
-                      </span>
-                    )}
+
+              {/* Kit: 2 cols (Ocasión + Stock) | Producto: 3 cols (Categoría + Proveedor + Stock) */}
+              {productMode === 'kit' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label><i className="fa fa-calendar-star" style={{ marginRight: 5, color: '#8B5CF6', fontSize: 10 }} />Ocasión / Tipo de evento</label>
+                    <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
+                      {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
+                    </select>
+                  </div>{/* /ocasión */}
+                  {/* Stock — col 2 kit */}
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : '#8B5CF6', fontSize: 11 }} />
+                      Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ paddingRight: form.stock !== '' ? 52 : undefined }} />
+                      {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              ) : (
+                /* ── Producto: 3 cols (Categoría + Proveedor + Stock) ── */
+                <div className="modal-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 12px' }}>
+                  <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
+                    <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
+                      {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
+                    </select>
+                  </div>
+                  <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor</label>
+                    <select tabIndex={3} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}>
+                      <option value="">Sin asignar</option>
+                      {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 11 }} />
+                      Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input tabIndex={4} type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ paddingRight: form.stock !== '' ? 52 : undefined }} />
+                      {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>{/* /card 1 */}
 
             {/* ══════════════════════════════════════════════
                 CARD 2 KIT: CONSTRUCTOR DE COMPONENTES
@@ -889,20 +905,46 @@ export default function Catalogo() {
                         </div>
                       )
                     })}
-                    {/* Barra de costo total */}
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                      padding: '6px 10px 0', gap: 6,
-                    }}>
+                    {/* Barra de costo componentes */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px 0', gap: 6 }}>
                       <span style={{ fontSize: 11, color: 'var(--txt3)' }}>
-                        {componentes.length} componente{componentes.length !== 1 ? 's' : ''} ·
+                        {componentes.length} componente{componentes.length !== 1 ? 's' : ''}
                       </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#059669' }}>
-                        Costo kit: {fmt(kitCost)}
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#059669' }}>
+                        Subtotal productos: {fmt(kitCost)}
                       </span>
                     </div>
                   </div>
                 )}
+
+                {/* ── Costo de presentación / packaging ── */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, padding: '10px 12px', background: 'rgba(255,255,255,.6)', borderRadius: 10, border: '1px solid #EDE9FE' }}>
+                  <i className="fa fa-gift" style={{ color: '#DB2777', fontSize: 14, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#DB2777', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>
+                      Packaging / Presentación <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--txt4)' }}>(caja, ribbon, tissue...)</span>
+                    </div>
+                    <input
+                      type="number" min="0"
+                      value={costoExtra}
+                      onChange={e => setCostoExtra(e.target.value)}
+                      onFocus={selectOnFocus}
+                      placeholder="$ 0 — opcional"
+                      style={{ width: '100%', padding: '6px 10px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', color: 'var(--txt)', background: 'var(--surface)', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  {(kitCost > 0 || num(costoExtra) > 0) && (
+                    <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 80 }}>
+                      <div style={{ fontSize: 9, color: 'var(--txt4)', fontWeight: 600, marginBottom: 2 }}>COSTO TOTAL KIT</div>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: '#8B5CF6', lineHeight: 1 }}>{fmt(kitTotal)}</div>
+                      {num(costoExtra) > 0 && (
+                        <div style={{ fontSize: 9, color: 'var(--txt4)', marginTop: 2 }}>
+                          {fmt(kitCost)} + {fmt(num(costoExtra))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Formulario para agregar componente */}
                 <div style={{
@@ -1065,7 +1107,7 @@ export default function Catalogo() {
                       display: 'flex', alignItems: 'center', gap: 6,
                     }}>
                       <i className="fa fa-calculator" style={{ fontSize: 10 }} />
-                      {componentes.length > 0 ? fmt(kitCost) : '— Agregá componentes'}
+                      {componentes.length > 0 ? fmt(kitTotal) : '— Agregá componentes'}
                     </div>
                   ) : (
                     <input tabIndex={5} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
@@ -1088,10 +1130,10 @@ export default function Catalogo() {
                   <input tabIndex={6} type="number" value={form.price || ''} onChange={e => onPriceChange(e.target.value)} placeholder="0" min="0" style={{ borderColor: 'var(--green)', borderWidth: 2 }} />
                 </div>
               </div>
-              {(productMode === 'kit' ? kitCost : num(form.cost)) > 0 && num(form.price) > 0 && (
-                <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className={`fa fa-arrow-${num(form.price) > (productMode === 'kit' ? kitCost : num(form.cost)) ? 'trend-up' : 'trend-down'}`} />
-                  Ganancia por unidad: ${(num(form.price) - (productMode === 'kit' ? kitCost : num(form.cost))).toLocaleString('es-AR')} · Margen real: {marginInput || 0}%
+              {(productMode === 'kit' ? kitTotal : num(form.cost)) > 0 && num(form.price) > 0 && (
+                <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className={`fa fa-arrow-${num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'trend-up' : 'trend-down'}`} />
+                  Ganancia por unidad: ${(num(form.price) - (productMode === 'kit' ? kitTotal : num(form.cost))).toLocaleString('es-AR')} · Margen real: {marginInput || 0}%
                 </div>
               )}
             </div>
@@ -1128,7 +1170,9 @@ export default function Catalogo() {
               </div>
             )}
 
-            <div className="mfooter">
+            </div>{/* /body scrollable */}
+            {/* ── FOOTER FIJO ── */}
+            <div className="mfooter" style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '12px 20px' }}>
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
               <button className="btn btn-primary" onClick={save}
                 style={productMode === 'kit' ? { background: 'linear-gradient(135deg,#8B5CF6,#DB2777)', border: 'none' } : {}}>
