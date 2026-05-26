@@ -22,6 +22,7 @@ import Mensajes from '../pages/Mensajes'
 import Config from '../pages/Config'
 import Insumos from '../pages/Insumos'
 import Admin from '../pages/Admin'
+import Importador from '../pages/Importador'
 
 const PRIORITIES = [
   { key: 'today',    label: 'Urgente hoy',  color: '#DC2626', bg: '#FEF2F2' },
@@ -294,6 +295,7 @@ function AppShellInner() {
             <Route path="/logistica" element={<Guard perm="logistica.view"><Logistica /></Guard>} />
             <Route path="/mensajes" element={<Guard perm="mensajes.view"><Mensajes /></Guard>} />
             <Route path="/config" element={<Guard perm="config.access"><Config /></Guard>} />
+            <Route path="/importador" element={<Guard perm="config.access"><Importador /></Guard>} />
             <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
           </Routes>
         </div>
@@ -316,6 +318,7 @@ function AppShellInner() {
           <BottomSheetItem icon="fa-cubes" label="Packaging" sub="Materiales y presentación" onClick={() => goSheet('/insumos')} />
         )}
         {can('config.access') && (
+          <BottomSheetItem icon="fa-file-import" label="Importador" sub="Cargá datos desde CSV o Excel" onClick={() => goSheet('/importador')} iconBg="#FCE7F3" iconColor="#DB2777" />
           <BottomSheetItem icon="fa-gear" label="Configuración" sub="Personalización y datos" onClick={() => goSheet('/config')} iconBg="var(--surface2)" iconColor="var(--txt2)" />
         )}
       </BottomSheet>
