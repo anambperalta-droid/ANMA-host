@@ -55,7 +55,7 @@ export default function TaskFab() {
   return (
     <div ref={panelRef} style={{
       position: 'fixed', top: 68, right: 12, zIndex: 500,
-      width: 340, maxHeight: 'calc(100vh - 80px)',
+      width: 340, maxWidth: 'calc(100vw - 24px)', maxHeight: 'calc(100vh - 80px)',
       background: 'var(--surface)', borderRadius: 16,
       border: '1px solid var(--border)',
       boxShadow: '0 16px 48px rgba(0,0,0,.15)',
