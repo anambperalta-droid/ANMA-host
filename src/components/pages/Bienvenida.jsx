@@ -138,7 +138,7 @@ export default function Bienvenida() {
   if (loading) {
     return (
       <div style={styles.container}>
-        <div style={styles.card}>
+        <div style={styles.card} className="bv-card">
           <div style={styles.logo}>AN</div>
           <p style={styles.subtitle}>Verificando invitacion...</p>
           <div className="sk sk-kpi" style={{ height: 40, width: '100%' }} />
@@ -150,9 +150,9 @@ export default function Bienvenida() {
   if (!sessionReady) {
     return (
       <div style={styles.container}>
-        <div style={styles.card}>
+        <div style={styles.card} className="bv-card">
           <div style={styles.logo}>AN</div>
-          <h1 style={styles.title}>Enlace Invalido</h1>
+          <h1 style={styles.title} className="bv-title">Enlace Invalido</h1>
           <p style={styles.subtitle}>{error}</p>
         </div>
       </div>
@@ -161,9 +161,15 @@ export default function Bienvenida() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
+      <style>{`
+        @media(max-width:480px){
+          .bv-card{padding:32px 20px 28px!important}
+          .bv-title{font-size:20px!important}
+        }
+      `}</style>
+      <div style={styles.card} className="bv-card">
         <div style={styles.logo}>AN</div>
-        <h1 style={styles.title}>Bienvenido a ANMA</h1>
+        <h1 style={styles.title} className="bv-title">Bienvenido a ANMA</h1>
         <p style={styles.subtitle}>Elige tu contraseña para comenzar</p>
 
         {error && (
