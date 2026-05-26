@@ -1047,7 +1047,7 @@ export default function Config() {
                     <i className="fa fa-circle-info" style={{ fontSize: 10 }} /> Ver instrucciones de configuración ▾
                   </button>
                 )}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
+                <div className="grid3" style={{ marginBottom: 12 }}>
                   <div className="fg" style={{ marginBottom: 0 }}>
                     <label><i className="fa fa-server" style={{ marginRight: 4 }} />Service ID</label>
                     <input type="text" value={ejsServiceId} onChange={e => setEjsServiceId(e.target.value)}
