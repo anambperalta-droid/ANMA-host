@@ -318,8 +318,10 @@ function AppShellInner() {
           <BottomSheetItem icon="fa-cubes" label="Packaging" sub="Materiales y presentación" onClick={() => goSheet('/insumos')} />
         )}
         {can('config.access') && (
-          <BottomSheetItem icon="fa-file-import" label="Importador" sub="Cargá datos desde CSV o Excel" onClick={() => goSheet('/importador')} iconBg="#FCE7F3" iconColor="#DB2777" />
-          <BottomSheetItem icon="fa-gear" label="Configuración" sub="Personalización y datos" onClick={() => goSheet('/config')} iconBg="var(--surface2)" iconColor="var(--txt2)" />
+          <>
+            <BottomSheetItem icon="fa-file-import" label="Importador" sub="Cargá datos desde CSV o Excel" onClick={() => goSheet('/importador')} iconBg="#FCE7F3" iconColor="#DB2777" />
+            <BottomSheetItem icon="fa-gear" label="Configuración" sub="Personalización y datos" onClick={() => goSheet('/config')} iconBg="var(--surface2)" iconColor="var(--txt2)" />
+          </>
         )}
       </BottomSheet>
       <PWAInstall />
