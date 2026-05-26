@@ -262,6 +262,8 @@ export default function Login() {
           .lpr-card{padding:30px 24px 24px;border-radius:20px}
           .lpr-greet{font-size:21px}
           .lpr-confetti{display:none}
+          /* iOS zoom prevention: inputs necesitan font-size ≥16px */
+          .lpr-inp{font-size:16px!important;padding:14px 15px!important}
         }
       `}</style>
 

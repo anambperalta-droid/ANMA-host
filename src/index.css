@@ -897,6 +897,8 @@ td b{color:var(--txt);font-weight:600}
 .fg input,.fg select,.fg textarea{min-height:var(--touch);font-size:16px;padding:12px 14px;border-radius:12px}
 .fg textarea{min-height:80px;font-size:15px}
 .fg label{font-size:11px;margin-bottom:6px}
+/* f-inp (Bienvenida / otros formularios standalone): iOS zoom + touch target */
+.f-inp{font-size:16px!important;padding:12px 14px!important;min-height:var(--touch)!important;border-radius:12px!important}
 /* grid2/grid3 en forms → columna única en mobile */
 @media(max-width:600px){
   .form-grid2,.grid2{grid-template-columns:1fr!important}
