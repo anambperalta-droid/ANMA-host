@@ -70,7 +70,7 @@ export default function Catalogo() {
   const [bulkModal, setBulkModal] = useState(false)
   const [csvModal, setCsvModal] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ name: '', cat: '', cost: '', supplierId: '', image: '' })
+  const [form, setForm] = useState({ name: '', cat: '', cost: '', supplierId: '', image: '', stock: '' })
   const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
   const selectOnFocus = (e) => e.target.select()
   const [bulkCat, setBulkCat] = useState('')
@@ -92,7 +92,7 @@ export default function Catalogo() {
   const [editingCat, setEditingCat] = useState(null)
   const [viewMode, setViewMode] = useState(() => db('productViewMode', 'grid'))
   const switchView = (mode) => { setViewMode(mode); dbW('productViewMode', mode) }
-  const [productMode, setProductMode] = useState('buy')
+  const [productMode, setProductMode] = useState('producto')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [marginInput, setMarginInput] = useState('')
   const imgRef = useRef(null)
@@ -135,7 +135,7 @@ export default function Catalogo() {
 
   const open = (p) => {
     const isKit = p?.tipo === 'kit'
-    setProductMode(isKit ? 'kit' : 'buy')
+    setProductMode(isKit ? 'kit' : 'producto')
     setShowAdvanced(false)
     // Inicializar componentes del kit
     setComponentes(isKit && p.componentes ? p.componentes : [])
@@ -143,12 +143,12 @@ export default function Catalogo() {
     setCompSearch('')
 
     if (p) {
-      setForm({ ...p, cat: p.cat ?? '', image: p.image || '' })
+      setForm({ ...p, cat: p.cat ?? '', image: p.image || '', stock: p.stock ?? '' })
       const cv = num(p.cost); const pr = num(p.price || 0)
       setMarginInput(cv > 0 && pr > 0 ? String(Math.round((pr - cv) / cv * 100)) : String(margin))
     } else {
       setMarginInput(String(margin))
-      setForm({ name: '', cat: cats[0] || '', cost: '', supplierId: '', image: '', price: '' })
+      setForm({ name: '', cat: cats[0] || '', cost: '', supplierId: '', image: '', price: '', stock: '' })
     }
     setModal(true)
   }
@@ -172,7 +172,8 @@ export default function Catalogo() {
       cat:         form.cat ?? '',
       cost:        finalCost,
       price:       num(form.price),
-      tipo:        productMode === 'kit' ? 'kit' : (form.tipo === 'kit' ? 'producto' : (form.tipo || 'producto')),
+      stock:       form.stock === '' ? null : num(form.stock),
+      tipo:        productMode === 'kit' ? 'kit' : 'producto',
       componentes: productMode === 'kit' ? componentes : [],
       updatedAt:   new Date().toISOString().slice(0, 10),
     })
@@ -490,7 +491,15 @@ export default function Catalogo() {
                     {p.name}
                     {isKit && <KitBadge small />}
                   </span>
-                  {p.cat && <span className="cat-mob-item-cat">{p.cat}</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                    {p.cat && <span className="cat-mob-item-cat">{p.cat}</span>}
+                    {p.stock != null && (
+                      <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
+                        <i className="fa fa-cubes-stacked" style={{ marginRight: 3, fontSize: 8 }} />
+                        {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span className="cat-mob-item-price">{fmt(suggestedPrice(p.cost))}</span>
               </div>
@@ -536,13 +545,14 @@ export default function Catalogo() {
                 </th>}
                 {!opHideCosts && <th className="col-hide-mobile">% Margen</th>}
                 {showCostInfo && <th className="col-hide-mobile">Últ. actualización</th>}
+                <th className="col-hide-mobile">Stock</th>
                 <th>Precio sugerido ($)</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? [1,2,3,4].map(i => (
-                <tr key={i}><td colSpan={showCostInfo ? 9 : 8}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
+                <tr key={i}><td colSpan={showCostInfo ? 10 : 9}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(p => {
                 const pct = marginPct(p)
                 const cc = catColor(p.cat)
@@ -582,6 +592,15 @@ export default function Catalogo() {
                         ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
                       </td>
                     )}
+                    <td className="col-hide-mobile">
+                      {p.stock != null
+                        ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
+                            <i className="fa fa-cubes-stacked" style={{ fontSize: 9 }} />
+                            {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
+                          </span>
+                        : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>
+                      }
+                    </td>
                     <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
                     <td><div className="acts" style={{ display:'flex',gap:5 }}>
                       <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
@@ -589,7 +608,7 @@ export default function Catalogo() {
                     </div></td>
                   </tr>
                 )
-              }) : <tr><td colSpan={showCostInfo ? 9 : 8}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+              }) : <tr><td colSpan={showCostInfo ? 10 : 9}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
             </tbody>
           </table>
         </div>
@@ -641,6 +660,12 @@ export default function Catalogo() {
                   {!opHideCosts && <div className="prod-card-cost">Costo: {fmt(p.cost)}</div>}
                   {pct !== null && (
                     <div className="prod-card-margin" style={{ color: marginColor(pct) }}>{pct}% margen</div>
+                  )}
+                  {p.stock != null && (
+                    <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
+                      <i className="fa fa-cubes-stacked" style={{ fontSize: 8 }} />
+                      {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
+                    </div>
                   )}
                 </div>
                 {/* FOOTER */}
@@ -709,32 +734,34 @@ export default function Catalogo() {
           <div className="modal" style={{ maxWidth: 680 }}>
             <div className="mh">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {productMode === 'kit' && <i className="fa fa-gift" style={{ color: '#8B5CF6' }} />}
-                {form.id ? 'Editar' : 'Agregar'} {productMode === 'kit' ? 'Kit / Box' : 'producto'}
+                <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-box'}`} style={{ color: productMode === 'kit' ? '#8B5CF6' : 'var(--brand)', fontSize: 15 }} />
+                {form.id ? 'Editar' : 'Nuevo'} {productMode === 'kit' ? 'Kit / Box' : 'producto'}
               </h3>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
 
-            {/* ── TIPO DE OPERACIÓN ── */}
+            {/* ── TIPO: Producto terminado vs Kit/Box ── */}
             <div style={{ display: 'flex', gap: 5, marginBottom: 16, background: 'var(--surface2)', borderRadius: 12, padding: 5, border: '1px solid var(--border)' }}>
-              {[
-                ['buy',  'fa-box',              'Compro Terminado'],
-                ['make', 'fa-screwdriver-wrench','Fabrico / Armo'],
-                ['kit',  'fa-gift',              '🎁 Kit / Box'],
-              ].map(([m, icon, label]) => (
-                <button key={m} onClick={() => setProductMode(m)}
-                  style={{
-                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    padding: '9px 10px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
-                    fontSize: 11.5, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
-                    background: productMode === m
-                      ? (m === 'kit' ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'var(--brand)')
-                      : 'transparent',
-                    color: productMode === m ? '#fff' : 'var(--txt3)',
-                  }}>
-                  <i className={`fa ${icon}`} style={{ fontSize: 12 }} />{label}
-                </button>
-              ))}
+              <button onClick={() => setProductMode('producto')}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  padding: '10px 14px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
+                  background: productMode === 'producto' ? 'var(--brand)' : 'transparent',
+                  color: productMode === 'producto' ? '#fff' : 'var(--txt3)',
+                }}>
+                <i className="fa fa-box" style={{ fontSize: 13 }} /> Producto terminado
+              </button>
+              <button onClick={() => setProductMode('kit')}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  padding: '10px 14px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
+                  background: productMode === 'kit' ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'transparent',
+                  color: productMode === 'kit' ? '#fff' : 'var(--txt3)',
+                }}>
+                <i className="fa fa-gift" style={{ fontSize: 13 }} /> Kit / Box
+              </button>
             </div>
 
             {/* ── CARD 1: Datos del producto ── */}
@@ -754,12 +781,40 @@ export default function Catalogo() {
                     {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
                   </select>
                 </div>
-                <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor / Armador</label>
+                <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor</label>
                   <select tabIndex={3} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}>
                     <option value="">Sin asignar</option>
                     {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
+              </div>
+              {/* ── Stock ── */}
+              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10 }}>
+                <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 14, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>
+                    Stock disponible <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(unidades)</span>
+                  </div>
+                  <input
+                    tabIndex={4}
+                    type="number" min="0" step="1"
+                    value={form.stock}
+                    onChange={e => setF('stock', e.target.value)}
+                    onFocus={selectOnFocus}
+                    placeholder="Dejá vacío si no manejás stock"
+                    style={{ width: '100%', padding: '6px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', color: 'var(--txt)', background: 'var(--surface2)', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                {form.stock !== '' && (
+                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', lineHeight: 1 }}>
+                      {form.stock}
+                    </div>
+                    <div style={{ fontSize: 9, color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', fontWeight: 700, marginTop: 1 }}>
+                      {num(form.stock) === 0 ? 'SIN STOCK' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -998,7 +1053,7 @@ export default function Catalogo() {
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} />
-                    {productMode === 'kit' ? 'Costo del Kit (auto)' : productMode === 'buy' ? 'Precio de Compra' : 'Costo de Fabricación'}
+                    {productMode === 'kit' ? 'Costo del Kit (auto)' : 'Costo del producto'}
                   </label>
                   {productMode === 'kit' ? (
                     // Costo auto-calculado — read only con indicador visual
@@ -1013,7 +1068,7 @@ export default function Catalogo() {
                       {componentes.length > 0 ? fmt(kitCost) : '— Agregá componentes'}
                     </div>
                   ) : (
-                    <input tabIndex={4} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
+                    <input tabIndex={5} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
                   )}
                 </div>
                 <div className="cat-price-arrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
