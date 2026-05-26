@@ -430,7 +430,7 @@ export default function Catalogo() {
         .cli-pill-new:hover{filter:brightness(1.08);transform:translateY(-1px)}
         .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
-        @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}.cat-ph{display:none!important}}
+        @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}.cat-ph{display:none!important}.modal-3col{grid-template-columns:1fr!important}}
         @media(max-width:480px){.cat-price-calc{grid-template-columns:1fr!important}.cat-price-arrow{display:none!important}}
         .comp-row{display:grid;grid-template-columns:1fr 56px 80px 30px;gap:6px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:5px}
         .comp-row input{padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--txt);background:var(--surface);outline:none;width:100%;box-sizing:border-box}
@@ -731,7 +731,7 @@ export default function Catalogo() {
       ══════════════════════════════════════════════════ */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 680 }}>
+          <div className="modal" style={{ maxWidth: 800, width: '96vw' }}>
             <div className="mh">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-box'}`} style={{ color: productMode === 'kit' ? '#8B5CF6' : 'var(--brand)', fontSize: 15 }} />
@@ -774,7 +774,7 @@ export default function Catalogo() {
                   onChange={e => setF('name', e.target.value)}
                   placeholder={productMode === 'kit' ? 'Ej: Kit Bienestar Premium, Box Emprendedor...' : 'Taza sublimada 11oz'} />
               </div>
-              <div className="grid2">
+              <div className="modal-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 12px' }}>
                 <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
                   <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
                     {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -787,34 +787,34 @@ export default function Catalogo() {
                     {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
-              </div>
-              {/* ── Stock ── */}
-              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10 }}>
-                <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 14, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>
-                    Stock disponible <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(unidades)</span>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 11 }} />
+                    Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      tabIndex={4}
+                      type="number" min="0" step="1"
+                      value={form.stock}
+                      onChange={e => setF('stock', e.target.value)}
+                      onFocus={selectOnFocus}
+                      placeholder="—"
+                      style={{ paddingRight: form.stock !== '' ? 52 : undefined }}
+                    />
+                    {form.stock !== '' && (
+                      <span style={{
+                        position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                        fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6,
+                        background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4',
+                        color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669',
+                        pointerEvents: 'none',
+                      }}>
+                        {num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}
+                      </span>
+                    )}
                   </div>
-                  <input
-                    tabIndex={4}
-                    type="number" min="0" step="1"
-                    value={form.stock}
-                    onChange={e => setF('stock', e.target.value)}
-                    onFocus={selectOnFocus}
-                    placeholder="Dejá vacío si no manejás stock"
-                    style={{ width: '100%', padding: '6px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', color: 'var(--txt)', background: 'var(--surface2)', outline: 'none', boxSizing: 'border-box' }}
-                  />
                 </div>
-                {form.stock !== '' && (
-                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', lineHeight: 1 }}>
-                      {form.stock}
-                    </div>
-                    <div style={{ fontSize: 9, color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', fontWeight: 700, marginTop: 1 }}>
-                      {num(form.stock) === 0 ? 'SIN STOCK' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
