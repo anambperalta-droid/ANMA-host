@@ -899,8 +899,8 @@ td b{color:var(--txt);font-weight:600}
 .fg label{font-size:11px;margin-bottom:6px}
 /* f-inp (Bienvenida / otros formularios standalone): iOS zoom + touch target */
 .f-inp{font-size:16px!important;padding:12px 14px!important;min-height:var(--touch)!important;border-radius:12px!important}
-/* search-row: iOS zoom prevention (font-size 14px triggers zoom on Safari) */
-@media(max-width:768px){.search-row input{font-size:16px!important}}
+/* search-row + cmd-input: iOS zoom prevention (font-size <16px triggers zoom on Safari) */
+@media(max-width:768px){.search-row input,.cmd-input{font-size:16px!important}}
 /* grid2/grid3 en forms → columna única en mobile */
 @media(max-width:600px){
   .form-grid2,.grid2{grid-template-columns:1fr!important}
