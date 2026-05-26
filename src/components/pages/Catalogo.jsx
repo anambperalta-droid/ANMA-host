@@ -735,7 +735,7 @@ export default function Catalogo() {
       ══════════════════════════════════════════════════ */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: productMode === 'kit' ? 980 : 780, width: '98vw', display: 'flex', flexDirection: 'column', maxHeight: '94vh', padding: 0, overflow: 'hidden' }}>
+          <div className="modal" style={{ maxWidth: productMode === 'kit' ? 1200 : 960, width: 'calc(100vw - 32px)', display: 'flex', flexDirection: 'column', maxHeight: '94vh', padding: 0, overflow: 'hidden' }}>
             {/* ── HEADER FIJO ── */}
             <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
