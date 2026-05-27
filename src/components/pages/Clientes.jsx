@@ -203,6 +203,7 @@ export default function Clientes() {
   const [previewBudget, setPreviewBudget] = useState(null)
   const fileRef = useRef(null)
   const [csvPreview, setCsvPreview] = useState([])
+  const [isDragging, setIsDragging] = useState(false)
   const [revinculModal, setRevinculModal] = useState(null)
   const [revinculMsg, setRevinculMsg] = useState('')
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -274,15 +275,13 @@ export default function Clientes() {
     }).filter(c => c.company || c.contact)
   }
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0]
+  const processFile = (file) => {
     if (!file) return
     const reader = new FileReader()
     reader.onload = (ev) => {
       const content = ev.target.result
       if (file.name.endsWith('.vcf') || content.includes('BEGIN:VCARD')) {
-        setCsvPreview(parseVcf(content))
-        return
+        setCsvPreview(parseVcf(content)); return
       }
       const lines = content.split('\n').filter(l => l.trim())
       const header = lines[0].toLowerCase()
@@ -297,6 +296,15 @@ export default function Clientes() {
       setCsvPreview(parsed)
     }
     reader.readAsText(file, 'UTF-8')
+  }
+  const handleFileSelect = (e) => processFile(e.target.files?.[0])
+
+  const downloadTemplate = () => {
+    const csv = 'Empresa,Contacto,WhatsApp,Email,Rubro,Notas\n"Empresa Ejemplo","María López","1198765432","maria@empresa.com","Educación","Sin notas"'
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'plantilla-clientes.csv'; a.click()
+    URL.revokeObjectURL(url)
   }
 
   const doImport = () => {
@@ -1026,43 +1034,108 @@ export default function Clientes() {
 
       {/* MODAL IMPORTAR CSV */}
       {importModal && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
-          <div className="modal" style={{ maxWidth: 680 }}>
-            <div className="mh"><h3>Importar contactos</h3><button className="mclose" onClick={() => { setImportModal(false); setCsvPreview([]) }}><i className="fa fa-xmark" /></button></div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-              <div style={{ padding: '10px 13px', borderRadius: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.2)', fontSize: 11, color: 'var(--txt2)' }}>
-                <div style={{ fontWeight: 700, color: 'var(--txt)', marginBottom: 4 }}><i className="fa-brands fa-whatsapp" style={{ color: '#25D366', marginRight: 5 }} />Desde WhatsApp / Teléfono</div>
-                <div>Exportá tus contactos como <b>.vcf</b> desde el teléfono y subí el archivo acá. Se importan nombre, celular y email automáticamente.</div>
-              </div>
-              <div style={{ padding: '10px 13px', borderRadius: 10, background: 'var(--surface2)', border: '1px solid var(--border)', fontSize: 11, color: 'var(--txt2)' }}>
-                <div style={{ fontWeight: 700, color: 'var(--txt)', marginBottom: 4 }}><i className="fa fa-file-csv" style={{ color: '#0F9D58', marginRight: 5 }} />Desde planilla CSV</div>
-                <div><b>Columnas:</b> Empresa, Contacto, WhatsApp, Email, Rubro, Notas</div>
-              </div>
-            </div>
-            <div className="fg">
-              <label>Seleccioná archivo (.vcf de contactos o .csv)</label>
-              <input ref={fileRef} type="file" accept=".csv,.txt,.vcf" onChange={handleFileSelect}
-                style={{ padding: '8px 12px', border: '1.5px dashed var(--border)', borderRadius: 8, width: '100%', cursor: 'pointer', fontSize: 12 }} />
-            </div>
-            {csvPreview.length > 0 && (
-              <>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', margin: '8px 0 6px' }}>Vista previa ({csvPreview.length} registros)</div>
-                <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 6 }}>
-                  <table style={{ fontSize: 11 }}>
-                    <thead><tr><th>Empresa</th><th>Contacto</th><th>WA</th><th>Email</th><th>Rubro</th></tr></thead>
-                    <tbody>
-                      {csvPreview.slice(0, 10).map((c, i) => (
-                        <tr key={i}><td>{c.company}</td><td>{c.contact}</td><td>{c.wa}</td><td>{c.email}</td><td>{c.rubro}</td></tr>
-                      ))}
-                      {csvPreview.length > 10 && <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--txt3)' }}>...y {csvPreview.length - 10} más</td></tr>}
-                    </tbody>
-                  </table>
+        <div className="modal-bg open" style={{ padding: '10px 14px' }} onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
+          <div className="modal" style={{ maxWidth: 620, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 20px)', padding: 0, overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', fontSize: 16 }}>
+                  <i className="fa fa-users" />
                 </div>
-              </>
-            )}
-            <div className="mfooter">
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800 }}>Importar clientes</div>
+                  <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Desde contactos del celular (.vcf) o planilla CSV</div>
+                </div>
+              </div>
+              <button className="mclose" onClick={() => { setImportModal(false); setCsvPreview([]) }}><i className="fa fa-xmark" /></button>
+            </div>
+
+            {/* Body */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
+              {/* 2 opciones */}
+              {csvPreview.length === 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                  <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(37,211,102,.07)', border: '1.5px solid rgba(37,211,102,.3)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
+                      <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', fontSize: 16 }} /> Desde el celular
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
+                      Exportá tus contactos como <b>.vcf</b> desde la app de Contactos del teléfono. Se importan nombre, celular y email.
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 10, color: '#059669', fontWeight: 600 }}>
+                      <i className="fa fa-circle-check" style={{ marginRight: 4 }} />Acepta .vcf de iPhone y Android
+                    </div>
+                  </div>
+                  <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
+                      <i className="fa fa-file-csv" style={{ color: '#0F9D58', fontSize: 16 }} /> Desde planilla
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
+                      Usá nuestra plantilla CSV. Completá en Excel o Google Sheets y subila acá.
+                    </div>
+                    <button className="btn btn-ghost btn-xs" style={{ marginTop: 8, color: 'var(--brand)' }} onClick={downloadTemplate}>
+                      <i className="fa fa-download" /> Descargar plantilla
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Drop zone */}
+              {csvPreview.length === 0 && (
+                <>
+                  <div
+                    onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+                    onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false) }}
+                    onDrop={e => { e.preventDefault(); setIsDragging(false); processFile(e.dataTransfer.files[0]) }}
+                    onClick={() => fileRef.current?.click()}
+                    style={{ border: `2px dashed ${isDragging ? 'var(--brand)' : 'var(--border)'}`, background: isDragging ? 'var(--brand-xlt)' : 'var(--surface2)', borderRadius: 12, padding: '28px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .2s' }}
+                  >
+                    <i className="fa fa-cloud-arrow-up" style={{ fontSize: 36, color: isDragging ? 'var(--brand)' : 'var(--txt4)', display: 'block', marginBottom: 10 }} />
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 4 }}>
+                      {isDragging ? '¡Soltá el archivo acá!' : 'Arrastrá tu archivo acá'}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--txt3)' }}>o hacé clic para seleccionar · .vcf · .csv · .txt</div>
+                    <input ref={fileRef} type="file" accept=".csv,.txt,.vcf" onChange={handleFileSelect} style={{ display: 'none' }} />
+                  </div>
+                  <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 11, color: 'var(--txt3)' }}>
+                    <b style={{ color: 'var(--txt2)' }}>Columnas CSV:</b> Empresa · Contacto · WhatsApp · Email · Rubro · Notas
+                  </div>
+                </>
+              )}
+
+              {/* Preview */}
+              {csvPreview.length > 0 && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ background: '#059669', color: '#fff', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 20 }}>{csvPreview.length} registros</span>
+                      <span style={{ fontSize: 12, color: 'var(--txt3)' }}>listos para importar</span>
+                    </div>
+                    <button className="btn btn-ghost btn-xs" style={{ color: 'var(--txt3)' }} onClick={() => { setCsvPreview([]); if (fileRef.current) fileRef.current.value = '' }}>
+                      <i className="fa fa-arrow-left" /> Cambiar archivo
+                    </button>
+                  </div>
+                  <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 10, maxHeight: 320, overflowY: 'auto' }}>
+                    <table style={{ fontSize: 11, minWidth: 480 }}>
+                      <thead><tr><th style={{ width: 28 }}>#</th><th>Empresa</th><th>Contacto</th><th>WA</th><th>Email</th><th>Rubro</th></tr></thead>
+                      <tbody>
+                        {csvPreview.slice(0, 20).map((c, i) => (
+                          <tr key={i}><td style={{ color: 'var(--txt4)', textAlign: 'center' }}>{i + 1}</td><td><b>{c.company || c.contact}</b></td><td>{c.contact}</td><td>{c.wa}</td><td>{c.email}</td><td>{c.rubro}</td></tr>
+                        ))}
+                        {csvPreview.length > 20 && <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--txt3)', padding: '8px', fontStyle: 'italic' }}>…y {csvPreview.length - 20} más</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="mfooter" style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '12px 20px' }}>
               <button className="btn btn-secondary" onClick={() => { setImportModal(false); setCsvPreview([]) }}>Cancelar</button>
-              <button className="btn btn-primary" onClick={doImport} disabled={!csvPreview.length}><i className="fa fa-file-import" /> Importar {csvPreview.length}</button>
+              <button className="btn btn-primary" onClick={doImport} disabled={!csvPreview.length}>
+                <i className="fa fa-file-import" /> {csvPreview.length > 0 ? `Importar ${csvPreview.length} clientes` : 'Importar'}
+              </button>
             </div>
           </div>
         </div>
