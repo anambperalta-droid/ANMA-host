@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
@@ -186,14 +186,31 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
   )
 }
 
+/* ── Parser de texto libre → contacto ── */
+const parseContactText = (text) => {
+  const r = {}
+  const emailM = text.match(/[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/)
+  if (emailM) r.email = emailM[0]
+  const phoneM = text.match(/(?:\+?(?:549?|54\s?9?)\s*)?(?:\d[\d\s\-]{7,13}\d)/)
+  if (phoneM) r.wa = phoneM[0].replace(/[\s\-()]/g, '').replace(/^00/, '+')
+  const nameM = text.match(/(?:nombre|contacto|name|contact)[:\s]+([^\n,@\d\\/<>]{3,40})/i)
+    || text.match(/^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)/m)
+  if (nameM) r.contact = nameM[1].trim()
+  const coM = text.match(/(?:empresa|company|org(?:anización)?|negocio)[:\s]+([^\n,]{2,50})/i)
+  if (coM) r.company = coM[1].trim()
+  return r
+}
+
 export default function Clientes() {
   const { get, saveEntity, deleteEntity, config } = useData()
   const toast   = useToast()
   const confirm = useConfirm()
   const nav = useNavigate()
+  const location = useLocation()
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
   const [importModal, setImportModal] = useState(false)
+  const [regFormModal, setRegFormModal] = useState(false)
   const [detailClient, setDetailClient] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
@@ -201,6 +218,9 @@ export default function Clientes() {
   const [form, setForm] = useState({ company: '', contact: '', wa: '', email: '', rubro: '', notes: '', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' })
   const [newNote, setNewNote] = useState('')
   const [previewBudget, setPreviewBudget] = useState(null)
+  const [pasteMode, setPasteMode] = useState(false)
+  const [pasteText, setPasteText] = useState('')
+  const [formRegUrl, setFormRegUrl] = useState('')
   const fileRef = useRef(null)
   const [csvPreview, setCsvPreview] = useState([])
   const [isDragging, setIsDragging] = useState(false)
@@ -209,6 +229,23 @@ export default function Clientes() {
   const [selectedIds, setSelectedIds] = useState(new Set())
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
+
+  /* ── Deep link: ?cn=Nombre&co=Empresa&cw=WhatsApp&ce=Email ──
+     Se activa cuando Tally/Google Forms redirige a la app con los datos del cliente.
+     El usuario ve el modal pre-cargado y sólo tiene que presionar Guardar.        */
+  useEffect(() => {
+    const p = new URLSearchParams(location.search)
+    const cn = p.get('cn') || p.get('nombre') || p.get('name') || ''
+    const co = p.get('co') || p.get('empresa') || p.get('company') || ''
+    const cw = (p.get('cw') || p.get('wa') || p.get('tel') || p.get('telefono') || '').replace(/\s/g, '')
+    const ce = p.get('ce') || p.get('email') || ''
+    if (cn || cw || co) {
+      setForm(f => ({ ...f, contact: cn, company: co || cn, wa: cw, email: ce }))
+      setModal(true)
+      nav('/clientes', { replace: true })
+      toast('📥 Nuevo contacto recibido — revisá los datos y guardá', 'ok')
+    }
+  }, []) // eslint-disable-line
 
   const clients = get('clients')
   const budgets = get('budgets')
@@ -240,7 +277,7 @@ export default function Clientes() {
   }, [clients, search])
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' }); setModal(true) }
+  const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' }); setModal(true); setPasteMode(false); setPasteText('') }
   const save = () => {
     if (!form.company) { toast('Ingresá el nombre de la empresa.', 'er'); return }
     saveEntity('clients', form); setModal(false); toast('Cliente guardado', 'ok')
@@ -432,6 +469,9 @@ export default function Clientes() {
             </button>
             <button className="cli-pill" onClick={exportCSV}>
               <i className="fa fa-download" /><span>Exportar</span>
+            </button>
+            <button className="cli-pill" onClick={() => setRegFormModal(true)}>
+              <i className="fa fa-qrcode" /><span>Formulario</span>
             </button>
           </div>
           <button className="cli-pill-new" onClick={() => openEdit()}>
@@ -828,6 +868,69 @@ export default function Clientes() {
           <div className="modal" style={{ maxWidth: 680 }}>
             <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} cliente</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
 
+            {/* ── Pegar texto de WhatsApp / email / tarjeta ── */}
+            <div style={{ marginBottom: 14, borderRadius: 10, border: `1.5px solid ${pasteMode ? 'rgba(37,211,102,.4)' : 'var(--border)'}`, overflow: 'hidden', transition: 'border-color .2s' }}>
+              <button
+                type="button"
+                onClick={() => { setPasteMode(m => !m); if (pasteMode) setPasteText('') }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, background: pasteMode ? 'rgba(37,211,102,.06)' : 'var(--surface2)', border: 'none', padding: '9px 13px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .2s' }}
+              >
+                <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', fontSize: 15 }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)', flex: 1, textAlign: 'left' }}>Extraer datos de un mensaje (WA, email, tarjeta...)</span>
+                <i className={`fa fa-chevron-${pasteMode ? 'up' : 'down'}`} style={{ fontSize: 10, color: 'var(--txt4)' }} />
+              </button>
+              {pasteMode && (
+                <div style={{ padding: '0 13px 12px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
+                  <div style={{ fontSize: 10, color: 'var(--txt3)', padding: '8px 0 5px' }}>
+                    Pegá cualquier texto con datos del cliente — mensaje de WA, email, bio, tarjeta:
+                  </div>
+                  <textarea
+                    value={pasteText}
+                    onChange={e => setPasteText(e.target.value)}
+                    rows={3}
+                    placeholder={'Ej: Hola! Soy María López de Tech SA\nCelular: 11 5555-1234\nEmail: maria@tech.com'}
+                    style={{ width: '100%', resize: 'none', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', border: '1.5px solid var(--border)', borderRadius: 7, boxSizing: 'border-box', lineHeight: 1.5, color: 'var(--txt)', background: 'var(--surface)', outline: 'none' }}
+                  />
+                  {pasteText.trim() && (() => {
+                    const r = parseContactText(pasteText)
+                    const found = Object.keys(r).length > 0
+                    return (
+                      <div style={{ marginTop: 6, display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {found ? (
+                          <>
+                            {r.contact && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#15803D', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>👤 {r.contact}</span>}
+                            {r.company && <span style={{ fontSize: 10, background: 'var(--brand-xlt)', color: 'var(--brand)', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>🏢 {r.company}</span>}
+                            {r.wa && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#059669', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>📱 {r.wa}</span>}
+                            {r.email && <span style={{ fontSize: 10, background: '#DBEAFE', color: '#2563EB', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>✉️ {r.email}</span>}
+                            <button
+                              className="btn btn-primary btn-xs"
+                              style={{ marginLeft: 'auto' }}
+                              onClick={() => {
+                                setForm(f => ({
+                                  ...f,
+                                  ...(r.contact ? { contact: r.contact } : {}),
+                                  ...(r.company ? { company: r.company } : {}),
+                                  ...(r.wa ? { wa: r.wa } : {}),
+                                  ...(r.email ? { email: r.email } : {}),
+                                }))
+                                setPasteMode(false)
+                                setPasteText('')
+                                toast('Datos aplicados al formulario', 'ok')
+                              }}
+                            >
+                              <i className="fa fa-check" /> Aplicar
+                            </button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 11, color: 'var(--txt4)', fontStyle: 'italic' }}>No se reconocieron datos. Probá con más texto...</span>
+                        )}
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+
             {/* Datos de contacto */}
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Datos de contacto</div>
             <div className="grid2">
@@ -1148,6 +1251,135 @@ export default function Clientes() {
           onClose={() => setPreviewBudget(null)}
           onEdit={() => { setPreviewBudget(null); setDetailClient(null); nav(`/presupuesto/${previewBudget.id}`) }}
         />
+      )}
+
+      {/* MODAL FORMULARIO DE ALTA (integración gratuita WA Business) */}
+      {regFormModal && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) { setRegFormModal(false); setFormRegUrl('') } }}>
+          <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
+            <div className="mh">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', fontSize: 17, flexShrink: 0 }}>
+                  <i className="fa fa-qrcode" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 15 }}>Formulario de alta de clientes</h3>
+                  <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>Integración gratuita · sin código</div>
+                </div>
+              </div>
+              <button className="mclose" onClick={() => { setRegFormModal(false); setFormRegUrl('') }}><i className="fa fa-xmark" /></button>
+            </div>
+
+            <div style={{ maxHeight: '68vh', overflowY: 'auto', padding: '2px 0' }}>
+              {/* Cómo funciona */}
+              <div style={{ background: 'linear-gradient(120deg,rgba(124,58,237,.07),rgba(37,211,102,.05))', border: '1px solid rgba(124,58,237,.18)', borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 11, color: 'var(--txt2)', lineHeight: 1.6 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 3, color: 'var(--txt)' }}>¿Cómo funciona?</div>
+                El cliente completa un formulario Tally.so gratuito → al enviarlo se redirige a ANMA con sus datos → aparece un modal pre-cargado para que guardés el cliente con un clic. <b>100% gratis, sin API paga.</b>
+              </div>
+
+              {/* PASO 1 */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>1</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', marginBottom: 3 }}>Creá el formulario en Tally.so (gratis)</div>
+                  <div style={{ fontSize: 11, color: 'var(--txt3)', lineHeight: 1.55, marginBottom: 7 }}>
+                    Creá cuenta gratuita en Tally y armá un formulario con los campos:<br />
+                    <b>Nombre · Empresa · WhatsApp · Email</b>.<br />
+                    En <i>Settings → Redirects</i> pegá la URL del paso 2.
+                  </div>
+                  <a href="https://tally.so" target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: 'var(--brand)', textDecoration: 'none', background: 'var(--brand-xlt)', padding: '4px 11px', borderRadius: 6 }}>
+                    <i className="fa fa-external-link" style={{ fontSize: 10 }} /> Ir a tally.so →
+                  </a>
+                </div>
+              </div>
+
+              {/* PASO 2 */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>2</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', marginBottom: 3 }}>Pegá esta URL de redirección en Tally</div>
+                  <div style={{ fontSize: 10, color: 'var(--txt3)', marginBottom: 6, lineHeight: 1.5 }}>
+                    En Tally, reemplazá NOMBRE, EMPRESA, WHATSAPP, EMAIL con las variables de cada campo
+                    (en Tally se usan como <code style={{ background: 'var(--surface3)', padding: '1px 4px', borderRadius: 3, fontFamily: 'monospace' }}>{'@{nombre_del_campo}'}</code>):
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+                    <div style={{ flex: 1, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 7, padding: '7px 10px', fontSize: 10, fontFamily: 'monospace', color: 'var(--txt2)', wordBreak: 'break-all', lineHeight: 1.6 }}>
+                      https://anma-host.vercel.app/clientes?cn=<b>NOMBRE</b>&co=<b>EMPRESA</b>&cw=<b>WHATSAPP</b>&ce=<b>EMAIL</b>
+                    </div>
+                    <button
+                      title="Copiar URL"
+                      className="btn btn-ghost btn-xs"
+                      style={{ flexShrink: 0, alignSelf: 'center' }}
+                      onClick={() => {
+                        navigator.clipboard.writeText('https://anma-host.vercel.app/clientes?cn=NOMBRE&co=EMPRESA&cw=WHATSAPP&ce=EMAIL')
+                        toast('URL de redirección copiada', 'ok')
+                      }}
+                    >
+                      <i className="fa fa-copy" /> Copiar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* PASO 3 */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>3</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', marginBottom: 3 }}>Generá el QR de tu formulario</div>
+                  <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 7 }}>
+                    Pegá el link de tu formulario Tally para generar el QR y compartirlo:
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="url"
+                      value={formRegUrl}
+                      onChange={e => setFormRegUrl(e.target.value)}
+                      placeholder="https://tally.so/r/..."
+                      style={{ flex: 1, padding: '8px 11px', border: '1.5px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, outline: 'none', minWidth: 0 }}
+                    />
+                    {formRegUrl && (
+                      <button
+                        className="btn btn-ghost btn-xs"
+                        style={{ flexShrink: 0 }}
+                        onClick={() => { navigator.clipboard.writeText(formRegUrl); toast('Link copiado', 'ok') }}
+                      >
+                        <i className="fa fa-copy" />
+                      </button>
+                    )}
+                  </div>
+                  {formRegUrl && (
+                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 16px', background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(formRegUrl)}`}
+                        alt="QR formulario"
+                        style={{ width: 176, height: 176, borderRadius: 8, border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,.13)', display: 'block' }}
+                      />
+                      <div style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'center' }}>
+                        Descargá o capturá una pantalla del QR para compartir
+                      </div>
+                      <button
+                        className="btn btn-ghost btn-xs"
+                        onClick={() => {
+                          const a = document.createElement('a')
+                          a.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(formRegUrl)}&download=1`
+                          a.download = 'qr-formulario-clientes.png'
+                          a.click()
+                        }}
+                      >
+                        <i className="fa fa-download" /> Descargar QR (400×400)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mfooter">
+              <button className="btn btn-secondary" onClick={() => { setRegFormModal(false); setFormRegUrl('') }}>Cerrar</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* MODAL RE-VINCULAR */}
