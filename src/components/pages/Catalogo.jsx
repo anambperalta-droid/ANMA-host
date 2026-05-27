@@ -1479,12 +1479,43 @@ export default function Catalogo() {
 
       {bulkModal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setBulkModal(false) }}>
-          <div className="modal">
-            <div className="mh"><h3>Carga masiva de productos</h3><button className="mclose" onClick={() => setBulkModal(false)}><i className="fa fa-xmark" /></button></div>
-            <div style={{ fontSize: 12, color: 'var(--txt2)', marginBottom: 14, background: 'var(--surface2)', padding: '10px 14px', borderRadius: 8 }}>Formato: <code>Nombre del producto, precio</code> (una por línea)</div>
-            <div className="fg"><label>Categoría</label><select value={bulkCat} onChange={e => setBulkCat(e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
-            <div className="fg"><label>Datos</label><textarea value={bulkData} onChange={e => setBulkData(e.target.value)} rows={8} placeholder={'Taza sublimada, 850\nLapicera metálica, 450'} /></div>
-            <div className="mfooter"><button className="btn btn-secondary" onClick={() => setBulkModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={doBulk}><i className="fa fa-bolt" /> Importar</button></div>
+          <div className="modal" style={{ maxWidth: 580, display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 40px)', padding: 0, overflow: 'hidden' }}>
+            <div className="mh" style={{ flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="fa fa-bolt" style={{ fontSize: 12, color: 'var(--brand)' }} />
+                </span>
+                <h3 style={{ margin: 0 }}>Carga masiva de productos</h3>
+              </div>
+              <button className="mclose" onClick={() => setBulkModal(false)}><i className="fa fa-xmark" /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px 4px' }}>
+              <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand)', marginBottom: 4 }}>Formato de entrada</div>
+                <div style={{ fontSize: 12, color: 'var(--txt2)', lineHeight: 1.7 }}>
+                  Una línea por producto: <code style={{ background: 'var(--surface)', padding: '1px 5px', borderRadius: 4 }}>Nombre del producto, precio</code>
+                </div>
+                <div style={{ marginTop: 6, fontSize: 11, color: 'var(--txt3)' }}>Ej: <code>Taza sublimada, 850</code></div>
+              </div>
+              <div className="fg"><label>Categoría</label><select value={bulkCat} onChange={e => setBulkCat(e.target.value)}>{cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+              <div className="fg" style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ margin: 0 }}>Datos de productos</label>
+                  {bulkData.trim() && (
+                    <span style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>
+                      {bulkData.trim().split('\n').filter(l => l.trim()).length} producto{bulkData.trim().split('\n').filter(l => l.trim()).length !== 1 ? 's' : ''} detectado{bulkData.trim().split('\n').filter(l => l.trim()).length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+                <textarea value={bulkData} onChange={e => setBulkData(e.target.value)} rows={13} placeholder={'Taza sublimada, 850\nLapicera metálica, 450\nCuaderno corporativo, 1200'} style={{ fontFamily: 'monospace', fontSize: 12, resize: 'vertical' }} />
+              </div>
+            </div>
+            <div className="mfooter" style={{ flexShrink: 0 }}>
+              <button className="btn btn-secondary" onClick={() => setBulkModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={doBulk} disabled={!bulkData.trim()}>
+                <i className="fa fa-bolt" /> {bulkData.trim() ? `Importar ${bulkData.trim().split('\n').filter(l => l.trim()).length} producto${bulkData.trim().split('\n').filter(l => l.trim()).length !== 1 ? 's' : ''}` : 'Importar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
