@@ -98,15 +98,18 @@ export default function Catalogo() {
   const imgRef = useRef(null)
 
   // ── Estado del Kit Builder ────────────────────────────────────────
-  const [componentes, setComponentes] = useState([])
-  const [compForm, setCompForm]       = useState({ nombre: '', qty: 1, costoUnit: '' })
-  const [compSearch, setCompSearch]   = useState('')
+  const [componentes, setComponentes]   = useState([])
+  const [compForm, setCompForm]         = useState({ nombre: '', qty: 1, costoUnit: '' })
+  const [compSearch, setCompSearch]     = useState('')
   const [compDropdown, setCompDropdown] = useState(false)
-  const [costoExtra, setCostoExtra]   = useState('')   // packaging / presentación
   const compInputRef = useRef(null)
+  // Packaging: items individuales (caja, cinta, tissue…)
+  const [packagingItems, setPackagingItems] = useState([])
+  const [packForm, setPackForm]             = useState({ nombre: '', qty: 1, costoUnit: '' })
 
-  const kitCost  = componentes.reduce((s, c) => s + (num(c.qty) * num(c.costoUnit)), 0)
-  const kitTotal = kitCost + num(costoExtra)           // costo real = componentes + packaging
+  const kitCost   = componentes.reduce((s, c) => s + (num(c.qty) * num(c.costoUnit)), 0)
+  const packTotal = packagingItems.reduce((s, p) => s + (num(p.qty) * num(p.costoUnit)), 0)
+  const kitTotal  = kitCost + packTotal   // costo real = componentes + packaging
 
   // Sincronizar costo del kit → form.cost y recalcular precio
   useEffect(() => {
@@ -114,7 +117,7 @@ export default function Catalogo() {
     setF('cost', kitTotal)
     const m = parseFloat(marginInput)
     if (!isNaN(m) && kitTotal > 0) setF('price', Math.round(kitTotal * (1 + m / 100)))
-  }, [componentes, costoExtra, productMode]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [kitTotal, productMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -143,7 +146,15 @@ export default function Catalogo() {
     setComponentes(isKit && p.componentes ? p.componentes : [])
     setCompForm({ nombre: '', qty: 1, costoUnit: '' })
     setCompSearch('')
-    setCostoExtra(isKit && p.costoExtra ? String(p.costoExtra) : '')
+    // Packaging: cargar array nuevo o migrar valor legacy costoExtra
+    if (isKit && p.packagingItems && p.packagingItems.length > 0) {
+      setPackagingItems(p.packagingItems)
+    } else if (isKit && p.costoExtra && num(p.costoExtra) > 0) {
+      setPackagingItems([{ _pid: Date.now(), nombre: 'Packaging', qty: 1, costoUnit: num(p.costoExtra) }])
+    } else {
+      setPackagingItems([])
+    }
+    setPackForm({ nombre: '', qty: 1, costoUnit: '' })
 
     if (p) {
       setForm({ ...p, cat: p.cat ?? '', image: p.image || '', stock: p.stock ?? '' })
@@ -177,8 +188,9 @@ export default function Catalogo() {
       price:       num(form.price),
       stock:       form.stock === '' ? null : num(form.stock),
       tipo:        productMode === 'kit' ? 'kit' : 'producto',
-      componentes: productMode === 'kit' ? componentes : [],
-      costoExtra:  productMode === 'kit' ? (costoExtra === '' ? 0 : num(costoExtra)) : 0,
+      componentes:    productMode === 'kit' ? componentes : [],
+      packagingItems: productMode === 'kit' ? packagingItems : [],
+      costoExtra:     productMode === 'kit' ? packTotal : 0,  // compat legacy
       updatedAt:   new Date().toISOString().slice(0, 10),
     })
     setModal(false)
@@ -228,6 +240,22 @@ export default function Catalogo() {
   const removeComp = (cid) => setComponentes(prev => prev.filter(c => c._cid !== cid))
   const updateComp = (cid, field, val) =>
     setComponentes(prev => prev.map(c => c._cid === cid ? { ...c, [field]: val } : c))
+
+  // ── Packaging helpers ────────────────────────────────────────────
+  const addPackaging = () => {
+    const nombre = packForm.nombre.trim()
+    if (!nombre) { toast('Ingresá el nombre del ítem de packaging', 'er'); return }
+    setPackagingItems(prev => [...prev, {
+      _pid: Date.now() + Math.floor(Math.random() * 1000),
+      nombre,
+      qty:       Math.max(1, num(packForm.qty) || 1),
+      costoUnit: num(packForm.costoUnit) || 0,
+    }])
+    setPackForm({ nombre: '', qty: 1, costoUnit: '' })
+  }
+  const removePackaging = (pid) => setPackagingItems(prev => prev.filter(p => p._pid !== pid))
+  const updatePackaging = (pid, field, val) =>
+    setPackagingItems(prev => prev.map(p => p._pid === pid ? { ...p, [field]: val } : p))
 
   const doBulk = () => {
     const lines = bulkData.split('\n').filter(l => l.trim())
@@ -737,8 +765,8 @@ export default function Catalogo() {
           MODAL PRODUCTO / KIT
       ══════════════════════════════════════════════════ */}
       {modal && (
-        <div className="modal-bg open" style={{ padding: '8px 12px', alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: productMode === 'kit' ? 1020 : 700, width: 'calc(100vw - 24px)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 16px)', padding: 0, overflow: 'hidden' }}>
+        <div className="modal-bg open" style={{ padding: '6px 10px', alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+          <div className="modal" style={{ maxWidth: productMode === 'kit' ? 1040 : 700, width: 'calc(100vw - 20px)', display: 'flex', flexDirection: 'column', height: productMode === 'kit' ? 'calc(100dvh - 12px)' : 'auto', maxHeight: 'calc(100dvh - 12px)', padding: 0, overflow: 'hidden' }}>
             {/* ── HEADER FIJO ── */}
             <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -927,33 +955,106 @@ export default function Catalogo() {
                   </div>
                 )}
 
-                {/* ── Costo de presentación / packaging ── */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, padding: '10px 12px', background: 'rgba(255,255,255,.6)', borderRadius: 10, border: '1px solid #EDE9FE' }}>
-                  <i className="fa fa-gift" style={{ color: '#DB2777', fontSize: 14, flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#DB2777', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>
-                      Packaging / Presentación <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--txt4)' }}>(caja, ribbon, tissue...)</span>
-                    </div>
-                    <input
-                      type="number" min="0"
-                      value={costoExtra}
-                      onChange={e => setCostoExtra(e.target.value)}
-                      onFocus={selectOnFocus}
-                      placeholder="$ 0 — opcional"
-                      style={{ width: '100%', padding: '6px 10px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', color: 'var(--txt)', background: 'var(--surface)', outline: 'none', boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  {(kitCost > 0 || num(costoExtra) > 0) && (
-                    <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 80 }}>
-                      <div style={{ fontSize: 9, color: 'var(--txt4)', fontWeight: 600, marginBottom: 2 }}>COSTO TOTAL KIT</div>
-                      <div style={{ fontSize: 16, fontWeight: 900, color: '#8B5CF6', lineHeight: 1 }}>{fmt(kitTotal)}</div>
-                      {num(costoExtra) > 0 && (
-                        <div style={{ fontSize: 9, color: 'var(--txt4)', marginTop: 2 }}>
-                          {fmt(kitCost)} + {fmt(num(costoExtra))}
-                        </div>
+                {/* ── PACKAGING: ítems individuales ── */}
+                <div style={{ marginTop: 8, background: 'rgba(255,255,255,.7)', borderRadius: 10, border: '1.5px solid #FBCFE8', overflow: 'hidden' }}>
+                  {/* Header packaging */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'linear-gradient(90deg,#FDF2F8,#FFF5FB)', borderBottom: '1px solid #FBCFE8' }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#DB2777', textTransform: 'uppercase', letterSpacing: .6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <i className="fa fa-gift" style={{ fontSize: 11 }} /> Packaging / Presentación
+                      {packagingItems.length > 0 && (
+                        <span style={{ background: '#FCE7F3', color: '#DB2777', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
+                          {packagingItems.length}
+                        </span>
                       )}
                     </div>
-                  )}
+                    {packTotal > 0 && (
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 9, color: 'var(--txt4)', fontWeight: 600 }}>TOTAL PACKAGING</div>
+                        <div style={{ fontSize: 13, fontWeight: 900, color: '#DB2777' }}>{fmt(packTotal)}</div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ padding: '8px 12px' }}>
+                    {/* Lista de ítems agregados */}
+                    {packagingItems.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px 26px', gap: 4, padding: '0 6px 3px', fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                          <span>Ítem</span><span style={{ textAlign: 'center' }}>Cant.</span><span style={{ textAlign: 'right' }}>Costo</span><span />
+                        </div>
+                        {packagingItems.map((p, idx) => {
+                          const lineCost = num(p.qty) * num(p.costoUnit)
+                          return (
+                            <div key={p._pid} style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px 26px', gap: 4, alignItems: 'center', padding: '5px 6px', borderRadius: 7, background: idx % 2 === 0 ? 'var(--surface)' : '#FFF5FB', marginBottom: 3 }}>
+                              <div>
+                                <input
+                                  value={p.nombre}
+                                  onChange={e => updatePackaging(p._pid, 'nombre', e.target.value)}
+                                  style={{ width: '100%', padding: '4px 7px', border: '1px solid #FBCFE8', borderRadius: 6, fontSize: 11.5, fontFamily: 'inherit', color: 'var(--txt)', background: 'transparent', fontWeight: 600, boxSizing: 'border-box' }}
+                                />
+                                {lineCost > 0 && <div style={{ fontSize: 9, color: '#DB2777', fontWeight: 700, paddingLeft: 4 }}>{fmt(lineCost)}</div>}
+                              </div>
+                              <input type="number" min="1" step="1" value={p.qty}
+                                onChange={e => updatePackaging(p._pid, 'qty', e.target.value)}
+                                onFocus={selectOnFocus}
+                                style={{ padding: '4px 5px', border: '1px solid #FBCFE8', borderRadius: 6, fontSize: 11.5, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
+                              />
+                              <input type="number" min="0" value={p.costoUnit}
+                                onChange={e => updatePackaging(p._pid, 'costoUnit', e.target.value)}
+                                onFocus={selectOnFocus}
+                                style={{ padding: '4px 5px', border: '1px solid #FBCFE8', borderRadius: 6, fontSize: 11.5, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
+                              />
+                              <button onClick={() => removePackaging(p._pid)}
+                                style={{ width: 22, height: 22, border: '1px solid #FECACA', background: '#FFF1F2', color: '#DC2626', borderRadius: 5, cursor: 'pointer', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <i className="fa fa-xmark" />
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    {/* Chips rápidos */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                      {['Caja', 'Cinta/Ribbon', 'Papel tissue', 'Bolsa', 'Tarjeta', 'Virutas', 'Film', 'Sticker'].map(preset => (
+                        <button key={preset}
+                          onMouseDown={() => setPackForm(f => ({ ...f, nombre: preset }))}
+                          style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, border: '1px solid #FBCFE8', background: packForm.nombre === preset ? '#FCE7F3' : 'var(--surface)', color: packForm.nombre === preset ? '#DB2777' : 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Form agregar ítem */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px auto', gap: 5, alignItems: 'end' }}>
+                      <input
+                        type="text" value={packForm.nombre}
+                        onChange={e => setPackForm(f => ({ ...f, nombre: e.target.value }))}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addPackaging() } }}
+                        placeholder="Caja, cinta, tissue…"
+                        style={{ padding: '6px 9px', border: '1.5px solid #FBCFE8', borderRadius: 7, fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)', background: 'var(--surface)', width: '100%', boxSizing: 'border-box' }}
+                      />
+                      <input type="number" min="1" step="1" value={packForm.qty}
+                        onChange={e => setPackForm(f => ({ ...f, qty: e.target.value }))}
+                        onFocus={selectOnFocus}
+                        placeholder="Cant."
+                        style={{ padding: '6px 5px', border: '1.5px solid #FBCFE8', borderRadius: 7, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
+                      />
+                      <input type="number" min="0" value={packForm.costoUnit}
+                        onChange={e => setPackForm(f => ({ ...f, costoUnit: e.target.value }))}
+                        onFocus={selectOnFocus}
+                        placeholder="$ Costo"
+                        style={{ padding: '6px 5px', border: '1.5px solid #FBCFE8', borderRadius: 7, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
+                      />
+                      <button onClick={addPackaging}
+                        disabled={!packForm.nombre.trim()}
+                        style={{ height: 32, padding: '0 10px', borderRadius: 7, border: 'none', background: packForm.nombre.trim() ? 'linear-gradient(135deg,#DB2777,#9333EA)' : 'var(--surface3)', color: packForm.nombre.trim() ? '#fff' : 'var(--txt4)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3, transition: 'all .15s' }}>
+                        <i className="fa fa-plus" /> Agregar
+                      </button>
+                    </div>
+                    {packForm.costoUnit && num(packForm.qty) > 0 && num(packForm.costoUnit) > 0 && (
+                      <div style={{ fontSize: 10, color: '#DB2777', marginTop: 4, textAlign: 'right', fontWeight: 700 }}>
+                        Subtotal: {fmt(num(packForm.qty) * num(packForm.costoUnit))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Formulario para agregar componente */}
@@ -1123,7 +1224,14 @@ export default function Catalogo() {
                       display: 'flex', alignItems: 'center', gap: 6,
                     }}>
                       <i className="fa fa-calculator" style={{ fontSize: 10 }} />
-                      {componentes.length > 0 ? fmt(kitTotal) : '— Agregá componentes'}
+                      <span>
+                        {componentes.length > 0 || packTotal > 0 ? fmt(kitTotal) : '— Agregá componentes'}
+                        {packTotal > 0 && kitCost > 0 && (
+                          <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--txt3)', display: 'block' }}>
+                            prod {fmt(kitCost)} + pkg {fmt(packTotal)}
+                          </span>
+                        )}
+                      </span>
                     </div>
                   ) : (
                     <input tabIndex={5} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
