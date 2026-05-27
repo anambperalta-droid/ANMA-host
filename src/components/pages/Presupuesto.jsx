@@ -217,6 +217,19 @@ export default function Presupuesto() {
   const [currentStep, setCurrentStep] = useState(1)
   const [draftRestored, setDraftRestored] = useState(false)
 
+  /* ── Modo: 'simple' (lista de productos) | 'kit' (constructor regalo) ── */
+  const [kitMode, setKitMode] = useState(false)
+  const handleModeSwitch = (toKit) => {
+    if (toKit === kitMode) return
+    setKitMode(toKit)
+    setActiveAltIdx(0)
+    if (toKit) {
+      setAlternatives([emptyAlt()])
+    } else {
+      setAlternatives([{ label: 'Pedido', kits: [emptyItem()] }])
+    }
+  }
+
   const clients = get('clients')
   const products = get('products')
   const insumos = get('insumos', [])
@@ -249,6 +262,9 @@ export default function Presupuesto() {
         }
         setEditId(b.id)
         setMarginBudgetedSaved(typeof b.marginBudgeted === 'number' ? b.marginBudgeted : null)
+        const hasKitItems = (b.alternatives || []).some(a => (a.kits || []).some(i => i.type === 'kit'))
+          || (b.items || []).some(i => i.type === 'kit')
+        setKitMode(hasKitItems)
       }
     } else {
       const saved = db(DRAFT_KEY, null)
@@ -264,6 +280,8 @@ export default function Presupuesto() {
           }
         }
         if (step) setCurrentStep(step)
+        const draftHasKit = (it || []).some(a => Array.isArray(a?.kits) ? a.kits.some(i => i.type === 'kit') : a?.type === 'kit')
+        setKitMode(draftHasKit)
         setDraftRestored(true)
         toast('Borrador restaurado — tus datos anteriores están cargados', 'ok')
       }
@@ -517,7 +535,7 @@ export default function Presupuesto() {
       const hasItem = alternatives.some(a => a.kits.some(i => i.type === 'kit'
         ? (i.name || (i.packaging?.length > 0) || (i.products?.length > 0))
         : i.name))
-      if (!hasItem) return 'Agregá al menos un Kit con nombre, insumos o productos.'
+      if (!hasItem) return kitMode ? 'Agregá al menos un Kit con nombre, insumos o productos.' : 'Agregá al menos un producto al pedido.'
       return null
     }
     return null
@@ -1064,10 +1082,120 @@ export default function Presupuesto() {
               </>
             )}
 
-            {/* ─── PASO 2: KIT BUILDER ─── */}
+            {/* ─── PASO 2: PRODUCTOS / KIT ─── */}
             {currentStep === 2 && (
               <>
-                <PaneHeader icon="fa-gift" title="Paso 2 · Kit / Box" subtitle="Construí cada regalo combinando packaging, productos y personalización" />
+                <PaneHeader icon="fa-gift" title="Paso 2 · Productos" subtitle="¿Qué tipo de pedido es este?" />
+
+                {/* ── Selector de modo ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+                  {/* Tab: Pedido simple */}
+                  <button
+                    onClick={() => handleModeSwitch(false)}
+                    style={{ padding: '13px 14px', borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit', border: `2px solid ${!kitMode ? 'var(--brand)' : 'var(--border)'}`, background: !kitMode ? 'rgba(124,58,237,.07)' : 'var(--surface2)', textAlign: 'left', transition: 'all .15s', outline: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 8, background: !kitMode ? 'var(--grad)' : 'var(--surface)', border: `1.5px solid ${!kitMode ? 'transparent' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
+                        <i className="fa fa-list-ul" style={{ color: !kitMode ? '#fff' : 'var(--txt3)' }} />
+                      </div>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: !kitMode ? 'var(--brand)' : 'var(--txt2)', flex: 1 }}>Pedido simple</span>
+                      {!kitMode && <i className="fa fa-circle-check" style={{ color: 'var(--brand)', fontSize: 14, flexShrink: 0 }} />}
+                    </div>
+                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', paddingLeft: 38, lineHeight: 1.4 }}>Productos con precio directo. Sin packaging ni personalización.</div>
+                  </button>
+                  {/* Tab: Kit / Box */}
+                  <button
+                    onClick={() => handleModeSwitch(true)}
+                    style={{ padding: '13px 14px', borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit', border: `2px solid ${kitMode ? 'var(--brand)' : 'var(--border)'}`, background: kitMode ? 'rgba(124,58,237,.07)' : 'var(--surface2)', textAlign: 'left', transition: 'all .15s', outline: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 8, background: kitMode ? 'var(--grad)' : 'var(--surface)', border: `1.5px solid ${kitMode ? 'transparent' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
+                        <i className="fa fa-gift" style={{ color: kitMode ? '#fff' : 'var(--txt3)' }} />
+                      </div>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: kitMode ? 'var(--brand)' : 'var(--txt2)', flex: 1 }}>Kit / Box regalo</span>
+                      {kitMode && <i className="fa fa-circle-check" style={{ color: 'var(--brand)', fontSize: 14, flexShrink: 0 }} />}
+                    </div>
+                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', paddingLeft: 38, lineHeight: 1.4 }}>Constructor completo: packaging, personalización y alternativas.</div>
+                  </button>
+                </div>
+
+                {/* ══════════════════════════════════════════
+                    MODO SIMPLE — lista de productos
+                ══════════════════════════════════════════ */}
+                {!kitMode && (
+                  <>
+                    {/* header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <span style={{ fontSize: 11, color: 'var(--txt3)' }}>
+                        {items.filter(i => i.name).length
+                          ? `${items.filter(i => i.name).length} producto${items.filter(i => i.name).length !== 1 ? 's' : ''} cargado${items.filter(i => i.name).length !== 1 ? 's' : ''}`
+                          : 'Cargá los productos del pedido'}
+                      </span>
+                      <button className="btn btn-ghost btn-sm" onClick={addItem}>
+                        <i className="fa fa-plus" /> Agregar
+                      </button>
+                    </div>
+                    {/* column headers */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 58px 96px 78px 28px', gap: 6, padding: '5px 8px 7px', borderBottom: '1.5px solid var(--border)', marginBottom: 6 }}>
+                      {[['Producto', 'left'], ['Qty', 'center'], ['Precio u.', 'right'], ['Total', 'right'], ['', '']].map(([h, a], i) => (
+                        <span key={i} style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: a }}>{h}</span>
+                      ))}
+                    </div>
+                    {/* rows */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      {items.map((item, idx) => (
+                        <div key={idx}
+                          draggable onDragStart={handleDragStart(idx)} onDragOver={handleDragOver(idx)} onDragLeave={handleDragLeave} onDrop={handleDrop(idx)}
+                          style={{ display: 'grid', gridTemplateColumns: '1fr 58px 96px 78px 28px', gap: 6, alignItems: 'center', background: dragOver === idx ? 'rgba(124,58,237,.04)' : 'transparent', borderRadius: 8, transition: 'background .1s', padding: '2px 0' }}>
+                          {/* Nombre + picker catálogo */}
+                          <div style={{ display: 'flex', gap: 4, minWidth: 0 }}>
+                            <input type="text" value={item.name || ''} onChange={e => updateItem(idx, 'name', e.target.value)}
+                              placeholder="Nombre del producto..."
+                              style={{ flex: 1, fontSize: 12, padding: '5px 8px', height: 32, minWidth: 0 }} />
+                            <button onClick={() => openPicker(idx)} type="button" title="Elegir del catálogo"
+                              style={{ width: 30, height: 32, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flexShrink: 0 }}>
+                              <i className="fa fa-list" />
+                            </button>
+                          </div>
+                          {/* Qty */}
+                          <input type="number" min="1" value={item.qty || 1} onFocus={selectOnFocus}
+                            onChange={e => updateItem(idx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
+                            style={{ height: 32, textAlign: 'center', fontSize: 12, padding: '0 4px', fontWeight: 700 }} />
+                          {/* Precio unit */}
+                          <input type="text" inputMode="numeric" value={fmtTbl(item.priceUnit)} onFocus={selectOnFocus}
+                            onChange={e => { const r = parseTbl(e.target.value); updateItem(idx, 'priceUnit', r === '' ? 0 : Number(r)) }}
+                            style={{ height: 32, textAlign: 'right', fontSize: 12, padding: '0 8px', fontVariantNumeric: 'tabular-nums' }} />
+                          {/* Subtotal */}
+                          <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: num(item.qty) * num(item.priceUnit) > 0 ? 'var(--money)' : 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>
+                            {num(item.qty) * num(item.priceUnit) > 0 ? fmt(num(item.qty) * num(item.priceUnit)) : '—'}
+                          </div>
+                          {/* Remove */}
+                          <button onClick={() => removeItem(idx)}
+                            style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt4)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                            onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt4)'; e.currentTarget.style.background = 'transparent' }}>
+                            <i className="fa fa-xmark" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {/* add row */}
+                    <button className="btn btn-ghost btn-sm" onClick={addItem}
+                      style={{ marginTop: 8, width: '100%', borderStyle: 'dashed', justifyContent: 'center', fontSize: 11 }}>
+                      <i className="fa fa-plus" /> Agregar producto
+                    </button>
+                    {/* tip */}
+                    <div className="wiz-tip" style={{ marginTop: 12 }}>
+                      <i className="fa fa-lightbulb" /> Hacé clic en <i className="fa fa-list" style={{ margin: '0 2px' }} /> para seleccionar del catálogo. El precio se completa automáticamente.
+                    </div>
+                    {/* Catalog picker */}
+                    <ProductPicker open={pickerOpen} onClose={() => setPickerOpen(false)} products={products} onSelect={handlePickProduct} />
+                  </>
+                )}
+
+                {/* ══════════════════════════════════════════
+                    MODO KIT — constructor completo de regalos
+                ══════════════════════════════════════════ */}
+                {kitMode && (
+                  <>
 
                 {/* ── Tabs de alternativas ── */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -1446,6 +1574,9 @@ export default function Presupuesto() {
                     setInsPickerTarget(null)
                   }}
                 />
+
+                  </>
+                )}
 
               </>
             )}
