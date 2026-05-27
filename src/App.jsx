@@ -4,6 +4,7 @@ import Login from './components/layout/Login'
 import AppShell from './components/layout/AppShell'
 import Bienvenida from './components/pages/Bienvenida'
 import PortalProveedor from './components/pages/PortalProveedor'
+import Alta from './components/pages/Alta'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 
 function AuthRedirect() {
@@ -30,6 +31,7 @@ export default function App() {
     <ErrorBoundary>
       <Routes>
         <Route path="/portal-proveedor" element={<PortalProveedor />} />
+        <Route path="/alta" element={<Alta appName="ANMA Regalos" />} />
         <Route path="/bienvenida" element={<Bienvenida />} />
         <Route path="/login" element={
           hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :

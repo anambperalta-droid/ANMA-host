@@ -312,6 +312,25 @@ export default function Clientes() {
     }).filter(c => c.company || c.contact)
   }
 
+  /* ── Detecta y parsea un chat exportado de WhatsApp (.txt) ── */
+  const parseWaChat = (text) => {
+    // iOS: [01/01/24, 10:30:00 AM] +54 11 5555-1234: Hola
+    // Android: 01/01/24, 10:30 - +54 11 5555-1234: Hola
+    const lineRe = /(?:\[[\d/.,\s:AMP]+\]|-)\s*([^:]{3,60}):/g
+    const participants = new Map()
+    let m
+    while ((m = lineRe.exec(text)) !== null) {
+      const raw = m[1].trim()
+      // Solo capturar si parece un número de teléfono o tiene dígitos
+      const phoneRe = /^[+\d][\d\s\-().]{6,20}$/
+      if (phoneRe.test(raw)) {
+        const clean = raw.replace(/[\s\-().]/g, '')
+        participants.set(clean, { wa: clean, contact: '', company: '' })
+      }
+    }
+    return [...participants.values()].filter(p => p.wa.length >= 8)
+  }
+
   const processFile = (file) => {
     if (!file) return
     const reader = new FileReader()
@@ -319,6 +338,12 @@ export default function Clientes() {
       const content = ev.target.result
       if (file.name.endsWith('.vcf') || content.includes('BEGIN:VCARD')) {
         setCsvPreview(parseVcf(content)); return
+      }
+      // Detectar export de WhatsApp
+      const isWaChat = /(\[[\d/., :APM]+\]|^\d{1,2}\/\d{1,2}\/\d{2,4},\s*\d)/m.test(content) && content.includes(' - ')
+      if (isWaChat || (file.name.toLowerCase().includes('whatsapp') && file.name.endsWith('.txt'))) {
+        const contacts = parseWaChat(content)
+        if (contacts.length > 0) { setCsvPreview(contacts); return }
       }
       const lines = content.split('\n').filter(l => l.trim())
       const header = lines[0].toLowerCase()
@@ -1155,26 +1180,37 @@ export default function Clientes() {
 
             {/* Body */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
-              {/* 2 opciones */}
+              {/* 3 opciones de import */}
               {csvPreview.length === 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
                   <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(37,211,102,.07)', border: '1.5px solid rgba(37,211,102,.3)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
-                      <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', fontSize: 16 }} /> Desde el celular
+                      <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', fontSize: 16 }} /> Contactos
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
-                      Exportá tus contactos como <b>.vcf</b> desde la app de Contactos del teléfono. Se importan nombre, celular y email.
+                      Exportá tus contactos como <b>.vcf</b> desde la app de Contactos del teléfono.
                     </div>
                     <div style={{ marginTop: 8, fontSize: 10, color: '#059669', fontWeight: 600 }}>
-                      <i className="fa fa-circle-check" style={{ marginRight: 4 }} />Acepta .vcf de iPhone y Android
+                      <i className="fa fa-circle-check" style={{ marginRight: 4 }} />iPhone y Android
+                    </div>
+                  </div>
+                  <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(37,211,102,.05)', border: '1.5px solid rgba(37,211,102,.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
+                      <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', fontSize: 16 }} /> Chat WA
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
+                      Exportá un chat de WhatsApp desde el celular y subí el <b>.txt</b>. Extrae los participantes.
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 10, color: '#059669', fontWeight: 600 }}>
+                      <i className="fa fa-circle-check" style={{ marginRight: 4 }} />WA → ⋮ → Más → Exportar chat
                     </div>
                   </div>
                   <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--surface2)', border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
-                      <i className="fa fa-file-csv" style={{ color: '#0F9D58', fontSize: 16 }} /> Desde planilla
+                      <i className="fa fa-file-csv" style={{ color: '#0F9D58', fontSize: 16 }} /> Planilla CSV
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--txt2)', lineHeight: 1.5 }}>
-                      Usá nuestra plantilla CSV. Completá en Excel o Google Sheets y subila acá.
+                      Usá nuestra plantilla. Completá en Excel o Google Sheets y subila.
                     </div>
                     <button className="btn btn-ghost btn-xs" style={{ marginTop: 8, color: 'var(--brand)' }} onClick={downloadTemplate}>
                       <i className="fa fa-download" /> Descargar plantilla
@@ -1197,7 +1233,7 @@ export default function Clientes() {
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 4 }}>
                       {isDragging ? '¡Soltá el archivo acá!' : 'Arrastrá tu archivo acá'}
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--txt3)' }}>o hacé clic para seleccionar · .vcf · .csv · .txt</div>
+                    <div style={{ fontSize: 12, color: 'var(--txt3)' }}>o hacé clic para seleccionar · .vcf · .csv · .txt (chat WA)</div>
                     <input ref={fileRef} type="file" accept=".csv,.txt,.vcf" onChange={handleFileSelect} style={{ display: 'none' }} />
                   </div>
                   <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 11, color: 'var(--txt3)' }}>
@@ -1253,134 +1289,98 @@ export default function Clientes() {
         />
       )}
 
-      {/* MODAL FORMULARIO DE ALTA (integración gratuita WA Business) */}
-      {regFormModal && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) { setRegFormModal(false); setFormRegUrl('') } }}>
-          <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
-            <div className="mh">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', fontSize: 17, flexShrink: 0 }}>
-                  <i className="fa fa-qrcode" />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 15 }}>Formulario de alta de clientes</h3>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>Integración gratuita · sin código</div>
-                </div>
-              </div>
-              <button className="mclose" onClick={() => { setRegFormModal(false); setFormRegUrl('') }}><i className="fa fa-xmark" /></button>
-            </div>
+      {/* MODAL FORMULARIO DE ALTA — link directo, sin setup externo */}
+      {regFormModal && (() => {
+        const cfg = config()
+        const adminWa = (cfg.wa || '').replace(/\D/g, '')
+        const neg = cfg.businessName || 'ANMA'
+        const intakeUrl = `${window.location.origin}/alta?neg=${encodeURIComponent(neg)}${adminWa ? `&admin=${adminWa}` : ''}`
+        const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(intakeUrl)}`
 
-            <div style={{ maxHeight: '68vh', overflowY: 'auto', padding: '2px 0' }}>
-              {/* Cómo funciona */}
+        return (
+          <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setRegFormModal(false) }}>
+            <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+              <div className="mh">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', fontSize: 17, flexShrink: 0 }}>
+                    <i className="fa fa-qrcode" />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 15 }}>Formulario de alta de clientes</h3>
+                    <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>Sin setup · listo para compartir ahora</div>
+                  </div>
+                </div>
+                <button className="mclose" onClick={() => setRegFormModal(false)}><i className="fa fa-xmark" /></button>
+              </div>
+
+              {/* Explicación rápida */}
               <div style={{ background: 'linear-gradient(120deg,rgba(124,58,237,.07),rgba(37,211,102,.05))', border: '1px solid rgba(124,58,237,.18)', borderRadius: 10, padding: '10px 13px', marginBottom: 16, fontSize: 11, color: 'var(--txt2)', lineHeight: 1.6 }}>
-                <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 3, color: 'var(--txt)' }}>¿Cómo funciona?</div>
-                El cliente completa un formulario Tally.so gratuito → al enviarlo se redirige a ANMA con sus datos → aparece un modal pre-cargado para que guardés el cliente con un clic. <b>100% gratis, sin API paga.</b>
+                <b style={{ color: 'var(--txt)' }}>¿Cómo funciona?</b> El cliente escanea el QR o abre el link → completa sus datos → te lo manda por WhatsApp → abrís el link y ANMA pre-carga el formulario. <b>Un clic para guardar.</b>
               </div>
 
-              {/* PASO 1 */}
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>1</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', marginBottom: 3 }}>Creá el formulario en Tally.so (gratis)</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)', lineHeight: 1.55, marginBottom: 7 }}>
-                    Creá cuenta gratuita en Tally y armá un formulario con los campos:<br />
-                    <b>Nombre · Empresa · WhatsApp · Email</b>.<br />
-                    En <i>Settings → Redirects</i> pegá la URL del paso 2.
+              {/* QR centrado */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '16px', background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)', marginBottom: 14 }}>
+                <img src={qrSrc} alt="QR formulario de alta" width={192} height={192}
+                  style={{ borderRadius: 10, border: '4px solid #fff', boxShadow: '0 2px 12px rgba(0,0,0,.12)', display: 'block' }} />
+                <div style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'center' }}>
+                  <i className="fa fa-mobile-screen-button" style={{ marginRight: 4 }} />Tus clientes escanean este QR y se registran
+                </div>
+                <button className="btn btn-ghost btn-xs"
+                  onClick={() => {
+                    const a = document.createElement('a')
+                    a.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(intakeUrl)}&download=1`
+                    a.download = 'qr-registro-clientes.png'
+                    a.click()
+                  }}>
+                  <i className="fa fa-download" /> Descargar QR
+                </button>
+              </div>
+
+              {/* Link del formulario */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', marginBottom: 5 }}>LINK DEL FORMULARIO</div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <div style={{ flex: 1, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 7, padding: '7px 10px', fontSize: 11, fontFamily: 'monospace', color: 'var(--txt2)', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                    {intakeUrl}
                   </div>
-                  <a href="https://tally.so" target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: 'var(--brand)', textDecoration: 'none', background: 'var(--brand-xlt)', padding: '4px 11px', borderRadius: 6 }}>
-                    <i className="fa fa-external-link" style={{ fontSize: 10 }} /> Ir a tally.so →
-                  </a>
+                  <button className="btn btn-ghost btn-xs" style={{ flexShrink: 0 }}
+                    onClick={() => { navigator.clipboard.writeText(intakeUrl); toast('Link copiado', 'ok') }}>
+                    <i className="fa fa-copy" /> Copiar
+                  </button>
                 </div>
               </div>
 
-              {/* PASO 2 */}
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>2</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', marginBottom: 3 }}>Pegá esta URL de redirección en Tally</div>
-                  <div style={{ fontSize: 10, color: 'var(--txt3)', marginBottom: 6, lineHeight: 1.5 }}>
-                    En Tally, reemplazá NOMBRE, EMPRESA, WHATSAPP, EMAIL con las variables de cada campo
-                    (en Tally se usan como <code style={{ background: 'var(--surface3)', padding: '1px 4px', borderRadius: 3, fontFamily: 'monospace' }}>{'@{nombre_del_campo}'}</code>):
+              {/* Dónde usar */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 4 }}>
+                {[
+                  { icon: 'fa-brands fa-whatsapp', bg: '#DCFCE7', col: '#16A34A', label: 'Story de WA' },
+                  { icon: 'fa fa-print', bg: '#EDE9FE', col: '#7C3AED', label: 'Impreso' },
+                  { icon: 'fa fa-envelope', bg: '#DBEAFE', col: '#2563EB', label: 'Email / web' },
+                ].map(it => (
+                  <div key={it.label} style={{ textAlign: 'center', padding: '10px 8px', background: it.bg + '66', borderRadius: 8, border: `1px solid ${it.bg}` }}>
+                    <i className={it.icon} style={{ fontSize: 18, color: it.col, display: 'block', marginBottom: 5 }} />
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt2)' }}>{it.label}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
-                    <div style={{ flex: 1, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 7, padding: '7px 10px', fontSize: 10, fontFamily: 'monospace', color: 'var(--txt2)', wordBreak: 'break-all', lineHeight: 1.6 }}>
-                      https://anma-host.vercel.app/clientes?cn=<b>NOMBRE</b>&co=<b>EMPRESA</b>&cw=<b>WHATSAPP</b>&ce=<b>EMAIL</b>
-                    </div>
-                    <button
-                      title="Copiar URL"
-                      className="btn btn-ghost btn-xs"
-                      style={{ flexShrink: 0, alignSelf: 'center' }}
-                      onClick={() => {
-                        navigator.clipboard.writeText('https://anma-host.vercel.app/clientes?cn=NOMBRE&co=EMPRESA&cw=WHATSAPP&ce=EMAIL')
-                        toast('URL de redirección copiada', 'ok')
-                      }}
-                    >
-                      <i className="fa fa-copy" /> Copiar
-                    </button>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* PASO 3 */}
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>3</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', marginBottom: 3 }}>Generá el QR de tu formulario</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)', marginBottom: 7 }}>
-                    Pegá el link de tu formulario Tally para generar el QR y compartirlo:
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input
-                      type="url"
-                      value={formRegUrl}
-                      onChange={e => setFormRegUrl(e.target.value)}
-                      placeholder="https://tally.so/r/..."
-                      style={{ flex: 1, padding: '8px 11px', border: '1.5px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', fontSize: 12, outline: 'none', minWidth: 0 }}
-                    />
-                    {formRegUrl && (
-                      <button
-                        className="btn btn-ghost btn-xs"
-                        style={{ flexShrink: 0 }}
-                        onClick={() => { navigator.clipboard.writeText(formRegUrl); toast('Link copiado', 'ok') }}
-                      >
-                        <i className="fa fa-copy" />
-                      </button>
-                    )}
-                  </div>
-                  {formRegUrl && (
-                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 16px', background: 'var(--surface2)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(formRegUrl)}`}
-                        alt="QR formulario"
-                        style={{ width: 176, height: 176, borderRadius: 8, border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,.13)', display: 'block' }}
-                      />
-                      <div style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'center' }}>
-                        Descargá o capturá una pantalla del QR para compartir
-                      </div>
-                      <button
-                        className="btn btn-ghost btn-xs"
-                        onClick={() => {
-                          const a = document.createElement('a')
-                          a.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(formRegUrl)}&download=1`
-                          a.download = 'qr-formulario-clientes.png'
-                          a.click()
-                        }}
-                      >
-                        <i className="fa fa-download" /> Descargar QR (400×400)
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div className="mfooter" style={{ marginTop: 14 }}>
+                <button className="btn btn-secondary" onClick={() => setRegFormModal(false)}>Cerrar</button>
+                {adminWa && (
+                  <button className="btn btn-primary"
+                    style={{ background: '#16A34A', borderColor: '#16A34A' }}
+                    onClick={() => {
+                      const text = `¡Hola! Para registrarte como cliente de ${neg}, completá este formulario: ${intakeUrl}`
+                      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+                    }}>
+                    <i className="fa-brands fa-whatsapp" /> Compartir por WA
+                  </button>
+                )}
               </div>
-            </div>
-
-            <div className="mfooter">
-              <button className="btn btn-secondary" onClick={() => { setRegFormModal(false); setFormRegUrl('') }}>Cerrar</button>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* MODAL RE-VINCULAR */}
       {revinculModal && (
