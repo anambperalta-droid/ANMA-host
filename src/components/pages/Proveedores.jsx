@@ -257,7 +257,7 @@ export default function Proveedores() {
   const handleFileSelect = (e) => processFile(e.target.files?.[0])
 
   const downloadTemplate = () => {
-    const csv = 'Nombre,Contacto,WhatsApp,Email,Rubro,Notas\n"Mi Proveedor S.A.","Juan García","1112345678","juan@proveedor.com","Textiles","Sin notas"'
+    const csv = 'sep=,\nNombre,Contacto,WhatsApp,Email,Rubro,Notas\n"Mi Proveedor S.A.","Juan García","1112345678","juan@proveedor.com","Textiles","Sin notas"\n"Otro Proveedor","Ana Martínez","1187654321","ana@proveedor.com","Packaging",""'
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a'); a.href = url; a.download = 'plantilla-proveedores.csv'; a.click()
@@ -1123,8 +1123,8 @@ export default function Proveedores() {
 
       {/* MODAL IMPORTAR CSV */}
       {importModal && (
-        <div className="modal-bg open" style={{ padding: '10px 14px' }} onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
-          <div className="modal" style={{ maxWidth: 620, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 20px)', padding: 0, overflow: 'hidden' }}>
+        <div className="modal-bg open" style={{ alignItems: 'flex-start', padding: '14px' }} onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
+          <div className="modal" style={{ maxWidth: 620, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 28px)', padding: 0, overflow: 'hidden' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

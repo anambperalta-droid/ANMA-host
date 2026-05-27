@@ -300,7 +300,7 @@ export default function Clientes() {
   const handleFileSelect = (e) => processFile(e.target.files?.[0])
 
   const downloadTemplate = () => {
-    const csv = 'Empresa,Contacto,WhatsApp,Email,Rubro,Notas\n"Empresa Ejemplo","María López","1198765432","maria@empresa.com","Educación","Sin notas"'
+    const csv = 'sep=,\nEmpresa,Contacto,WhatsApp,Email,Rubro,Notas\n"Empresa Ejemplo","María López","1198765432","maria@empresa.com","Educación","Sin notas"\n"Otra Empresa","Carlos Pérez","1145678901","carlos@mail.com","Tecnología",""'
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a'); a.href = url; a.download = 'plantilla-clientes.csv'; a.click()
@@ -1034,8 +1034,8 @@ export default function Clientes() {
 
       {/* MODAL IMPORTAR CSV */}
       {importModal && (
-        <div className="modal-bg open" style={{ padding: '10px 14px' }} onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
-          <div className="modal" style={{ maxWidth: 620, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 20px)', padding: 0, overflow: 'hidden' }}>
+        <div className="modal-bg open" style={{ alignItems: 'flex-start', padding: '14px' }} onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
+          <div className="modal" style={{ maxWidth: 620, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 28px)', padding: 0, overflow: 'hidden' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

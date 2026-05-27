@@ -1478,8 +1478,8 @@ export default function Catalogo() {
       )}
 
       {bulkModal && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setBulkModal(false) }}>
-          <div className="modal" style={{ maxWidth: 580, display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 40px)', padding: 0, overflow: 'hidden' }}>
+        <div className="modal-bg open" style={{ alignItems: 'flex-start', padding: '14px' }} onClick={e => { if (e.target === e.currentTarget) setBulkModal(false) }}>
+          <div className="modal" style={{ maxWidth: 580, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 28px)', padding: 0, overflow: 'hidden' }}>
             <div className="mh" style={{ flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
