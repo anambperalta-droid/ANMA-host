@@ -485,8 +485,8 @@ export default function Insumos() {
 
       {/* ── Modal: crear / editar material ── */}
       {modal && (
-        <div className="modal-bg open" style={{ padding: '48px 16px', alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 480 }}>
+        <div className="modal-bg open" style={{ alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+          <div className="modal" style={{ maxWidth: 560 }}>
             <div className="mh">
               <div>
                 <h3>{form.id ? 'Editar material' : 'Nuevo material de packaging'}</h3>
