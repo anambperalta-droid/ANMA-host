@@ -10,7 +10,7 @@ import { pushBudget, getSheetsConfig } from '../../lib/sheets'
 const emptyItem = () => ({ name: '', qty: 1, costUnit: '', priceUnit: '' })
 
 /* ── Estructura Kit/Box modular ── */
-const emptyPackComp = () => ({ id: '', name: '', costUnit: 0, qty: 1 })
+const emptyPackComp = () => ({ id: '', name: '', costUnit: 0, qty: 1, fixedQty: false })
 const emptyProdComp = () => ({ id: '', name: '', costUnit: 0, qty: 1 })
 const emptyKit = () => ({
   type: 'kit',
@@ -19,7 +19,7 @@ const emptyKit = () => ({
   priceUnit: 0,
   packaging: [],
   products: [],
-  personalizacion: { desc: '', costUnit: 0 },
+  personalizacion: { desc: '', costUnit: 0, designCost: 0 },
 })
 
 /* ── Alternativa de cotización ── */
@@ -388,10 +388,18 @@ export default function Presupuesto() {
     })
   }
 
-  /* ── Helper: costo unitario de un kit ── */
+  /* ── Helper: costo unitario de un kit ──
+     fixedQty: el insumo tiene cant. fija (total pedido, no ×kit) → se amortiza
+     designCost: honorario único del diseñador → se amortiza por cant. de kits  */
   const kitCostUnit = (kit) => {
+    const kq = Math.max(1, num(kit.qty))
     let cu = num(kit.personalizacion?.costUnit)
-    ;(kit.packaging || []).forEach(p => { cu += num(p.costUnit) * num(p.qty) })
+    if (num(kit.personalizacion?.designCost) > 0) cu += num(kit.personalizacion.designCost) / kq
+    ;(kit.packaging || []).forEach(p => {
+      cu += p.fixedQty
+        ? (num(p.costUnit) * num(p.qty)) / kq   // costo amortizado
+        : num(p.costUnit) * num(p.qty)           // costo por kit (default)
+    })
     ;(kit.products || []).forEach(p => { cu += num(p.costUnit) * num(p.qty) })
     return cu
   }
@@ -401,12 +409,7 @@ export default function Presupuesto() {
     items.forEach(item => {
       if (item.type === 'kit') {
         const q = num(item.qty)
-        const cu = (() => {
-          let c2 = num(item.personalizacion?.costUnit)
-          ;(item.packaging || []).forEach(p => { c2 += num(p.costUnit) * num(p.qty) })
-          ;(item.products || []).forEach(p => { c2 += num(p.costUnit) * num(p.qty) })
-          return c2
-        })()
+        const cu = kitCostUnit(item)
         // Round per-item to avoid floating-point accumulation across kit components
         totalCost    += Math.round(q * cu)
         totalRevenue += Math.round(q * num(item.priceUnit))
@@ -574,6 +577,9 @@ export default function Presupuesto() {
         if (hasPers) {
           const persTotal = num(kit.personalizacion?.costUnit) * kQty
           lines.push(`  🎨 *Personalización:* ${kit.personalizacion?.desc || ''}${persTotal > 0 ? ` — ${fmt(persTotal)}` : ''}`)
+        }
+        if (num(kit.personalizacion?.designCost) > 0) {
+          lines.push(`  ✏️ *Diseñador:* ${fmt(num(kit.personalizacion.designCost))} (honorario único)`)
         }
       })
 
@@ -753,8 +759,11 @@ export default function Presupuesto() {
         const packItems = (i.packaging || []).filter(c => c.name)
         const packHdr   = packItems.length ? blockHdrRow('📦', 'A. Packaging / Insumos', '#F5F3FF') : ''
         const packRowsHtml = packItems.map((c, ci, arr) => {
-          const isLast = ci === arr.length - 1 && !(i.products || []).some(p => p.name) && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
-          return subRow(c.name, num(c.qty || 1), num(c.costUnit), isLast)
+          const isLast = ci === arr.length - 1 && !(i.products || []).some(p => p.name) && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit) && !num(i.personalizacion?.designCost)
+          // fixedQty: mostrar qty real sin multiplicar por kits
+          const displayQty = c.fixedQty ? num(c.qty || 1) : num(c.qty || 1)
+          const label = c.fixedQty ? `${c.name} (total pedido)` : c.name
+          return subRow(label, displayQty, num(c.costUnit), isLast)
         })
 
         /* ── Bloque B: Contenido del Kit ── */
@@ -766,18 +775,20 @@ export default function Presupuesto() {
         })
 
         /* ── Bloque C: Personalización ── */
-        const hasPers = i.personalizacion?.desc || num(i.personalizacion?.costUnit) > 0
-        const persHdr = hasPers ? blockHdrRow('🎨', 'C. Personalización', '#FFFBEB') : ''
-        const persRow = hasPers ? subRow(
+        const hasPers    = i.personalizacion?.desc || num(i.personalizacion?.costUnit) > 0
+        const hasDesign  = num(i.personalizacion?.designCost) > 0
+        const persHdr    = (hasPers || hasDesign) ? blockHdrRow('🎨', 'C. Personalización', '#FFFBEB') : ''
+        const persRow    = hasPers ? subRow(
           i.personalizacion?.desc || 'Personalización / Logo',
-          1, num(i.personalizacion?.costUnit), true
+          1, num(i.personalizacion?.costUnit), !hasDesign
         ) : ''
+        const designRow  = hasDesign ? subRow('Honorario diseñador (único)', 1, num(i.personalizacion.designCost), true) : ''
 
         /* Fila de cierre si no hay sub-filas */
-        const closingRow = (!packItems.length && !prodItems.length && !hasPers)
+        const closingRow = (!packItems.length && !prodItems.length && !hasPers && !hasDesign)
           ? `<tr><td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:3px 0"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td></tr>` : ''
 
-        return [kitSep, kitRow, packHdr, ...packRowsHtml, prodHdr, ...prodRowsHtml, persHdr, persRow, closingRow].filter(Boolean)
+        return [kitSep, kitRow, packHdr, ...packRowsHtml, prodHdr, ...prodRowsHtml, persHdr, persRow, designRow, closingRow].filter(Boolean)
       }).join('')
 
       /* Fila de total por alternativa (solo si hay más de una) */
@@ -1228,22 +1239,33 @@ export default function Presupuesto() {
                                       onChange={e => { const r = parseTbl(e.target.value); updatePackComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
                                       style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
                                   </div>
-                                  {/* Qty — muestra TOTAL (kit.qty × comp.qty), guarda por-kit */}
+                                  {/* Toggle: ×kit (default) vs fijo (cantidad total fija para todo el pedido) */}
+                                  <button
+                                    onClick={() => updatePackComp(kitIdx, cIdx, 'fixedQty', !comp.fixedQty)}
+                                    title={comp.fixedQty ? 'Cantidad fija para todo el pedido — clic para cambiar a ×kit' : 'Cantidad por kit — clic para fijar cantidad total del pedido'}
+                                    style={{ height: 28, padding: '0 7px', borderRadius: 6, border: `1.5px solid ${comp.fixedQty ? 'var(--brand)' : 'var(--border)'}`, background: comp.fixedQty ? 'rgba(124,58,237,.1)' : 'transparent', color: comp.fixedQty ? 'var(--brand)' : 'var(--txt4)', cursor: 'pointer', fontSize: 9, fontWeight: 700, fontFamily: 'inherit', flexShrink: 0, lineHeight: 1 }}>
+                                    {comp.fixedQty ? '📦 fijo' : '×kit'}
+                                  </button>
+                                  {/* Qty — modo ×kit muestra total, modo fijo muestra cantidad directa */}
                                   <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                                    <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>cant. total</span>
+                                    <span style={{ fontSize: 8, color: comp.fixedQty ? 'var(--brand)' : 'var(--txt3)', lineHeight: 1, fontWeight: comp.fixedQty ? 700 : 400 }}>
+                                      {comp.fixedQty ? 'cant. fija' : 'cant. total'}
+                                    </span>
                                     <input type="number" min="1"
-                                      value={(num(comp.qty) || 1) * (num(kit.qty) || 1)}
+                                      value={comp.fixedQty ? (num(comp.qty) || 1) : (num(comp.qty) || 1) * (num(kit.qty) || 1)}
                                       onFocus={selectOnFocus}
                                       onChange={e => {
-                                        const total = Math.max(1, parseInt(e.target.value) || 1)
-                                        updatePackComp(kitIdx, cIdx, 'qty', Math.max(1, Math.round(total / (num(kit.qty) || 1))))
+                                        const val = Math.max(1, parseInt(e.target.value) || 1)
+                                        updatePackComp(kitIdx, cIdx, 'qty', comp.fixedQty ? val : Math.max(1, Math.round(val / (num(kit.qty) || 1))))
                                       }}
-                                      style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700 }} />
+                                      style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700, borderColor: comp.fixedQty ? 'var(--brand)' : undefined }} />
                                   </div>
-                                  {/* Subtotal total (costUnit × qty/kit × kit.qty) */}
+                                  {/* Subtotal */}
                                   {num(comp.costUnit) > 0 && (
                                     <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 58, textAlign: 'right' }}>
-                                      {fmt(num(comp.costUnit) * num(comp.qty) * num(kit.qty))}
+                                      {fmt(comp.fixedQty
+                                        ? num(comp.costUnit) * num(comp.qty)
+                                        : num(comp.costUnit) * num(comp.qty) * num(kit.qty))}
                                     </span>
                                   )}
                                   <button onClick={() => removePackComp(kitIdx, cIdx)}
@@ -1351,6 +1373,29 @@ export default function Presupuesto() {
                         {num(kit.personalizacion?.costUnit) > 0 && (
                           <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 5 }}>
                             {num(kit.qty)} u. × {fmt(num(kit.personalizacion?.costUnit))} = <strong style={{ color: 'var(--money)' }}>{fmt(num(kit.qty) * num(kit.personalizacion?.costUnit))}</strong>
+                          </div>
+                        )}
+
+                        {/* Costo del diseñador (honorario único, se amortiza) */}
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)', flexWrap: 'wrap' }}>
+                          <div style={{ flex: 1, minWidth: 130 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <i className="fa fa-pen-ruler" style={{ opacity: .65, fontSize: 10 }} />
+                              Costo del diseñador
+                            </div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Honorario único — se amortiza por cantidad</div>
+                          </div>
+                          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ total</span>
+                            <input type="text" inputMode="numeric" value={fmtTbl(kit.personalizacion?.designCost)}
+                              onFocus={selectOnFocus}
+                              onChange={e => { const r = parseTbl(e.target.value); updatePersonalizacion(kitIdx, 'designCost', r === '' ? 0 : Number(r)) }}
+                              style={{ width: 90, textAlign: 'right', fontSize: 12, padding: '6px 8px', height: 32, fontVariantNumeric: 'tabular-nums' }} />
+                          </div>
+                        </div>
+                        {num(kit.personalizacion?.designCost) > 0 && (
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>
+                            {fmt(num(kit.personalizacion.designCost))} ÷ {num(kit.qty)} u. = <strong style={{ color: 'var(--money)' }}>{fmt(Math.round(num(kit.personalizacion.designCost) / Math.max(1, num(kit.qty))))}</strong> amortizado por kit
                           </div>
                         )}
                       </div>
@@ -1515,6 +1560,98 @@ export default function Presupuesto() {
                       <div className="wiz-rev-meta">Margen {form.margin}% · Seña {form.deposit}%</div>
                     </div>
                   </div>
+
+                  {/* ─ Resumen desglosado ─ */}
+                  <div className="wiz-rev-card">
+                    <div className="wiz-rev-card-h"><i className="fa fa-calculator" /> Resumen desglosado</div>
+                    <div className="wiz-rev-body">
+                      {alternatives.length > 1 && approvedAlt && (
+                        <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <i className="fa fa-circle-check" /> Alternativa aprobada: {approvedAlt.label}
+                        </div>
+                      )}
+                      {items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).map((it, idx) => (
+                        <div key={idx} style={{ marginBottom: idx < items.length - 1 ? 10 : 0 }}>
+                          <div className="wiz-rev-item" style={{ fontWeight: 700 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <i className="fa fa-gift" style={{ fontSize: 9, color: 'var(--brand)', opacity: .7 }} />
+                              {it.type === 'kit' ? (it.name || 'Kit sin nombre') : it.name} ×{it.qty}
+                            </span>
+                            <span style={{ color: 'var(--brand)' }}>{fmt(num(it.qty) * num(it.priceUnit))}</span>
+                          </div>
+                          {it.type === 'kit' && (() => {
+                            const packLines = (it.packaging || []).filter(c => c.name)
+                            const prodLines = (it.products || []).filter(c => c.name)
+                            const hasPers = it.personalizacion?.desc || num(it.personalizacion?.costUnit) > 0
+                            const hasDesign = num(it.personalizacion?.designCost) > 0
+                            if (!packLines.length && !prodLines.length && !hasPers && !hasDesign) return null
+                            return (
+                              <div style={{ paddingLeft: 14, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                {packLines.map((c, ci) => (
+                                  <div key={ci} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
+                                    <span>📦 {c.name}
+                                      {c.fixedQty
+                                        ? <span style={{ fontSize: 9, marginLeft: 4, background: 'rgba(124,58,237,.08)', border: '1px solid rgba(124,58,237,.2)', borderRadius: 4, padding: '1px 5px', color: 'var(--brand)' }}>×{c.qty} fijo</span>
+                                        : <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>×{num(c.qty) * num(it.qty)}</span>}
+                                    </span>
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                      {c.fixedQty ? fmt(num(c.costUnit) * num(c.qty)) : fmt(num(c.costUnit) * num(c.qty) * num(it.qty))}
+                                    </span>
+                                  </div>
+                                ))}
+                                {prodLines.map((c, ci) => (
+                                  <div key={ci} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
+                                    <span>🎁 {c.name} <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>×{num(c.qty) * num(it.qty)}</span></span>
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(c.costUnit) * num(c.qty) * num(it.qty))}</span>
+                                  </div>
+                                ))}
+                                {hasPers && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
+                                    <span>🎨 {it.personalizacion.desc || 'Personalización'} <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>×{it.qty}</span></span>
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(it.personalizacion.costUnit) * num(it.qty))}</span>
+                                  </div>
+                                )}
+                                {hasDesign && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
+                                    <span>✏️ Costo diseñador <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>(único)</span></span>
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(it.personalizacion.designCost))}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      ))}
+                      {calc.logTotal > 0 && (
+                        <div className="wiz-rev-item" style={{ color: 'var(--txt2)', fontSize: 11, marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
+                          <span>🖨️ Impresión/logo global</span>
+                          <span>{fmt(calc.logTotal)}</span>
+                        </div>
+                      )}
+                      {calc.discountAmt > 0 && (
+                        <div className="wiz-rev-item" style={{ color: 'var(--red)', fontSize: 12, marginTop: 4 }}>
+                          <span>Descuento ({calc.discountPct}%)</span>
+                          <span>−{fmt(calc.discountAmt)}</span>
+                        </div>
+                      )}
+                      <div className="wiz-rev-item" style={{ fontWeight: 800, fontSize: 16, marginTop: 10, paddingTop: 10, borderTop: '2px solid var(--border)' }}>
+                        <span>Total</span>
+                        <span style={{ color: 'var(--brand)' }}>{fmt(calc.total)}</span>
+                      </div>
+                      {showPaymentDetails && (
+                        <>
+                          <div className="wiz-rev-item" style={{ fontWeight: 600, color: 'var(--txt2)', marginTop: 4 }}>
+                            <span>Seña ({form.deposit}%)</span>
+                            <span>{fmt(calc.depositAmt)}</span>
+                          </div>
+                          <div className="wiz-rev-item" style={{ fontWeight: 700, color: '#16A34A' }}>
+                            <span>Saldo contra entrega</span>
+                            <span>{fmt(calc.total - calc.depositAmt)}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="wiz-tip" style={{ marginTop: 14 }}>
                   <i className="fa fa-circle-check" /> Todo listo. Al confirmar guardás el presupuesto y volvés al dashboard.
@@ -1601,6 +1738,31 @@ export default function Presupuesto() {
                 </div>
               )
             })()}
+            {/* ── Desglose por kit ── */}
+            {items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).length > 0 && (
+              <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.28)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Desglose</div>
+                {items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).map((it, idx) => (
+                  <div key={idx} style={{ marginBottom: 5 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: 'rgba(255,255,255,.75)', fontWeight: 600 }}>
+                        {it.type === 'kit' ? (it.name || 'Kit') : it.name}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.9)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                        {fmt(num(it.qty) * num(it.priceUnit))}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.35)', marginTop: 1 }}>
+                      {it.qty} kit{it.qty !== 1 ? 's' : ''} · Costo u.: {fmt(Math.round(kitCostUnit(it)))}
+                      {num(it.personalizacion?.designCost) > 0 && (
+                        <span style={{ marginLeft: 5, color: 'rgba(167,139,250,.6)' }}>+ diseñador</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* ── Chip de modo: cotización ↔ venta directa ── */}
             {isMultiAlt && !approvedAlt && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(124,58,237,.13)', border: '1px solid rgba(124,58,237,.24)', borderRadius: 9, padding: '8px 12px', marginBottom: 10 }}>
