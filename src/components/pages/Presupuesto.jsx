@@ -217,7 +217,7 @@ export default function Presupuesto() {
   const [currentStep, setCurrentStep] = useState(1)
   const [draftRestored, setDraftRestored] = useState(false)
 
-  /* ── Modo: 'simple' (lista de productos) | 'kit' (constructor regalo) ── */
+  /* ── Modo: simple (lista de productos) | kit (constructor regalo) ── */
   const [kitMode, setKitMode] = useState(false)
   const handleModeSwitch = (toKit) => {
     if (toKit === kitMode) return
@@ -229,6 +229,13 @@ export default function Presupuesto() {
       setAlternatives([{ label: 'Pedido', kits: [emptyItem()] }])
     }
   }
+  /* ── Pedido simple: packaging global + personalización global ── */
+  const [simplePack, setSimplePack] = useState([])
+  const [simplePers, setSimplePers] = useState({ desc: '', costUnit: 0, designCost: 0 })
+  const addSimplePack    = () => setSimplePack(p => [...p, emptyPackComp()])
+  const removeSimplePack = (idx) => setSimplePack(p => p.filter((_, i) => i !== idx))
+  const updateSimplePack = (idx, key, val) => setSimplePack(p => p.map((c, i) => i !== idx ? c : { ...c, [key]: val }))
+  const updateSimplePers = (key, val) => setSimplePers(p => ({ ...p, [key]: val }))
 
   const clients = get('clients')
   const products = get('products')
@@ -265,6 +272,8 @@ export default function Presupuesto() {
         const hasKitItems = (b.alternatives || []).some(a => (a.kits || []).some(i => i.type === 'kit'))
           || (b.items || []).some(i => i.type === 'kit')
         setKitMode(hasKitItems)
+        if (b.simplePack?.length) setSimplePack(b.simplePack)
+        if (b.simplePers) setSimplePers(prev => ({ ...prev, ...b.simplePers }))
       }
     } else {
       const saved = db(DRAFT_KEY, null)
@@ -282,6 +291,8 @@ export default function Presupuesto() {
         if (step) setCurrentStep(step)
         const draftHasKit = (it || []).some(a => Array.isArray(a?.kits) ? a.kits.some(i => i.type === 'kit') : a?.type === 'kit')
         setKitMode(draftHasKit)
+        if (saved.sp?.length) setSimplePack(saved.sp)
+        if (saved.spers) setSimplePers(prev => ({ ...prev, ...saved.spers }))
         setDraftRestored(true)
         toast('Borrador restaurado — tus datos anteriores están cargados', 'ok')
       }
@@ -292,7 +303,7 @@ export default function Presupuesto() {
     if (id) return
     const hasSomeData = form.contact || form.company || alternatives.some(a => a.kits.some(i => i.name))
     if (hasSomeData) {
-      dbW(DRAFT_KEY, { f: form, it: alternatives, step: currentStep })
+      dbW(DRAFT_KEY, { f: form, it: alternatives, step: currentStep, km: kitMode, sp: simplePack, spers: simplePers })
     }
   }, [form, items, currentStep]) // eslint-disable-line
 
@@ -439,6 +450,12 @@ export default function Presupuesto() {
         totalQty     += q
       }
     })
+    // Modo simple: sumar packaging y personalización globales al costo
+    if (!kitMode) {
+      simplePack.forEach(p => { totalCost += Math.round(num(p.costUnit) * num(p.qty)) })
+      totalCost += Math.round(num(simplePers.costUnit) * totalQty)
+      totalCost += num(simplePers.designCost)
+    }
     const logTotal = Math.round(num(form.logoCost) * totalQty)
     const ship = num(form.shipCost)
     const shipCharged = form.shipCharged !== false
@@ -452,7 +469,7 @@ export default function Presupuesto() {
     const marginLow = total > 0 && Number(marginReal) < marginThreshold
     const depositAmt = Math.round(total * num(form.deposit) / 100)
     return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct }
-  }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, c.marginLowThreshold])
+  }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, c.marginLowThreshold, kitMode, simplePack, simplePers])
 
   /* ── Lógica de flujo: venta directa vs. cotización ──
      showPaymentDetails = true  → 1 sola opción  O  hay una opción aprobada
@@ -496,6 +513,7 @@ export default function Presupuesto() {
     const savedBudget = saveBudget({
       ...(editId ? { id: editId } : {}), ...saveForm,
       items: validItems, alternatives,
+      ...(!kitMode ? { simplePack, simplePers } : {}),
       stockDeducted: wasStockDeducted || willDeductStock,
       totalCost: frozenTotalCost,
       totalGain,
@@ -1186,6 +1204,122 @@ export default function Presupuesto() {
                     <div className="wiz-tip" style={{ marginTop: 12 }}>
                       <i className="fa fa-lightbulb" /> Hacé clic en <i className="fa fa-list" style={{ margin: '0 2px' }} /> para seleccionar del catálogo. El precio se completa automáticamente.
                     </div>
+
+                    {/* ─ Packaging / Insumos (simple mode) ─ */}
+                    <div style={{ marginTop: 14, border: '1.5px solid var(--border)', borderRadius: 12, overflow: 'hidden', background: 'var(--surface2)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: simplePack.length > 0 ? '1px solid var(--border)' : 'none', background: 'var(--surface2)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>A</div>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Packaging / Insumos</span>
+                          <span style={{ fontSize: 10, color: 'var(--txt3)' }}>cajas, bolsas, cintas...</span>
+                        </div>
+                        <button className="btn btn-ghost btn-xs" onClick={addSimplePack}>
+                          <i className="fa fa-plus" /> Agregar
+                        </button>
+                      </div>
+                      {simplePack.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '9px 14px', color: 'var(--txt3)', fontSize: 11 }}>
+                          <i className="fa fa-inbox" style={{ marginRight: 5, opacity: .45 }} /> Sin insumos — opcional
+                        </div>
+                      ) : (
+                        <div style={{ padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                          {simplePack.map((comp, cIdx) => (
+                            <div key={cIdx} className="kit-comp-row">
+                              <i className="fa fa-box" style={{ fontSize: 11, color: 'var(--brand)', flexShrink: 0, opacity: .65 }} />
+                              <div className="kit-comp-name-group">
+                                <input type="text" value={comp.name || ''}
+                                  onChange={e => updateSimplePack(cIdx, 'name', e.target.value)}
+                                  placeholder="Ej: Caja kraft, Bolsa organza..."
+                                  style={{ flex: 1, fontSize: 12, padding: '4px 8px', height: 30, minWidth: 0 }} />
+                                {insumos.length > 0 && (
+                                  <button onClick={() => { setInsPickerTarget({ kitIdx: -1, cIdx }); setInsPickerOpen(true) }} type="button" title="Elegir de Insumos"
+                                    style={{ width: 30, height: 30, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
+                                    <i className="fa fa-list" />
+                                  </button>
+                                )}
+                              </div>
+                              <div className="kit-comp-nums">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                                  <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
+                                  <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                    onChange={e => { const r = parseTbl(e.target.value); updateSimplePack(cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                    style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                                </div>
+                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                                  <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>cantidad</span>
+                                  <input type="number" min="1" value={num(comp.qty) || 1} onFocus={selectOnFocus}
+                                    onChange={e => updateSimplePack(cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
+                                    style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700 }} />
+                                </div>
+                                {num(comp.costUnit) > 0 && (
+                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 58, textAlign: 'right' }}>
+                                    {fmt(num(comp.costUnit) * num(comp.qty))}
+                                  </span>
+                                )}
+                                <button onClick={() => removeSimplePack(cIdx)}
+                                  style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
+                                  <i className="fa fa-xmark" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ─ Personalización (simple mode) ─ */}
+                    <div style={{ marginTop: 10, background: 'var(--surface)', borderRadius: 10, padding: '10px 14px', border: '1.5px solid var(--border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 6, background: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>C</div>
+                        <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Personalización</span>
+                        <span style={{ fontSize: 10, color: 'var(--txt3)', marginLeft: 2 }}>logo, grabado, impresión</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input type="text" value={simplePers.desc || ''}
+                          onChange={e => updateSimplePers('desc', e.target.value)}
+                          placeholder="Ej: Logo bordado, impresión digital UV..."
+                          style={{ flex: 1, minWidth: 160, fontSize: 12, padding: '6px 10px', height: 32 }} />
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>Costo u.</span>
+                          <input type="text" inputMode="numeric" value={fmtTbl(simplePers.costUnit)}
+                            onFocus={selectOnFocus}
+                            onChange={e => { const r = parseTbl(e.target.value); updateSimplePers('costUnit', r === '' ? 0 : Number(r)) }}
+                            style={{ width: 90, textAlign: 'right', fontSize: 12, padding: '6px 8px', height: 32, fontVariantNumeric: 'tabular-nums' }} />
+                        </div>
+                      </div>
+                      {num(simplePers.costUnit) > 0 && (
+                        <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 5 }}>
+                          {items.reduce((s, i) => s + num(i.qty), 0)} u. × {fmt(num(simplePers.costUnit))} = <strong style={{ color: 'var(--money)' }}>{fmt(items.reduce((s, i) => s + num(i.qty), 0) * num(simplePers.costUnit))}</strong>
+                        </div>
+                      )}
+                      {/* Costo del diseñador */}
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: 130 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <i className="fa fa-pen-ruler" style={{ opacity: .65, fontSize: 10 }} /> Costo del diseñador
+                          </div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Honorario único — se amortiza por cantidad</div>
+                        </div>
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ total</span>
+                          <input type="text" inputMode="numeric" value={fmtTbl(simplePers.designCost)}
+                            onFocus={selectOnFocus}
+                            onChange={e => { const r = parseTbl(e.target.value); updateSimplePers('designCost', r === '' ? 0 : Number(r)) }}
+                            style={{ width: 90, textAlign: 'right', fontSize: 12, padding: '6px 8px', height: 32, fontVariantNumeric: 'tabular-nums' }} />
+                        </div>
+                      </div>
+                      {num(simplePers.designCost) > 0 && (() => {
+                        const totalQtyCalc = items.reduce((s, i) => s + num(i.qty), 0)
+                        return (
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>
+                            {fmt(num(simplePers.designCost))} ÷ {totalQtyCalc} u. = <strong style={{ color: 'var(--money)' }}>{fmt(Math.round(num(simplePers.designCost) / Math.max(1, totalQtyCalc)))}</strong> amortizado por unidad
+                          </div>
+                        )
+                      })()}
+                    </div>
+
                     {/* Catalog picker */}
                     <ProductPicker open={pickerOpen} onClose={() => setPickerOpen(false)} products={products} onSelect={handlePickProduct} />
                   </>
@@ -1561,16 +1695,22 @@ export default function Presupuesto() {
                     setKitProdPickerTarget(null)
                   }}
                 />
-                {/* Picker de insumos para componente A */}
+                {/* Picker de insumos para componente A (kit) y simple mode */}
                 <ProductPicker open={insPickerOpen} onClose={() => setInsPickerOpen(false)}
                   products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
                   onSelect={(ins) => {
                     if (!insPickerTarget) return
                     const { kitIdx, cIdx } = insPickerTarget
-                    setItems(prev => prev.map((k, i) => {
-                      if (i !== kitIdx) return k
-                      return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, id: ins.id || '', name: ins.name || '', costUnit: num(ins.cost) }) }
-                    }))
+                    if (kitIdx === -1) {
+                      // Simple mode: update simplePack
+                      updateSimplePack(cIdx, 'name', ins.name || '')
+                      updateSimplePack(cIdx, 'costUnit', num(ins.cost))
+                    } else {
+                      setItems(prev => prev.map((k, i) => {
+                        if (i !== kitIdx) return k
+                        return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, id: ins.id || '', name: ins.name || '', costUnit: num(ins.cost) }) }
+                      }))
+                    }
                     setInsPickerTarget(null)
                   }}
                 />
@@ -1753,6 +1893,29 @@ export default function Presupuesto() {
                           })()}
                         </div>
                       ))}
+                      {/* Simple mode: packaging + personalizacion extras */}
+                      {!kitMode && (simplePack.filter(c => c.name).length > 0 || simplePers.desc || num(simplePers.costUnit) > 0 || num(simplePers.designCost) > 0) && (
+                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
+                          {simplePack.filter(c => c.name).map((c, ci) => (
+                            <div key={ci} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)', marginBottom: 3 }}>
+                              <span>📦 {c.name} <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>×{c.qty}</span></span>
+                              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(c.costUnit) * num(c.qty))}</span>
+                            </div>
+                          ))}
+                          {(simplePers.desc || num(simplePers.costUnit) > 0) && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)', marginBottom: 3 }}>
+                              <span>🎨 {simplePers.desc || 'Personalización'}</span>
+                              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(simplePers.costUnit) * items.reduce((s, i) => s + num(i.qty), 0))}</span>
+                            </div>
+                          )}
+                          {num(simplePers.designCost) > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
+                              <span>✏️ Costo diseñador <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>(único)</span></span>
+                              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(simplePers.designCost))}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {calc.logTotal > 0 && (
                         <div className="wiz-rev-item" style={{ color: 'var(--txt2)', fontSize: 11, marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
                           <span>🖨️ Impresión/logo global</span>
