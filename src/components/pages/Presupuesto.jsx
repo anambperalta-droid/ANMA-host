@@ -1695,17 +1695,21 @@ export default function Presupuesto() {
                     setKitProdPickerTarget(null)
                   }}
                 />
-                {/* Picker de insumos para componente A (kit) y simple mode */}
-                <ProductPicker open={insPickerOpen} onClose={() => setInsPickerOpen(false)}
+                  </>
+                )}
+
+                {/* Picker de insumos — fuera del kitMode para funcionar en ambos modos */}
+                <ProductPicker open={insPickerOpen} onClose={() => { setInsPickerOpen(false); setInsPickerTarget(null) }}
                   products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
                   onSelect={(ins) => {
                     if (!insPickerTarget) return
                     const { kitIdx, cIdx } = insPickerTarget
                     if (kitIdx === -1) {
-                      // Simple mode: update simplePack
+                      // Modo simple: actualizar simplePack
                       updateSimplePack(cIdx, 'name', ins.name || '')
                       updateSimplePack(cIdx, 'costUnit', num(ins.cost))
                     } else {
+                      // Modo kit: actualizar packaging del kit
                       setItems(prev => prev.map((k, i) => {
                         if (i !== kitIdx) return k
                         return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, id: ins.id || '', name: ins.name || '', costUnit: num(ins.cost) }) }
@@ -1714,9 +1718,6 @@ export default function Presupuesto() {
                     setInsPickerTarget(null)
                   }}
                 />
-
-                  </>
-                )}
 
               </>
             )}
