@@ -618,37 +618,63 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
     <div style="border-radius:0 0 16px 16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.06);border-top:none">
       <div style="display:flex;height:480px;background:#f8fafc">
 
-        <!-- Sidebar -->
-        <nav style="width:176px;background:#1F1338;flex-shrink:0;padding:10px 0;display:flex;flex-direction:column;gap:2px">
-          <div style="padding:10px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:6px">
+        <!-- Sidebar — espejo real de la app Regalos -->
+        <nav style="width:176px;background:#1F1338;flex-shrink:0;padding:0;display:flex;flex-direction:column;overflow-y:auto">
+          <!-- logo -->
+          <div style="padding:12px 14px 10px;border-bottom:1px solid rgba(255,255,255,.06)">
             <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff"><i class="fa-solid fa-gift"></i></div>
-              <span style="font-size:12px;font-weight:800;color:#fff">ANMA Regalos</span>
+              <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0"><i class="fa-solid fa-gift"></i></div>
+              <div>
+                <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.1">Cajas Lúa</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.4);line-height:1">Tu negocio en un solo lugar</div>
+              </div>
             </div>
           </div>
-          <div id="rg-nav-pedidos" style="display:flex;align-items:center;gap:8px;padding:8px 14px;margin:0 6px;border-radius:8px;background:rgba(236,72,153,.2);cursor:default">
-            <i class="fa-solid fa-list-check" style="font-size:12px;color:#ec4899;width:14px;text-align:center"></i>
-            <span style="font-size:12px;font-weight:700;color:#fff">Pedidos</span>
+          <!-- nav -->
+          <div style="padding:8px 0;flex:1">
+            <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:6px 14px 3px">Gestión</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
+              <i class="fa-solid fa-chart-line" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
+              <span style="font-size:12px;color:#94a3b8">Dashboard</span>
+            </div>
+            <div id="rg-nav-pedidos" style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;background:rgba(236,72,153,.2);cursor:default">
+              <i class="fa-solid fa-file-invoice-dollar" style="font-size:12px;color:#ec4899;width:14px;text-align:center"></i>
+              <span style="font-size:12px;font-weight:700;color:#fff">Presupuesto</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
+              <i class="fa-solid fa-users" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
+              <span style="font-size:12px;color:#94a3b8">Clientes</span>
+            </div>
+            <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:8px 14px 3px">Catálogo</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
+              <i class="fa-solid fa-box-open" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
+              <span style="font-size:12px;color:#94a3b8">Productos</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
+              <i class="fa-solid fa-industry" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
+              <span style="font-size:12px;color:#94a3b8">Proveedores</span>
+            </div>
+            <div id="rg-nav-insumos" style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
+              <i class="fa-solid fa-cubes" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
+              <span style="font-size:12px;color:#94a3b8">Packaging</span>
+            </div>
+            <div id="rg-nav-logistica" style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
+              <i class="fa-solid fa-truck-fast" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
+              <span style="font-size:12px;color:#94a3b8">Logística</span>
+            </div>
+            <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:8px 14px 3px">Comunicación</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
+              <i class="fa-brands fa-whatsapp" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
+              <span style="font-size:12px;color:#94a3b8">Mensajes WA</span>
+            </div>
           </div>
-          <div id="rg-nav-insumos" style="display:flex;align-items:center;gap:8px;padding:8px 14px;margin:0 6px;border-radius:8px;cursor:default">
-            <i class="fa-solid fa-box-open" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-            <span style="font-size:12px;color:#94a3b8">Insumos</span>
-          </div>
-          <div id="rg-nav-logistica" style="display:flex;align-items:center;gap:8px;padding:8px 14px;margin:0 6px;border-radius:8px;cursor:default">
-            <i class="fa-solid fa-truck-fast" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-            <span style="font-size:12px;color:#94a3b8">Logística</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;margin:0 6px;border-radius:8px;cursor:default">
-            <i class="fa-solid fa-chart-line" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-            <span style="font-size:12px;color:#94a3b8">Métricas</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;margin:0 6px;border-radius:8px;cursor:default">
-            <i class="fa-brands fa-whatsapp" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-            <span style="font-size:12px;color:#94a3b8">Mensajes WA</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;margin:0 6px;border-radius:8px;cursor:default">
-            <i class="fa-solid fa-truck" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-            <span style="font-size:12px;color:#94a3b8">Proveedores</span>
+          <!-- user footer -->
+          <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px">
+            <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">L</div>
+            <div style="min-width:0">
+              <div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">laura.mendez</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.4)">Cerrar sesión</div>
+            </div>
           </div>
         </nav>
 
@@ -1153,29 +1179,45 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 <script>
 document.getElementById('y').textContent = new Date().getFullYear();
 
-// Regalos demo tabs
+// Regalos demo tabs — sincroniza panel + sidebar nav (espejo real de la app)
 (function(){
-  var navColors = {pedidos:'rgba(236,72,153,.2)',insumos:'',logistica:''};
+  // Tab → nav item mapping (según rutas reales de la app)
+  var tabNavMap = { pedidos:'rg-nav-pedidos', insumos:'rg-nav-insumos', logistica:'rg-nav-logistica' };
+  // Íconos y textos del nav por tab
+  var navMeta = {
+    pedidos:   { icon:'fa-file-invoice-dollar', label:'Presupuesto' },
+    insumos:   { icon:'fa-cubes',               label:'Packaging'   },
+    logistica: { icon:'fa-truck-fast',           label:'Logística'  }
+  };
+
+  function setNavActive(navId, meta, isActive){
+    var el = document.getElementById(navId);
+    if(!el) return;
+    el.style.background = isActive ? 'rgba(236,72,153,.2)' : '';
+    var ico = el.querySelector('i');
+    var lbl = el.querySelector('span');
+    if(ico) ico.style.color = isActive ? '#ec4899' : '#64748b';
+    if(lbl){ lbl.style.color = isActive ? '#fff' : '#94a3b8'; lbl.style.fontWeight = isActive ? '700' : '400'; }
+  }
+
   document.querySelectorAll('.rg-tab').forEach(function(tab){
-    tab.addEventListener('click',function(){
+    tab.addEventListener('click', function(){
       var target = this.dataset.rg;
-      // panels
+      // Panels
       ['pedidos','insumos','logistica'].forEach(function(p){
         var panel = document.getElementById('rg-panel-'+p);
-        if(panel) panel.style.display = (p===target)?'flex':'none';
-        var nav = document.getElementById('rg-nav-'+p);
-        if(nav){
-          nav.style.background = (p===target)?'rgba(236,72,153,.2)':'';
-          nav.querySelector('span').style.color = (p===target)?'#fff':'#94a3b8';
-          nav.querySelector('i').style.color = (p===target)?'#ec4899':'#64748b';
-        }
+        if(panel) panel.style.display = (p===target) ? 'flex' : 'none';
       });
-      // tab styling
+      // Sidebar
+      ['pedidos','insumos','logistica'].forEach(function(p){
+        setNavActive(tabNavMap[p], navMeta[p], p===target);
+      });
+      // Tabs
       document.querySelectorAll('.rg-tab').forEach(function(t){
-        var isActive = t.dataset.rg === target;
-        t.style.background = isActive ? '#f8fafc' : 'transparent';
-        t.style.color = isActive ? '#1F1338' : '#64748b';
-        t.style.borderColor = isActive ? 'rgba(255,255,255,.07)' : 'transparent';
+        var on = t.dataset.rg === target;
+        t.style.background   = on ? '#f8fafc'                    : 'transparent';
+        t.style.color        = on ? '#1F1338'                    : '#64748b';
+        t.style.borderColor  = on ? 'rgba(255,255,255,.07)'      : 'transparent';
       });
     });
   });
