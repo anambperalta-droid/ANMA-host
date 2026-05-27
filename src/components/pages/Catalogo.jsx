@@ -189,18 +189,26 @@ export default function Catalogo() {
 
   // ── Funciones del Kit Builder ─────────────────────────────────────
   const compSuggestions = useMemo(() => {
-    if (!compSearch.trim()) return products.slice(0, 6)
+    const insumos = (get('insumos') || []).map(i => ({
+      id: `ins_${i.id}`, name: i.name || i.nombre || '',
+      cost: i.cost ?? i.costoUnit ?? 0, _source: 'insumo',
+    }))
+    const all = [
+      ...products.map(p => ({ ...p, _source: 'product' })),
+      ...insumos,
+    ].filter(p => p.name)
+    if (!compSearch.trim()) return all.slice(0, 8)
     const sq = compSearch.toLowerCase()
-    return products.filter(p => p.name.toLowerCase().includes(sq)).slice(0, 6)
-  }, [products, compSearch])
+    return all.filter(p => p.name.toLowerCase().includes(sq)).slice(0, 8)
+  }, [products, get, compSearch])
 
   const addComp = () => {
-    const nombre = compForm.nombre.trim()
+    const nombre = (compForm.nombre || compSearch || '').trim()
     if (!nombre) { toast('Ingresá el nombre del componente', 'er'); return }
     setComponentes(prev => [...prev, {
-      _cid:     Date.now(),
+      _cid:      Date.now() + Math.floor(Math.random() * 1000),
       nombre,
-      qty:      num(compForm.qty) || 1,
+      qty:       Math.max(0.1, num(compForm.qty) || 1),
       costoUnit: num(compForm.costoUnit) || 0,
       productId: compForm.productId || null,
     }])
@@ -413,11 +421,6 @@ export default function Catalogo() {
               </button>
             </div>
           </div>
-          {/* ── Botón Nuevo Kit ── */}
-          <button className="cli-pill" onClick={() => { setProductMode('kit'); open() }}
-            style={{ background: 'linear-gradient(135deg,#FDF2F8,#F5F3FF)', borderColor: '#DDD6FE', color: '#8B5CF6' }}>
-            <i className="fa fa-gift" /><span>Nuevo Kit</span>
-          </button>
           <button className="cli-pill-new" onClick={() => open()}>
             <i className="fa fa-plus" /><span>Nuevo</span>
           </button>
@@ -734,8 +737,8 @@ export default function Catalogo() {
           MODAL PRODUCTO / KIT
       ══════════════════════════════════════════════════ */}
       {modal && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: productMode === 'kit' ? 1200 : 960, width: 'calc(100vw - 32px)', display: 'flex', flexDirection: 'column', maxHeight: '94vh', padding: 0, overflow: 'hidden' }}>
+        <div className="modal-bg open" style={{ padding: '8px 12px', alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+          <div className="modal" style={{ maxWidth: productMode === 'kit' ? 1020 : 700, width: 'calc(100vw - 24px)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100dvh - 16px)', padding: 0, overflow: 'hidden' }}>
             {/* ── HEADER FIJO ── */}
             <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1017,9 +1020,10 @@ export default function Catalogo() {
                               onMouseEnter={e => e.currentTarget.style.background = '#F5F3FF'}
                               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
-                              <span style={{ fontWeight: 600, color: 'var(--txt)' }}>
-                                <i className="fa fa-link" style={{ color: '#8B5CF6', marginRight: 6, fontSize: 9 }} />
+                              <span style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <i className={`fa ${p._source === 'insumo' ? 'fa-wrench' : 'fa-box'}`} style={{ color: p._source === 'insumo' ? '#F59E0B' : '#8B5CF6', fontSize: 9 }} />
                                 {p.name}
+                                {p._source === 'insumo' && <span style={{ fontSize: 9, fontWeight: 700, background: '#FFFBEB', color: '#D97706', border: '1px solid #FDE68A', padding: '1px 5px', borderRadius: 8 }}>INSUMO</span>}
                               </span>
                               <span style={{ fontSize: 11, color: '#059669', fontWeight: 700 }}>{fmt(p.cost)}</span>
                             </div>
@@ -1059,11 +1063,11 @@ export default function Catalogo() {
                     {/* Botón Agregar */}
                     <button
                       onClick={addComp}
-                      disabled={!compForm.nombre.trim()}
+                      disabled={!(compForm.nombre || compSearch).trim()}
                       style={{
                         height: 34, padding: '0 12px', borderRadius: 8, border: 'none',
-                        background: compForm.nombre.trim() ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'var(--surface3)',
-                        color: compForm.nombre.trim() ? '#fff' : 'var(--txt4)',
+                        background: (compForm.nombre || compSearch).trim() ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'var(--surface3)',
+                        color: (compForm.nombre || compSearch).trim() ? '#fff' : 'var(--txt4)',
                         fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                         whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4,
                         transition: 'all .15s',
@@ -1195,17 +1199,11 @@ export default function Catalogo() {
                   <div className="fg"><label>Nombre *</label>
                     <input autoFocus type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" />
                   </div>
-                  <div className="modal-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
                     <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
                       <select value={form.cat} onChange={e => setF('cat', e.target.value)}>
                         {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                         {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
-                      </select>
-                    </div>
-                    <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor</label>
-                      <select value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}>
-                        <option value="">Sin asignar</option>
-                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                     </div>
                     <div className="fg" style={{ marginBottom: 0 }}>
@@ -1461,6 +1459,35 @@ export default function Catalogo() {
                 )
               })}
             </div>
+            {/* ── Ocasiones sugeridas ── */}
+            {(() => {
+              const OCASIONES = ['Día del Padre','Día de la Madre','Día del Trabajador','Cumpleaños','Bodas / Casamiento','Baby Shower','Aniversario','Navidad / Fin de Año','Egresados','San Valentín','Día del Amigo','Corporativo / Empresa','Bienvenida / Agradecimiento','Otro']
+              const missing = OCASIONES.filter(o => !cats.includes(o))
+              if (missing.length === 0) return null
+              return (
+                <div style={{ marginTop: 14, padding: '12px 14px', background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)', borderRadius: 10, border: '1px solid #DDD6FE' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: .6, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="fa fa-gift" /> Ocasiones sugeridas para kits
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+                    {missing.map(o => (
+                      <span key={o} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: 'var(--surface)', border: '1px solid #DDD6FE', color: 'var(--txt2)' }}>{o}</span>
+                    ))}
+                  </div>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: '#8B5CF6', borderColor: '#DDD6FE', width: '100%', justifyContent: 'center' }}
+                    onClick={() => {
+                      const newCats = [...cats, ...missing]
+                      updateConfig({ productCats: newCats })
+                      toast(`${missing.length} ocasiones agregadas`, 'ok')
+                    }}
+                  >
+                    <i className="fa fa-plus" /> Agregar todas las ocasiones sugeridas
+                  </button>
+                </div>
+              )
+            })()}
             <div className="mfooter" style={{ justifyContent: 'flex-end' }}>
               <button className="btn btn-secondary" onClick={() => { setCatMgmtModal(false); setEditingCat(null) }}>Cerrar</button>
             </div>
