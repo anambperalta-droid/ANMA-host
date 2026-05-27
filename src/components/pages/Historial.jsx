@@ -1307,10 +1307,10 @@ export default function Historial() {
         <>
           <style>{`
             .hist-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
-            .hist-tbl table{border-collapse:collapse;min-width:860px}
+            .hist-tbl table{border-collapse:collapse;min-width:860px;font-size:13px}
             @media(max-width:640px){.hist-tbl table{min-width:520px}}
-            .hist-tbl th{padding:8px 10px;font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid var(--border);white-space:nowrap;background:var(--surface2)}
-            .hist-tbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;background:var(--surface)}
+            .hist-tbl th{padding:9px 14px;font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1.5px solid var(--border);white-space:nowrap;background:var(--surface2);font-family:inherit}
+            .hist-tbl td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;background:var(--surface);font-family:inherit;font-size:13px}
             .hist-tbl tr:last-child td{border-bottom:none}
             .hist-tbl tbody tr:hover td{background:var(--surface2)}
             .hist-tbl tbody tr.selected td{background:var(--brand-xlt)}
@@ -1404,7 +1404,7 @@ export default function Historial() {
                   return (
                     <tr key={b.id} className={selectedIds.has(b.id) ? 'selected' : ''} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
                       <td><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
-                      <td style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}><b>{b.num || '—'}</b></td>
+                      <td style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontSize: 12, color: 'var(--txt3)', fontWeight: 600 }}>{b.num || '—'}</td>
                       <td className="col-hide-mobile">{fmtDate(b.date)}</td>
                       <td style={{ maxWidth: 200 }}>
                         <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.company || b.contact || '—'}</div>
@@ -1418,8 +1418,8 @@ export default function Historial() {
                           </div>
                         )}
                       </td>
-                      <td style={{ fontWeight: 800, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em', fontVariantNumeric: 'tabular-nums' }}>{money(b.total)}</td>
-                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : '#16A34A', fontWeight: 700, textAlign: 'right', fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '-.01em', fontVariantNumeric: 'tabular-nums' }}>{money(b.totalGain)}</td>
+                      <td style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(b.total)}</td>
+                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : (b.totalGain < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
@@ -1475,7 +1475,7 @@ export default function Historial() {
         <>
           {insights.length > 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
-              <style>{`.ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:900px){.ins-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.ins-grid{grid-template-columns:1fr}}`}</style>
+              <style>{`.ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:900px){.ins-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.ins-grid{grid-template-columns:1fr}}`}</style>
               <div className="card-header" style={{ marginBottom: 10 }}>
                 <span className="card-title"><i className="fa fa-lightbulb" style={{ color: '#F59E0B', marginRight: 7 }} />Insights del período</span>
                 <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 10, marginLeft: 'auto' }}>{insights.length}</span>
@@ -1483,19 +1483,19 @@ export default function Historial() {
               <div className="ins-grid">
                 {insights.map((ins, i) => {
                   const palette = ins.tone === 'success'
-                    ? { bg: 'rgba(22,163,74,.06)', border: 'rgba(22,163,74,.25)', icon: '#16A34A', val: '#16A34A' }
+                    ? { bg: 'rgba(22,163,74,.05)', border: 'rgba(22,163,74,.18)', icon: '#16A34A', val: '#16A34A' }
                     : ins.tone === 'warning'
-                      ? { bg: 'rgba(220,38,38,.05)', border: 'rgba(220,38,38,.25)', icon: '#DC2626', val: '#DC2626' }
-                      : { bg: 'var(--brand-xlt)', border: 'var(--brand)', icon: 'var(--brand)', val: 'var(--brand)' }
+                      ? { bg: 'rgba(220,38,38,.04)', border: 'rgba(220,38,38,.18)', icon: '#DC2626', val: '#DC2626' }
+                      : { bg: 'var(--brand-xlt)', border: 'var(--brand-dim)', icon: 'var(--brand)', val: 'var(--brand)' }
                   return (
-                    <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 14px', background: palette.bg, border: `1px solid ${palette.border}`, borderRadius: 12, boxSizing: 'border-box' }}>
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: palette.bg, border: `1px solid ${palette.border}`, borderRadius: 10, boxSizing: 'border-box' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 6, background: palette.icon, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 10 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: palette.icon, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9 }}>
                           <i className={`fa ${ins.icon}`} />
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', lineHeight: 1.3, flex: 1 }}>{ins.label}</span>
                       </div>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: palette.val, lineHeight: 1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{ins.value}</div>
+                      <div style={{ fontSize: 17, fontWeight: 800, color: palette.val, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{ins.value}</div>
                       <div style={{ fontSize: 11, color: 'var(--txt3)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ins.desc}</div>
                     </div>
                   )
