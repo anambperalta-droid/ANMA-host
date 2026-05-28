@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/resend-api/:path*", "destination": "https://api.resend.com/:path*" },
+    { "source": "/landing.html", "destination": "/landing.html" },
+    { "source": "/demo.html", "destination": "/demo.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -12,6 +14,18 @@
     },
     {
       "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/landing.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/demo.html",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
