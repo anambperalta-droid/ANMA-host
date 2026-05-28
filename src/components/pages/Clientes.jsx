@@ -1003,121 +1003,140 @@ export default function Clientes() {
       {/* MODAL EDITAR */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 680 }}>
-            <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} cliente</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
+          {/* overflow:hidden garantiza que header y footer queden fijos y el body scrollee */}
+          <div className="modal" style={{ maxWidth: 680, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'min(780px, calc(100dvh - 32px))' }}>
 
-            {/* ── Pegar texto de WhatsApp / email / tarjeta ── */}
-            <div style={{ marginBottom: 14, borderRadius: 10, border: `1.5px solid ${pasteMode ? 'rgba(37,211,102,.4)' : 'var(--border)'}`, overflow: 'hidden', transition: 'border-color .2s' }}>
-              <button
-                type="button"
-                onClick={() => { setPasteMode(m => !m); if (pasteMode) setPasteText('') }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, background: pasteMode ? 'rgba(37,211,102,.06)' : 'var(--surface2)', border: 'none', padding: '9px 13px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .2s' }}
-              >
-                <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', fontSize: 15 }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)', flex: 1, textAlign: 'left' }}>Extraer datos de un mensaje (WA, email, tarjeta...)</span>
-                <i className={`fa fa-chevron-${pasteMode ? 'up' : 'down'}`} style={{ fontSize: 10, color: 'var(--txt4)' }} />
-              </button>
-              {pasteMode && (
-                <div style={{ padding: '0 13px 12px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
-                  <div style={{ fontSize: 10, color: 'var(--txt3)', padding: '8px 0 5px' }}>
-                    Pegá cualquier texto con datos del cliente — mensaje de WA, email, bio, tarjeta:
+            {/* ── Header fijo ── */}
+            <div style={{ padding: '18px 28px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+              <div className="mh" style={{ margin: 0, paddingBottom: 0, borderBottom: 'none' }}>
+                <h3>{form.id ? 'Editar' : 'Agregar'} cliente</h3>
+                <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
+              </div>
+            </div>
+
+            {/* ── Body scrollable — NUNCA clipea el footer ── */}
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '18px 28px 4px', WebkitOverflowScrolling: 'touch' }}>
+
+              {/* ── Pegar texto de WhatsApp / email / tarjeta ── */}
+              <div style={{ marginBottom: 16, borderRadius: 10, border: `1.5px solid ${pasteMode ? 'rgba(37,211,102,.4)' : 'var(--border)'}`, overflow: 'hidden', transition: 'border-color .2s' }}>
+                <button
+                  type="button"
+                  onClick={() => { setPasteMode(m => !m); if (pasteMode) setPasteText('') }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, background: pasteMode ? 'rgba(37,211,102,.06)' : 'var(--surface2)', border: 'none', padding: '9px 13px', cursor: 'pointer', fontFamily: 'inherit', transition: 'background .2s' }}
+                >
+                  <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', fontSize: 15 }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)', flex: 1, textAlign: 'left' }}>Extraer datos de un mensaje (WA, email, tarjeta...)</span>
+                  <i className={`fa fa-chevron-${pasteMode ? 'up' : 'down'}`} style={{ fontSize: 10, color: 'var(--txt4)' }} />
+                </button>
+                {pasteMode && (
+                  <div style={{ padding: '0 13px 12px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--txt3)', padding: '8px 0 5px' }}>
+                      Pegá cualquier texto con datos del cliente — mensaje de WA, email, bio, tarjeta:
+                    </div>
+                    <textarea
+                      value={pasteText}
+                      onChange={e => setPasteText(e.target.value)}
+                      rows={3}
+                      placeholder={'Ej: Hola! Soy María López de Tech SA\nCelular: 11 5555-1234\nEmail: maria@tech.com'}
+                      style={{ width: '100%', resize: 'none', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', border: '1.5px solid var(--border)', borderRadius: 7, boxSizing: 'border-box', lineHeight: 1.5, color: 'var(--txt)', background: 'var(--surface)', outline: 'none' }}
+                    />
+                    {pasteText.trim() && (() => {
+                      const r = parseContactText(pasteText)
+                      const found = Object.keys(r).length > 0
+                      return (
+                        <div style={{ marginTop: 6, display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+                          {found ? (
+                            <>
+                              {r.contact && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#15803D', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>👤 {r.contact}</span>}
+                              {r.company && <span style={{ fontSize: 10, background: 'var(--brand-xlt)', color: 'var(--brand)', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>🏢 {r.company}</span>}
+                              {r.wa && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#059669', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>📱 {r.wa}</span>}
+                              {r.email && <span style={{ fontSize: 10, background: '#DBEAFE', color: '#2563EB', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>✉️ {r.email}</span>}
+                              <button
+                                className="btn btn-primary btn-xs"
+                                style={{ marginLeft: 'auto' }}
+                                onClick={() => {
+                                  setForm(f => ({
+                                    ...f,
+                                    ...(r.contact ? { contact: r.contact } : {}),
+                                    ...(r.company ? { company: r.company } : {}),
+                                    ...(r.wa ? { wa: r.wa } : {}),
+                                    ...(r.email ? { email: r.email } : {}),
+                                  }))
+                                  setPasteMode(false)
+                                  setPasteText('')
+                                  toast('Datos aplicados al formulario', 'ok')
+                                }}
+                              >
+                                <i className="fa fa-check" /> Aplicar
+                              </button>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: 11, color: 'var(--txt4)', fontStyle: 'italic' }}>No se reconocieron datos. Probá con más texto...</span>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </div>
-                  <textarea
-                    value={pasteText}
-                    onChange={e => setPasteText(e.target.value)}
-                    rows={3}
-                    placeholder={'Ej: Hola! Soy María López de Tech SA\nCelular: 11 5555-1234\nEmail: maria@tech.com'}
-                    style={{ width: '100%', resize: 'none', fontFamily: 'inherit', fontSize: 12, padding: '7px 10px', border: '1.5px solid var(--border)', borderRadius: 7, boxSizing: 'border-box', lineHeight: 1.5, color: 'var(--txt)', background: 'var(--surface)', outline: 'none' }}
-                  />
-                  {pasteText.trim() && (() => {
-                    const r = parseContactText(pasteText)
-                    const found = Object.keys(r).length > 0
-                    return (
-                      <div style={{ marginTop: 6, display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
-                        {found ? (
-                          <>
-                            {r.contact && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#15803D', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>👤 {r.contact}</span>}
-                            {r.company && <span style={{ fontSize: 10, background: 'var(--brand-xlt)', color: 'var(--brand)', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>🏢 {r.company}</span>}
-                            {r.wa && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#059669', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>📱 {r.wa}</span>}
-                            {r.email && <span style={{ fontSize: 10, background: '#DBEAFE', color: '#2563EB', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>✉️ {r.email}</span>}
-                            <button
-                              className="btn btn-primary btn-xs"
-                              style={{ marginLeft: 'auto' }}
-                              onClick={() => {
-                                setForm(f => ({
-                                  ...f,
-                                  ...(r.contact ? { contact: r.contact } : {}),
-                                  ...(r.company ? { company: r.company } : {}),
-                                  ...(r.wa ? { wa: r.wa } : {}),
-                                  ...(r.email ? { email: r.email } : {}),
-                                }))
-                                setPasteMode(false)
-                                setPasteText('')
-                                toast('Datos aplicados al formulario', 'ok')
-                              }}
-                            >
-                              <i className="fa fa-check" /> Aplicar
-                            </button>
-                          </>
-                        ) : (
-                          <span style={{ fontSize: 11, color: 'var(--txt4)', fontStyle: 'italic' }}>No se reconocieron datos. Probá con más texto...</span>
-                        )}
-                      </div>
-                    )
-                  })()}
-                </div>
-              )}
-            </div>
-
-            {/* Datos de contacto */}
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Datos de contacto</div>
-            <div className="grid2">
-              <div className="fg"><label>Empresa *</label><input type="text" value={form.company} onChange={e => setF('company', e.target.value)} placeholder="Empresa S.A." autoFocus /></div>
-              <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} placeholder="Nombre y apellido" /></div>
-              <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} placeholder="+54 ..." /></div>
-              <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
-              <div className="fg" style={!config().features?.descuentoCliente ? { gridColumn: '1 / -1' } : undefined}>
-                <label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud, Eventos..." />
+                )}
               </div>
-              {config().features?.descuentoCliente && (
-                <div className="fg">
-                  <label>Descuento fijo (%)</label>
-                  <input type="number" value={form.discount || 0} onChange={e => setF('discount', Number(e.target.value))} min="0" max="100" placeholder="0" />
-                </div>
-              )}
-            </div>
 
-            {/* Datos fiscales — siempre visibles en ANMA Regalos (foco B2B) */}
-            <div style={{ borderTop: '1px solid var(--border)', margin: '14px 0 10px', paddingTop: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <i className="fa fa-landmark" style={{ color: 'var(--brand)', fontSize: 11 }} />
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Datos Fiscales (Facturación)</span>
-              </div>
+              {/* ── Datos de contacto ── */}
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>Datos de contacto</div>
               <div className="grid2">
-                <div className="fg">
-                  <label>CUIT / CUIL</label>
-                  <input type="text" value={form.cuit || ''} onChange={e => setF('cuit', e.target.value)} placeholder="20-12345678-9" maxLength={13} />
+                <div className="fg"><label>Empresa *</label><input type="text" value={form.company} onChange={e => setF('company', e.target.value)} placeholder="Empresa S.A." autoFocus /></div>
+                <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} placeholder="Nombre y apellido" /></div>
+                <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} placeholder="+54 ..." /></div>
+                <div className="fg"><label>Email</label><input type="email" value={form.email} onChange={e => setF('email', e.target.value)} /></div>
+                <div className="fg" style={!config().features?.descuentoCliente ? { gridColumn: '1 / -1' } : undefined}>
+                  <label>Rubro</label><input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Tecnología, Salud, Eventos..." />
                 </div>
-                <div className="fg">
-                  <label>Condición frente al IVA</label>
-                  <select value={form.ivaCondition || ''} onChange={e => setF('ivaCondition', e.target.value)}>
-                    <option value="">— seleccionar —</option>
-                    <option value="Responsable Inscripto">Responsable Inscripto</option>
-                    <option value="Monotributista">Monotributista</option>
-                    <option value="Exento">Exento</option>
-                    <option value="No Responsable">No Responsable</option>
-                    <option value="Consumidor Final">Consumidor Final</option>
-                  </select>
+                {config().features?.descuentoCliente && (
+                  <div className="fg">
+                    <label>Descuento fijo (%)</label>
+                    <input type="number" value={form.discount || 0} onChange={e => setF('discount', Number(e.target.value))} min="0" max="100" placeholder="0" />
+                  </div>
+                )}
+              </div>
+
+              {/* ── Datos fiscales ── */}
+              <div style={{ borderTop: '1px solid var(--border)', margin: '16px 0 12px', paddingTop: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fa fa-landmark" style={{ color: 'var(--brand)', fontSize: 10 }} />
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Datos Fiscales (Facturación)</span>
                 </div>
-                <div className="fg" style={{ gridColumn: '1 / -1' }}>
-                  <label>Razón Social</label>
-                  <input type="text" value={form.razonSocial || ''} onChange={e => setF('razonSocial', e.target.value)} placeholder="Razón social completa según AFIP" />
+                <div className="grid2">
+                  <div className="fg">
+                    <label>CUIT / CUIL</label>
+                    <input type="text" value={form.cuit || ''} onChange={e => setF('cuit', e.target.value)} placeholder="20-12345678-9" maxLength={13} />
+                  </div>
+                  <div className="fg">
+                    <label>Condición frente al IVA</label>
+                    <select value={form.ivaCondition || ''} onChange={e => setF('ivaCondition', e.target.value)}>
+                      <option value="">— seleccionar —</option>
+                      <option value="Responsable Inscripto">Responsable Inscripto</option>
+                      <option value="Monotributista">Monotributista</option>
+                      <option value="Exento">Exento</option>
+                      <option value="No Responsable">No Responsable</option>
+                      <option value="Consumidor Final">Consumidor Final</option>
+                    </select>
+                  </div>
+                  <div className="fg" style={{ gridColumn: '1 / -1' }}>
+                    <label>Razón Social</label>
+                    <input type="text" value={form.razonSocial || ''} onChange={e => setF('razonSocial', e.target.value)} placeholder="Razón social completa según AFIP" />
+                  </div>
                 </div>
               </div>
+
+              <div className="fg"><label>Notas internas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={3} placeholder="Preferencias, condiciones especiales, recordatorios de seguimiento..." /></div>
             </div>
 
-            <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} placeholder="Observaciones internas..." /></div>
-            <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
+            {/* ── Footer fijo — siempre visible ── */}
+            <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '14px 28px 20px', background: 'var(--surface)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button>
+            </div>
           </div>
         </div>
       )}

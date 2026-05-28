@@ -792,44 +792,70 @@ export default function Proveedores() {
       {/* MODAL EDITAR */}
       {modal && (
         <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 620 }} onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && form.name && form.name.trim()) save() }}>
-            <div className="mh"><h3>{form.id ? 'Editar' : 'Agregar'} proveedor</h3><button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button></div>
-            <div className="grid2">
-              <div className="fg"><label>Nombre *</label><input type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Proveedor S.A." /></div>
-              <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} /></div>
-              <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} /></div>
-              <div className="fg">
-                <label>Email <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(contacto@empresa.com)</span></label>
-                <input type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="contacto@proveedor.com" />
+          <div className="modal" style={{ maxWidth: 620, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'min(720px, calc(100dvh - 32px))' }}
+            onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && form.name && form.name.trim()) save() }}>
+
+            {/* Header fijo */}
+            <div style={{ padding: '18px 28px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+              <div className="mh" style={{ margin: 0, paddingBottom: 0, borderBottom: 'none' }}>
+                <h3>{form.id ? 'Editar' : 'Agregar'} proveedor</h3>
+                <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
               </div>
             </div>
-            <div className="fg">
-              <label>Rubro <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(ej: Electrónica, Textil, Alimentos)</span></label>
-              <input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Categoría / industria" />
-              {form.rubro && form.rubro.includes('@') && (
-                <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 3, fontWeight: 600 }}>
-                  ⚠ Esto parece un email — usá el campo "Email" arriba
+
+            {/* Body scrollable */}
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '18px 28px 4px', WebkitOverflowScrolling: 'touch' }}>
+              <div className="grid2">
+                <div className="fg"><label>Nombre *</label><input type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Proveedor S.A." autoFocus /></div>
+                <div className="fg"><label>Contacto</label><input type="text" value={form.contact} onChange={e => setF('contact', e.target.value)} /></div>
+                <div className="fg"><label>WhatsApp</label><input type="text" value={form.wa} onChange={e => setF('wa', e.target.value)} /></div>
+                <div className="fg">
+                  <label>Email <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(contacto@empresa.com)</span></label>
+                  <input type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="contacto@proveedor.com" />
                 </div>
-              )}
-            </div>
-            <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Datos fiscales y operativos</div>
-            <div className="grid2">
-              <div className="fg"><label>CUIT</label><input type="text" value={form.cuit} onChange={e => setF('cuit', e.target.value)} placeholder="20-12345678-9" /></div>
-              <div className="fg"><label>Condición IVA</label>
-                <select value={form.ivaCondition} onChange={e => setF('ivaCondition', e.target.value)}>
-                  <option value="">—</option>
-                  <option value="RI">Responsable Inscripto</option>
-                  <option value="MT">Monotributo</option>
-                  <option value="EX">Exento</option>
-                  <option value="CF">Consumidor Final</option>
-                </select>
               </div>
-              <div className="fg"><label>Plazo de pago (días)</label><input type="number" min="0" value={form.paymentTerm} onChange={e => setF('paymentTerm', e.target.value)} placeholder="30" style={{ maxWidth: 100 }} /></div>
-              <div className="fg"><label>Lead time entrega (días)</label><input type="number" min="0" value={form.leadTime} onChange={e => setF('leadTime', e.target.value)} placeholder="7" style={{ maxWidth: 100 }} /></div>
+              <div className="fg">
+                <label>Rubro <span style={{ color: 'var(--txt4)', fontWeight: 400, fontSize: 10 }}>(ej: Textil, Packaging, Alimentos)</span></label>
+                <input type="text" value={form.rubro} onChange={e => setF('rubro', e.target.value)} placeholder="Categoría / industria" />
+                {form.rubro && form.rubro.includes('@') && (
+                  <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 3, fontWeight: 600 }}>
+                    ⚠ Esto parece un email — usá el campo "Email" arriba
+                  </div>
+                )}
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border)', margin: '16px 0 12px', paddingTop: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 7, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fa fa-landmark" style={{ color: 'var(--brand)', fontSize: 10 }} />
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Datos fiscales y operativos</span>
+                </div>
+                <div className="grid2">
+                  <div className="fg"><label>CUIT</label><input type="text" value={form.cuit} onChange={e => setF('cuit', e.target.value)} placeholder="20-12345678-9" /></div>
+                  <div className="fg"><label>Condición IVA</label>
+                    <select value={form.ivaCondition} onChange={e => setF('ivaCondition', e.target.value)}>
+                      <option value="">—</option>
+                      <option value="RI">Responsable Inscripto</option>
+                      <option value="MT">Monotributo</option>
+                      <option value="EX">Exento</option>
+                      <option value="CF">Consumidor Final</option>
+                    </select>
+                  </div>
+                  <div className="fg"><label>Plazo de pago (días)</label><input type="number" min="0" value={form.paymentTerm} onChange={e => setF('paymentTerm', e.target.value)} placeholder="30" style={{ maxWidth: 100 }} /></div>
+                  <div className="fg"><label>Lead time entrega (días)</label><input type="number" min="0" value={form.leadTime} onChange={e => setF('leadTime', e.target.value)} placeholder="7" style={{ maxWidth: 100 }} /></div>
+                </div>
+                <div className="fg"><label>CBU / Alias</label><input type="text" value={form.cbu} onChange={e => setF('cbu', e.target.value)} placeholder="0000000000000000000000 o ALIAS.PROVEEDOR" /></div>
+              </div>
+
+              <div className="fg"><label>Notas internas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={3} placeholder="Condiciones especiales, recordatorios, acuerdos comerciales..." /></div>
             </div>
-            <div className="fg"><label>CBU / Alias</label><input type="text" value={form.cbu} onChange={e => setF('cbu', e.target.value)} placeholder="0000000000000000000000 o ALIAS.PROVEEDOR" /></div>
-            <div className="fg"><label>Notas</label><textarea value={form.notes} onChange={e => setF('notes', e.target.value)} rows={2} /></div>
-            <div className="mfooter"><button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button><button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button></div>
+
+            {/* Footer fijo */}
+            <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '14px 28px 20px', background: 'var(--surface)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button>
+            </div>
           </div>
         </div>
       )}
