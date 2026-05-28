@@ -766,7 +766,7 @@ export default function Catalogo() {
       ══════════════════════════════════════════════════ */}
       {modal && (
         <div className="modal-bg open" style={{ padding: '6px 10px', alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal modal-hbf" style={{ maxWidth: productMode === 'kit' ? 1040 : 700, width: 'calc(100vw - 20px)', display: 'flex', flexDirection: 'column', height: productMode === 'kit' ? 'calc(100dvh - 12px)' : 'auto', maxHeight: 'calc(100dvh - 12px)' }}>
+          <div className="modal-form-card" style={{ maxWidth: productMode === 'kit' ? 1040 : 700, width: 'calc(100vw - 20px)', height: productMode === 'kit' ? 'calc(100dvh - 12px)' : 'auto', maxHeight: 'calc(100dvh - 12px)' }}>
             {/* ── HEADER FIJO ── */}
             <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

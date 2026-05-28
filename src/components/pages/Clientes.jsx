@@ -1004,7 +1004,7 @@ export default function Clientes() {
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           {/* overflow:hidden garantiza que header y footer queden fijos y el body scrollee */}
-          <div className="modal modal-hbf" style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', maxHeight: 'min(780px, calc(100dvh - 32px))' }}>
+          <div className="modal-form-card" style={{ maxWidth: 680, maxHeight: 'min(780px, calc(100dvh - 32px))' }}>
 
             {/* ── Header fijo ── */}
             <div style={{ padding: '18px 28px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>

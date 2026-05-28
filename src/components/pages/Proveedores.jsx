@@ -792,7 +792,7 @@ export default function Proveedores() {
       {/* MODAL EDITAR */}
       {modal && (
         <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal modal-hbf" style={{ maxWidth: 620, display: 'flex', flexDirection: 'column', maxHeight: 'min(720px, calc(100dvh - 32px))' }}
+          <div className="modal-form-card" style={{ maxWidth: 620, maxHeight: 'min(720px, calc(100dvh - 32px))' }}
             onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && form.name && form.name.trim()) save() }}>
 
             {/* Header fijo */}
@@ -863,7 +863,7 @@ export default function Proveedores() {
       {/* FICHA DETALLE CON PESTAÑAS */}
       {detailSupplier && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailSupplier(null) }}>
-          <div className="modal modal-hbf" style={{ maxWidth: 820, height: 'min(820px, 92vh)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+          <div className="modal-form-card" style={{ maxWidth: 820, height: 'min(820px, 92dvh)' }} onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
