@@ -31,6 +31,8 @@ export default function Proveedores() {
   const [priceForm, setPriceForm] = useState({ newCost: '', note: '' })
   const [reorderOpen, setReorderOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [importTab, setImportTab] = useState('archivo')
+  const [pasteNums, setPasteNums] = useState('')
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -271,6 +273,32 @@ export default function Proveedores() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  const closeImportModal = () => {
+    setImportModal(false); setCsvPreview([]); setImportTab('archivo'); setPasteNums('')
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  /* ── Parsear números pegados: flexible (nombre + número, solo número, etc.) ── */
+  const parsePastedNums = (raw) => {
+    const results = []
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean)
+    for (const line of lines) {
+      const m = line.match(/[\d][\d\s\-.()]{6,18}[\d]/)
+      if (!m) {
+        const name = line.replace(/^\d+[.)]\s*/, '').trim()
+        if (name.length >= 2) results.push({ name, contact: name, wa: '', email: '', rubro: '', notes: '' })
+        continue
+      }
+      let wa = m[0].replace(/[\s\-.() ]/g, '')
+      wa = wa.replace(/^00549?/, '').replace(/^549/, '').replace(/^54/, '').replace(/^0/, '')
+      let name = line.replace(m[0], '').replace(/[-–—,;:|[\](){}]+/g, ' ').replace(/\s+/g, ' ').trim()
+      name = name || `Proveedor ${wa.slice(-4)}`
+      results.push({ name, contact: name, wa, email: '', rubro: '', notes: '' })
+    }
+    return results
+  }
+  const parsedPaste = parsePastedNums(pasteNums)
+
   const exportCSV = () => {
     const rows = [['Nombre', 'Contacto', 'WhatsApp', 'Rubro', 'Email', 'Notas'].join(',')]
     suppliers.forEach(s => rows.push([s.name, s.contact, s.wa, s.rubro, s.email, s.notes].map(v => `"${(v || '').replace(/"/g, '""')}"`).join(',')))
@@ -300,7 +328,7 @@ export default function Proveedores() {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
         if (modal) { setModal(false); return }
-        if (importModal) { setImportModal(false); setCsvPreview([]); return }
+        if (importModal) { closeImportModal(); return }
         if (detailSupplier) { setDetailSupplier(null); return }
       }
     }
@@ -1121,9 +1149,9 @@ export default function Proveedores() {
         </div>
       )}
 
-      {/* MODAL IMPORTAR CSV */}
+      {/* MODAL IMPORTAR */}
       {importModal && (
-        <div className="modal-bg open" style={{ alignItems: 'flex-start', padding: '14px' }} onClick={e => { if (e.target === e.currentTarget) { setImportModal(false); setCsvPreview([]) } }}>
+        <div className="modal-bg open" style={{ alignItems: 'flex-start', padding: '14px' }} onClick={e => { if (e.target === e.currentTarget) closeImportModal() }}>
           <div className="modal" style={{ maxWidth: 620, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 28px)', padding: 0, overflow: 'hidden' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
@@ -1133,101 +1161,179 @@ export default function Proveedores() {
                 </div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 800 }}>Importar proveedores</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Desde planilla CSV · Excel · Google Sheets</div>
+                  <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Subí un archivo o pegá los números directo</div>
                 </div>
               </div>
-              <button className="mclose" onClick={() => { setImportModal(false); setCsvPreview([]) }}><i className="fa fa-xmark" /></button>
+              <button className="mclose" onClick={closeImportModal}><i className="fa fa-xmark" /></button>
+            </div>
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--surface2)', flexShrink: 0 }}>
+              {[
+                { id: 'archivo', icon: 'fa-cloud-arrow-up', label: 'Subir archivo' },
+                { id: 'pegar',   icon: 'fa-paste',          label: 'Pegar números' },
+              ].map(t => (
+                <button key={t.id} onClick={() => { setImportTab(t.id); setCsvPreview([]); setPasteNums('') }}
+                  style={{ flex: 1, padding: '10px 4px', fontSize: 12, fontWeight: importTab === t.id ? 700 : 500, color: importTab === t.id ? 'var(--brand)' : 'var(--txt3)', background: 'none', border: 'none', borderBottom: importTab === t.id ? '2px solid var(--brand)' : '2px solid transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .15s' }}>
+                  <i className={`fa ${t.icon}`} style={{ fontSize: 13 }} /> {t.label}
+                </button>
+              ))}
             </div>
 
             {/* Body */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
-              {/* Pasos */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginBottom: 20 }}>
-                {[
-                  { n: 1, label: 'Descargá la plantilla', done: false },
-                  { n: 2, label: 'Completá en Excel / Sheets', done: false },
-                  { n: 3, label: 'Subí el archivo', done: csvPreview.length > 0 },
-                ].map((s, idx) => (
-                  <div key={s.n} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, position: 'relative' }}>
-                    {idx < 2 && <div style={{ position: 'absolute', top: 13, left: '50%', right: '-50%', height: 2, background: 'var(--border)', zIndex: 0 }} />}
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.done ? '#059669' : csvPreview.length === 0 ? 'var(--brand)' : 'var(--surface2)', color: s.done ? '#fff' : csvPreview.length === 0 ? '#fff' : 'var(--txt3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, zIndex: 1, border: `2px solid ${s.done ? '#059669' : 'var(--brand)'}`, flexShrink: 0 }}>
-                      {s.done ? <i className="fa fa-check" /> : s.n}
-                    </div>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textAlign: 'center', lineHeight: 1.3 }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
 
-              {/* Banner plantilla */}
-              {csvPreview.length === 0 && (
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 14px', background: 'var(--brand-xlt)', borderRadius: 10, border: '1px solid var(--brand-dim)', marginBottom: 16 }}>
-                  <i className="fa fa-table" style={{ color: 'var(--brand)', fontSize: 18, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>¿Primera vez? Usá nuestra plantilla</div>
-                    <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Abrila en Excel o Google Sheets, completá tus proveedores y subí el archivo.</div>
-                  </div>
-                  <button className="btn btn-secondary btn-sm" onClick={downloadTemplate} style={{ flexShrink: 0 }}>
-                    <i className="fa fa-download" /> Descargar
-                  </button>
+              {/* ── TAB: Subir archivo ── */}
+              {importTab === 'archivo' && (<>
+                {/* Pasos */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginBottom: 20 }}>
+                  {[
+                    { n: 1, label: 'Descargá la plantilla', done: false },
+                    { n: 2, label: 'Completá en Excel / Sheets', done: false },
+                    { n: 3, label: 'Subí el archivo', done: csvPreview.length > 0 },
+                  ].map((s, idx) => (
+                    <div key={s.n} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, position: 'relative' }}>
+                      {idx < 2 && <div style={{ position: 'absolute', top: 13, left: '50%', right: '-50%', height: 2, background: 'var(--border)', zIndex: 0 }} />}
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.done ? '#059669' : csvPreview.length === 0 ? 'var(--brand)' : 'var(--surface2)', color: s.done ? '#fff' : csvPreview.length === 0 ? '#fff' : 'var(--txt3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, zIndex: 1, border: `2px solid ${s.done ? '#059669' : 'var(--brand)'}`, flexShrink: 0 }}>
+                        {s.done ? <i className="fa fa-check" /> : s.n}
+                      </div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textAlign: 'center', lineHeight: 1.3 }}>{s.label}</div>
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              {/* Drop zone */}
-              {csvPreview.length === 0 && (
-                <>
-                  <div
-                    onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
-                    onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false) }}
-                    onDrop={e => { e.preventDefault(); setIsDragging(false); processFile(e.dataTransfer.files[0]) }}
-                    onClick={() => fileRef.current?.click()}
-                    style={{ border: `2px dashed ${isDragging ? 'var(--brand)' : 'var(--border)'}`, background: isDragging ? 'var(--brand-xlt)' : 'var(--surface2)', borderRadius: 12, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .2s' }}
-                  >
-                    <i className="fa fa-cloud-arrow-up" style={{ fontSize: 36, color: isDragging ? 'var(--brand)' : 'var(--txt4)', display: 'block', marginBottom: 10 }} />
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 5 }}>
-                      {isDragging ? '¡Soltá el archivo acá!' : 'Arrastrá tu archivo CSV acá'}
+                {/* Banner plantilla */}
+                {csvPreview.length === 0 && (
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 14px', background: 'var(--brand-xlt)', borderRadius: 10, border: '1px solid var(--brand-dim)', marginBottom: 16 }}>
+                    <i className="fa fa-table" style={{ color: 'var(--brand)', fontSize: 18, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>¿Primera vez? Usá nuestra plantilla</div>
+                      <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Abrila en Excel o Google Sheets, completá tus proveedores y subí el archivo.</div>
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--txt3)' }}>o hacé clic para seleccionar · acepta .csv y .txt</div>
-                    <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleFileSelect} style={{ display: 'none' }} />
-                  </div>
-                  <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 11, color: 'var(--txt3)' }}>
-                    <b style={{ color: 'var(--txt2)' }}>Columnas:</b> Nombre · Contacto · WhatsApp · Email · Rubro · Notas
-                  </div>
-                </>
-              )}
-
-              {/* Preview */}
-              {csvPreview.length > 0 && (
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ background: '#059669', color: '#fff', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 20 }}>{csvPreview.length} registros</span>
-                      <span style={{ fontSize: 12, color: 'var(--txt3)' }}>listos para importar</span>
-                    </div>
-                    <button className="btn btn-ghost btn-xs" style={{ color: 'var(--txt3)' }} onClick={() => { setCsvPreview([]); if (fileRef.current) fileRef.current.value = '' }}>
-                      <i className="fa fa-arrow-left" /> Cambiar archivo
+                    <button className="btn btn-secondary btn-sm" onClick={downloadTemplate} style={{ flexShrink: 0 }}>
+                      <i className="fa fa-download" /> Descargar
                     </button>
                   </div>
-                  <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 10, maxHeight: 300, overflowY: 'auto' }}>
-                    <table style={{ fontSize: 11, minWidth: 480 }}>
-                      <thead><tr><th style={{ width: 28 }}>#</th><th>Nombre</th><th>Contacto</th><th>WA</th><th>Rubro</th><th>Email</th></tr></thead>
-                      <tbody>
-                        {csvPreview.slice(0, 20).map((s, i) => (
-                          <tr key={i}><td style={{ color: 'var(--txt4)', textAlign: 'center' }}>{i + 1}</td><td><b>{s.name}</b></td><td>{s.contact}</td><td>{s.wa}</td><td>{s.rubro}</td><td>{s.email}</td></tr>
-                        ))}
-                        {csvPreview.length > 20 && <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--txt3)', padding: '8px', fontStyle: 'italic' }}>…y {csvPreview.length - 20} más</td></tr>}
-                      </tbody>
-                    </table>
+                )}
+                {/* Drop zone */}
+                {csvPreview.length === 0 && (
+                  <>
+                    <div
+                      onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+                      onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false) }}
+                      onDrop={e => { e.preventDefault(); setIsDragging(false); processFile(e.dataTransfer.files[0]) }}
+                      onClick={() => fileRef.current?.click()}
+                      style={{ border: `2px dashed ${isDragging ? 'var(--brand)' : 'var(--border)'}`, background: isDragging ? 'var(--brand-xlt)' : 'var(--surface2)', borderRadius: 12, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .2s' }}
+                    >
+                      <i className="fa fa-cloud-arrow-up" style={{ fontSize: 36, color: isDragging ? 'var(--brand)' : 'var(--txt4)', display: 'block', marginBottom: 10 }} />
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 5 }}>
+                        {isDragging ? '¡Soltá el archivo acá!' : 'Arrastrá tu archivo CSV acá'}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--txt3)' }}>o hacé clic para seleccionar · acepta .csv y .txt</div>
+                      <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleFileSelect} style={{ display: 'none' }} />
+                    </div>
+                    <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 11, color: 'var(--txt3)' }}>
+                      <b style={{ color: 'var(--txt2)' }}>Columnas:</b> Nombre · Contacto · WhatsApp · Email · Rubro · Notas
+                    </div>
+                  </>
+                )}
+                {/* Preview */}
+                {csvPreview.length > 0 && (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ background: '#059669', color: '#fff', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 20 }}>{csvPreview.length} registros</span>
+                        <span style={{ fontSize: 12, color: 'var(--txt3)' }}>listos para importar</span>
+                      </div>
+                      <button className="btn btn-ghost btn-xs" style={{ color: 'var(--txt3)' }} onClick={() => { setCsvPreview([]); if (fileRef.current) fileRef.current.value = '' }}>
+                        <i className="fa fa-arrow-left" /> Cambiar archivo
+                      </button>
+                    </div>
+                    <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 10, maxHeight: 300, overflowY: 'auto' }}>
+                      <table style={{ fontSize: 11, minWidth: 480 }}>
+                        <thead><tr><th style={{ width: 28 }}>#</th><th>Nombre</th><th>Contacto</th><th>WA</th><th>Rubro</th><th>Email</th></tr></thead>
+                        <tbody>
+                          {csvPreview.slice(0, 20).map((s, i) => (
+                            <tr key={i}><td style={{ color: 'var(--txt4)', textAlign: 'center' }}>{i + 1}</td><td><b>{s.name}</b></td><td>{s.contact}</td><td>{s.wa}</td><td>{s.rubro}</td><td>{s.email}</td></tr>
+                          ))}
+                          {csvPreview.length > 20 && <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--txt3)', padding: '8px', fontStyle: 'italic' }}>…y {csvPreview.length - 20} más</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
+                )}
+              </>)}
+
+              {/* ── TAB: Pegar números ── */}
+              {importTab === 'pegar' && (
+                <div>
+                  <div style={{ padding: '12px 14px', borderRadius: 10, background: '#FFF7ED', border: '1.5px solid #FED7AA', marginBottom: 14, fontSize: 12 }}>
+                    <div style={{ fontWeight: 700, color: '#C2410C', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <i className="fa fa-bolt" /> Cargá todos tus proveedores ahora mismo — sin exportar nada
+                    </div>
+                    <div style={{ color: '#92400E', lineHeight: 1.6 }}>
+                      Abrí WhatsApp, entrá a cada chat de proveedor y <b>copiá el número</b> desde el perfil del contacto.
+                      Pegalo acá (uno por línea) con o sin nombre. También podés pegar desde tus notas, agenda o cualquier lista.
+                    </div>
+                    <div style={{ marginTop: 8, display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 11, color: '#92400E' }}>
+                      <span><i className="fa fa-circle-check" style={{ color: '#059669', marginRight: 4 }} /><b>11 9876 5432</b> — solo número</span>
+                      <span><i className="fa fa-circle-check" style={{ color: '#059669', marginRight: 4 }} /><b>Textiles Ruiz 1145678901</b></span>
+                      <span><i className="fa fa-circle-check" style={{ color: '#059669', marginRight: 4 }} /><b>+54 9 11 2345 6789 - Packaging S.A.</b></span>
+                    </div>
+                  </div>
+                  <textarea
+                    value={pasteNums}
+                    onChange={e => setPasteNums(e.target.value)}
+                    placeholder={'Pegá o escribí los números de tus proveedores:\n\n11 9876 5432\nTextiles Ruiz  1145678901\n+54 9 11 2345 6789 - Packaging S.A.\nProveedor Envases  2216789012\n...'}
+                    style={{ width: '100%', minHeight: 180, borderRadius: 10, border: '1.5px solid var(--border)', padding: '12px 14px', fontSize: 13, fontFamily: 'inherit', lineHeight: 1.7, resize: 'vertical', outline: 'none', background: 'var(--surface)', color: 'var(--txt)', boxSizing: 'border-box', transition: 'border-color .15s' }}
+                    onFocus={e => e.target.style.borderColor = 'var(--brand)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                    autoFocus
+                  />
+                  {parsedPaste.length > 0 && (
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={{ background: '#059669', color: '#fff', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 20 }}>{parsedPaste.length} contactos detectados</span>
+                        <span style={{ fontSize: 11, color: 'var(--txt3)' }}>— revisá y confirmá</span>
+                      </div>
+                      <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 10, maxHeight: 240, overflowY: 'auto' }}>
+                        <table style={{ fontSize: 11, minWidth: 340 }}>
+                          <thead><tr><th style={{ width: 24 }}>#</th><th>Nombre / Empresa</th><th>WhatsApp</th></tr></thead>
+                          <tbody>
+                            {parsedPaste.slice(0, 30).map((s, i) => (
+                              <tr key={i}>
+                                <td style={{ color: 'var(--txt4)', textAlign: 'center' }}>{i + 1}</td>
+                                <td><b>{s.name}</b></td>
+                                <td style={{ color: s.wa ? 'var(--txt)' : 'var(--txt4)', fontStyle: s.wa ? 'normal' : 'italic' }}>{s.wa || 'sin número'}</td>
+                              </tr>
+                            ))}
+                            {parsedPaste.length > 30 && <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--txt3)', padding: '8px', fontStyle: 'italic' }}>…y {parsedPaste.length - 30} más</td></tr>}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                  {pasteNums.trim() && parsedPaste.length === 0 && (
+                    <div style={{ marginTop: 10, padding: '10px 14px', background: 'var(--surface2)', borderRadius: 8, fontSize: 12, color: 'var(--txt3)' }}>
+                      <i className="fa fa-circle-info" style={{ marginRight: 6 }} />Escribí al menos un número o nombre para ver la vista previa.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Footer */}
             <div className="mfooter" style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '12px 20px' }}>
-              <button className="btn btn-secondary" onClick={() => { setImportModal(false); setCsvPreview([]) }}>Cancelar</button>
-              <button className="btn btn-primary" onClick={doImport} disabled={!csvPreview.length}>
-                <i className="fa fa-file-import" /> {csvPreview.length > 0 ? `Importar ${csvPreview.length} proveedores` : 'Importar'}
-              </button>
+              <button className="btn btn-secondary" onClick={closeImportModal}>Cancelar</button>
+              {importTab === 'archivo' && (
+                <button className="btn btn-primary" onClick={doImport} disabled={!csvPreview.length}>
+                  <i className="fa fa-file-import" /> {csvPreview.length > 0 ? `Importar ${csvPreview.length} proveedores` : 'Importar'}
+                </button>
+              )}
+              {importTab === 'pegar' && (
+                <button className="btn btn-primary" disabled={parsedPaste.length === 0}
+                  onClick={() => { parsedPaste.forEach(s => saveEntity('suppliers', { ...s })); toast(`${parsedPaste.length} proveedores importados`, 'ok'); closeImportModal() }}>
+                  <i className="fa fa-industry" /> {parsedPaste.length > 0 ? `Agregar ${parsedPaste.length} proveedores` : 'Agregar proveedores'}
+                </button>
+              )}
             </div>
           </div>
         </div>
