@@ -1540,7 +1540,11 @@ td b{color:var(--txt);font-weight:600}
 .pkg-calc-apply{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.4;text-align:center;flex-shrink:0;transition:opacity .15s}
 .pkg-calc-apply:hover{opacity:.88}
 .pkg-calc-apply:active{opacity:.75;transform:scale(.96)}
-/* ── Modal con header/body/footer fijos — overrides mobile bottom-sheet !important ── */
-/* v2: footer siempre visible en todos los dispositivos y tenants */
-.modal-hbf{overflow:hidden!important;padding:0!important}
-.modal-hbf>.mhbf-foot{position:sticky!important;bottom:0;flex-shrink:0;z-index:5;background:var(--surface)}
+/* ── Modal con header/body/footer fijos ─────────────────────────────
+   Selector doble (.modal.modal-hbf) = especificidad 0,2,0
+   Gana sobre cualquier .modal{...!important} de los media queries (0,1,0)
+   sin importar posición en el archivo ni viewport.
+─────────────────────────────────────────────────────────────────── */
+.modal.modal-hbf{overflow:hidden!important;padding:0!important}
+.modal.modal-hbf::before{display:none!important}
+.modal.modal-hbf>.mhbf-foot{position:sticky!important;bottom:0;flex-shrink:0;z-index:5;background:var(--surface)}
