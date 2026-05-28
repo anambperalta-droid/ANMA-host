@@ -863,28 +863,28 @@ export default function Proveedores() {
       {/* FICHA DETALLE CON PESTAÑAS */}
       {detailSupplier && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailSupplier(null) }}>
-          <div className="modal-form-card" style={{ maxWidth: 820, height: 'min(820px, 92dvh)' }} onClick={e => e.stopPropagation()}>
+          <div className="modal-form-card" style={{ maxWidth: 860, height: 'min(880px, 96dvh)' }} onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+            <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                     {(detailSupplier.name || '?')[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailSupplier.name}</h3>
+                    <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailSupplier.name}</h3>
                     {detailSupplier.contact && (
-                      <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
+                      <div style={{ fontSize: 13, color: 'var(--txt3)', marginTop: 3 }}>
                         {detailSupplier.contact}{detailSupplier.rubro ? <span style={{ color: 'var(--txt4)' }}> · {detailSupplier.rubro}</span> : ''}
                       </div>
                     )}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 5 }}>
-                  <button className="btn btn-ghost btn-xs" onClick={() => sharePortalLink(detailSupplier)} title="Genera un link público con resumen para la proveedora">
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => sharePortalLink(detailSupplier)} title="Genera un link público con resumen para la proveedora">
                     <i className="fa fa-share-nodes" /> Compartir portal
                   </button>
-                  <button className="btn btn-ghost btn-xs" onClick={() => openEdit(detailSupplier)}><i className="fa fa-pen" /> Editar</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(detailSupplier)}><i className="fa fa-pen" /> Editar</button>
                   <button className="mclose" onClick={() => setDetailSupplier(null)}><i className="fa fa-xmark" /></button>
                 </div>
               </div>
@@ -898,7 +898,7 @@ export default function Proveedores() {
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 20px', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px 24px', WebkitOverflowScrolling: 'touch' }}>
 
               {/* TAB: Información */}
               {detailTab === 'info' && (
