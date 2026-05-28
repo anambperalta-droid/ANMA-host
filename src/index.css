@@ -1541,5 +1541,6 @@ td b{color:var(--txt);font-weight:600}
 .pkg-calc-apply:hover{opacity:.88}
 .pkg-calc-apply:active{opacity:.75;transform:scale(.96)}
 /* ── Modal con header/body/footer fijos — overrides mobile bottom-sheet !important ── */
+/* v2: footer siempre visible en todos los dispositivos y tenants */
 .modal-hbf{overflow:hidden!important;padding:0!important}
 .modal-hbf>.mhbf-foot{position:sticky!important;bottom:0;flex-shrink:0;z-index:5;background:var(--surface)}
