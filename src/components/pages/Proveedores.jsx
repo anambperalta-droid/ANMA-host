@@ -1151,66 +1151,62 @@ export default function Proveedores() {
 
       {/* MODAL IMPORTAR */}
       {importModal && (
-        <div className="modal-bg open" style={{ alignItems: 'flex-start', padding: '14px' }} onClick={e => { if (e.target === e.currentTarget) closeImportModal() }}>
-          <div className="modal" style={{ maxWidth: 620, width: 'calc(100vw - 28px)', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 28px)', padding: 0, overflow: 'hidden' }}>
+        <div className="modal-bg open" style={{ alignItems: 'flex-end', padding: 0 }} onClick={e => { if (e.target === e.currentTarget) closeImportModal() }}>
+          <div style={{ width: '100%', maxWidth: 640, background: 'var(--surface)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', maxHeight: '92dvh', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(0,0,0,.18)', animation: 'slideUp .25s cubic-bezier(.32,.72,0,1) both' }}>
+            {/* Handle */}
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 4, flexShrink: 0 }}>
+              <div style={{ width: 36, height: 4, borderRadius: 4, background: 'var(--border2)' }} />
+            </div>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 20px 12px', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', fontSize: 16 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: 'var(--brand-xlt)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', fontSize: 17 }}>
                   <i className="fa fa-truck" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 800 }}>Importar proveedores</div>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Subí un archivo o pegá los números directo</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.3px' }}>Importar proveedores</div>
+                  <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>Subí un archivo o pegá los números directo</div>
                 </div>
               </div>
               <button className="mclose" onClick={closeImportModal}><i className="fa fa-xmark" /></button>
             </div>
             {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--surface2)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               {[
                 { id: 'archivo', icon: 'fa-cloud-arrow-up', label: 'Subir archivo' },
                 { id: 'pegar',   icon: 'fa-paste',          label: 'Pegar números' },
               ].map(t => (
                 <button key={t.id} onClick={() => { setImportTab(t.id); setCsvPreview([]); setPasteNums('') }}
-                  style={{ flex: 1, padding: '10px 4px', fontSize: 12, fontWeight: importTab === t.id ? 700 : 500, color: importTab === t.id ? 'var(--brand)' : 'var(--txt3)', background: 'none', border: 'none', borderBottom: importTab === t.id ? '2px solid var(--brand)' : '2px solid transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .15s' }}>
-                  <i className={`fa ${t.icon}`} style={{ fontSize: 13 }} /> {t.label}
+                  style={{ flex: 1, padding: '11px 4px', fontSize: 13, fontWeight: importTab === t.id ? 700 : 500, color: importTab === t.id ? 'var(--brand)' : 'var(--txt3)', background: 'none', border: 'none', borderBottom: importTab === t.id ? '2.5px solid var(--brand)' : '2.5px solid transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'all .15s', marginBottom: -1 }}>
+                  <i className={`fa ${t.icon}`} style={{ fontSize: 14 }} /> {t.label}
                 </button>
               ))}
             </div>
 
-            {/* Body */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
+            {/* Body — scrollable, SIN altura fija */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 8px', WebkitOverflowScrolling: 'touch' }}>
 
               {/* ── TAB: Subir archivo ── */}
               {importTab === 'archivo' && (<>
-                {/* Pasos */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginBottom: 20 }}>
-                  {[
-                    { n: 1, label: 'Descargá la plantilla', done: false },
-                    { n: 2, label: 'Completá en Excel / Sheets', done: false },
-                    { n: 3, label: 'Subí el archivo', done: csvPreview.length > 0 },
-                  ].map((s, idx) => (
-                    <div key={s.n} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, position: 'relative' }}>
-                      {idx < 2 && <div style={{ position: 'absolute', top: 13, left: '50%', right: '-50%', height: 2, background: 'var(--border)', zIndex: 0 }} />}
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.done ? '#059669' : csvPreview.length === 0 ? 'var(--brand)' : 'var(--surface2)', color: s.done ? '#fff' : csvPreview.length === 0 ? '#fff' : 'var(--txt3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, zIndex: 1, border: `2px solid ${s.done ? '#059669' : 'var(--brand)'}`, flexShrink: 0 }}>
-                        {s.done ? <i className="fa fa-check" /> : s.n}
-                      </div>
-                      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textAlign: 'center', lineHeight: 1.3 }}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* Banner plantilla */}
+                {/* Tips compactos — 1 fila horizontal */}
                 {csvPreview.length === 0 && (
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 14px', background: 'var(--brand-xlt)', borderRadius: 10, border: '1px solid var(--brand-dim)', marginBottom: 16 }}>
-                    <i className="fa fa-table" style={{ color: 'var(--brand)', fontSize: 18, flexShrink: 0 }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>¿Primera vez? Usá nuestra plantilla</div>
-                      <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Abrila en Excel o Google Sheets, completá tus proveedores y subí el archivo.</div>
-                    </div>
-                    <button className="btn btn-secondary btn-sm" onClick={downloadTemplate} style={{ flexShrink: 0 }}>
-                      <i className="fa fa-download" /> Descargar
-                    </button>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                    {[
+                      { icon: 'fa-brands fa-whatsapp', icoColor: '#25D366', bg: 'rgba(37,211,102,.07)', border: 'rgba(37,211,102,.25)', label: 'Contactos .vcf', sub: 'App Contactos → Compartir' },
+                      { icon: 'fa-brands fa-whatsapp', icoColor: '#25D366', bg: 'rgba(37,211,102,.05)', border: 'rgba(37,211,102,.18)', label: 'Chat WA .txt', sub: '⋮ Más → Exportar chat' },
+                      { icon: 'fa-file-csv', icoColor: '#0F9D58', bg: 'var(--surface2)', border: 'var(--border)', label: 'Planilla CSV', action: downloadTemplate },
+                    ].map((t, i) => (
+                      <div key={i} onClick={t.action || undefined} style={{ flex: '1 1 130px', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: t.bg, border: `1px solid ${t.border}`, cursor: t.action ? 'pointer' : 'default', transition: 'opacity .15s' }}
+                        onMouseEnter={e => t.action && (e.currentTarget.style.opacity = '.8')} onMouseLeave={e => t.action && (e.currentTarget.style.opacity = '1')}>
+                        <div style={{ width: 32, height: 32, borderRadius: 9, background: `${t.icoColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <i className={t.icon} style={{ color: t.icoColor, fontSize: 15 }} />
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.label}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{t.action ? '⬇ Descargar plantilla' : t.sub}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
                 {/* Drop zone */}
@@ -1221,17 +1217,24 @@ export default function Proveedores() {
                       onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false) }}
                       onDrop={e => { e.preventDefault(); setIsDragging(false); processFile(e.dataTransfer.files[0]) }}
                       onClick={() => fileRef.current?.click()}
-                      style={{ border: `2px dashed ${isDragging ? 'var(--brand)' : 'var(--border)'}`, background: isDragging ? 'var(--brand-xlt)' : 'var(--surface2)', borderRadius: 12, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .2s' }}
+                      style={{ border: `2px dashed ${isDragging ? 'var(--brand)' : 'var(--border)'}`, background: isDragging ? 'var(--brand-xlt)' : 'var(--surface2)', borderRadius: 14, padding: '36px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .2s', marginBottom: 10 }}
                     >
-                      <i className="fa fa-cloud-arrow-up" style={{ fontSize: 36, color: isDragging ? 'var(--brand)' : 'var(--txt4)', display: 'block', marginBottom: 10 }} />
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 5 }}>
-                        {isDragging ? '¡Soltá el archivo acá!' : 'Arrastrá tu archivo CSV acá'}
+                      <div style={{ width: 56, height: 56, borderRadius: '50%', background: isDragging ? 'var(--brand-dim)' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                        <i className="fa fa-cloud-arrow-up" style={{ fontSize: 22, color: isDragging ? 'var(--brand)' : 'var(--txt3)' }} />
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--txt3)' }}>o hacé clic para seleccionar · acepta .csv y .txt</div>
-                      <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleFileSelect} style={{ display: 'none' }} />
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--txt)', marginBottom: 5 }}>
+                        {isDragging ? '¡Soltá el archivo acá!' : 'Arrastrá tu archivo acá'}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--txt3)', marginBottom: 14 }}>o hacé clic para seleccionar</div>
+                      <div style={{ display: 'inline-flex', gap: 6 }}>
+                        {['.vcf', '.csv', '.txt'].map(ext => (
+                          <span key={ext} style={{ fontSize: 11, fontWeight: 700, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', color: 'var(--txt2)' }}>{ext}</span>
+                        ))}
+                      </div>
+                      <input ref={fileRef} type="file" accept=".csv,.txt,.vcf" onChange={handleFileSelect} style={{ display: 'none' }} />
                     </div>
-                    <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 11, color: 'var(--txt3)' }}>
-                      <b style={{ color: 'var(--txt2)' }}>Columnas:</b> Nombre · Contacto · WhatsApp · Email · Rubro · Notas
+                    <div style={{ padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, fontSize: 11, color: 'var(--txt3)' }}>
+                      <b style={{ color: 'var(--txt2)' }}>Columnas CSV:</b> Nombre · Contacto · WhatsApp · Email · Rubro · Notas
                     </div>
                   </>
                 )}

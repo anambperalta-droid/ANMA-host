@@ -469,6 +469,7 @@ td b{color:var(--txt);font-weight:600}
 
 /* ─── PAGE ANIMATION ─── */
 @keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{transform:translateY(100%);opacity:.85}to{transform:translateY(0);opacity:1}}
 .page-enter{animation:pgIn .2s ease both}
 
 /* ─── PAY METHOD CARDS ─── */
