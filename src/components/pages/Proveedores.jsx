@@ -792,7 +792,7 @@ export default function Proveedores() {
       {/* MODAL EDITAR */}
       {modal && (
         <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 620, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'min(720px, calc(100dvh - 32px))' }}
+          <div className="modal modal-hbf" style={{ maxWidth: 620, display: 'flex', flexDirection: 'column', maxHeight: 'min(720px, calc(100dvh - 32px))' }}
             onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && form.name && form.name.trim()) save() }}>
 
             {/* Header fijo */}
@@ -852,7 +852,7 @@ export default function Proveedores() {
             </div>
 
             {/* Footer fijo */}
-            <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '14px 28px 20px', background: 'var(--surface)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <div style={{ flexShrink: 0, position: 'sticky', bottom: 0, borderTop: '1px solid var(--border)', padding: '14px 28px 20px', background: 'var(--surface)', display: 'flex', gap: 10, justifyContent: 'flex-end', zIndex: 5 }}>
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
               <button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button>
             </div>
@@ -863,7 +863,7 @@ export default function Proveedores() {
       {/* FICHA DETALLE CON PESTAÑAS */}
       {detailSupplier && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailSupplier(null) }}>
-          <div className="modal" style={{ maxWidth: 820, height: 'min(820px, 92vh)', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }} onClick={e => e.stopPropagation()}>
+          <div className="modal modal-hbf" style={{ maxWidth: 820, height: 'min(820px, 92vh)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

@@ -1004,7 +1004,7 @@ export default function Clientes() {
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           {/* overflow:hidden garantiza que header y footer queden fijos y el body scrollee */}
-          <div className="modal" style={{ maxWidth: 680, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'min(780px, calc(100dvh - 32px))' }}>
+          <div className="modal modal-hbf" style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', maxHeight: 'min(780px, calc(100dvh - 32px))' }}>
 
             {/* ── Header fijo ── */}
             <div style={{ padding: '18px 28px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
@@ -1133,7 +1133,7 @@ export default function Clientes() {
             </div>
 
             {/* ── Footer fijo — siempre visible ── */}
-            <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '14px 28px 20px', background: 'var(--surface)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <div style={{ flexShrink: 0, position: 'sticky', bottom: 0, borderTop: '1px solid var(--border)', padding: '14px 28px 20px', background: 'var(--surface)', display: 'flex', gap: 10, justifyContent: 'flex-end', zIndex: 5 }}>
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
               <button className="btn btn-primary" onClick={save}><i className="fa fa-floppy-disk" /> Guardar</button>
             </div>

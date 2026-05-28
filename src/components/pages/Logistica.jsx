@@ -941,7 +941,7 @@ export default function Logistica() {
       {/* ── MODAL ──────────────────────────────────────────────────── */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal ship-modal" style={{ maxWidth: 600, maxHeight: 'calc(100dvh - 48px)', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}
+          <div className="modal ship-modal modal-hbf" style={{ maxWidth: 600, maxHeight: 'calc(100dvh - 48px)', display: 'flex', flexDirection: 'column' }}
                onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && (form.remito || form.client)) saveShip() }}>
             <div className="mh" style={{ padding: '18px 22px 12px', borderBottom: '1px solid var(--border)', margin: 0, flexShrink: 0 }}>
               <h3>{form.id ? 'Editar envío' : 'Registrar envío'}</h3>
@@ -1103,7 +1103,7 @@ export default function Logistica() {
             </div>
             </div>
 
-            <div className="mfooter" style={{ padding: '12px 22px 16px', borderTop: '1px solid var(--border)', margin: 0, flexShrink: 0, background: 'var(--surface)' }}>
+            <div className="mfooter" style={{ padding: '12px 22px 16px', borderTop: '1px solid var(--border)', margin: 0, flexShrink: 0, position: 'sticky', bottom: 0, background: 'var(--surface)', zIndex: 5 }}>
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
               {trackingLink && (
                 <button
