@@ -11,17 +11,52 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
   const c = config
   const brandColor = c.brandColor || '#7C3AED'
   const bName = c.businessName || 'ANMA'
-  const items = budget.items || []
-  const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
+  const n = (v) => { const x = Number(v); return isNaN(x) ? 0 : x }
+
+  /* ── Multi-alternativa: leer `alternatives` si existe ── */
+  const alts = budget.alternatives?.length ? budget.alternatives : null
+  const hasAlts = alts && alts.length > 1
+  const approvedAlt = alts?.find(a => a.approved) || null
+  // Para tabla: si multi-alt, mostrar todas; si no, usar items o la única alt
+  const displayAlts = hasAlts
+    ? alts
+    : alts ? [alts[0]] : [{ label: '', kits: budget.items || [] }]
+
+  const validKits = (kits) => (kits || []).filter(i =>
+    i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
+
+  /* ── Total footer ── */
+  const footerTotal = approvedAlt
+    ? validKits(approvedAlt.kits).reduce((s, i) => s + n(i.qty) * n(i.priceUnit), 0)
+    : n(budget.total)
 
   const printBudgetPdf = () => {
-    const rows = items.map(it =>
+    const buildRows = (kits) => validKits(kits).map(it =>
       `<tr style="border-bottom:1px solid #E5E7F0">
         <td style="padding:8px 10px;font-weight:500">${it.name || '—'}</td>
-        <td style="padding:8px 10px;text-align:center">${num(it.qty)}</td>
-        <td style="padding:8px 10px;text-align:right">${fmt(num(it.priceUnit))}</td>
-        <td style="padding:8px 10px;text-align:right;font-weight:600">${fmt(num(it.qty) * num(it.priceUnit))}</td>
+        <td style="padding:8px 10px;text-align:center">${n(it.qty)}</td>
+        <td style="padding:8px 10px;text-align:right">${fmt(n(it.priceUnit))}</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:600">${fmt(n(it.qty) * n(it.priceUnit))}</td>
       </tr>`).join('')
+
+    let tableBody = ''
+    if (hasAlts) {
+      tableBody = alts.map((alt, ai) => {
+        const ks = validKits(alt.kits); if (!ks.length) return ''
+        const sub = ks.reduce((s, i) => s + n(i.qty) * n(i.priceUnit), 0)
+        const hBg = alt.approved ? '#E8F8F0' : '#F5F3FF'
+        const hCol = alt.approved ? '#059669' : brandColor
+        return `<tr><td colspan="4" style="padding:7px 10px;background:${hBg};font-weight:700;font-size:11px;color:${hCol};border-bottom:1px solid ${hCol}33">
+          ${alt.approved ? '✓ ' : ''}${alt.label || `Alternativa ${ai + 1}`}${alt.approved ? ' — Aprobada' : ''}
+        </td></tr>${buildRows(ks)}<tr>
+          <td colspan="3" style="padding:5px 10px;text-align:right;font-size:11px;color:#6B7280;border-bottom:2px solid ${hCol}33">Total ${alt.label || `Alt. ${ai + 1}`}</td>
+          <td style="padding:5px 10px;text-align:right;font-weight:800;color:${hCol};font-size:13px;border-bottom:2px solid ${hCol}33">${fmt(sub)}</td>
+        </tr>`
+      }).join('')
+    } else {
+      tableBody = buildRows(displayAlts[0]?.kits || budget.items || [])
+    }
+
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
       <title>${budget.num || 'Presupuesto'}</title>
       <style>*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:32px;color:#1E1B4B}table{width:100%;border-collapse:collapse}@media print{body{margin:20px}}</style>
@@ -31,23 +66,22 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
         <div style="text-align:right"><div style="font-size:18px;font-weight:800">${budget.num || '—'}</div><div style="font-size:12px;color:#666;margin-top:2px">Fecha: ${budget.date || '—'}</div>${budget.deliveryDate ? `<div style="font-size:12px;color:#666">Entrega: ${budget.deliveryDate}</div>` : ''}</div>
       </div>
       <div style="background:#F8F9FE;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13px">
-        ${budget.contact ? `<div><b>${budget.contact}</b></div>` : ''}
-        ${budget.company ? `<div style="color:#666">${budget.company}</div>` : ''}
-        ${budget.wa ? `<div style="color:#666">${budget.wa}</div>` : ''}
+        ${budget.contact ? `<div><b>${budget.contact}</b></div>` : ''}${budget.company ? `<div style="color:#666">${budget.company}</div>` : ''}${budget.wa ? `<div style="color:#666">${budget.wa}</div>` : ''}
       </div>
+      ${hasAlts && !approvedAlt ? `<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:6px;padding:7px 10px;margin-bottom:10px;font-size:10.5px;color:#92400E">🔄 Cotización con ${alts.length} opciones — el cliente aún no aprobó ninguna</div>` : ''}
+      ${approvedAlt ? `<div style="background:#E8F8F0;border:1px solid #6EE7B7;border-radius:6px;padding:7px 10px;margin-bottom:10px;font-size:10.5px;color:#065F46">✓ Alternativa aprobada: <b>${approvedAlt.label}</b></div>` : ''}
       <table><thead><tr style="background:${brandColor}">
-        <th style="padding:8px 10px;text-align:left;color:#fff;font-size:11px">Producto</th>
-        <th style="padding:8px 10px;text-align:center;color:#fff;font-size:11px">Cant.</th>
-        <th style="padding:8px 10px;text-align:right;color:#fff;font-size:11px">Precio unit.</th>
-        <th style="padding:8px 10px;text-align:right;color:#fff;font-size:11px">Subtotal</th>
-      </tr></thead><tbody>${rows}</tbody></table>
-      <div style="display:flex;justify-content:flex-end;margin-top:16px">
-        <div style="width:240px">
-          ${num(budget.shipCost) > 0 ? `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;border-bottom:1px solid #E5E7F0"><span>Envío</span><span>${fmt(num(budget.shipCost))}</span></div>` : ''}
-          <div style="display:flex;justify-content:space-between;padding:10px 0 6px;font-size:18px;font-weight:800;color:${brandColor}"><span>Total</span><span>${fmt(num(budget.total))}</span></div>
-          ${num(budget.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:${brandColor};font-weight:600"><span>Seña (${num(budget.deposit) || 50}%)</span><span>${fmt(num(budget.depositAmt))}</span></div>` : ''}
-        </div>
-      </div>
+        <th style="padding:8px 10px;text-align:left;color:#fff;font-size:11px">Producto / Kit</th>
+        <th style="padding:8px 10px;text-align:center;color:#fff;font-size:11px;width:50px">Cant.</th>
+        <th style="padding:8px 10px;text-align:right;color:#fff;font-size:11px;width:95px">Precio unit.</th>
+        <th style="padding:8px 10px;text-align:right;color:#fff;font-size:11px;width:100px">Subtotal</th>
+      </tr></thead><tbody>${tableBody}</tbody></table>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px"><div style="width:240px">
+        ${n(budget.shipCost) > 0 ? `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;border-bottom:1px solid #E5E7F0"><span>Envío</span><span>${fmt(n(budget.shipCost))}</span></div>` : ''}
+        <div style="display:flex;justify-content:space-between;padding:10px 0 6px;font-size:18px;font-weight:800;color:${brandColor}"><span>${approvedAlt ? approvedAlt.label : 'Total'}</span><span>${fmt(footerTotal)}</span></div>
+        ${!hasAlts && n(budget.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:${brandColor};font-weight:600"><span>Seña (${n(budget.deposit) || 50}%)</span><span>${fmt(n(budget.depositAmt))}</span></div>` : ''}
+        ${approvedAlt && n(budget.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:${brandColor};font-weight:600"><span>Seña (${n(budget.deposit) || 50}%)</span><span>${fmt(n(budget.depositAmt))}</span></div>` : ''}
+      </div></div>
       ${budget.noteCli ? `<div style="margin-top:20px;background:#F4F6FD;border-radius:8px;padding:12px 16px;font-size:12px;color:#4B5280">${budget.noteCli}</div>` : ''}
       ${c.paymentConditions || c.legalNote ? `<div style="margin-top:24px;padding-top:12px;border-top:1px solid #E5E7F0;font-size:10px;color:#999">${c.paymentConditions ? `<div>${c.paymentConditions}</div>` : ''}${c.legalNote ? `<div style="margin-top:3px">${c.legalNote}</div>` : ''}</div>` : ''}
       <script>window.print()</script></body></html>`
@@ -65,6 +99,9 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
             <i className="fa fa-file-invoice-dollar" style={{ color: brandColor, flexShrink: 0 }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)', whiteSpace: 'nowrap' }}>{budget.num || '—'}</span>
             <span className={`badge ${STATUS_CLS[budget.status] || 'b-draft'}`}>{STATUS_MAP[budget.status] || 'Borrador'}</span>
+            {hasAlts && <span style={{ fontSize: 10, fontWeight: 700, background: approvedAlt ? '#E8F8F0' : '#FFF7ED', color: approvedAlt ? '#065F46' : '#92400E', padding: '2px 7px', borderRadius: 8, flexShrink: 0 }}>
+              {approvedAlt ? `✓ ${approvedAlt.label}` : `${alts.length} opciones`}
+            </span>}
           </div>
           <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
         </div>
@@ -75,8 +112,7 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
           {/* Cabecera del comprobante */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 14, borderBottom: `3px solid ${brandColor}`, marginBottom: 16, gap: 12 }}>
             <div style={{ minWidth: 0 }}>
-              {c.logo
-                ? <img src={c.logo} alt={bName} style={{ height: 38, marginBottom: 4, maxWidth: 140 }} />
+              {c.logo ? <img src={c.logo} alt={bName} style={{ height: 38, marginBottom: 4, maxWidth: 140 }} />
                 : <div style={{ fontSize: 20, fontWeight: 800, color: brandColor, letterSpacing: '-1px', lineHeight: 1.1 }}>{bName}</div>}
               {c.subtitle && <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{c.subtitle}</div>}
             </div>
@@ -97,45 +133,85 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
             </div>
           </div>
 
-          {/* Tabla de ítems — scrolleable en mobile */}
+          {/* Banner estado multi-alt */}
+          {hasAlts && !approvedAlt && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8, marginBottom: 12, fontSize: 11, color: '#92400E' }}>
+              <i className="fa fa-layer-group" />
+              <span>Cotización con <b>{alts.length} opciones</b> — pendiente de aprobación del cliente</span>
+            </div>
+          )}
+          {approvedAlt && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#E8F8F0', border: '1px solid #6EE7B7', borderRadius: 8, marginBottom: 12, fontSize: 11, color: '#065F46' }}>
+              <i className="fa fa-circle-check" />
+              <span>Alternativa aprobada: <b>{approvedAlt.label}</b></span>
+            </div>
+          )}
+
+          {/* Tabla de kits / alternativas */}
           <div style={{ fontSize: 9, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Detalle de productos</div>
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 16, borderRadius: 6, border: '1px solid #E5E7F0' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 340 }}>
               <thead>
                 <tr style={{ background: brandColor }}>
-                  <th style={{ padding: '8px 10px', textAlign: 'left', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Producto</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'left', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Producto / Kit</th>
                   <th style={{ padding: '8px 10px', textAlign: 'center', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', width: 44 }}>Cant.</th>
                   <th style={{ padding: '8px 10px', textAlign: 'right', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', width: 90 }}>P. unit.</th>
                   <th style={{ padding: '8px 10px', textAlign: 'right', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', width: 90 }}>Subtotal</th>
                 </tr>
               </thead>
               <tbody>
-                {items.length ? items.map((it, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #E5E7F0', background: i % 2 === 0 ? '#fff' : '#FAFBFF' }}>
-                    <td style={{ padding: '9px 10px', fontWeight: 500 }}>{it.name || '—'}</td>
-                    <td style={{ padding: '9px 10px', textAlign: 'center' }}>{num(it.qty)}</td>
-                    <td style={{ padding: '9px 10px', textAlign: 'right' }}>{fmt(num(it.priceUnit))}</td>
-                    <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600 }}>{fmt(num(it.qty) * num(it.priceUnit))}</td>
-                  </tr>
-                )) : <tr><td colSpan={4} style={{ padding: 16, textAlign: 'center', color: '#888' }}>Sin productos</td></tr>}
+                {displayAlts.map((alt, ai) => {
+                  const ks = validKits(alt.kits)
+                  const sub = ks.reduce((s, i) => s + n(i.qty) * n(i.priceUnit), 0)
+                  const hBg    = alt.approved ? '#E8F8F0' : '#F5F3FF'
+                  const hColor = alt.approved ? '#065F46' : brandColor
+                  return [
+                    hasAlts && <tr key={`h${ai}`} style={{ background: hBg }}>
+                      <td colSpan={4} style={{ padding: '7px 10px', fontWeight: 700, fontSize: 11, color: hColor }}>
+                        {alt.approved ? <i className="fa fa-circle-check" style={{ marginRight: 5 }} /> : <i className="fa fa-layer-group" style={{ marginRight: 5, opacity: .6 }} />}
+                        {alt.label || `Alternativa ${ai + 1}`}{alt.approved ? ' — Aprobada' : ''}
+                      </td>
+                    </tr>,
+                    ...ks.map((it, j) => (
+                      <tr key={`${ai}-${j}`} style={{ borderBottom: '1px solid #E5E7F0', background: j % 2 === 0 ? '#fff' : '#FAFBFF' }}>
+                        <td style={{ padding: '9px 10px', fontWeight: 500 }}>{it.name || '—'}</td>
+                        <td style={{ padding: '9px 10px', textAlign: 'center' }}>{n(it.qty)}</td>
+                        <td style={{ padding: '9px 10px', textAlign: 'right' }}>{fmt(n(it.priceUnit))}</td>
+                        <td style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 600 }}>{fmt(n(it.qty) * n(it.priceUnit))}</td>
+                      </tr>
+                    )),
+                    hasAlts && <tr key={`st${ai}`}>
+                      <td colSpan={3} style={{ padding: '5px 10px', textAlign: 'right', fontSize: 11, color: '#6B7280', borderBottom: ai < displayAlts.length - 1 ? `2px solid ${hColor}33` : 'none' }}>
+                        Total {alt.label || `Alt. ${ai + 1}`}
+                      </td>
+                      <td style={{ padding: '5px 10px', textAlign: 'right', fontWeight: 800, color: hColor, fontSize: 13, borderBottom: ai < displayAlts.length - 1 ? `2px solid ${hColor}33` : 'none' }}>
+                        {fmt(sub)}
+                      </td>
+                    </tr>
+                  ].filter(Boolean)
+                })}
+                {displayAlts.every(a => !validKits(a.kits).length) && (
+                  <tr><td colSpan={4} style={{ padding: 16, textAlign: 'center', color: '#888' }}>Sin productos</td></tr>
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Totales */}
+          {/* Totales footer */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ width: '100%', maxWidth: 240 }}>
-              {num(budget.shipCost) > 0 && (
+              {n(budget.shipCost) > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: 12, color: '#666', borderBottom: '1px solid #E5E7F0' }}>
-                  <span>Envío</span><span>{fmt(num(budget.shipCost))}</span>
+                  <span>Envío</span><span>{fmt(n(budget.shipCost))}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 5px', fontSize: 18, fontWeight: 800, color: brandColor }}>
-                <span>Total</span><span>{fmt(num(budget.total))}</span>
+                <span>{approvedAlt ? approvedAlt.label : 'Total'}</span>
+                <span>{fmt(footerTotal)}</span>
               </div>
-              {num(budget.depositAmt) > 0 && (
+              {(!hasAlts || approvedAlt) && n(budget.depositAmt) > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 12, color: brandColor, fontWeight: 600 }}>
-                  <span>Seña ({num(budget.deposit) || 50}%)</span><span>{fmt(num(budget.depositAmt))}</span>
+                  <span>Seña ({n(budget.deposit) || 50}%)</span><span>{fmt(n(budget.depositAmt))}</span>
                 </div>
               )}
             </div>
@@ -147,8 +223,6 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
               <i className="fa fa-message" style={{ color: brandColor, marginRight: 6 }} />{budget.noteCli}
             </div>
           )}
-
-          {/* Pie legal */}
           {(c.paymentConditions || c.legalNote) && (
             <div style={{ marginTop: 20, paddingTop: 12, borderTop: '1px solid #E5E7F0', fontSize: 10, color: '#999', lineHeight: 1.6 }}>
               {c.paymentConditions && <div>{c.paymentConditions}</div>}
@@ -159,25 +233,13 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
 
         {/* ── Footer de acciones ── */}
         <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface2)', flexShrink: 0, flexWrap: 'wrap' }}>
-          <button
-            className="btn btn-primary"
-            style={{ flex: '1 1 140px', fontSize: 13, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
-            onClick={printBudgetPdf}
-          >
+          <button className="btn btn-primary" style={{ flex: '1 1 140px', fontSize: 13, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }} onClick={printBudgetPdf}>
             <i className="fa fa-file-pdf" /> Ver PDF Completo
           </button>
-          <button
-            className="btn btn-ghost"
-            style={{ flex: '0 0 auto', fontSize: 12, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6 }}
-            onClick={onEdit}
-          >
+          <button className="btn btn-ghost" style={{ flex: '0 0 auto', fontSize: 12, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6 }} onClick={onEdit}>
             <i className="fa fa-pen" /> Editar
           </button>
-          <button
-            className="btn btn-ghost"
-            style={{ flex: '0 0 auto', fontSize: 12, padding: '10px 14px' }}
-            onClick={onClose}
-          >
+          <button className="btn btn-ghost" style={{ flex: '0 0 auto', fontSize: 12, padding: '10px 14px' }} onClick={onClose}>
             Cerrar
           </button>
         </div>

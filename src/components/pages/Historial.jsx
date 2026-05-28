@@ -1659,9 +1659,53 @@ export default function Historial() {
         const brandColor = cfg.brandColor || '#7C3AED'
         const bName = cfg.businessName || 'ANMA'
         const numV = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
-        const rows = (b.items || []).filter(i => i.name).map(i =>
-          `<tr><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7">${i.name}${i.variant ? ` <span style="color:#888;font-size:10px">· ${i.variant}</span>` : ''}</td><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:center">${numV(i.qty)}</td><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:right">${fmt(numV(i.priceUnit))}</td><td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:right;font-weight:700">${fmt(numV(i.qty) * numV(i.priceUnit))}</td></tr>`
-        ).join('')
+
+        /* ── Determinar si es multi-alternativa ── */
+        const alts = b.alternatives?.length ? b.alternatives : null
+        const hasAlts = alts && alts.length > 1
+        const approvedAlt = alts?.find(a => a.approved) || null
+
+        /* ── Helper: filas HTML para una lista de kits ── */
+        const buildRows = (kits) => (kits || [])
+          .filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
+          .map(i => `<tr>
+            <td style="padding:6px 9px;border-bottom:1px solid #EEF0F7">${i.name || '—'}${i.variant ? ` <span style="color:#888;font-size:10px">· ${i.variant}</span>` : ''}</td>
+            <td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:center">${numV(i.qty)}</td>
+            <td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:right">${fmt(numV(i.priceUnit))}</td>
+            <td style="padding:6px 9px;border-bottom:1px solid #EEF0F7;text-align:right;font-weight:700">${fmt(numV(i.qty) * numV(i.priceUnit))}</td>
+          </tr>`).join('')
+
+        /* ── Construir cuerpo de tabla ── */
+        let tableBody = ''
+        if (hasAlts) {
+          tableBody = alts.map((alt, ai) => {
+            const altKits = (alt.kits || []).filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
+            if (!altKits.length) return ''
+            const altSubtotal = altKits.reduce((s, i) => s + numV(i.qty) * numV(i.priceUnit), 0)
+            const hBg    = alt.approved ? '#E8F8F0' : '#F5F3FF'
+            const hColor = alt.approved ? '#059669' : brandColor
+            return `
+              <tr><td colspan="4" style="padding:7px 9px;background:${hBg};font-weight:700;font-size:11px;color:${hColor};border-bottom:1px solid ${hColor}33">
+                ${alt.approved ? '✓ ' : ''}${alt.label || `Alternativa ${ai + 1}`}${alt.approved ? ' — Aprobada' : ''}
+              </td></tr>
+              ${buildRows(altKits)}
+              <tr>
+                <td colspan="3" style="padding:5px 9px;text-align:right;font-size:11px;color:#6B7280;border-bottom:2px solid ${hColor}33">Total ${alt.label || `Alt. ${ai + 1}`}</td>
+                <td style="padding:5px 9px;text-align:right;font-weight:800;color:${hColor};font-size:13px;border-bottom:2px solid ${hColor}33">${fmt(altSubtotal)}</td>
+              </tr>`
+          }).join('')
+        } else {
+          // Fallback: 1 alternativa o formato legacy
+          const sourceKits = alts?.[0]?.kits || b.items || []
+          tableBody = buildRows(sourceKits)
+        }
+
+        /* ── Footer: usar alt aprobada o total guardado ── */
+        const footerTotal = approvedAlt
+          ? (approvedAlt.kits || []).reduce((s, i) => s + numV(i.qty) * numV(i.priceUnit), 0)
+          : numV(b.total)
+        const footerLabel = approvedAlt ? `Total — ${approvedAlt.label}` : 'Total'
+
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:28px;color:#1E1B4B;font-size:12px}table{width:100%;border-collapse:collapse}th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px}@media print{body{margin:16px}}</style></head><body>
           <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:3px solid ${brandColor};margin-bottom:16px">
             <div>${cfg.logo ? `<img src="${cfg.logo}" style="height:36px">` : `<div style="font-size:20px;font-weight:800;color:${brandColor}">${bName}</div>`}</div>
@@ -1672,10 +1716,13 @@ export default function Historial() {
             ${b.company ? `<div style="color:#666">${b.company}</div>` : ''}
             ${b.wa ? `<div style="color:#666">${b.wa}</div>` : ''}
           </div>
-          <table><thead><tr><th>Producto</th><th style="width:55px;text-align:center">Cant.</th><th style="width:95px;text-align:right">P.unit</th><th style="width:100px;text-align:right">Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
+          ${hasAlts && !approvedAlt ? `<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:6px;padding:7px 10px;margin-bottom:10px;font-size:10.5px;color:#92400E">🔄 Cotización con ${alts.length} opciones — el cliente aún no aprobó ninguna</div>` : ''}
+          ${hasAlts && approvedAlt ? `<div style="background:#E8F8F0;border:1px solid #6EE7B7;border-radius:6px;padding:7px 10px;margin-bottom:10px;font-size:10.5px;color:#065F46">✓ Alternativa aprobada: <b>${approvedAlt.label}</b></div>` : ''}
+          <table><thead><tr><th>Producto / Kit</th><th style="width:55px;text-align:center">Cant.</th><th style="width:95px;text-align:right">P.unit</th><th style="width:100px;text-align:right">Subtotal</th></tr></thead><tbody>${tableBody}</tbody></table>
           <div style="display:flex;justify-content:flex-end;margin-top:12px"><div style="min-width:220px;padding:10px 14px;background:${brandColor}10;border-radius:8px;border:1px solid ${brandColor}30">
-            <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:${brandColor}"><span>Total</span><span>${fmt(numV(b.total))}</span></div>
-            ${numV(b.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:${brandColor};font-weight:600;margin-top:4px"><span>Seña</span><span>${fmt(numV(b.depositAmt))}</span></div>` : ''}
+            <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;color:${brandColor}"><span>${footerLabel}</span><span>${fmt(footerTotal)}</span></div>
+            ${!hasAlts && numV(b.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:${brandColor};font-weight:600;margin-top:4px"><span>Seña</span><span>${fmt(numV(b.depositAmt))}</span></div>` : ''}
+            ${approvedAlt && numV(b.depositAmt) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:${brandColor};font-weight:600;margin-top:4px"><span>Seña</span><span>${fmt(numV(b.depositAmt))}</span></div>` : ''}
           </div></div>
           ${b.noteCli ? `<div style="margin-top:14px;background:#F4F6FD;border-radius:8px;padding:10px 14px;font-size:11px;color:#4B5280">${b.noteCli}</div>` : ''}
         </body></html>`
