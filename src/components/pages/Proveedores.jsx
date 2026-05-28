@@ -898,7 +898,7 @@ export default function Proveedores() {
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 20px', WebkitOverflowScrolling: 'touch' }}>
 
               {/* TAB: Información */}
               {detailTab === 'info' && (
