@@ -13,7 +13,7 @@ const fmtDec = (v) => {
 const EMPTY = {
   name: '', cat: '', subcat: '', unit: 'un', cost: '',
   stock: '', minStock: '', supplierId: '', notes: '',
-  packCost: '', packQty: '', qtyPerGift: '',
+  packCost: '', packQty: '', qtyPerGift: '', shippingCost: '',
 }
 const numFocus = e => e.target.select()
 
@@ -149,14 +149,15 @@ export default function Insumos() {
   const lowStock = useMemo(() => insumos.filter(x => stockLevel(x.stock, x.minStock) === 'low'), [insumos])
   const totalValue = insumos.reduce((s, x) => s + (x.stock || 0) * (Number(x.cost) || 0), 0)
 
-  // Cálculo de fraccionamiento en tiempo real
+  // Cálculo de fraccionamiento en tiempo real (incluye envío del pedido)
   const costPerGift = useMemo(() => {
     const pc = parseFloat(form.packCost)
     const pq = parseFloat(form.packQty)
     const qpg = parseFloat(form.qtyPerGift)
+    const sc = parseFloat(form.shippingCost) || 0
     if (!pc || !pq || !qpg || pq <= 0 || qpg <= 0) return null
-    return (pc / pq) * qpg
-  }, [form.packCost, form.packQty, form.qtyPerGift])
+    return ((pc + sc) / pq) * qpg
+  }, [form.packCost, form.packQty, form.qtyPerGift, form.shippingCost])
 
   // Rendimiento: cuántos regalos cubre el stock actual
   const rendimiento = (item) => {
@@ -485,15 +486,18 @@ export default function Insumos() {
 
       {/* ── Modal: crear / editar material ── */}
       {modal && (
-        <div className="modal-bg open" style={{ alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal" style={{ maxWidth: 560 }}>
-            <div className="mh">
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+          <div className="modal-form-card" style={{ maxWidth: 560 }}>
+            {/* Header fijo */}
+            <div style={{ padding: '16px 22px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3>{form.id ? 'Editar material' : 'Nuevo material de packaging'}</h3>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{form.id ? 'Editar material' : 'Nuevo material de packaging'}</h3>
                 <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 2 }}>Cajas, cintas, viruta, tarjetas, bolsas…</div>
               </div>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
+            {/* Body scrollable */}
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 22px 8px', WebkitOverflowScrolling: 'touch' }}>
 
             {/* Fila 1: Nombre */}
             <div className="fg">
@@ -530,7 +534,7 @@ export default function Insumos() {
                   <i className="fa fa-calculator" /> Calculadora de fraccionamiento
                 </div>
 
-                <div className="grid2" style={{ marginBottom: 10 }}>
+                <div className="grid2" style={{ marginBottom: 8 }}>
                   <div className="fg">
                     <label>Costo del pack completo ($)</label>
                     <input type="number" value={form.packCost} onChange={e => setF('packCost', e.target.value)} onFocus={numFocus} placeholder="Ej: 10000" min="0" />
@@ -539,6 +543,15 @@ export default function Insumos() {
                     <label>Cantidad total del pack</label>
                     <input type="number" value={form.packQty} onChange={e => setF('packQty', e.target.value)} onFocus={numFocus} placeholder="Ej: 50 metros" min="0" step="any" />
                   </div>
+                </div>
+                {/* Costo de envío del pedido */}
+                <div className="fg" style={{ marginBottom: 10 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="fa fa-truck" style={{ color: '#8B5CF6', fontSize: 10 }} />
+                    Envío del pedido ($)
+                    <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(opcional — se suma al costo total)</span>
+                  </label>
+                  <input type="number" value={form.shippingCost || ''} onChange={e => setF('shippingCost', e.target.value)} onFocus={numFocus} placeholder="0" min="0" />
                 </div>
 
                 <div className="fg">
@@ -563,7 +576,13 @@ export default function Insumos() {
                         {fmtDec(costPerGift)}
                       </div>
                       <div style={{ fontSize: 10, color: 'rgba(99,102,241,.7)', marginTop: 3 }}>
-                        {fmtDec(parseFloat(form.packCost))} ÷ {form.packQty} × {form.qtyPerGift} {form.unit || 'un'}
+                        {fmtDec((parseFloat(form.packCost) || 0) + (parseFloat(form.shippingCost) || 0))} ÷ {form.packQty} × {form.qtyPerGift} {form.unit || 'un'}
+                        {parseFloat(form.shippingCost) > 0 && (
+                          <span style={{ display: 'block', color: '#8B5CF6', marginTop: 1 }}>
+                            <i className="fa fa-truck" style={{ marginRight: 3 }} />
+                            incl. {fmtDec(parseFloat(form.shippingCost))} de envío ({fmtDec((parseFloat(form.shippingCost) / (parseFloat(form.packQty) || 1)) * (parseFloat(form.qtyPerGift) || 1))} por regalo)
+                          </span>
+                        )}
                       </div>
                     </div>
                     <button
@@ -674,7 +693,9 @@ export default function Insumos() {
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+            </div>{/* /body scrollable */}
+            {/* Footer fijo */}
+            <div style={{ flexShrink: 0, position: 'sticky', bottom: 0, borderTop: '1px solid var(--border)', padding: '12px 22px 18px', background: 'var(--surface)', display: 'flex', gap: 8, justifyContent: 'flex-end', zIndex: 5 }}>
               <button className="btn btn-ghost btn-sm" onClick={() => setModal(false)}>Cancelar</button>
               <button className="btn btn-primary btn-sm" onClick={save}>
                 <i className="fa fa-floppy-disk" /> {form.id ? 'Guardar cambios' : 'Crear material'}
