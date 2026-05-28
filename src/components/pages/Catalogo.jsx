@@ -776,7 +776,7 @@ export default function Catalogo() {
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
             {/* ── BODY SCROLLABLE ── */}
-            <div style={{ overflowY: 'auto', flex: 1, padding: '16px 20px 8px' }}>
+            <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: '16px 20px 8px' }}>
 
             {/* ── TIPO: Producto terminado vs Kit/Box ── */}
             <div style={{ display: 'flex', gap: 5, marginBottom: 16, background: 'var(--surface2)', borderRadius: 12, padding: 5, border: '1px solid var(--border)' }}>
