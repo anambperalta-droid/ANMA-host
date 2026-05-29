@@ -102,9 +102,12 @@ export default function Catalogo() {
   const DRAFT_KEY = 'anma_prod_draft'
 
   // ── Quick-cat popover ─────────────────────────────────────────────
-  const [quickCatPop, setQuickCatPop]   = useState(null) // { prod, x, y }
+  const [quickCatPop, setQuickCatPop]     = useState(null) // { prod, x, y }
   const [quickCatInput, setQuickCatInput] = useState('')
-  const [groupByType, setGroupByType]   = useState(false)
+  const [groupByType, setGroupByType]     = useState(false)
+  // secciones colapsables cuando groupByType está ON
+  const [collapsedGrps, setCollapsedGrps] = useState({})
+  const toggleGrp = (key) => setCollapsedGrps(prev => ({ ...prev, [key]: !prev[key] }))
 
   // ── Estado del Kit Builder ────────────────────────────────────────
   const [componentes, setComponentes]   = useState([])
@@ -651,8 +654,18 @@ export default function Catalogo() {
         .qcat-pop-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .1s;gap:6px}
         .qcat-pop-item:hover{background:var(--surface2)}
         .qcat-pop-item.active{background:var(--brand-xlt);color:var(--brand)}
-        .grp-section-hd{display:flex;align-items:center;gap:8px;padding:6px 2px 4px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--txt3);margin-top:4px}
+        .grp-section-hd{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 4px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--txt3);margin-top:4px;cursor:pointer;border-radius:8px;user-select:none;transition:background .12s}
+        .grp-section-hd:hover{background:var(--surface2)}
         .grp-section-hd:first-child{margin-top:0}
+        .grp-section-hd .grp-chevron{margin-left:auto;font-size:9px;opacity:.5;transition:transform .2s}
+        .grp-section-hd .grp-badge{background:var(--surface2);border:1px solid var(--border);color:var(--txt3);font-size:9px;padding:1px 7px;border-radius:20px;font-weight:700}
+        .bulk-import-sheet{width:100%;max-width:600px;background:var(--surface);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--sh-lg);max-height:92vh;max-height:92dvh;border-radius:18px;animation:pgIn .2s ease both;margin:auto}
+        .bulk-import-sheet .mob-only-handle{display:none}
+        @media(max-width:768px){
+          .bulk-import-sheet{border-radius:20px 20px 0 0;max-width:100%;animation:slideUp .25s cubic-bezier(.32,.72,0,1) both;margin:0}
+          .bulk-import-sheet .mob-only-handle{display:flex}
+          .modal-bg:has(.bulk-import-sheet){align-items:flex-end!important;padding:0!important}
+        }
       `}</style>
 
       <div className="pill-row cat-pill-row">
@@ -783,12 +796,30 @@ export default function Catalogo() {
               )) : filtered.length ? (groupByType
                 ? [
                     ...(prodsFiltered.length > 0 ? [
-                      <tr key="__hd_prod"><td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 8, paddingBottom: 2 }}><div className="grp-section-hd" style={{ marginTop: 0 }}><i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />Productos ({prodsFiltered.length})</div></td></tr>,
-                      ...prodsFiltered.map(p => renderTableRow(p))
+                      <tr key="__hd_prod" style={{ background: 'var(--surface)' }}>
+                        <td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                          <div className="grp-section-hd" style={{ marginTop: 0 }} onClick={() => toggleGrp('prods')}>
+                            <i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />
+                            Productos
+                            <span className="grp-badge">{prodsFiltered.length}</span>
+                            <i className={`fa fa-chevron-${collapsedGrps.prods ? 'right' : 'down'} grp-chevron`} />
+                          </div>
+                        </td>
+                      </tr>,
+                      ...(collapsedGrps.prods ? [] : prodsFiltered.map(p => renderTableRow(p)))
                     ] : []),
                     ...(kitsFiltered.length > 0 ? [
-                      <tr key="__hd_kit"><td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 8, paddingBottom: 2 }}><div className="grp-section-hd"><i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />Kits & Boxes ({kitsFiltered.length})</div></td></tr>,
-                      ...kitsFiltered.map(p => renderTableRow(p))
+                      <tr key="__hd_kit" style={{ background: 'var(--surface)' }}>
+                        <td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                          <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
+                            <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />
+                            Kits & Boxes
+                            <span className="grp-badge">{kitsFiltered.length}</span>
+                            <i className={`fa fa-chevron-${collapsedGrps.kits ? 'right' : 'down'} grp-chevron`} />
+                          </div>
+                        </td>
+                      </tr>,
+                      ...(collapsedGrps.kits ? [] : kitsFiltered.map(p => renderTableRow(p)))
                     ] : []),
                   ]
                 : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={showCostInfo ? 10 : 9}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
@@ -811,15 +842,25 @@ export default function Catalogo() {
           )) : filtered.length ? (groupByType ? [
             ...(prodsFiltered.length > 0 ? [
               <div key="__ghd_prod" style={{ gridColumn: '1/-1' }}>
-                <div className="grp-section-hd"><i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />Productos ({prodsFiltered.length})</div>
+                <div className="grp-section-hd" onClick={() => toggleGrp('prods')}>
+                  <i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />
+                  Productos
+                  <span className="grp-badge">{prodsFiltered.length}</span>
+                  <i className={`fa fa-chevron-${collapsedGrps.prods ? 'right' : 'down'} grp-chevron`} />
+                </div>
               </div>,
-              ...prodsFiltered.map(p => renderGridCard(p))
+              ...(collapsedGrps.prods ? [] : prodsFiltered.map(p => renderGridCard(p)))
             ] : []),
             ...(kitsFiltered.length > 0 ? [
               <div key="__ghd_kit" style={{ gridColumn: '1/-1' }}>
-                <div className="grp-section-hd"><i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />Kits & Boxes ({kitsFiltered.length})</div>
+                <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
+                  <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />
+                  Kits & Boxes
+                  <span className="grp-badge">{kitsFiltered.length}</span>
+                  <i className={`fa fa-chevron-${collapsedGrps.kits ? 'right' : 'down'} grp-chevron`} />
+                </div>
               </div>,
-              ...kitsFiltered.map(p => renderGridCard(p))
+              ...(collapsedGrps.kits ? [] : kitsFiltered.map(p => renderGridCard(p)))
             ] : []),
           ] : filtered.map(p => renderGridCard(p))) : (
             <div style={{ gridColumn: '1/-1' }}>
@@ -1723,10 +1764,10 @@ export default function Catalogo() {
       )}
 
       {bulkModal && (
-        <div className="modal-bg open" style={{ alignItems: 'flex-end', padding: 0 }} onClick={e => { if (e.target === e.currentTarget) setBulkModal(false) }}>
-          <div style={{ width: '100%', maxWidth: 600, background: 'var(--surface)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', maxHeight: '92dvh', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(0,0,0,.18)', animation: 'slideUp .25s cubic-bezier(.32,.72,0,1) both' }}>
-            {/* Handle */}
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 4, flexShrink: 0 }}>
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setBulkModal(false) }}>
+          <div className="bulk-import-sheet">
+            {/* Handle visible solo en mobile */}
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 4, flexShrink: 0 }} className="mob-only-handle">
               <div style={{ width: 36, height: 4, borderRadius: 4, background: 'var(--border2)' }} />
             </div>
             {/* Header */}
