@@ -872,27 +872,14 @@ export default function Catalogo() {
                   placeholder={productMode === 'kit' ? 'Ej: Kit Bienestar, Box Día del Padre...' : 'Taza sublimada 11oz'} />
               </div>
 
-              {/* Kit: 2 cols (Ocasión + Stock) | Producto: 3 cols (Categoría + Proveedor + Stock) */}
+              {/* Kit: solo Ocasión (Stock se ingresa en la card Producción) | Producto: 3 cols */}
               {productMode === 'kit' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
-                  <div className="fg" style={{ marginBottom: 0 }}>
-                    <label><i className="fa fa-calendar-star" style={{ marginRight: 5, color: '#8B5CF6', fontSize: 10 }} />Ocasión / Tipo de evento</label>
-                    <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
-                      {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                      {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
-                    </select>
-                  </div>{/* /ocasión */}
-                  {/* Stock — col 2 kit */}
-                  <div className="fg" style={{ marginBottom: 0 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : '#8B5CF6', fontSize: 11 }} />
-                      Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <input type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ paddingRight: form.stock !== '' ? 52 : undefined }} />
-                      {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
-                    </div>
-                  </div>
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label><i className="fa fa-calendar-star" style={{ marginRight: 5, color: '#8B5CF6', fontSize: 10 }} />Ocasión / Tipo de evento</label>
+                  <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
+                    {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
+                  </select>
                 </div>
               ) : (
                 /* ── Producto: 3 cols (Categoría + Proveedor + Stock) ── */
@@ -932,18 +919,24 @@ export default function Catalogo() {
                 borderRadius: 12, padding: '14px 16px', marginBottom: 12,
                 border: '1.5px solid #DDD6FE',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '.7px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <i className="fa fa-layer-group" /> Componentes del Kit
-                    <span style={{ background: '#EDE9FE', color: '#8B5CF6', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
-                      {componentes.length}
-                    </span>
-                  </div>
-                  {componentes.length > 0 && (
-                    <div style={{ fontSize: 12, fontWeight: 800, color: '#8B5CF6' }}>
-                      Costo total: <span style={{ color: '#059669' }}>{fmt(kitCost)}</span>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '.7px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <i className="fa fa-layer-group" /> Receta de 1 Kit
+                      <span style={{ background: '#EDE9FE', color: '#8B5CF6', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
+                        {componentes.length}
+                      </span>
                     </div>
-                  )}
+                    {componentes.length > 0 && (
+                      <div style={{ fontSize: 11, fontWeight: 800, color: '#059669' }}>
+                        insumos: {fmt(kitCost)}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 3 }}>
+                    <i className="fa fa-circle-info" style={{ marginRight: 4, color: '#A78BFA' }} />
+                    Ingresá los insumos y packaging que lleva <strong style={{ color: '#8B5CF6' }}>1 sola unidad</strong> del kit
+                  </div>
                 </div>
 
                 {/* Lista de componentes agregados */}
@@ -1257,6 +1250,23 @@ export default function Catalogo() {
                     Buscá en el catálogo o escribí un componente libre
                   </div>
                 )}
+
+                {/* ═══ COSTO TOTAL DE 1 KIT — resumen prominente ═══ */}
+                {kitTotal > 0 && (
+                  <div style={{ marginTop: 14, padding: '12px 14px', background: 'linear-gradient(135deg,#F0FDF4,#ECFDF5)', borderRadius: 10, border: '2px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: .6 }}>
+                        <i className="fa fa-calculator" style={{ marginRight: 5 }} />Costo de 1 kit
+                      </div>
+                      {packTotal > 0 && kitCost > 0 && (
+                        <div style={{ fontSize: 9, color: 'var(--txt3)', marginTop: 2 }}>
+                          insumos {fmt(kitCost)} + packaging {fmt(packTotal)}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#059669' }}>{fmt(kitTotal)}</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1267,9 +1277,14 @@ export default function Catalogo() {
 
             {/* ── CARD COSTO · MARGEN · PRECIO ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fa fa-coins" /> {productMode === 'kit' ? 'Costo del Kit · Margen · Precio' : 'Costo · Margen · Precio'}
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <i className="fa fa-coins" /> {productMode === 'kit' ? 'Precio por 1 Kit' : 'Costo · Margen · Precio'}
               </div>
+              {productMode === 'kit' && (
+                <div style={{ fontSize: 10, color: 'var(--txt4)', marginBottom: 10 }}>
+                  Definí el precio de venta de <strong style={{ color: 'var(--txt3)' }}>1 solo kit</strong> — la cantidad total se calcula abajo
+                </div>
+              )}
               <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr 28px 1fr', gap: '0 6px', alignItems: 'end' }}>
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1320,6 +1335,55 @@ export default function Catalogo() {
                 <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <i className={`fa fa-arrow-${num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'trend-up' : 'trend-down'}`} />
                   Ganancia por unidad: ${(num(form.price) - (productMode === 'kit' ? kitTotal : num(form.cost))).toLocaleString('es-AR')} · Margen real: {marginInput || 0}%
+                </div>
+              )}
+            </div>
+
+            {/* ── CARD PRODUCCIÓN & STOCK (kit mode only) ── */}
+            <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1.5px solid #6EE7B7' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <i className="fa fa-boxes-stacked" /> Producción & Stock inicial
+              </div>
+              <div className="fg" style={{ marginBottom: kitTotal > 0 && num(form.stock) > 0 ? 10 : 0 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <i className="fa fa-hashtag" style={{ color: '#059669', fontSize: 10 }} />
+                  ¿Cuántos kits vas a armar?
+                  <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(= stock inicial)</span>
+                </label>
+                <input type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="Ej: 25" style={{ borderColor: '#6EE7B7', borderWidth: '1.5px' }} />
+              </div>
+              {/* Batch math — solo si hay cantidad Y costo */}
+              {num(form.stock) > 0 && kitTotal > 0 && (
+                <div style={{ background: 'rgba(255,255,255,.8)', borderRadius: 8, border: '1px solid #A7F3D0', overflow: 'hidden' }}>
+                  <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #D1FAE5' }}>
+                    <span style={{ fontSize: 11, color: 'var(--txt3)' }}>Costo · 1 kit</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)' }}>{fmt(kitTotal)}</span>
+                  </div>
+                  <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FEF2F2', borderBottom: '1px solid #FECACA' }}>
+                    <span style={{ fontSize: 11, color: '#DC2626', fontWeight: 600 }}>Inversión total · {num(form.stock)} kits</span>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: '#DC2626' }}>{fmt(kitTotal * num(form.stock))}</span>
+                  </div>
+                  {num(form.price) > 0 && (<>
+                    <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #DBEAFE' }}>
+                      <span style={{ fontSize: 11, color: '#2563EB', fontWeight: 600 }}>Ingresos si vendés todo</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: '#2563EB' }}>{fmt(num(form.price) * num(form.stock))}</span>
+                    </div>
+                    <div style={{ padding: '9px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: num(form.price) > kitTotal ? '#F0FDF4' : '#FEF2F2' }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: num(form.price) > kitTotal ? '#059669' : '#DC2626' }}>
+                        <i className={`fa fa-arrow-trend-${num(form.price) > kitTotal ? 'up' : 'down'}`} style={{ marginRight: 5 }} />
+                        Ganancia neta total
+                      </span>
+                      <span style={{ fontSize: 15, fontWeight: 900, color: num(form.price) > kitTotal ? '#059669' : '#DC2626' }}>
+                        {fmt((num(form.price) - kitTotal) * num(form.stock))}
+                      </span>
+                    </div>
+                  </>)}
+                </div>
+              )}
+              {/* Hint cuando faltan datos */}
+              {(num(form.stock) === 0 || form.stock === '') && (
+                <div style={{ fontSize: 10, color: 'var(--txt4)', textAlign: 'center', padding: '2px 0' }}>
+                  <i className="fa fa-arrow-up" style={{ marginRight: 3 }} />Ingresá la cantidad para ver la inversión total
                 </div>
               )}
             </div>
