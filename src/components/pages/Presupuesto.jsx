@@ -66,7 +66,7 @@ function ProductPicker({ open, onClose, products, onSelect }) {
             {q && <button onClick={() => setQ('')} style={{ background: 'none', border: 'none', color: 'var(--txt4)', cursor: 'pointer', fontSize: 13, padding: 4 }}><i className="fa fa-xmark" /></button>}
           </div>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px 16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '6px 8px 16px' }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--txt3)', fontSize: 13 }}>
               <i className="fa fa-box-open" style={{ fontSize: 24, display: 'block', marginBottom: 8, opacity: .4 }} />

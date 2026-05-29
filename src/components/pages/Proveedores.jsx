@@ -1210,7 +1210,7 @@ export default function Proveedores() {
             </div>
 
             {/* Body — scrollable, SIN altura fija */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 8px', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px 20px 8px', WebkitOverflowScrolling: 'touch' }}>
 
               {/* ── TAB: Subir archivo ── */}
               {importTab === 'archivo' && (<>

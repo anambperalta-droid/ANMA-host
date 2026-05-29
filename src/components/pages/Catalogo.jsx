@@ -1497,7 +1497,7 @@ export default function Catalogo() {
               </div>
               <button className="mclose" onClick={() => setBulkModal(false)}><i className="fa fa-xmark" /></button>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 8px', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 20px 8px', WebkitOverflowScrolling: 'touch' }}>
               <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand)', marginBottom: 4 }}>Formato de entrada</div>
                 <div style={{ fontSize: 12, color: 'var(--txt2)', lineHeight: 1.7 }}>

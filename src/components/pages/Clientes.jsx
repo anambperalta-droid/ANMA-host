@@ -107,7 +107,7 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
         </div>
 
         {/* ── Content ── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', background: '#fff' }}>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px 18px', background: '#fff' }}>
 
           {/* Cabecera del comprobante */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 14, borderBottom: `3px solid ${brandColor}`, marginBottom: 16, gap: 12 }}>
@@ -1332,7 +1332,7 @@ export default function Clientes() {
             </div>
 
             {/* Body — scrollable, SIN altura fija */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 8px', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px 20px 8px', WebkitOverflowScrolling: 'touch' }}>
 
               {/* ── TAB: Subir archivo ── */}
               {importTab === 'archivo' && (<>

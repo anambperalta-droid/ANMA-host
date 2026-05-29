@@ -1792,7 +1792,7 @@ export default function Historial() {
                 </button>
               </div>
               {/* Scroll body */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+              <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
                 {/* Contact pills */}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                   {waNum && (
