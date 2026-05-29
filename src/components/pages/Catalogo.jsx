@@ -96,6 +96,10 @@ export default function Catalogo() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [marginInput, setMarginInput] = useState('')
   const imgRef = useRef(null)
+  const bodyRef = useRef(null)
+  const packCostRef = useRef(null)
+  const [hasDraft, setHasDraft] = useState(null)
+  const DRAFT_KEY = 'anma_prod_draft'
 
   // ── Estado del Kit Builder ────────────────────────────────────────
   const [componentes, setComponentes]   = useState([])
@@ -142,11 +146,9 @@ export default function Catalogo() {
     const isKit = p?.tipo === 'kit'
     setProductMode(isKit ? 'kit' : 'producto')
     setShowAdvanced(false)
-    // Inicializar componentes del kit
     setComponentes(isKit && p.componentes ? p.componentes : [])
     setCompForm({ nombre: '', qty: 1, costoUnit: '' })
     setCompSearch('')
-    // Packaging: cargar array nuevo o migrar valor legacy costoExtra
     if (isKit && p.packagingItems && p.packagingItems.length > 0) {
       setPackagingItems(p.packagingItems)
     } else if (isKit && p.costoExtra && num(p.costoExtra) > 0) {
@@ -160,9 +162,20 @@ export default function Catalogo() {
       setForm({ ...p, cat: p.cat ?? '', image: p.image || '', stock: p.stock ?? '' })
       const cv = num(p.cost); const pr = num(p.price || 0)
       setMarginInput(cv > 0 && pr > 0 ? String(Math.round((pr - cv) / cv * 100)) : String(margin))
+      setHasDraft(null)
     } else {
       setMarginInput(String(margin))
       setForm({ name: '', cat: cats[0] || '', cost: '', supplierId: '', image: '', price: '', stock: '' })
+      // ── Detectar borrador guardado ──
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY)
+        if (raw) {
+          const d = JSON.parse(raw)
+          // Solo restaurar borradores de las últimas 24h
+          if (d._ts && Date.now() - d._ts < 86400000) { setHasDraft(d) }
+          else { localStorage.removeItem(DRAFT_KEY); setHasDraft(null) }
+        } else { setHasDraft(null) }
+      } catch { setHasDraft(null) }
     }
     setModal(true)
   }
@@ -190,9 +203,11 @@ export default function Catalogo() {
       tipo:        productMode === 'kit' ? 'kit' : 'producto',
       componentes:    productMode === 'kit' ? componentes : [],
       packagingItems: productMode === 'kit' ? packagingItems : [],
-      costoExtra:     productMode === 'kit' ? packTotal : 0,  // compat legacy
+      costoExtra:     productMode === 'kit' ? packTotal : 0,
       updatedAt:   new Date().toISOString().slice(0, 10),
     })
+    try { localStorage.removeItem(DRAFT_KEY) } catch {}
+    setHasDraft(null)
     setModal(false)
     toast('Producto guardado', 'ok')
   }
@@ -228,6 +243,7 @@ export default function Catalogo() {
     setCompSearch('')
     setCompDropdown(false)
     setTimeout(() => compInputRef.current?.focus(), 50)
+    setTimeout(() => bodyRef.current?.scrollBy({ top: 60, behavior: 'smooth' }), 100)
   }
 
   const selectFromCatalog = (p) => {
@@ -252,6 +268,7 @@ export default function Catalogo() {
       costoUnit: num(packForm.costoUnit) || 0,
     }])
     setPackForm({ nombre: '', qty: 1, costoUnit: '' })
+    setTimeout(() => bodyRef.current?.scrollBy({ top: 80, behavior: 'smooth' }), 100)
   }
   const removePackaging = (pid) => setPackagingItems(prev => prev.filter(p => p._pid !== pid))
   const updatePackaging = (pid, field, val) =>
@@ -395,6 +412,13 @@ export default function Catalogo() {
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
   }, [catMgmtModal, bulkCatModal, bulkSupplierModal, csvModal, bulkModal, priceUpdateModal, modal, compDropdown])
+
+  // ── Auto-guardar borrador mientras el modal está abierto ──────────
+  useEffect(() => {
+    if (!modal) return
+    const draft = { form, componentes, packagingItems, productMode, marginInput, _ts: Date.now() }
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)) } catch {}
+  }, [form, componentes, packagingItems, productMode, marginInput, modal]) // eslint-disable-line
 
   const handleCsvFile = (e) => {
     const file = e.target.files?.[0]
@@ -775,8 +799,35 @@ export default function Catalogo() {
               </h3>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
+            {/* ── BANNER BORRADOR ── */}
+            {hasDraft && !form.id && (
+              <div style={{ padding: '10px 20px', background: '#FFF7ED', borderBottom: '1px solid #FED7AA', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10, animation: 'pgIn .2s ease both' }}>
+                <i className="fa fa-clock-rotate-left" style={{ color: '#D97706', fontSize: 13, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0, fontSize: 12, color: '#92400E' }}>
+                  <b>Borrador guardado</b>{hasDraft.form?.name ? ` — ${hasDraft.form.name}` : ''}
+                  <span style={{ fontSize: 10, color: '#B45309', marginLeft: 6 }}>
+                    · hace {Math.max(1, Math.round((Date.now() - hasDraft._ts) / 60000))}min
+                  </span>
+                </div>
+                <button className="btn btn-sm" style={{ background: '#D97706', color: '#fff', border: 'none', flexShrink: 0 }}
+                  onClick={() => {
+                    try {
+                      setForm(hasDraft.form || {}); setComponentes(hasDraft.componentes || [])
+                      setPackagingItems(hasDraft.packagingItems || []); setProductMode(hasDraft.productMode || 'producto')
+                      setMarginInput(hasDraft.marginInput || String(margin)); setHasDraft(null)
+                      toast('Borrador restaurado ✓', 'ok')
+                    } catch { setHasDraft(null) }
+                  }}>
+                  <i className="fa fa-rotate-left" /> Restaurar
+                </button>
+                <button onClick={() => { try { localStorage.removeItem(DRAFT_KEY) } catch {}; setHasDraft(null) }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#B45309', fontSize: 15, padding: '2px 4px', lineHeight: 1 }}>
+                  <i className="fa fa-xmark" />
+                </button>
+              </div>
+            )}
             {/* ── BODY SCROLLABLE ── */}
-            <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: '16px 20px 8px' }}>
+            <div ref={bodyRef} style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: '16px 20px 8px' }}>
 
             {/* ── TIPO: Producto terminado vs Kit/Box ── */}
             <div style={{ display: 'flex', gap: 5, marginBottom: 16, background: 'var(--surface2)', borderRadius: 12, padding: 5, border: '1px solid var(--border)' }}>
@@ -977,8 +1028,8 @@ export default function Catalogo() {
                   <div style={{ padding: '8px 12px' }}>
                     {/* Lista de ítems agregados */}
                     {packagingItems.length > 0 && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px 26px', gap: 4, padding: '0 6px 3px', fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                      <div style={{ marginBottom: 8, maxHeight: 168, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px 26px', gap: 4, padding: '0 6px 3px', fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.4, position: 'sticky', top: 0, background: 'rgba(255,255,255,.9)' }}>
                           <span>Ítem</span><span style={{ textAlign: 'center' }}>Cant.</span><span style={{ textAlign: 'right' }}>Costo</span><span />
                         </div>
                         {packagingItems.map((p, idx) => {
@@ -1013,14 +1064,24 @@ export default function Catalogo() {
                       </div>
                     )}
                     {/* Chips rápidos */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
-                      {['Caja', 'Cinta/Ribbon', 'Papel tissue', 'Bolsa', 'Tarjeta', 'Virutas', 'Film', 'Sticker'].map(preset => (
-                        <button key={preset}
-                          onMouseDown={() => setPackForm(f => ({ ...f, nombre: preset }))}
-                          style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, border: '1px solid #FBCFE8', background: packForm.nombre === preset ? '#FCE7F3' : 'var(--surface)', color: packForm.nombre === preset ? '#DB2777' : 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          {preset}
-                        </button>
-                      ))}
+                    <div style={{ marginBottom: 6 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#DB2777', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <i className="fa fa-bolt" style={{ fontSize: 8 }} /> Agregar rápido
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {['Caja', 'Cinta/Ribbon', 'Papel tissue', 'Bolsa', 'Tarjeta', 'Virutas', 'Film', 'Sticker'].map(preset => (
+                          <button key={preset}
+                            type="button"
+                            onMouseDown={e => {
+                              e.preventDefault()
+                              setPackForm(f => ({ ...f, nombre: preset }))
+                              setTimeout(() => packCostRef.current?.focus(), 30)
+                            }}
+                            style={{ fontSize: 10, padding: '4px 10px', borderRadius: 20, border: `1.5px solid ${packForm.nombre === preset ? '#DB2777' : '#FBCFE8'}`, background: packForm.nombre === preset ? '#FCE7F3' : 'var(--surface)', color: packForm.nombre === preset ? '#DB2777' : 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, whiteSpace: 'nowrap', transition: 'all .12s', display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <i className="fa fa-plus" style={{ fontSize: 7, opacity: packForm.nombre === preset ? 1 : .5 }} />{preset}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     {/* Form agregar ítem */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px auto', gap: 5, alignItems: 'end' }}>
@@ -1037,9 +1098,10 @@ export default function Catalogo() {
                         placeholder="Cant."
                         style={{ padding: '6px 5px', border: '1.5px solid #FBCFE8', borderRadius: 7, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
                       />
-                      <input type="number" min="0" value={packForm.costoUnit}
+                      <input ref={packCostRef} type="number" min="0" value={packForm.costoUnit}
                         onChange={e => setPackForm(f => ({ ...f, costoUnit: e.target.value }))}
                         onFocus={selectOnFocus}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addPackaging() } }}
                         placeholder="$ Costo"
                         style={{ padding: '6px 5px', border: '1.5px solid #FBCFE8', borderRadius: 7, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
                       />
@@ -1269,13 +1331,14 @@ export default function Catalogo() {
             </button>
             {showAdvanced && (
               <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px 16px', marginBottom: 4 }}>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>Imagen {productMode === 'kit' ? 'del kit' : 'del producto'} <span style={{ fontWeight: 400, color: 'var(--txt3)' }}>(opcional)</span></label>
+                {/* Imagen del kit */}
+                <div className="fg" style={{ marginBottom: 12 }}>
+                  <label>Imagen del kit <span style={{ fontWeight: 400, color: 'var(--txt3)' }}>(opcional)</span></label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {form.image
                       ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} />
-                      : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: productMode === 'kit' ? '#F5F3FF' : 'transparent' }}>
-                          <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-image'}`} style={{ color: productMode === 'kit' ? '#8B5CF6' : 'var(--txt4)', fontSize: 20, opacity: .5 }} />
+                      : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: '#F5F3FF' }}>
+                          <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 20, opacity: .5 }} />
                         </div>
                     }
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1290,6 +1353,22 @@ export default function Catalogo() {
                       )}
                     </div>
                   </div>
+                </div>
+                {/* SKU + Tiempo de armado */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px', marginBottom: 10 }}>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label><i className="fa fa-barcode" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />SKU / Código interno</label>
+                    <input type="text" value={form.sku || ''} onChange={e => setF('sku', e.target.value)} placeholder="KIT-001, BOX-PAPA..." />
+                  </div>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label><i className="fa fa-clock" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />Tiempo de armado <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(días)</span></label>
+                    <input type="number" min="0" value={form.leadDays || ''} onChange={e => setF('leadDays', e.target.value)} placeholder="1" />
+                  </div>
+                </div>
+                {/* Notas internas */}
+                <div className="fg" style={{ marginBottom: 0 }}>
+                  <label><i className="fa fa-note-sticky" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />Notas internas <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(no visible al cliente)</span></label>
+                  <textarea value={form.internalNotes || ''} onChange={e => setF('internalNotes', e.target.value)} rows={2} placeholder="Instrucciones de armado, proveedores, condiciones especiales..." style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: 12 }} />
                 </div>
               </div>
             )}
@@ -1360,20 +1439,40 @@ export default function Catalogo() {
                     </div>
                   )}
                 </div>
-                {/* Imagen producto */}
-                <button onClick={() => setShowAdvanced(s => !s)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: showAdvanced ? '10px 10px 0 0' : 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: 'var(--txt2)' }}>
-                  <span><i className="fa fa-image" style={{ marginRight: 6, color: 'var(--brand)' }} />Imagen del producto <span style={{ fontWeight: 400, color: 'var(--txt4)' }}>(opcional)</span></span>
+                {/* Configuración avanzada producto */}
+                <button onClick={() => setShowAdvanced(s => !s)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: showAdvanced ? '10px 10px 0 0' : 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: showAdvanced ? 0 : 4 }}>
+                  <span><i className="fa fa-sliders" style={{ marginRight: 6, color: 'var(--brand)' }} />Imagen y configuración avanzada</span>
                   <i className={`fa fa-chevron-${showAdvanced ? 'up' : 'down'}`} style={{ fontSize: 11 }} />
                 </button>
                 {showAdvanced && (
-                  <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {form.image ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} /> : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-image" style={{ color: 'var(--txt4)', fontSize: 20, opacity: .5 }} /></div>}
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <input ref={imgRef} type="file" accept="image/*" onChange={handleImgUpload} style={{ display: 'none' }} />
-                        <button className="btn btn-ghost btn-sm" type="button" onClick={() => imgRef.current?.click()}><i className="fa fa-upload" /> {form.image ? 'Cambiar' : 'Subir imagen'}</button>
-                        {form.image && <button className="btn btn-ghost btn-sm" type="button" style={{ color: 'var(--red)' }} onClick={() => setF('image', '')}><i className="fa fa-trash" /> Quitar</button>}
+                  <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px 16px', marginBottom: 4 }}>
+                    {/* Imagen del producto */}
+                    <div className="fg" style={{ marginBottom: 12 }}>
+                      <label>Imagen del producto <span style={{ fontWeight: 400, color: 'var(--txt3)' }}>(opcional)</span></label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        {form.image ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} /> : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-image" style={{ color: 'var(--txt4)', fontSize: 20, opacity: .5 }} /></div>}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <input ref={imgRef} type="file" accept="image/*" onChange={handleImgUpload} style={{ display: 'none' }} />
+                          <button className="btn btn-ghost btn-sm" type="button" onClick={() => imgRef.current?.click()}><i className="fa fa-upload" /> {form.image ? 'Cambiar' : 'Subir imagen'}</button>
+                          {form.image && <button className="btn btn-ghost btn-sm" type="button" style={{ color: 'var(--red)' }} onClick={() => setF('image', '')}><i className="fa fa-trash" /> Quitar</button>}
+                        </div>
                       </div>
+                    </div>
+                    {/* SKU + Stock mínimo */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px', marginBottom: 10 }}>
+                      <div className="fg" style={{ marginBottom: 0 }}>
+                        <label><i className="fa fa-barcode" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />SKU / Código interno</label>
+                        <input type="text" value={form.sku || ''} onChange={e => setF('sku', e.target.value)} placeholder="PROD-001, TZA-11OZ..." />
+                      </div>
+                      <div className="fg" style={{ marginBottom: 0 }}>
+                        <label><i className="fa fa-triangle-exclamation" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />Alerta stock mínimo <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span></label>
+                        <input type="number" min="0" value={form.minStock || ''} onChange={e => setF('minStock', e.target.value)} placeholder="5" />
+                      </div>
+                    </div>
+                    {/* Notas internas */}
+                    <div className="fg" style={{ marginBottom: 0 }}>
+                      <label><i className="fa fa-note-sticky" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />Notas internas <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(no visible al cliente)</span></label>
+                      <textarea value={form.internalNotes || ''} onChange={e => setF('internalNotes', e.target.value)} rows={2} placeholder="Proveedor preferido, condiciones especiales, variantes disponibles..." style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: 12 }} />
                     </div>
                   </div>
                 )}
