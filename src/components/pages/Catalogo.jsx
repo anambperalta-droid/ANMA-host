@@ -101,6 +101,11 @@ export default function Catalogo() {
   const [hasDraft, setHasDraft] = useState(null)
   const DRAFT_KEY = 'anma_prod_draft'
 
+  // ── Quick-cat popover ─────────────────────────────────────────────
+  const [quickCatPop, setQuickCatPop]   = useState(null) // { prod, x, y }
+  const [quickCatInput, setQuickCatInput] = useState('')
+  const [groupByType, setGroupByType]   = useState(false)
+
   // ── Estado del Kit Builder ────────────────────────────────────────
   const [componentes, setComponentes]   = useState([])
   const [compForm, setCompForm]         = useState({ nombre: '', qty: 1, costoUnit: '' })
@@ -136,6 +141,21 @@ export default function Catalogo() {
     if (search) { const sq = search.toLowerCase(); f = f.filter(p => (p.name || '').toLowerCase().includes(sq) || (p.sku || '').toLowerCase().includes(sq)) }
     return f
   }, [products, catFilter, search])
+
+  // ── Inteligencia de categorías: frecuencia de uso ─────────────────
+  const catFrequency = useMemo(() => {
+    const freq = {}
+    products.forEach(p => { if (p.cat) freq[p.cat] = (freq[p.cat] || 0) + 1 })
+    return freq
+  }, [products])
+
+  const catsSorted = useMemo(() =>
+    [...cats].sort((a, b) => (catFrequency[b] || 0) - (catFrequency[a] || 0))
+  , [cats, catFrequency])
+
+  // ── Agrupación por tipo ────────────────────────────────────────────
+  const prodsFiltered = useMemo(() => filtered.filter(p => p.tipo !== 'kit'), [filtered])
+  const kitsFiltered  = useMemo(() => filtered.filter(p => p.tipo === 'kit'),  [filtered])
 
   const isAllSelected = filtered.length > 0 && filtered.every(p => selectedIds.has(p.id))
 
@@ -364,6 +384,21 @@ export default function Catalogo() {
     setSelectedIds(new Set()); setBulkSupplierModal(false); setBulkSupplierValue('')
   }
 
+  // ── Quick-cat helpers ────────────────────────────────────────────
+  const quickChangeCat = (prod, newCat) => {
+    saveEntity('products', { ...prod, cat: newCat, updatedAt: new Date().toISOString().slice(0,10) })
+    setQuickCatPop(null)
+    toast('Categoría actualizada', 'ok')
+  }
+  const quickAddNewCat = () => {
+    const name = quickCatInput.trim()
+    if (!name) return
+    if (cats.includes(name)) { toast('Esa categoría ya existe', 'er'); return }
+    updateConfig({ productCats: [...cats, name] })
+    setQuickCatInput('')
+    toast(`Categoría "${name}" creada`, 'ok')
+  }
+
   const doRenameCat = (original, newName) => {
     if (!newName || newName === original) { setEditingCat(null); return }
     updateConfig({ productCats: cats.map(c => c === original ? newName : c) })
@@ -447,6 +482,119 @@ export default function Catalogo() {
     if (csvRef.current) csvRef.current.value = ''
   }
 
+  // ── Helper: tarjeta de grilla reutilizable ────────────────────────
+  const renderGridCard = (p) => {
+    const pct = marginPct(p)
+    const cc  = catColor(p.cat)
+    const isKit = p.tipo === 'kit'
+    return (
+      <div key={p.id} className="prod-card" onClick={() => open(p)}>
+        <div className="prod-card-img" style={{ background: isKit ? '#F5F3FF' : cc.bg }}>
+          {p.image
+            ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ fontSize: 38, color: isKit ? '#8B5CF6' : cc.color, opacity: .5 }} />
+          }
+          <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
+            style={{ position: 'absolute', top: 8, left: 8, width: 16, height: 16, cursor: 'pointer' }}
+            onClick={e => e.stopPropagation()} />
+          {isKit && <div style={{ position: 'absolute', top: 8, right: 8 }}><KitBadge /></div>}
+        </div>
+        <div className="prod-card-body">
+          <div className="prod-card-name" title={p.name}>{p.name}</div>
+          <span className="prod-card-cat qcat-badge" style={{ background: isKit ? '#F5F3FF' : cc.bg, color: isKit ? '#8B5CF6' : cc.color }}
+            onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setQuickCatPop({ prod: p, x: r.left, y: r.bottom + 4 }); setQuickCatInput('') }}>
+            {p.cat || '—'} <i className="fa fa-pen" />
+          </span>
+          {isKit && p.componentes?.length > 0 && (
+            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 2 }}>
+              <i className="fa fa-layer-group" style={{ marginRight: 3 }} />
+              {p.componentes.length} componente{p.componentes.length !== 1 ? 's' : ''}
+            </div>
+          )}
+          <div className="prod-card-price">{fmt(suggestedPrice(p.cost))}</div>
+          {!opHideCosts && <div className="prod-card-cost">Costo: {fmt(p.cost)}</div>}
+          {pct !== null && <div className="prod-card-margin" style={{ color: marginColor(pct) }}>{pct}% margen</div>}
+          {p.stock != null && (
+            <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
+              <i className="fa fa-cubes-stacked" style={{ fontSize: 8 }} />
+              {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
+            </div>
+          )}
+        </div>
+        <div className="prod-card-foot">
+          <button className="prod-card-foot-btn" onClick={e => { e.stopPropagation(); open(p) }}>
+            <i className="fa fa-pen" /> Editar
+          </button>
+          <div className="prod-card-foot-sep" />
+          <button className="prod-card-foot-btn prod-card-foot-del" onClick={e => { e.stopPropagation(); del(p.id) }}>
+            <i className="fa fa-trash" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Helper: fila de tabla reutilizable (tabla lista + grupos) ─────
+  const renderTableRow = (p) => {
+    const pct = marginPct(p)
+    const cc  = catColor(p.cat)
+    const isKit = p.tipo === 'kit'
+    return (
+      <tr key={p.id}>
+        <td style={{ textAlign: 'center' }}>
+          <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} style={{ cursor: 'pointer' }} />
+        </td>
+        <td>
+          {p.image && <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
+          {!p.image && isKit && <i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 8, fontSize: 16, verticalAlign: 'middle' }} />}
+          <span style={{ fontWeight: 800 }}>{p.name}</span>
+          {isKit && <span style={{ marginLeft: 6, verticalAlign: 'middle' }}><KitBadge small /></span>}
+        </td>
+        <td className="col-hide-mobile">
+          <span className="qcat-badge" style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: cc.bg, color: cc.color, letterSpacing: 0.2 }}
+            onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setQuickCatPop({ prod: p, x: r.left, y: r.bottom + 4 }); setQuickCatInput('') }}>
+            {p.cat || '—'} <i className="fa fa-pen" />
+          </span>
+        </td>
+        <td className="col-hide-mobile">{supplierName(p.supplierId)}</td>
+        {!opHideCosts && <td>
+          <span>{fmt(p.cost)}</span>
+          {isKit && p.componentes?.length > 0 && (
+            <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 4 }}>({p.componentes.length} comp.)</span>
+          )}
+        </td>}
+        {!opHideCosts && <td className="col-hide-mobile">
+          {pct !== null ? (
+            <span style={{ fontWeight: 800, fontSize: 13, color: marginColor(pct) }}>{pct}%</span>
+          ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+        </td>}
+        {showCostInfo && (
+          <td className="col-hide-mobile" style={{ fontSize: 11 }}>
+            {p.updatedAt ? (
+              <span style={{ color: (() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A' })(), fontWeight: 600 }}>
+                {(() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); if (days === 0) return 'Hoy'; if (days === 1) return 'Ayer'; if (days < 30) return `hace ${days}d`; if (days < 365) return `hace ${Math.floor(days/30)}m`; return `hace ${Math.floor(days/365)}a` })()}
+              </span>
+            ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+          </td>
+        )}
+        <td className="col-hide-mobile">
+          {p.stock != null
+            ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
+                <i className="fa fa-cubes-stacked" style={{ fontSize: 9 }} />
+                {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
+              </span>
+            : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>
+          }
+        </td>
+        <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
+        <td><div className="acts" style={{ display:'flex',gap:5 }}>
+          <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
+          <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-trash" /></button>
+        </div></td>
+      </tr>
+    )
+  }
+
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <div className="ph cat-ph" style={{ marginBottom: 6 }}>
@@ -496,6 +644,15 @@ export default function Catalogo() {
         .comp-row input:focus{border-color:var(--brand)}
         .comp-add-row{display:grid;grid-template-columns:1fr 64px 88px auto;gap:6px;align-items:end;margin-top:8px}
         @media(max-width:520px){.comp-add-row{grid-template-columns:1fr 52px 72px auto}.comp-row{grid-template-columns:1fr 48px 72px 28px}}
+        .qcat-badge{cursor:pointer;transition:filter .12s,transform .12s;display:inline-flex;align-items:center;gap:4px}
+        .qcat-badge:hover{filter:brightness(.92);transform:scale(.97)}
+        .qcat-badge i{font-size:8px;opacity:.6}
+        .qcat-pop{position:fixed;z-index:700;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:200px;max-width:240px;overflow:hidden;animation:pgIn .15s ease both}
+        .qcat-pop-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .1s;gap:6px}
+        .qcat-pop-item:hover{background:var(--surface2)}
+        .qcat-pop-item.active{background:var(--brand-xlt);color:var(--brand)}
+        .grp-section-hd{display:flex;align-items:center;gap:8px;padding:6px 2px 4px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--txt3);margin-top:4px}
+        .grp-section-hd:first-child{margin-top:0}
       `}</style>
 
       <div className="pill-row cat-pill-row">
@@ -520,6 +677,14 @@ export default function Catalogo() {
           </div>
           <button className="cat-gestionar" onClick={() => setCatMgmtModal(true)} title="Gestionar categorías">
             <i className="fa fa-sliders" /> Gestionar
+          </button>
+          {/* Agrupar toggle */}
+          <button
+            onClick={() => setGroupByType(v => !v)}
+            title={groupByType ? 'Ver todos mezclados' : 'Separar Productos y Kits'}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 34, padding: '0 12px', borderRadius: 20, border: `1.5px solid ${groupByType ? 'var(--brand)' : 'var(--border)'}`, background: groupByType ? 'var(--brand-xlt)' : 'var(--surface)', color: groupByType ? 'var(--brand)' : 'var(--txt3)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', whiteSpace: 'nowrap' }}>
+            <i className={`fa fa-${groupByType ? 'layer-group' : 'bars'}`} style={{ fontSize: 10 }} />
+            {groupByType ? 'Agrupado' : 'Agrupar'}
           </button>
         </div>
       </div>
@@ -551,7 +716,10 @@ export default function Catalogo() {
                     {isKit && <KitBadge small />}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-                    {p.cat && <span className="cat-mob-item-cat">{p.cat}</span>}
+                    {p.cat && <span className="cat-mob-item-cat qcat-badge"
+                      onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setQuickCatPop({ prod: p, x: Math.min(r.left, window.innerWidth - 250), y: r.bottom + 4 }); setQuickCatInput('') }}>
+                      {p.cat} <i className="fa fa-pen" />
+                    </span>}
                     {p.stock != null && (
                       <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
                         <i className="fa fa-cubes-stacked" style={{ marginRight: 3, fontSize: 8 }} />
@@ -612,62 +780,18 @@ export default function Catalogo() {
             <tbody>
               {loading ? [1,2,3,4].map(i => (
                 <tr key={i}><td colSpan={showCostInfo ? 10 : 9}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
-              )) : filtered.length ? filtered.map(p => {
-                const pct = marginPct(p)
-                const cc = catColor(p.cat)
-                const isKit = p.tipo === 'kit'
-                return (
-                  <tr key={p.id}>
-                    <td style={{ textAlign: 'center' }}>
-                      <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} style={{ cursor: 'pointer' }} />
-                    </td>
-                    <td>
-                      {p.image && <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
-                      {!p.image && isKit && <i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 8, fontSize: 16, verticalAlign: 'middle' }} />}
-                      <span style={{ fontWeight: 800 }}>{p.name}</span>
-                      {isKit && <span style={{ marginLeft: 6, verticalAlign: 'middle' }}><KitBadge small /></span>}
-                    </td>
-                    <td className="col-hide-mobile">
-                      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: cc.bg, color: cc.color, letterSpacing: 0.2 }}>{p.cat}</span>
-                    </td>
-                    <td className="col-hide-mobile">{supplierName(p.supplierId)}</td>
-                    {!opHideCosts && <td>
-                      <span>{fmt(p.cost)}</span>
-                      {isKit && p.componentes?.length > 0 && (
-                        <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 4 }}>({p.componentes.length} comp.)</span>
-                      )}
-                    </td>}
-                    {!opHideCosts && <td className="col-hide-mobile">
-                      {pct !== null ? (
-                        <span style={{ fontWeight: 800, fontSize: 13, color: marginColor(pct) }}>{pct}%</span>
-                      ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-                    </td>}
-                    {showCostInfo && (
-                      <td className="col-hide-mobile" style={{ fontSize: 11 }}>
-                        {p.updatedAt ? (
-                          <span style={{ color: (() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A' })(), fontWeight: 600 }}>
-                            {(() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); if (days === 0) return 'Hoy'; if (days === 1) return 'Ayer'; if (days < 30) return `hace ${days}d`; if (days < 365) return `hace ${Math.floor(days/30)}m`; return `hace ${Math.floor(days/365)}a` })()}
-                          </span>
-                        ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-                      </td>
-                    )}
-                    <td className="col-hide-mobile">
-                      {p.stock != null
-                        ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
-                            <i className="fa fa-cubes-stacked" style={{ fontSize: 9 }} />
-                            {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
-                          </span>
-                        : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>
-                      }
-                    </td>
-                    <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
-                    <td><div className="acts" style={{ display:'flex',gap:5 }}>
-                      <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
-                      <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-trash" /></button>
-                    </div></td>
-                  </tr>
-                )
-              }) : <tr><td colSpan={showCostInfo ? 10 : 9}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+              )) : filtered.length ? (groupByType
+                ? [
+                    ...(prodsFiltered.length > 0 ? [
+                      <tr key="__hd_prod"><td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 8, paddingBottom: 2 }}><div className="grp-section-hd" style={{ marginTop: 0 }}><i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />Productos ({prodsFiltered.length})</div></td></tr>,
+                      ...prodsFiltered.map(p => renderTableRow(p))
+                    ] : []),
+                    ...(kitsFiltered.length > 0 ? [
+                      <tr key="__hd_kit"><td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 8, paddingBottom: 2 }}><div className="grp-section-hd"><i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />Kits & Boxes ({kitsFiltered.length})</div></td></tr>,
+                      ...kitsFiltered.map(p => renderTableRow(p))
+                    ] : []),
+                  ]
+                : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={showCostInfo ? 10 : 9}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
             </tbody>
           </table>
         </div>
@@ -684,62 +808,20 @@ export default function Catalogo() {
                 <div className="sk-line" style={{ width: '45%', marginTop: 8 }} />
               </div>
             </div>
-          )) : filtered.length ? filtered.map(p => {
-            const pct = marginPct(p)
-            const cc = catColor(p.cat)
-            const isKit = p.tipo === 'kit'
-            return (
-              <div key={p.id} className="prod-card" onClick={() => open(p)}>
-                {/* IMAGE */}
-                <div className="prod-card-img" style={{ background: isKit ? '#F5F3FF' : cc.bg }}>
-                  {p.image
-                    ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ fontSize: 38, color: isKit ? '#8B5CF6' : cc.color, opacity: .5 }} />
-                  }
-                  <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
-                    style={{ position: 'absolute', top: 8, left: 8, width: 16, height: 16, cursor: 'pointer' }}
-                    onClick={e => e.stopPropagation()} />
-                  {isKit && (
-                    <div style={{ position: 'absolute', top: 8, right: 8 }}>
-                      <KitBadge />
-                    </div>
-                  )}
-                </div>
-                {/* BODY */}
-                <div className="prod-card-body">
-                  <div className="prod-card-name" title={p.name}>{p.name}</div>
-                  <span className="prod-card-cat" style={{ background: isKit ? '#F5F3FF' : cc.bg, color: isKit ? '#8B5CF6' : cc.color }}>{p.cat || '—'}</span>
-                  {isKit && p.componentes?.length > 0 && (
-                    <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 2 }}>
-                      <i className="fa fa-layer-group" style={{ marginRight: 3 }} />
-                      {p.componentes.length} componente{p.componentes.length !== 1 ? 's' : ''}
-                    </div>
-                  )}
-                  <div className="prod-card-price">{fmt(suggestedPrice(p.cost))}</div>
-                  {!opHideCosts && <div className="prod-card-cost">Costo: {fmt(p.cost)}</div>}
-                  {pct !== null && (
-                    <div className="prod-card-margin" style={{ color: marginColor(pct) }}>{pct}% margen</div>
-                  )}
-                  {p.stock != null && (
-                    <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
-                      <i className="fa fa-cubes-stacked" style={{ fontSize: 8 }} />
-                      {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
-                    </div>
-                  )}
-                </div>
-                {/* FOOTER */}
-                <div className="prod-card-foot">
-                  <button className="prod-card-foot-btn" onClick={e => { e.stopPropagation(); open(p) }}>
-                    <i className="fa fa-pen" /> Editar
-                  </button>
-                  <div className="prod-card-foot-sep" />
-                  <button className="prod-card-foot-btn prod-card-foot-del" onClick={e => { e.stopPropagation(); del(p.id) }}>
-                    <i className="fa fa-trash" />
-                  </button>
-                </div>
-              </div>
-            )
-          }) : (
+          )) : filtered.length ? (groupByType ? [
+            ...(prodsFiltered.length > 0 ? [
+              <div key="__ghd_prod" style={{ gridColumn: '1/-1' }}>
+                <div className="grp-section-hd"><i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />Productos ({prodsFiltered.length})</div>
+              </div>,
+              ...prodsFiltered.map(p => renderGridCard(p))
+            ] : []),
+            ...(kitsFiltered.length > 0 ? [
+              <div key="__ghd_kit" style={{ gridColumn: '1/-1' }}>
+                <div className="grp-section-hd"><i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />Kits & Boxes ({kitsFiltered.length})</div>
+              </div>,
+              ...kitsFiltered.map(p => renderGridCard(p))
+            ] : []),
+          ] : filtered.map(p => renderGridCard(p))) : (
             <div style={{ gridColumn: '1/-1' }}>
               <div className="empty-native">
                 <div className="ico"><i className="fa fa-box-open" /></div>
@@ -1727,6 +1809,77 @@ export default function Catalogo() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── QUICK-CAT POPOVER ── */}
+      {quickCatPop && (
+        <>
+          {/* Backdrop invisible que cierra el pop al hacer click fuera */}
+          <div style={{ position: 'fixed', inset: 0, zIndex: 699 }} onMouseDown={() => setQuickCatPop(null)} />
+          <div className="qcat-pop" style={{
+            top:  Math.min(quickCatPop.y, window.innerHeight - 320),
+            left: Math.min(quickCatPop.x, window.innerWidth  - 256),
+          }}>
+            {/* Header: nombre del producto */}
+            <div style={{ padding: '10px 14px 7px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--txt)', maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <i className="fa fa-tag" style={{ color: 'var(--brand)', fontSize: 10, flexShrink: 0 }} />
+                {quickCatPop.prod.name}
+              </div>
+              <button onMouseDown={() => setQuickCatPop(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--txt3)', fontSize: 13, padding: '2px 3px', lineHeight: 1, flexShrink: 0 }}>
+                <i className="fa fa-xmark" />
+              </button>
+            </div>
+            {/* Lista de categorías ordenadas por frecuencia */}
+            <div style={{ maxHeight: 210, overflowY: 'auto' }}>
+              {/* Opción: Sin categoría */}
+              <div
+                className={`qcat-pop-item${!quickCatPop.prod.cat ? ' active' : ''}`}
+                onMouseDown={() => quickChangeCat(quickCatPop.prod, '')}
+              >
+                <span style={{ color: 'var(--txt3)', fontStyle: 'italic', fontSize: 11 }}>Sin categoría</span>
+                {!quickCatPop.prod.cat && <i className="fa fa-check" style={{ fontSize: 10, color: 'var(--brand)', flexShrink: 0 }} />}
+              </div>
+              {catsSorted.map(cat => {
+                const cc     = catColor(cat)
+                const freq   = catFrequency[cat] || 0
+                const active = quickCatPop.prod.cat === cat
+                return (
+                  <div
+                    key={cat}
+                    className={`qcat-pop-item${active ? ' active' : ''}`}
+                    onMouseDown={() => quickChangeCat(quickCatPop.prod, cat)}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: cc.bg, color: cc.color, whiteSpace: 'nowrap', maxWidth: 145, overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat}</span>
+                      {freq > 0 && <span style={{ fontSize: 10, color: 'var(--txt4)', flexShrink: 0 }}>{freq}</span>}
+                    </span>
+                    {active && <i className="fa fa-check" style={{ fontSize: 10, color: 'var(--brand)', flexShrink: 0 }} />}
+                  </div>
+                )
+              })}
+            </div>
+            {/* Input para agregar nueva categoría */}
+            <div style={{ borderTop: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: 6, alignItems: 'center' }}>
+              <input
+                type="text"
+                value={quickCatInput}
+                onChange={e => setQuickCatInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); quickAddNewCat() } }}
+                placeholder="Nueva categoría..."
+                style={{ flex: 1, padding: '5px 9px', border: '1.5px solid var(--border)', borderRadius: 7, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)', background: 'var(--surface)', outline: 'none', minWidth: 0 }}
+                onFocus={e => e.target.style.borderColor = 'var(--brand)'}
+                onBlur={e  => e.target.style.borderColor = 'var(--border)'}
+              />
+              <button
+                onMouseDown={e => { e.preventDefault(); quickAddNewCat() }}
+                disabled={!quickCatInput.trim()}
+                style={{ height: 30, width: 30, borderRadius: 7, border: 'none', background: quickCatInput.trim() ? 'var(--brand)' : 'var(--surface3)', color: quickCatInput.trim() ? '#fff' : 'var(--txt4)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .15s' }}>
+                <i className="fa fa-plus" />
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {catMgmtModal && (
