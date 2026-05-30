@@ -941,7 +941,7 @@ export default function Logistica() {
       {/* ── MODAL ──────────────────────────────────────────────────── */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal-form-card" style={{ maxWidth: 600, maxHeight: 'calc(100dvh - 48px)' }}
+          <div className="modal-form-card" style={{ maxWidth: 600, maxHeight: 'calc(100svh - 48px)' }}
                onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && (form.remito || form.client)) saveShip() }}>
             <div className="mh" style={{ padding: '18px 22px 12px', borderBottom: '1px solid var(--border)', margin: 0, flexShrink: 0 }}>
               <h3>{form.id ? 'Editar envío' : 'Registrar envío'}</h3>

@@ -15,7 +15,7 @@ export function getMPConfig() {
 export function getBankConfig() {
   const c = cfg()
   return {
-    enabled: c.bankEnabled === true,
+    enabled: c.bankEnabled === true || !!(c.bankAlias || c.bankCbu),
     holder: c.bankHolder || '',
     bankName: c.bankName || '',
     accountType: c.bankAccountType || 'Cuenta corriente',
