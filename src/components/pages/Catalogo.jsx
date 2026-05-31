@@ -695,7 +695,7 @@ export default function Catalogo() {
           <button
             onClick={() => setGroupByType(v => !v)}
             title={groupByType ? 'Ver todos mezclados' : 'Separar Productos y Kits'}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 34, padding: '0 12px', borderRadius: 20, border: `1.5px solid ${groupByType ? 'var(--brand)' : 'var(--border)'}`, background: groupByType ? 'var(--brand-xlt)' : 'var(--surface)', color: groupByType ? 'var(--brand)' : 'var(--txt3)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', whiteSpace: 'nowrap' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 40, padding: '0 13px', borderRadius: 10, border: `1.5px solid ${groupByType ? 'var(--brand)' : 'var(--border)'}`, background: groupByType ? 'var(--brand-xlt)' : 'var(--surface)', color: groupByType ? 'var(--brand)' : 'var(--txt3)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}>
             <i className={`fa fa-${groupByType ? 'layer-group' : 'bars'}`} style={{ fontSize: 10 }} />
             {groupByType ? 'Agrupado' : 'Agrupar'}
           </button>
