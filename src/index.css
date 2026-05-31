@@ -160,7 +160,7 @@ input,select,textarea{font-family:inherit}
 .sb-ava{width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
 
 /* ─── MAIN AREA ─── */
-.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;height:100vh;height:100svh;max-width:calc(100vw - var(--sw));overflow:hidden;transition:margin-left .3s ease,max-width .3s ease}
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;height:100vh;max-width:calc(100vw - var(--sw));overflow:clip;transition:margin-left .3s ease,max-width .3s ease}
 .topbar{height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:12px;position:sticky;top:0;z-index:50;flex-shrink:0}
 .tb-page-title{display:block;font-size:17px;font-weight:800;color:var(--txt);letter-spacing:-.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-search{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;width:200px;cursor:pointer;transition:border-color var(--tr)}

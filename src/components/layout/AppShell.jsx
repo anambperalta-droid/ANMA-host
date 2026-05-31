@@ -278,7 +278,7 @@ function AppShellInner() {
   const goSheet = (path) => { setMoreSheet(false); nav(path) }
 
   return (
-    <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'clip' }}>
       <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} collapsed={collapsed} />
       {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
       <div className={`main${collapsed ? ' slim' : ''}`}>
