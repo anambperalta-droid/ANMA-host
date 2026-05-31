@@ -85,9 +85,14 @@ export default function Logistica() {
   const viaMsg = companyName
     ? `¡Hola! El costo de envío para tu pedido de ${companyName} es de $_______ a través de Vía Cargo. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
     : `¡Hola! El costo de envío para tu pedido es de $_______ a través de Vía Cargo. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
+  const andreaniMsg = companyName
+    ? `¡Hola! El costo de envío para tu pedido de ${companyName} es de $_______ a través de Andreani. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
+    : `¡Hola! El costo de envío para tu pedido es de $_______ a través de Andreani. Recordá que el flete se abona al recibir / en origen. ¡Cualquier duda me avisás!`
   const toast   = useToast()
   const confirm = useConfirm()
-  const [tab, setTab] = useState('envios')
+
+  // ── Pestañas: Control de Viajes | Cotizador | Resumen ──
+  const [tab, setTab] = useState('viajes')
   const [sFilter, setSFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
@@ -98,12 +103,63 @@ export default function Logistica() {
   const [hoveredStatus, setHoveredStatus] = useState(null)
   const [cotizSearch, setCotizSearch] = useState('')
   const [cotizClient, setCotizClient] = useState(null)
+  const [carrier, setCarrier] = useState('viacargo') // 'viacargo' | 'andreani'
   const [despachoDir, setDespachoDir] = useState(() => db('despDir', ''))
   const [despachoCUIT, setDespachoCUIT] = useState(() => db('despCuit', ''))
+
+  // ── Control de Viajes: estado persistido ──
+  const [viajes, setViajes] = useState(() => db('viajes', []))
+  const [activeViajeId, setActiveViajeId] = useState(() => {
+    const list = db('viajes', [])
+    return list.length ? list[list.length - 1].id : null
+  })
+
   const dismissLateAlert = () => {
     try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
     setLateAlertDismissed(true)
   }
+
+  // ── Helpers de Viaje ──
+  const _saveViaje = (v) => {
+    const list = [...viajes.filter(x => x.id !== v.id), v]
+    dbW('viajes', list); setViajes(list)
+  }
+  const createViaje = () => {
+    const v = {
+      id: Date.now(),
+      date: new Date().toISOString().slice(0, 10),
+      time: new Date().toTimeString().slice(0, 5),
+      cost: '', status: 'Planificado', tasks: []
+    }
+    _saveViaje(v); setActiveViajeId(v.id)
+  }
+  const patchViaje = (id, patch) => {
+    const v = viajes.find(x => x.id === id)
+    if (v) _saveViaje({ ...v, ...patch })
+  }
+  const delViaje = (id) => confirm('¿Eliminar este viaje?', () => {
+    const list = viajes.filter(x => x.id !== id)
+    dbW('viajes', list); setViajes(list)
+    if (activeViajeId === id) setActiveViajeId(list.length ? list[list.length - 1].id : null)
+  })
+  const addTask = (viajeId) => {
+    const v = viajes.find(x => x.id === viajeId)
+    if (!v) return
+    _saveViaje({ ...v, tasks: [...(v.tasks||[]), { id: Date.now(), category: 'Insumos', detail: '', done: false }] })
+  }
+  const patchTask = (viajeId, taskId, patch) => {
+    const v = viajes.find(x => x.id === viajeId)
+    if (!v) return
+    _saveViaje({ ...v, tasks: (v.tasks||[]).map(t => t.id === taskId ? { ...t, ...patch } : t) })
+  }
+  const removeTask = (viajeId, taskId) => {
+    const v = viajes.find(x => x.id === viajeId)
+    if (!v) return
+    _saveViaje({ ...v, tasks: (v.tasks||[]).filter(t => t.id !== taskId) })
+  }
+
+  // Mensaje según carrier seleccionado
+  const cotizMsg = carrier === 'andreani' ? andreaniMsg : viaMsg
 
   const shipments = get('shipments')
   const budgets = get('budgets')
@@ -356,6 +412,13 @@ export default function Logistica() {
         .logi-act-circ.del{background:#FEF2F2;color:#DC2626}
         /* Status quick-select */
         .logi-status-sel{border-radius:20px;padding:3px 22px 3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;background-repeat:no-repeat;background-position:right 7px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%236B7280' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E")}
+        /* ── CONTROL DE VIAJES: grilla de campos en mobile → 1 col ── */
+        @media(max-width:640px){
+          .viaje-header-grid{grid-template-columns:1fr 1fr!important}
+        }
+        @media(max-width:400px){
+          .viaje-header-grid{grid-template-columns:1fr!important}
+        }
         /* ── COTIZAR TAB ── */
         .cotiz-layout{display:grid;grid-template-columns:1fr;gap:12px;grid-template-areas:"cliente" "tools" "despacho"}
         .cotiz-area-cliente{grid-area:cliente}
@@ -378,9 +441,13 @@ export default function Logistica() {
       <div className="ph logi-ph" style={{ alignItems: 'center' }}>
         <div className="ph-right" style={{ gap: 6 }}>
           <div className="logi-cli-pill-group">
-            {['envios', 'cotizar', 'resumen'].map(t => (
-              <button key={t} className={`logi-cli-pill${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
-                {t === 'envios' ? 'Envíos' : t === 'cotizar' ? 'Cotizar' : 'Resumen'}
+            {[
+              { key: 'viajes',  label: 'Control de Viajes' },
+              { key: 'cotizar', label: 'Cotizador de Envíos' },
+              { key: 'resumen', label: 'Resumen' },
+            ].map(({ key, label }) => (
+              <button key={key} className={`logi-cli-pill${tab === key ? ' active' : ''}`} onClick={() => setTab(key)}>
+                {label}
               </button>
             ))}
           </div>
@@ -390,11 +457,15 @@ export default function Logistica() {
         </div>
       </div>
 
-      {/* Tab bar — solo mobile: scrollable con "+ Envío" al final */}
+      {/* Tab bar — solo mobile */}
       <div className="tab-bar logi-tab-bar-scroll logi-mob-tabs" style={{ gap: 0 }}>
-        {['envios', 'cotizar', 'resumen'].map(t => (
-          <div key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-            {t === 'envios' ? 'Envíos' : t === 'cotizar' ? 'Cotizar' : 'Resumen'}
+        {[
+          { key: 'viajes',  label: 'Control de Viajes' },
+          { key: 'cotizar', label: 'Cotizador' },
+          { key: 'resumen', label: 'Resumen' },
+        ].map(({ key, label }) => (
+          <div key={key} className={`tab-btn ${tab === key ? 'active' : ''}`} onClick={() => setTab(key)}>
+            {label}
           </div>
         ))}
         <button className="logi-tab-add" onClick={() => openShip()}>
@@ -402,7 +473,193 @@ export default function Logistica() {
         </button>
       </div>
 
-      {/* ── TAB ENVÍOS ─────────────────────────────────────────────── */}
+      {/* ── TAB CONTROL DE VIAJES ──────────────────────────────────── */}
+      {tab === 'viajes' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+
+          {/* ── Barra superior ── */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px' }}>
+                Registro de recorridos
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>
+                Un viaje · Múltiples tareas
+              </div>
+            </div>
+            <button className="btn btn-primary btn-sm" onClick={createViaje} style={{ gap: 5 }}>
+              <i className="fa fa-plus" style={{ fontSize: 11 }} /> Nuevo viaje
+            </button>
+          </div>
+
+          {/* ── Empty state ── */}
+          {viajes.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '56px 20px', borderRadius: 20, border: '1.5px dashed var(--border)', background: 'var(--surface2)' }}>
+              <div style={{ fontSize: 44, marginBottom: 12 }}>🚗</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', marginBottom: 6 }}>Sin viajes registrados</div>
+              <div style={{ fontSize: 13, color: 'var(--txt3)', marginBottom: 20, lineHeight: 1.6, maxWidth: 300, margin: '0 auto 20px' }}>
+                Registrá el viaje del día para organizar el recorrido del comisionista
+              </div>
+              <button className="btn btn-primary" onClick={createViaje}>
+                <i className="fa fa-route" /> Registrar primer viaje
+              </button>
+            </div>
+          )}
+
+          {/* ── Lista de viajes (más reciente primero) ── */}
+          {viajes.slice().reverse().map(viaje => {
+            const isOpen = viaje.id === activeViajeId
+            const tasks = viaje.tasks || []
+            const doneTasks = tasks.filter(t => t.done).length
+            const stateColor = { Planificado: '#D97706', 'En Curso': '#2563EB', Finalizado: '#059669' }[viaje.status] || 'var(--txt3)'
+            const stateBg = { Planificado: '#FFFBEB', 'En Curso': '#EFF6FF', Finalizado: '#DCFCE7' }[viaje.status] || 'var(--surface2)'
+
+            return (
+              <div key={viaje.id} style={{ background: 'var(--surface)', border: `1.5px solid ${isOpen ? 'var(--brand)' : 'var(--border)'}`, borderRadius: 20, marginBottom: 10, overflow: 'hidden', transition: 'border-color .15s', boxShadow: isOpen ? '0 4px 20px rgba(124,58,237,.1)' : 'var(--sh)' }}>
+
+                {/* ── Cabecera del viaje (siempre visible) ── */}
+                <div
+                  onClick={() => setActiveViajeId(isOpen ? null : viaje.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', cursor: 'pointer', background: isOpen ? 'var(--brand-xlt)' : 'transparent', transition: 'background .12s', userSelect: 'none' }}>
+                  {/* Icono estado */}
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: stateBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className={`fa ${ viaje.status === 'Finalizado' ? 'fa-check' : viaje.status === 'En Curso' ? 'fa-truck-fast' : 'fa-clock' }`} style={{ color: stateColor, fontSize: 14 }} />
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', lineHeight: 1.2 }}>
+                      {new Date(viaje.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      {viaje.time && <span style={{ fontWeight: 500, color: 'var(--txt3)', marginLeft: 6, fontSize: 12 }}>· Salida {viaje.time}</span>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: stateBg, color: stateColor }}>{viaje.status}</span>
+                      {tasks.length > 0 && (
+                        <span style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 600 }}>
+                          <i className="fa fa-check" style={{ marginRight: 3, color: '#059669' }} />{doneTasks}/{tasks.length} tareas
+                        </span>
+                      )}
+                      {viaje.cost && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt2)' }}>
+                          <i className="fa fa-dollar-sign" style={{ marginRight: 3, color: 'var(--txt3)', fontSize: 9 }} />{Number(viaje.cost).toLocaleString('es-AR')} viático
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 11, color: isOpen ? 'var(--brand)' : 'var(--txt4)', flexShrink: 0 }} />
+                </div>
+
+                {/* ── Contenido expandido ── */}
+                {isOpen && (
+                  <div style={{ borderTop: '1px solid var(--border)', padding: '16px 18px' }}>
+
+                    {/* Campos del header del viaje */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 18 }}>
+                      <div className="fg" style={{ marginBottom: 0 }}>
+                        <label>Fecha de salida</label>
+                        <input type="date" value={viaje.date}
+                          onChange={e => patchViaje(viaje.id, { date: e.target.value })} />
+                      </div>
+                      <div className="fg" style={{ marginBottom: 0 }}>
+                        <label>Hora de salida</label>
+                        <input type="time" value={viaje.time || ''}
+                          onChange={e => patchViaje(viaje.id, { time: e.target.value })} />
+                      </div>
+                      <div className="fg" style={{ marginBottom: 0 }}>
+                        <label>Viático / Costo Total ($)</label>
+                        <input type="number" value={viaje.cost}
+                          onChange={e => patchViaje(viaje.id, { cost: e.target.value })}
+                          placeholder="0" min="0" />
+                      </div>
+                      <div className="fg" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                        <label>Estado general</label>
+                        <select value={viaje.status}
+                          onChange={e => patchViaje(viaje.id, { status: e.target.value })}
+                          style={{ borderRadius: 10, fontWeight: 700, color: stateColor, borderColor: stateColor, background: stateBg }}>
+                          {['Planificado', 'En Curso', 'Finalizado'].map(s => <option key={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Bloque de tareas/paradas */}
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <i className="fa fa-map-pin" style={{ color: 'var(--brand)', fontSize: 10 }} />
+                        Recorrido — Paradas y Tareas
+                        {tasks.length > 0 && <span style={{ fontWeight: 600, color: '#059669', marginLeft: 4 }}>{doneTasks}/{tasks.length}</span>}
+                      </div>
+
+                      {tasks.length === 0 && (
+                        <div style={{ fontSize: 12, color: 'var(--txt4)', fontStyle: 'italic', padding: '8px 0 4px' }}>
+                          Sin paradas registradas. Añadí la primera tarea del recorrido.
+                        </div>
+                      )}
+
+                      {tasks.map((task, idx) => (
+                        <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 10px', borderRadius: 12, background: task.done ? 'rgba(5,150,105,.04)' : 'var(--surface2)', border: `1px solid ${task.done ? 'rgba(5,150,105,.2)' : 'var(--border)'}`, transition: 'all .12s' }}>
+                          {/* Número de parada */}
+                          <div style={{ width: 22, height: 22, borderRadius: '50%', background: task.done ? '#DCFCE7' : 'var(--surface)', border: `1.5px solid ${task.done ? '#86EFAC' : 'var(--border2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: task.done ? '#059669' : 'var(--txt3)', flexShrink: 0 }}>
+                            {idx + 1}
+                          </div>
+                          {/* Selector de categoría */}
+                          <select
+                            value={task.category}
+                            onChange={e => patchTask(viaje.id, task.id, { category: e.target.value })}
+                            style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: task.category === 'Insumos' ? '#D97706' : task.category === 'Mercadería' ? '#2563EB' : '#7C3AED', cursor: 'pointer', fontFamily: 'inherit', minWidth: 120 }}>
+                            <option value="Insumos">📦 Insumos</option>
+                            <option value="Mercadería">🛒 Mercadería</option>
+                            <option value="Entrega Pedido">🚚 Entrega Pedido</option>
+                          </select>
+                          {/* Campo de detalle */}
+                          <input
+                            type="text"
+                            value={task.detail}
+                            onChange={e => patchTask(viaje.id, task.id, { detail: e.target.value })}
+                            placeholder={task.category === 'Entrega Pedido' ? 'Ej: Dejar pedido #4025 en Saavedra' : task.category === 'Mercadería' ? 'Ej: Retirar cajas en depósito Once' : 'Ej: Comprar cintas en Palermo'}
+                            style={{ flex: 1, minWidth: 0, fontSize: 12, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', outline: 'none', opacity: task.done ? .55 : 1, textDecoration: task.done ? 'line-through' : 'none' }}
+                          />
+                          {/* Botón completar */}
+                          <button
+                            onClick={() => patchTask(viaje.id, task.id, { done: !task.done })}
+                            title={task.done ? 'Marcar como pendiente' : 'Marcar como completada'}
+                            style={{ width: 34, height: 34, borderRadius: '50%', border: `1.5px solid ${task.done ? '#059669' : 'var(--border2)'}`, background: task.done ? '#DCFCE7' : 'var(--surface)', color: task.done ? '#059669' : 'var(--txt4)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, transition: 'all .15s', WebkitTapHighlightColor: 'transparent' }}>
+                            <i className={`fa ${task.done ? 'fa-check' : 'fa-circle-dot'}`} />
+                          </button>
+                          {/* Eliminar tarea */}
+                          <button
+                            onClick={() => removeTask(viaje.id, task.id)}
+                            title="Eliminar parada"
+                            style={{ width: 28, height: 28, borderRadius: '50%', border: '1.5px solid #FECACA', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0, transition: 'all .15s' }}>
+                            <i className="fa fa-xmark" />
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Botón añadir tarea */}
+                      <button
+                        onClick={() => addTask(viaje.id)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 14px', borderRadius: 12, border: '1.5px dashed var(--brand-dim)', background: 'var(--brand-xlt)', color: 'var(--brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', WebkitTapHighlightColor: 'transparent' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-dim)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'var(--brand-xlt)'}>
+                        <i className="fa fa-plus" style={{ fontSize: 10 }} />
+                        Añadir Parada / Tarea
+                      </button>
+                    </div>
+
+                    {/* Acciones del viaje */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => delViaje(viaje.id)} style={{ color: 'var(--red)', borderColor: '#FECACA' }}>
+                        <i className="fa fa-trash" /> Eliminar viaje
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── TAB ENVÍOS (oculto — accesible via + Registrar envío) ── */}
       {tab === 'envios' && (
         <>
           {lateShipments.length > 0 && !lateAlertDismissed && (
@@ -641,7 +898,7 @@ export default function Logistica() {
         </>
       )}
 
-      {/* ── TAB COTIZAR ────────────────────────────────────────────── */}
+      {/* ── TAB COTIZADOR DE ENVÍOS ────────────────────────────────── */}
       {tab === 'cotizar' && (
         <div className="cotiz-layout">
 
@@ -722,43 +979,81 @@ export default function Logistica() {
           {/* ── ÁREA: Herramientas (Vía Cargo + Preview + WA) ── */}
           <div className="cotiz-area-tools card" style={{ borderRadius: 20, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-            {/* Badge Vía Cargo fijo */}
+            {/* Selector de transportista + Badge dinámico */}
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <i className="fa fa-truck" style={{ fontSize: 10 }} />Transportista
               </div>
-              <div className="cotiz-vc-badge">
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className="fa fa-truck" style={{ color: '#fff', fontSize: 17 }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#065F46', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Operado por</div>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: '#059669', letterSpacing: '-.3px', marginTop: 3 }}>Vía Cargo</div>
-                </div>
-                <a href="https://www.viacargo.com.ar" target="_blank" rel="noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#059669', background: '#fff', border: '1.5px solid #A7F3D0', borderRadius: 9, padding: '7px 13px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap', transition: 'filter .15s' }}
-                  onMouseEnter={e => e.currentTarget.style.filter = 'brightness(.93)'}
-                  onMouseLeave={e => e.currentTarget.style.filter = ''}>
-                  <i className="fa fa-arrow-up-right-from-square" style={{ fontSize: 9 }} />Cotizar
-                </a>
+
+              {/* Toggle Vía Cargo / Andreani */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                {[
+                  { key: 'viacargo',  label: 'Vía Cargo',  color: '#059669', bg: '#DCFCE7',  border: '#A7F3D0' },
+                  { key: 'andreani',  label: 'Andreani',   color: '#DC2626', bg: '#FEF2F2',  border: '#FECACA' },
+                ].map(c => (
+                  <button key={c.key} onClick={() => setCarrier(c.key)}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: 12, border: `2px solid ${carrier === c.key ? c.border : 'var(--border)'}`, background: carrier === c.key ? c.bg : 'var(--surface2)', color: carrier === c.key ? c.color : 'var(--txt3)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <i className="fa fa-truck" style={{ fontSize: 11 }} />
+                    {c.label}
+                    {carrier === c.key && <i className="fa fa-check-circle" style={{ fontSize: 11 }} />}
+                  </button>
+                ))}
               </div>
+
+              {/* Badge dinámico según carrier */}
+              {carrier === 'viacargo' ? (
+                <div className="cotiz-vc-badge">
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className="fa fa-truck" style={{ color: '#fff', fontSize: 17 }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#065F46', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Operado por</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: '#059669', letterSpacing: '-.3px', marginTop: 3 }}>Vía Cargo</div>
+                  </div>
+                  <a href="https://www.viacargo.com.ar" target="_blank" rel="noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#059669', background: '#fff', border: '1.5px solid #A7F3D0', borderRadius: 9, padding: '7px 13px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap', transition: 'filter .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(.93)'}
+                    onMouseLeave={e => e.currentTarget.style.filter = ''}>
+                    <i className="fa fa-arrow-up-right-from-square" style={{ fontSize: 9 }} />Cotizar
+                  </a>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 14, padding: '12px 16px' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className="fa fa-truck" style={{ color: '#fff', fontSize: 17 }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Operado por</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: '#DC2626', letterSpacing: '-.3px', marginTop: 3 }}>Andreani</div>
+                  </div>
+                  <a href="https://www.andreani.com" target="_blank" rel="noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#DC2626', background: '#fff', border: '1.5px solid #FECACA', borderRadius: 9, padding: '7px 13px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap', transition: 'filter .15s' }}
+                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(.93)'}
+                    onMouseLeave={e => e.currentTarget.style.filter = ''}>
+                    <i className="fa fa-arrow-up-right-from-square" style={{ fontSize: 9 }} />Cotizar
+                  </a>
+                </div>
+              )}
             </div>
 
-            {/* Vista previa del mensaje */}
+            {/* Vista previa del mensaje — se actualiza según carrier */}
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <i className="fa fa-eye" style={{ fontSize: 10 }} />Vista previa del mensaje
+                <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: carrier === 'andreani' ? '#FEF2F2' : '#DCFCE7', color: carrier === 'andreani' ? '#DC2626' : '#059669' }}>
+                  {carrier === 'andreani' ? 'Andreani' : 'Vía Cargo'}
+                </span>
               </div>
-              <p className="cotiz-preview">"{viaMsg}"</p>
+              <p className="cotiz-preview">"{cotizMsg}"</p>
             </div>
 
             {/* Botón WA */}
             <button className="cotiz-wa-btn"
               onClick={() => {
                 if (cotizClient?.wa) {
-                  window.open(`https://api.whatsapp.com/send?phone=${cotizClient.wa.replace(/\D/g, '')}&text=${encodeURIComponent(viaMsg)}`, '_blank')
+                  window.open(`https://api.whatsapp.com/send?phone=${cotizClient.wa.replace(/\D/g, '')}&text=${encodeURIComponent(cotizMsg)}`, '_blank')
                 } else {
-                  navigator.clipboard.writeText(viaMsg)
+                  navigator.clipboard.writeText(cotizMsg)
                   window.open('https://web.whatsapp.com/', '_blank')
                   toast('Texto copiado. Seleccioná el contacto en WhatsApp.', 'ok')
                 }
