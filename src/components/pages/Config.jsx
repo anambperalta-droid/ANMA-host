@@ -191,7 +191,7 @@ export default function Config() {
   const [showMpToken, setShowMpToken] = useState(false)
   const [opShowMetrics, setOpShowMetrics] = useState(c.opShowMetrics !== false)
   const [opShowCosts, setOpShowCosts] = useState(c.opShowCosts !== false)
-  const [bankEnabled, setBankEnabled] = useState(c.bankEnabled === true)
+  const [bankEnabled, setBankEnabled] = useState(c.bankEnabled === true || !!(c.bankAlias || c.bankCbu))
   const [bankHolder, setBankHolder] = useState(c.bankHolder || '')
   const [bankName, setBankName] = useState(c.bankName || '')
   const [bankAccountType, setBankAccountType] = useState(c.bankAccountType || 'Cuenta corriente')
@@ -836,7 +836,7 @@ export default function Config() {
         <div style={{ display: 'grid', gap: 18, maxWidth: 780 }}>
           {/* ── MERCADO PAGO CARD ── */}
           <div className={`pay-card ${mpEnabled ? 'on' : ''}`}>
-            <div className="pay-card-head" onClick={() => setMpEnabled(!mpEnabled)}>
+            <div className="pay-card-head" onClick={() => { const v = !mpEnabled; setMpEnabled(v); updateConfig({ mpEnabled: v }) }}>
               <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#009EE3,#00C1EA)' }}>
                 <i className="fa fa-credit-card" />
               </div>
@@ -847,7 +847,7 @@ export default function Config() {
               <div className={`pay-status ${mpEnabled ? 'on' : ''}`}>
                 {mpEnabled ? <><i className="fa fa-circle-check" /> ACTIVO</> : <><i className="fa fa-circle" /> INACTIVO</>}
               </div>
-              <button className={`toggle ${mpEnabled ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); setMpEnabled(!mpEnabled) }} />
+              <button className={`toggle ${mpEnabled ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); const v = !mpEnabled; setMpEnabled(v); updateConfig({ mpEnabled: v }) }} />
             </div>
             {mpEnabled && (
               <div className="pay-card-body">
@@ -880,6 +880,9 @@ export default function Config() {
                     <i className={`fa ${mpTesting ? 'fa-spinner fa-spin' : 'fa-flask-vial'}`} />
                     {mpTesting ? ' Probando...' : ' Probar conexión'}
                   </button>
+                  <button className="btn btn-primary" onClick={saveMPConfig} style={{minHeight:44}}>
+                    <i className="fa fa-floppy-disk" /> Guardar
+                  </button>
                 </div>
                 {mpTestResult && (
                   <div style={{ marginTop: 12, fontSize: 12 }}>
@@ -894,7 +897,7 @@ export default function Config() {
 
           {/* ── TRANSFERENCIA BANCARIA CARD ── */}
           <div className={`pay-card ${bankEnabled ? 'on' : ''}`}>
-            <div className="pay-card-head" onClick={() => setBankEnabled(!bankEnabled)}>
+            <div className="pay-card-head" onClick={() => { const v = !bankEnabled; setBankEnabled(v); updateConfig({ bankEnabled: v }) }}>
               <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#10B981,#059669)' }}>
                 <i className="fa fa-building-columns" />
               </div>
@@ -905,7 +908,7 @@ export default function Config() {
               <div className={`pay-status ${bankEnabled ? 'on' : ''}`}>
                 {bankEnabled ? <><i className="fa fa-circle-check" /> ACTIVO</> : <><i className="fa fa-circle" /> INACTIVO</>}
               </div>
-              <button className={`toggle ${bankEnabled ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); setBankEnabled(!bankEnabled) }} />
+              <button className={`toggle ${bankEnabled ? 'on' : ''}`} onClick={(e) => { e.stopPropagation(); const v = !bankEnabled; setBankEnabled(v); updateConfig({ bankEnabled: v }) }} />
             </div>
             {bankEnabled && (
               <div className="pay-card-body">
@@ -950,6 +953,11 @@ export default function Config() {
                 <div className="grid2">
                   <div className="fg"><label>Notas adicionales (opcional)</label><input type="text" value={bankNotes} onChange={e => setBankNotes(e.target.value)} placeholder="Ej: Enviar comprobante por WhatsApp al finalizar." /></div>
                   <div />
+                </div>
+                <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
+                  <button className="btn btn-primary" onClick={saveBankConfig} style={{ minHeight: 44 }}>
+                    <i className="fa fa-floppy-disk" /> Guardar datos bancarios
+                  </button>
                 </div>
               </div>
             )}
