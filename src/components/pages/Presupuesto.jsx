@@ -390,27 +390,28 @@ export default function Presupuesto() {
   const removeKit = (kitIdx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== kitIdx) : prev)
   const updateKit = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, [key]: val }))
 
-  // Componente A — Packaging / Insumos
-  const addPackComp = (kitIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, packaging: [...(k.packaging || []), emptyPackComp()] }))
-  const removePackComp = (kitIdx, cIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, packaging: (k.packaging || []).filter((_, j) => j !== cIdx) }))
-  const updatePackComp = (kitIdx, cIdx, key, val) => setItems(prev => prev.map((k, i) => {
+  // Helper local: aplica el patch al kit y luego re-precia con el margen actual.
+  // Cualquier cambio en packaging/products/personalización dispara reprice → priceUnit
+  // siempre refleja el costo real × margen. Evita que el precio quede stale.
+  const _patchKitAndReprice = (kitIdx, patcher) => setItems(prev => prev.map((k, i) => {
     if (i !== kitIdx) return k
-    return { ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }
+    const patched = patcher(k)
+    const cu = kitCostUnit(patched)
+    return cu > 0 ? { ...patched, priceUnit: priceFromMargin(cu, form.margin) } : patched
   }))
+
+  // Componente A — Packaging / Insumos
+  const addPackComp = (kitIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, packaging: [...(k.packaging || []), emptyPackComp()] }))
+  const removePackComp = (kitIdx, cIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, packaging: (k.packaging || []).filter((_, j) => j !== cIdx) }))
+  const updatePackComp = (kitIdx, cIdx, key, val) => _patchKitAndReprice(kitIdx, k => ({ ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }))
 
   // Componente B — Productos del kit
-  const addProdComp = (kitIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, products: [...(k.products || []), emptyProdComp()] }))
-  const removeProdComp = (kitIdx, cIdx) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, products: (k.products || []).filter((_, j) => j !== cIdx) }))
-  const updateProdComp = (kitIdx, cIdx, key, val) => setItems(prev => prev.map((k, i) => {
-    if (i !== kitIdx) return k
-    return { ...k, products: (k.products || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }
-  }))
+  const addProdComp = (kitIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, products: [...(k.products || []), emptyProdComp()] }))
+  const removeProdComp = (kitIdx, cIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, products: (k.products || []).filter((_, j) => j !== cIdx) }))
+  const updateProdComp = (kitIdx, cIdx, key, val) => _patchKitAndReprice(kitIdx, k => ({ ...k, products: (k.products || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }))
 
   // Componente C — Personalización
-  const updatePersonalizacion = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => {
-    if (i !== kitIdx) return k
-    return { ...k, personalizacion: { ...(k.personalizacion || {}), [key]: val } }
-  }))
+  const updatePersonalizacion = (kitIdx, key, val) => _patchKitAndReprice(kitIdx, k => ({ ...k, personalizacion: { ...(k.personalizacion || {}), [key]: val } }))
 
   /* ── Drag & drop de filas ── */
   const dragIdxRef = useRef(null)
@@ -448,22 +449,38 @@ export default function Presupuesto() {
     return cu
   }
 
-  /* ── Margen: cambiar el % recalcula precios = costo × (1 + margen/100) en vivo ── */
+  /* ── Cálculo de precio desde margen ────────────────────────────────────
+     Fórmula: price = cost / (1 - m/100)
+     Así si ponés 35% de margen, el "Margen real" mostrado dará exactamente 35%
+     (margen sobre precio de venta, no markup sobre costo). Capada en 99% para
+     evitar división por cero / explosión de precios. */
+  const priceFromMargin = (cost, marginPct) => {
+    const m = Math.min(99, Math.max(0, num(marginPct))) / 100
+    return Math.round(num(cost) / (1 - m))
+  }
+
+  /* ── Margen: cambiar el % recalcula precios en vivo en TODAS las alternativas y kits ── */
   const setMarginAndReprice = (val) => {
     setF('margin', val)
-    const m = num(val) / 100
-    if (!Number.isFinite(m) || m < 0) return
     setAlternatives(prev => prev.map(alt => ({
       ...alt,
       kits: (alt.kits || []).map(item => {
         if (item.type === 'kit') {
           const cu = kitCostUnit(item)
-          return cu > 0 ? { ...item, priceUnit: Math.round(cu * (1 + m)) } : item
+          return cu > 0 ? { ...item, priceUnit: priceFromMargin(cu, val) } : item
         }
         const cu = num(item.costUnit)
-        return cu > 0 ? { ...item, priceUnit: Math.round(cu * (1 + m)) } : item
+        return cu > 0 ? { ...item, priceUnit: priceFromMargin(cu, val) } : item
       })
     })))
+  }
+
+  /* ── Auto-reprice de un kit: cuando cambian sus componentes (packaging/products/personalización),
+     recalcula priceUnit con el margen actual. Garantiza que el precio nunca quede stale. */
+  const repriceKitInPlace = (kit) => {
+    const cu = kitCostUnit(kit)
+    if (cu <= 0) return kit
+    return { ...kit, priceUnit: priceFromMargin(cu, form.margin) }
   }
 
   /* ── Logística / Comisionista — paradas atribuidas a ESTE presupuesto ── */
@@ -2321,7 +2338,12 @@ export default function Presupuesto() {
                       </span>
                     </div>
                     <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.35)', marginTop: 1 }}>
-                      {it.qty} kit{it.qty !== 1 ? 's' : ''} · Costo u.: {fmt(Math.round(kitCostUnit(it)))}
+                      {(() => {
+                        const isKit = it.type === 'kit'
+                        const unitLabel = isKit ? (it.qty !== 1 ? 'kits' : 'kit') : (it.qty !== 1 ? 'unidades' : 'unidad')
+                        const costPerUnit = isKit ? Math.round(kitCostUnit(it)) : Math.round(num(it.costUnit))
+                        return `${it.qty} ${unitLabel} · Costo u.: ${fmt(costPerUnit)}`
+                      })()}
                       {num(it.personalizacion?.designCost) > 0 && (
                         <span style={{ marginLeft: 5, color: 'rgba(167,139,250,.6)' }}>+ diseñador</span>
                       )}
