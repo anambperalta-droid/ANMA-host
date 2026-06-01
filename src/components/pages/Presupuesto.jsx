@@ -237,7 +237,12 @@ export default function Presupuesto() {
   }
   /* ── Pedido simple: packaging global + personalización global ── */
   const [simplePack, setSimplePack] = useState([])
-  const [simplePers, setSimplePers] = useState({ desc: '', costUnit: 0, designCost: 0 })
+  // simplePers: costos de personalización centralizados (modo simple).
+  //   desc/costUnit: descripción + costo por unidad (amortiza por qty)
+  //   designCost:    honorario único del diseñador (fijo, se amortiza por qty)
+  //   laborCost:     honorario único de mano de obra (fijo, se amortiza por qty)
+  //   printCost:     costo total de impresión/estampado/grabado (fijo)
+  const [simplePers, setSimplePers] = useState({ desc: '', costUnit: 0, designCost: 0, laborCost: 0, printCost: 0 })
   const addSimplePack    = () => setSimplePack(p => [...p, emptyPackComp()])
   const removeSimplePack = (idx) => setSimplePack(p => p.filter((_, i) => i !== idx))
   const updateSimplePack = (idx, key, val) => setSimplePack(p => p.map((c, i) => i !== idx ? c : { ...c, [key]: val }))
@@ -498,15 +503,26 @@ export default function Presupuesto() {
         if (item.name && c2 > 0) itemsWithCost++
       }
     })
-    // Modo simple: sumar packaging y personalización globales al costo
+    // Modo simple: sumar packaging y personalización globales al costo.
+    // Personalización tiene 4 componentes:
+    //   - costUnit (por unidad, amortizado por qty) — descripción/logo
+    //   - designCost (fijo, único) — honorario diseñador
+    //   - laborCost  (fijo, único) — honorario mano de obra        ← NUEVO
+    //   - printCost  (fijo, único) — costo total impresión/grabado ← reemplaza form.logoCost
+    let persFixedTotal = 0
     if (!kitMode) {
       simplePack.forEach(p => { totalCost += Math.round(Math.max(0, num(p.costUnit)) * Math.max(0, num(p.qty))) })
       totalCost += Math.round(Math.max(0, num(simplePers.costUnit)) * totalQty)
-      totalCost += Math.max(0, num(simplePers.designCost))
+      persFixedTotal =
+        Math.max(0, num(simplePers.designCost)) +
+        Math.max(0, num(simplePers.laborCost)) +
+        Math.max(0, num(simplePers.printCost))
+      totalCost += persFixedTotal
     }
     // True ↔ todos los ítems con contenido tienen costo > 0
     const hasFullCostData = itemsWithName > 0 && itemsWithCost === itemsWithName
-    const logTotal = Math.round(Math.max(0, num(form.logoCost)) * totalQty)
+    // logTotal queda en 0 — el costo de impresión se centraliza en simplePers.printCost (fijo)
+    const logTotal = 0
     const ship = Math.max(0, num(form.shipCost))
     const shipCharged = form.shipCharged !== false
     // Logística / Comisionista — suma de paradas atribuidas a este presupuesto
@@ -523,8 +539,8 @@ export default function Presupuesto() {
     const marginThreshold = num(c.marginLowThreshold) || 10
     const marginLow = hasFullCostData && total > 0 && Number(marginReal) < marginThreshold
     const depositAmt = Math.round(total * num(form.deposit) / 100)
-    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct, viajesCost, costPending, hasFullCostData }
-  }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, form.logisticaParadas, c.marginLowThreshold, kitMode, simplePack, simplePers])
+    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct, viajesCost, costPending, hasFullCostData, persFixedTotal }
+  }, [items, form.shipCost, form.shipCharged, form.deposit, form.discount, form.logisticaParadas, c.marginLowThreshold, kitMode, simplePack, simplePers])
 
   /* ── Lógica de flujo: venta directa vs. cotización ──
      showPaymentDetails = true  → 1 sola opción  O  hay una opción aprobada
@@ -1424,6 +1440,53 @@ export default function Presupuesto() {
                           </div>
                         )
                       })()}
+
+                      {/* 🛠️ Mano de Obra (fijo, se amortiza por qty) */}
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: 130 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            🛠️ Costo Mano de Obra
+                          </div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Honorario único — se amortiza por cantidad</div>
+                        </div>
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ total</span>
+                          <input type="text" inputMode="numeric" value={fmtTbl(simplePers.laborCost)}
+                            onFocus={selectOnFocus}
+                            onChange={e => { const r = parseTbl(e.target.value); updateSimplePers('laborCost', r === '' ? 0 : Number(r)) }}
+                            style={{ width: 90, textAlign: 'right', fontSize: 12, padding: '6px 8px', height: 32, fontVariantNumeric: 'tabular-nums' }} />
+                        </div>
+                      </div>
+                      {num(simplePers.laborCost) > 0 && (() => {
+                        const totalQtyCalc = items.reduce((s, i) => s + num(i.qty), 0)
+                        return (
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>
+                            {fmt(num(simplePers.laborCost))} ÷ {totalQtyCalc} u. = <strong style={{ color: 'var(--money)' }}>{fmt(Math.round(num(simplePers.laborCost) / Math.max(1, totalQtyCalc)))}</strong> amortizado por unidad
+                          </div>
+                        )
+                      })()}
+
+                      {/* 🖨️ Impresión General (fijo total, trasladado desde el grid3 de Paso 3) */}
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: 130 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            🖨️ Costo de Impresión General
+                          </div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Valor fijo total del proceso de estampado/grabado</div>
+                        </div>
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ total</span>
+                          <input type="text" inputMode="numeric" value={fmtTbl(simplePers.printCost)}
+                            onFocus={selectOnFocus}
+                            onChange={e => { const r = parseTbl(e.target.value); updateSimplePers('printCost', r === '' ? 0 : Number(r)) }}
+                            style={{ width: 90, textAlign: 'right', fontSize: 12, padding: '6px 8px', height: 32, fontVariantNumeric: 'tabular-nums' }} />
+                        </div>
+                      </div>
+                      {num(simplePers.printCost) > 0 && (
+                        <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>
+                          Total fijo: <strong style={{ color: 'var(--money)' }}>{fmt(num(simplePers.printCost))}</strong>
+                        </div>
+                      )}
                     </div>
 
                     {/* Catalog picker */}
@@ -1875,7 +1938,7 @@ export default function Presupuesto() {
                 <div className="grid3" style={{ marginTop: 4 }}>
                   <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
                   <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
-                  <div className="fg"><label>Impresión/logo x u. ($)</label><input type="number" value={form.logoCost} onFocus={selectOnFocus} onChange={e => setF('logoCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('logoCost', 0) }} min="0" style={{ maxWidth: 140 }} /></div>
+                  {/* "Impresión/logo x u." removido — el costo de impresión vive ahora en Personalización (Costo de Impresión General, fijo total) */}
                 </div>
                 {feats.descuentoCliente && (
                   <div className="fg" style={{ maxWidth: 200, marginTop: 4 }}>
@@ -2072,7 +2135,7 @@ export default function Presupuesto() {
                         </div>
                       ))}
                       {/* Simple mode: packaging + personalizacion extras */}
-                      {!kitMode && (simplePack.filter(c => c.name).length > 0 || simplePers.desc || num(simplePers.costUnit) > 0 || num(simplePers.designCost) > 0) && (
+                      {!kitMode && (simplePack.filter(c => c.name).length > 0 || simplePers.desc || num(simplePers.costUnit) > 0 || num(simplePers.designCost) > 0 || num(simplePers.laborCost) > 0 || num(simplePers.printCost) > 0) && (
                         <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
                           {simplePack.filter(c => c.name).map((c, ci) => (
                             <div key={ci} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)', marginBottom: 3 }}>
@@ -2090,6 +2153,18 @@ export default function Presupuesto() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
                               <span>✏️ Costo diseñador <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>(único)</span></span>
                               <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(simplePers.designCost))}</span>
+                            </div>
+                          )}
+                          {num(simplePers.laborCost) > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
+                              <span>🛠️ Mano de obra <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>(único)</span></span>
+                              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(simplePers.laborCost))}</span>
+                            </div>
+                          )}
+                          {num(simplePers.printCost) > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--txt3)' }}>
+                              <span>🖨️ Impresión general <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 3 }}>(fijo)</span></span>
+                              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(num(simplePers.printCost))}</span>
                             </div>
                           )}
                         </div>
