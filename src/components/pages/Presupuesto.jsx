@@ -199,6 +199,12 @@ export default function Presupuesto() {
     contact: '', company: '', wa: '', clientEmail: '', ocasion: '', delivery: '', deliveryDate: '',
     shipCost: 0, shipCharged: false, envioACotizar: true, status: 'draft', payStatus: 'pending', noteInt: '', noteCli: '',
     margin: c.defaultMargin || 40, deposit: c.defaultDeposit || 50, logoCost: 0, discount: 0,
+    // ── Logística / Comisionista ── viajeId apunta al registro global en 'viajes' (dbW).
+    // logisticaParadas = paradas atribuidas a ESTE presupuesto (category: Insumos|Mercadería|Entrega Pedido).
+    viajeId: null,
+    logisticaParadas: [],
+    comisionista: '',
+    viajeFecha: '',
   })
   const [alternatives, setAlternatives] = useState([emptyAlt()])
   const [activeAltIdx, setActiveAltIdx] = useState(0)
@@ -260,6 +266,10 @@ export default function Presupuesto() {
           deposit: b.deposit ?? c.defaultDeposit ?? 50,
           logoCost: b.logoCost || 0,
           discount: b.discount || 0,
+          viajeId: b.viajeId || null,
+          logisticaParadas: b.logisticaParadas || [],
+          comisionista: b.comisionista || '',
+          viajeFecha: b.viajeFecha || '',
         })
         // Backward compat: si ya tiene alternatives las carga; si no, envuelve items en Alternativa 1
         if (b.alternatives?.length) {
@@ -433,43 +443,70 @@ export default function Presupuesto() {
     return cu
   }
 
+  /* ── Logística / Comisionista — paradas atribuidas a ESTE presupuesto ── */
+  const PARADA_CATEGORIES = [
+    { val: 'Insumos',        lbl: '📥 Retiro Insumos' },
+    { val: 'Mercadería',     lbl: '📦 Retiro Mercadería' },
+    { val: 'Entrega Pedido', lbl: '🚚 Entrega Pedido' },
+  ]
+  const addParada = (category = 'Entrega Pedido') =>
+    setF('logisticaParadas', [...(form.logisticaParadas || []), { category, detail: '', cost: 0 }])
+  const updateParada = (idx, field, val) =>
+    setF('logisticaParadas', (form.logisticaParadas || []).map((p, i) => i !== idx ? p : { ...p, [field]: val }))
+  const removeParada = (idx) =>
+    setF('logisticaParadas', (form.logisticaParadas || []).filter((_, i) => i !== idx))
+
   const calc = useMemo(() => {
     let totalCost = 0, totalRevenue = 0, totalQty = 0
+    let itemsWithName = 0, itemsWithCost = 0
     items.forEach(item => {
       if (item.type === 'kit') {
-        const q = num(item.qty)
-        const cu = kitCostUnit(item)
+        const q = Math.max(0, num(item.qty))
+        const cu = Math.max(0, kitCostUnit(item))
         // Round per-item to avoid floating-point accumulation across kit components
         totalCost    += Math.round(q * cu)
-        totalRevenue += Math.round(q * num(item.priceUnit))
+        totalRevenue += Math.round(q * Math.max(0, num(item.priceUnit)))
         totalQty     += q
+        if (item.name || (item.packaging?.length > 0) || (item.products?.length > 0)) itemsWithName++
+        if (cu > 0 && (item.name || item.packaging?.length || item.products?.length)) itemsWithCost++
       } else {
-        const q = num(item.qty), c2 = num(item.costUnit), p = num(item.priceUnit)
+        const q = Math.max(0, num(item.qty))
+        const c2 = Math.max(0, num(item.costUnit))
+        const p = Math.max(0, num(item.priceUnit))
         totalCost    += Math.round(q * c2)
         totalRevenue += Math.round(q * p)
         totalQty     += q
+        if (item.name) itemsWithName++
+        if (item.name && c2 > 0) itemsWithCost++
       }
     })
     // Modo simple: sumar packaging y personalización globales al costo
     if (!kitMode) {
-      simplePack.forEach(p => { totalCost += Math.round(num(p.costUnit) * num(p.qty)) })
-      totalCost += Math.round(num(simplePers.costUnit) * totalQty)
-      totalCost += num(simplePers.designCost)
+      simplePack.forEach(p => { totalCost += Math.round(Math.max(0, num(p.costUnit)) * Math.max(0, num(p.qty))) })
+      totalCost += Math.round(Math.max(0, num(simplePers.costUnit)) * totalQty)
+      totalCost += Math.max(0, num(simplePers.designCost))
     }
-    const logTotal = Math.round(num(form.logoCost) * totalQty)
-    const ship = num(form.shipCost)
+    // True ↔ todos los ítems con contenido tienen costo > 0
+    const hasFullCostData = itemsWithName > 0 && itemsWithCost === itemsWithName
+    const logTotal = Math.round(Math.max(0, num(form.logoCost)) * totalQty)
+    const ship = Math.max(0, num(form.shipCost))
     const shipCharged = form.shipCharged !== false
-    const baseCost = totalCost + logTotal + ship
+    // Logística / Comisionista — suma de paradas atribuidas a este presupuesto
+    const viajesCost = Math.round((form.logisticaParadas || []).reduce((s, p) => s + Math.max(0, num(p.cost)), 0))
+    const baseCost = totalCost + logTotal + ship + viajesCost
     const discountPct = Math.min(Math.max(num(form.discount), 0), 100)
     const discountAmt = Math.round(totalRevenue * discountPct / 100)
     const total = totalRevenue - discountAmt + (shipCharged ? ship : 0)
-    const gain = total - baseCost
-    const marginReal = total > 0 ? ((gain / total) * 100).toFixed(1) : '0.0'
+    const gain = hasFullCostData ? (total - baseCost) : 0
+    const marginReal = (hasFullCostData && total > 0)
+      ? (((total - baseCost) / total) * 100).toFixed(1)
+      : '0.0'
+    const costPending = !hasFullCostData
     const marginThreshold = num(c.marginLowThreshold) || 10
-    const marginLow = total > 0 && Number(marginReal) < marginThreshold
+    const marginLow = hasFullCostData && total > 0 && Number(marginReal) < marginThreshold
     const depositAmt = Math.round(total * num(form.deposit) / 100)
-    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct }
-  }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, c.marginLowThreshold, kitMode, simplePack, simplePers])
+    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct, viajesCost, costPending, hasFullCostData }
+  }, [items, form.shipCost, form.shipCharged, form.logoCost, form.deposit, form.discount, form.logisticaParadas, c.marginLowThreshold, kitMode, simplePack, simplePers])
 
   /* ── Lógica de flujo: venta directa vs. cotización ──
      showPaymentDetails = true  → 1 sola opción  O  hay una opción aprobada
@@ -496,7 +533,10 @@ export default function Presupuesto() {
     )
     if (!validItems.length) { toast('Completá al menos un Kit o producto en el Paso 2.', 'er'); return }
     const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
-    const marginBudgeted = marginBudgetedSaved !== null ? marginBudgetedSaved : Number(calc.marginReal)
+    // Si los costos están pendientes (algún ítem sin costo) NO congelamos un margen 0 engañoso.
+    const marginBudgeted = marginBudgetedSaved !== null
+      ? marginBudgetedSaved
+      : (calc.costPending ? null : Number(calc.marginReal))
 
     // Descuento de stock: solo al pasar a "En preparación" y solo una vez
     const prevBudget = editId ? get('budgets').find(b => b.id === editId) : null
@@ -520,8 +560,56 @@ export default function Presupuesto() {
       total: calc.total,
       depositAmt: calc.depositAmt,
       marginBudgeted,
-      ...(willDeductStock ? { costSnapshot: { date: new Date().toISOString().slice(0, 10), baseCost: calc.baseCost } } : {}),
+      ...(willDeductStock ? { costSnapshot: { date: new Date().toISOString().slice(0, 10), baseCost: calc.baseCost, viajesCost: calc.viajesCost } } : {}),
     })
+
+    // ── Sincronización Logística ⇄ Presupuesto ──────────────────────────────
+    // Persistimos las paradas en dbW('viajes') usando el schema de Regalos:
+    // viaje = { id, date, time, cost, status, tasks: [{id, category, detail, cost, done, budgetId, budgetNum}] }
+    // Cada parada lleva budgetId para atribución y para que editar el viaje
+    // desde el módulo Logística impacte sobre este presupuesto.
+    const paradasInput = (form.logisticaParadas || []).filter(p => p.detail || num(p.cost) > 0)
+    if (savedBudget?.id && (paradasInput.length > 0 || form.viajeId)) {
+      const taggedTasks = paradasInput.map((p, i) => ({
+        id: Date.now() + i,
+        category: p.category || 'Entrega Pedido',
+        detail: p.detail || '',
+        cost: Math.max(0, num(p.cost)),
+        done: false,
+        budgetId: savedBudget.id,
+        budgetNum: savedBudget.num || '',
+      }))
+      const allViajes = db('viajes', [])
+      if (form.viajeId) {
+        // Viaje existente → reemplazamos SOLO las tasks de este budget
+        const viaje = allViajes.find(v => v.id === form.viajeId)
+        if (viaje) {
+          const otherTasks = (viaje.tasks || []).filter(t => t.budgetId !== savedBudget.id)
+          const updatedTasks = [...otherTasks, ...taggedTasks]
+          const updated = {
+            ...viaje,
+            comisionista: form.comisionista || viaje.comisionista || '',
+            date: form.viajeFecha || viaje.date,
+            tasks: updatedTasks,
+          }
+          dbW('viajes', allViajes.map(v => v.id === viaje.id ? updated : v))
+        }
+      } else if (taggedTasks.length > 0) {
+        // Nuevo viaje creado desde este presupuesto
+        const newViaje = {
+          id: Date.now(),
+          date: form.viajeFecha || new Date().toISOString().slice(0, 10),
+          time: new Date().toTimeString().slice(0, 5),
+          comisionista: form.comisionista || '',
+          cost: '',
+          status: 'Planificado',
+          tasks: taggedTasks,
+        }
+        dbW('viajes', [...allViajes, newViaje])
+        // Re-guardamos el budget con el viajeId asignado
+        saveBudget({ ...savedBudget, viajeId: newViaje.id })
+      }
+    }
 
     if (willDeductStock) {
       const approvedAlt = alternatives.find(a => a.approved) || alternatives[0]
@@ -1777,6 +1865,77 @@ export default function Presupuesto() {
                     <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setF('discount', e.target.value)} onBlur={e => { if (e.target.value === '') setF('discount', 0) }} min="0" max="100" style={{ maxWidth: 120 }} />
                   </div>
                 )}
+
+                {/* ─── 🚚 Logística / Comisionista ─── */}
+                <div style={{ marginTop: 20, padding: '18px 20px', background: 'var(--bg-card, #fff)', border: '1px solid var(--border, #E5E7EB)', borderRadius: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>🚚</span> Logística / Comisionista
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                        Paradas del viaje (insumos, mercadería o entrega). Suma al costo total y se sincroniza con Control de Viajes.
+                      </div>
+                    </div>
+                    {form.viajeId && (
+                      <span style={{ background: '#EDE9FE', color: '#5B21B6', padding: '3px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 700 }} title="Vinculado a un viaje registrado en Logística">
+                        <i className="fa fa-link" /> Viaje #{form.viajeId}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid2" style={{ marginBottom: 10 }}>
+                    <div className="fg">
+                      <label>Comisionista / Transportista</label>
+                      <input type="text" value={form.comisionista || ''} onChange={e => setF('comisionista', e.target.value)} placeholder="Nombre del comisionista" />
+                    </div>
+                    <div className="fg">
+                      <label>Fecha del viaje</label>
+                      <input type="date" value={form.viajeFecha || ''} onChange={e => setF('viajeFecha', e.target.value)} />
+                    </div>
+                  </div>
+
+                  {(form.logisticaParadas || []).length === 0 && (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '8px 0', fontStyle: 'italic' }}>
+                      Sin paradas cargadas. Agregá las paradas que componen este viaje.
+                    </div>
+                  )}
+                  {(form.logisticaParadas || []).map((p, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                      <select value={p.category} onChange={e => updateParada(idx, 'category', e.target.value)} style={{ flex: '0 0 180px' }}>
+                        {PARADA_CATEGORIES.map(t => <option key={t.val} value={t.val}>{t.lbl}</option>)}
+                      </select>
+                      <input type="text" value={p.detail || ''} onChange={e => updateParada(idx, 'detail', e.target.value)} placeholder="Descripción (dónde / qué)" style={{ flex: '1 1 180px', minWidth: 140 }} />
+                      <input type="number" min="0" value={p.cost || 0} onFocus={selectOnFocus}
+                        onChange={e => updateParada(idx, 'cost', e.target.value === '' ? 0 : Number(e.target.value))}
+                        placeholder="Costo $" style={{ width: 110, textAlign: 'right' }} />
+                      <button type="button" className="btn btn-ghost btn-xs" onClick={() => removeParada(idx)} style={{ color: 'var(--red, #EF4444)', padding: '2px 6px' }}>
+                        <i className="fa fa-trash" />
+                      </button>
+                    </div>
+                  ))}
+
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                    <button type="button" className="btn btn-ghost btn-xs" onClick={() => addParada('Insumos')}>
+                      <i className="fa fa-plus" /> Retiro Insumos
+                    </button>
+                    <button type="button" className="btn btn-ghost btn-xs" onClick={() => addParada('Mercadería')}>
+                      <i className="fa fa-plus" /> Retiro Mercadería
+                    </button>
+                    <button type="button" className="btn btn-ghost btn-xs" onClick={() => addParada('Entrega Pedido')}>
+                      <i className="fa fa-plus" /> Entrega Pedido
+                    </button>
+                  </div>
+
+                  {calc.viajesCost > 0 && (
+                    <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        Total logística ({(form.logisticaParadas || []).length} parada{(form.logisticaParadas || []).length !== 1 ? 's' : ''})
+                      </span>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{fmt(calc.viajesCost)}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid2">
                   {feats.notasInternas && (
                     <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
@@ -1960,8 +2119,8 @@ export default function Presupuesto() {
                 <div className="pmt-label">Total</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div className="pmt-val">{fmt(calc.total)}</div>
-                  {feats.margenTabla && calc.marginLow && <span className="pmt-warn" title={`Margen bajo (< ${calc.marginThreshold}%)`}><i className="fa fa-triangle-exclamation" /></span>}
-                  {feats.margenTabla && <div className="pmt-margin">{calc.marginReal}%</div>}
+                  {feats.margenTabla && !calc.costPending && calc.marginLow && <span className="pmt-warn" title={`Margen bajo (< ${calc.marginThreshold}%)`}><i className="fa fa-triangle-exclamation" /></span>}
+                  {feats.margenTabla && <div className="pmt-margin" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic' } : undefined} title={calc.costPending ? 'Falta cargar el costo' : undefined}>{calc.costPending ? '—' : `${calc.marginReal}%`}</div>}
                 </div>
               </div>
               <div className="pmt-acts">
@@ -2006,10 +2165,31 @@ export default function Presupuesto() {
           <div className="calc-panel">
             <div className="cp-title"><i className="fa fa-calculator" />Resumen</div>
             <div className="cp-row"><span className="cp-lbl">N° Presupuesto</span><span className="cp-val">{budgetNum}</span></div>
-            {feats.costoInterno && <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val">{fmt(calc.totalCost)}</span></div>}
+            {feats.costoInterno && <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : undefined}>{calc.costPending ? 'Pendiente' : fmt(calc.totalCost)}</span></div>}
             {calc.logTotal > 0 && <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>}
-            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={{ color: '#86EFAC' }}>{fmt(calc.gain)}</span></div>}
-            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined}>{calc.marginReal}%{calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}</span></div>}
+            {calc.viajesCost > 0 && <div className="cp-row"><span className="cp-lbl">🚚 Logística</span><span className="cp-val">{fmt(calc.viajesCost)}</span></div>}
+            {feats.costoInterno && (() => {
+              const breakdown = [
+                `Productos: ${fmt(calc.totalCost)}`,
+                calc.logTotal > 0 ? `Impresión: ${fmt(calc.logTotal)}` : null,
+                num(form.shipCost) > 0 ? `Envío: ${fmt(num(form.shipCost))}` : null,
+                calc.viajesCost > 0 ? `Logística: ${fmt(calc.viajesCost)}` : null,
+              ].filter(Boolean).join(' · ')
+              return (
+                <div className="cp-row" style={{ background: 'rgba(245,158,11,.12)', borderRadius: 6, padding: '4px 8px', margin: '4px 0', borderLeft: '3px solid #F59E0B' }} title={`Costo crudo antes de margen e IVA — ${breakdown}`}>
+                  <span className="cp-lbl" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <i className="fa fa-lock" style={{ fontSize: 9, color: '#F59E0B' }} />
+                    <span>Costo Real</span>
+                    <span style={{ fontSize: 8, opacity: .6, fontStyle: 'italic' }}>(interno · pre-margen)</span>
+                  </span>
+                  <span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 800 } : { color: '#FBBF24', fontWeight: 800 }}>
+                    {calc.costPending ? 'Pendiente' : fmt(calc.baseCost)}
+                  </span>
+                </div>
+              )
+            })()}
+            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : { color: '#86EFAC' }}>{calc.costPending ? 'Pendiente' : fmt(calc.gain)}</span></div>}
+            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : (calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined)}>{calc.costPending ? 'Pendiente' : `${calc.marginReal}%`}{!calc.costPending && calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}{calc.costPending && <i className="fa fa-circle-info" style={{ marginLeft: 4, fontSize: 10 }} title="Cargá el costo de los productos para calcular el margen real" />}</span></div>}
             {calc.discountAmt > 0 && (
               <div className="cp-row" style={{ borderTop: '1px dashed rgba(255,255,255,.10)', marginTop: 2, paddingTop: 4 }}>
                 <span className="cp-lbl" style={{ color: 'rgba(255,255,255,.55)', display: 'flex', alignItems: 'center', gap: 4 }}>
