@@ -443,6 +443,24 @@ export default function Presupuesto() {
     return cu
   }
 
+  /* ── Margen: cambiar el % recalcula precios = costo × (1 + margen/100) en vivo ── */
+  const setMarginAndReprice = (val) => {
+    setF('margin', val)
+    const m = num(val) / 100
+    if (!Number.isFinite(m) || m < 0) return
+    setAlternatives(prev => prev.map(alt => ({
+      ...alt,
+      kits: (alt.kits || []).map(item => {
+        if (item.type === 'kit') {
+          const cu = kitCostUnit(item)
+          return cu > 0 ? { ...item, priceUnit: Math.round(cu * (1 + m)) } : item
+        }
+        const cu = num(item.costUnit)
+        return cu > 0 ? { ...item, priceUnit: Math.round(cu * (1 + m)) } : item
+      })
+    })))
+  }
+
   /* ── Logística / Comisionista — paradas atribuidas a ESTE presupuesto ── */
   const PARADA_CATEGORIES = [
     { val: 'Insumos',        lbl: '📥 Retiro Insumos' },
@@ -1855,7 +1873,7 @@ export default function Presupuesto() {
                   </div>
                 </div>
                 <div className="grid3" style={{ marginTop: 4 }}>
-                  <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setF('margin', e.target.value)} onBlur={e => { if (e.target.value === '') setF('margin', 0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
+                  <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
                   <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
                   <div className="fg"><label>Impresión/logo x u. ($)</label><input type="number" value={form.logoCost} onFocus={selectOnFocus} onChange={e => setF('logoCost', e.target.value)} onBlur={e => { if (e.target.value === '') setF('logoCost', 0) }} min="0" style={{ maxWidth: 140 }} /></div>
                 </div>
