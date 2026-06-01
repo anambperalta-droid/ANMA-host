@@ -145,8 +145,22 @@ export default function Logistica() {
   const addTask = (viajeId) => {
     const v = viajes.find(x => x.id === viajeId)
     if (!v) return
-    _saveViaje({ ...v, tasks: [...(v.tasks||[]), { id: Date.now(), category: 'Insumos', detail: '', done: false }] })
+    _saveViaje({ ...v, tasks: [...(v.tasks||[]), { id: Date.now(), category: 'Insumos', detail: '', cost: '', done: false }] })
   }
+  // Total de una parada/viaje calculado desde las paradas
+  const viajeTotal = (v) => (v.tasks || []).reduce((s, t) => s + (Number(t.cost) || 0), 0)
+  // Conteo histórico por categoría (todas las paradas de todos los viajes)
+  const categoryStats = useMemo(() => {
+    const stats = { 'Insumos': { count: 0, total: 0 }, 'Mercadería': { count: 0, total: 0 }, 'Entrega Pedido': { count: 0, total: 0 } }
+    viajes.forEach(v => (v.tasks || []).forEach(t => {
+      const k = t.category || 'Insumos'
+      if (!stats[k]) stats[k] = { count: 0, total: 0 }
+      stats[k].count += 1
+      stats[k].total += Number(t.cost) || 0
+    }))
+    return stats
+  }, [viajes])
+  const gastoLogisticoTotal = useMemo(() => viajes.reduce((s, v) => s + viajeTotal(v), 0), [viajes])
   const patchTask = (viajeId, taskId, patch) => {
     const v = viajes.find(x => x.id === viajeId)
     if (!v) return
@@ -415,6 +429,7 @@ export default function Logistica() {
         /* ── CONTROL DE VIAJES: grilla de campos en mobile → 1 col ── */
         @media(max-width:640px){
           .viaje-header-grid{grid-template-columns:1fr 1fr!important}
+          .viaje-stats-grid{grid-template-columns:1fr 1fr!important}
         }
         @media(max-width:400px){
           .viaje-header-grid{grid-template-columns:1fr!important}
@@ -492,6 +507,32 @@ export default function Logistica() {
             </button>
           </div>
 
+          {/* ── Conteo general por categoría ── */}
+          {viajes.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 14 }} className="viaje-stats-grid">
+              {[
+                { key: 'Insumos',        icon: '📦', color: '#D97706', bg: '#FFFBEB' },
+                { key: 'Mercadería',     icon: '🛒', color: '#2563EB', bg: '#EFF6FF' },
+                { key: 'Entrega Pedido', icon: '🚚', color: '#7C3AED', bg: '#F5F3FF' },
+              ].map(c => {
+                const st = categoryStats[c.key] || { count: 0, total: 0 }
+                return (
+                  <div key={c.key} style={{ background: c.bg, borderRadius: 14, padding: '10px 12px', border: `1px solid ${c.color}22` }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: c.color, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.icon} {c.key}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', lineHeight: 1 }}>{st.count}<span style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', marginLeft: 3 }}>veces</span></div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: c.color, marginTop: 2 }}>{fmt(st.total)}</div>
+                  </div>
+                )
+              })}
+              {/* Gasto total */}
+              <div style={{ background: 'var(--panel-grad, #1E1B4B)', borderRadius: 14, padding: '10px 12px', color: '#fff' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.6)', marginBottom: 3, whiteSpace: 'nowrap' }}>💰 Gasto total</div>
+                <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1 }}>{fmt(gastoLogisticoTotal)}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', marginTop: 4 }}>{viajes.length} viaje{viajes.length !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+          )}
+
           {/* ── Empty state ── */}
           {viajes.length === 0 && (
             <div style={{ textAlign: 'center', padding: '56px 20px', borderRadius: 20, border: '1.5px dashed var(--border)', background: 'var(--surface2)' }}>
@@ -535,14 +576,22 @@ export default function Logistica() {
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: stateBg, color: stateColor }}>{viaje.status}</span>
                       {tasks.length > 0 && (
                         <span style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 600 }}>
-                          <i className="fa fa-check" style={{ marginRight: 3, color: '#059669' }} />{doneTasks}/{tasks.length} tareas
+                          <i className="fa fa-check" style={{ marginRight: 3, color: '#059669' }} />{doneTasks}/{tasks.length} paradas
                         </span>
                       )}
-                      {viaje.cost && (
-                        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt2)' }}>
-                          <i className="fa fa-dollar-sign" style={{ marginRight: 3, color: 'var(--txt3)', fontSize: 9 }} />{Number(viaje.cost).toLocaleString('es-AR')} viático
+                      {viajeTotal(viaje) > 0 && (
+                        <span style={{ fontSize: 10, fontWeight: 800, color: '#059669', background: '#DCFCE7', padding: '2px 9px', borderRadius: 20 }}>
+                          {fmt(viajeTotal(viaje))} total
                         </span>
                       )}
+                      {viaje.budgetId && (() => {
+                        const b = budgets.find(x => String(x.id) === String(viaje.budgetId))
+                        return b ? (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-xlt)', padding: '2px 9px', borderRadius: 20 }}>
+                            <i className="fa fa-gift" style={{ marginRight: 3, fontSize: 9 }} />{b.company || b.contact || b.num}
+                          </span>
+                        ) : null
+                      })()}
                     </div>
                   </div>
                   <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 11, color: isOpen ? 'var(--brand)' : 'var(--txt4)', flexShrink: 0 }} />
@@ -553,7 +602,7 @@ export default function Logistica() {
                   <div style={{ borderTop: '1px solid var(--border)', padding: '16px 18px' }}>
 
                     {/* Campos del header del viaje */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 18 }}>
+                    <div className="viaje-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
                       <div className="fg" style={{ marginBottom: 0 }}>
                         <label>Fecha de salida</label>
                         <input type="date" value={viaje.date}
@@ -565,17 +614,21 @@ export default function Logistica() {
                           onChange={e => patchViaje(viaje.id, { time: e.target.value })} />
                       </div>
                       <div className="fg" style={{ marginBottom: 0 }}>
-                        <label>Viático / Costo Total ($)</label>
-                        <input type="number" value={viaje.cost}
-                          onChange={e => patchViaje(viaje.id, { cost: e.target.value })}
-                          placeholder="0" min="0" />
-                      </div>
-                      <div className="fg" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
                         <label>Estado general</label>
                         <select value={viaje.status}
                           onChange={e => patchViaje(viaje.id, { status: e.target.value })}
                           style={{ borderRadius: 10, fontWeight: 700, color: stateColor, borderColor: stateColor, background: stateBg }}>
                           {['Planificado', 'En Curso', 'Finalizado'].map(s => <option key={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div className="fg" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                        <label><i className="fa fa-gift" style={{ marginRight: 5, color: 'var(--brand)', fontSize: 10 }} />Pedido / Cliente asociado (opcional)</label>
+                        <select value={viaje.budgetId || ''}
+                          onChange={e => patchViaje(viaje.id, { budgetId: e.target.value })}>
+                          <option value="">Sin asociar — viaje general</option>
+                          {budgets.map(b => (
+                            <option key={b.id} value={b.id}>{b.num || `#${b.id}`} — {b.company || b.contact || 'Cliente'}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -617,6 +670,18 @@ export default function Logistica() {
                             placeholder={task.category === 'Entrega Pedido' ? 'Ej: Dejar pedido #4025 en Saavedra' : task.category === 'Mercadería' ? 'Ej: Retirar cajas en depósito Once' : 'Ej: Comprar cintas en Palermo'}
                             style={{ flex: 1, minWidth: 0, fontSize: 12, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', outline: 'none', opacity: task.done ? .55 : 1, textDecoration: task.done ? 'line-through' : 'none' }}
                           />
+                          {/* Costo de la parada */}
+                          <div style={{ position: 'relative', flexShrink: 0, width: 96 }}>
+                            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 11, fontWeight: 700, color: 'var(--txt4)', pointerEvents: 'none' }}>$</span>
+                            <input
+                              type="number" min="0" inputMode="numeric"
+                              value={task.cost ?? ''}
+                              onChange={e => patchTask(viaje.id, task.id, { cost: e.target.value })}
+                              placeholder="0"
+                              title="Costo de esta parada"
+                              style={{ width: '100%', boxSizing: 'border-box', fontSize: 12, fontWeight: 700, padding: '6px 8px 6px 18px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', outline: 'none', textAlign: 'right' }}
+                            />
+                          </div>
                           {/* Botón completar */}
                           <button
                             onClick={() => patchTask(viaje.id, task.id, { done: !task.done })}
@@ -644,6 +709,51 @@ export default function Logistica() {
                         Añadir Parada / Tarea
                       </button>
                     </div>
+
+                    {/* ── Resumen de costos del viaje ── */}
+                    {tasks.length > 0 && (() => {
+                      const cats = ['Insumos', 'Mercadería', 'Entrega Pedido']
+                      const catColors = { 'Insumos': '#D97706', 'Mercadería': '#2563EB', 'Entrega Pedido': '#7C3AED' }
+                      const catIcons = { 'Insumos': '📦', 'Mercadería': '🛒', 'Entrega Pedido': '🚚' }
+                      const byCat = cats.map(c => {
+                        const items = tasks.filter(t => t.category === c)
+                        return { cat: c, count: items.length, total: items.reduce((s, t) => s + (Number(t.cost) || 0), 0) }
+                      }).filter(c => c.count > 0)
+                      const assocBudget = viaje.budgetId ? budgets.find(b => String(b.id) === String(viaje.budgetId)) : null
+                      return (
+                        <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 14, background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <i className="fa fa-calculator" style={{ color: 'var(--brand)', fontSize: 10 }} />Resumen de costos
+                          </div>
+                          {/* Desglose por categoría */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                            {byCat.map(c => (
+                              <div key={c.cat} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+                                <span style={{ color: 'var(--txt2)', fontWeight: 600 }}>
+                                  {catIcons[c.cat]} {c.cat}
+                                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: catColors[c.cat], background: 'var(--surface)', padding: '1px 7px', borderRadius: 10 }}>×{c.count}</span>
+                                </span>
+                                <span style={{ fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{fmt(c.total)}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {/* Total del viaje */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1.5px dashed var(--border2)' }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)' }}>Costo total del viaje</span>
+                            <span style={{ fontSize: 18, fontWeight: 800, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>{fmt(viajeTotal(viaje))}</span>
+                          </div>
+                          {/* Costo logístico de 1 pedido */}
+                          {assocBudget && (
+                            <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: 'var(--brand-xlt)', border: '1px solid var(--brand-dim)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <i className="fa fa-gift" style={{ color: 'var(--brand)', fontSize: 13, flexShrink: 0 }} />
+                              <div style={{ fontSize: 11, color: 'var(--txt2)', lineHeight: 1.4 }}>
+                                Costo logístico del pedido <b style={{ color: 'var(--brand)' }}>{assocBudget.num || assocBudget.company || assocBudget.contact}</b>: <b style={{ color: '#059669' }}>{fmt(viajeTotal(viaje))}</b>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
 
                     {/* Acciones del viaje */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
