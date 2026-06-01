@@ -434,12 +434,16 @@ export default function Presupuesto() {
   }
 
   /* ── Helper: costo unitario de un kit ──
-     fixedQty: el insumo tiene cant. fija (total pedido, no ×kit) → se amortiza
-     designCost: honorario único del diseñador → se amortiza por cant. de kits  */
+     fixedQty:    el insumo tiene cant. fija (total pedido, no ×kit) → se amortiza
+     designCost:  honorario único del diseñador → se amortiza por cant. de kits
+     laborCost:   honorario único de mano de obra → se amortiza por cant. de kits
+     printCost:   costo fijo total de impresión/grabado → se amortiza por cant. de kits */
   const kitCostUnit = (kit) => {
     const kq = Math.max(1, num(kit.qty))
     let cu = num(kit.personalizacion?.costUnit)
     if (num(kit.personalizacion?.designCost) > 0) cu += num(kit.personalizacion.designCost) / kq
+    if (num(kit.personalizacion?.laborCost)  > 0) cu += num(kit.personalizacion.laborCost)  / kq
+    if (num(kit.personalizacion?.printCost)  > 0) cu += num(kit.personalizacion.printCost)  / kq
     ;(kit.packaging || []).forEach(p => {
       cu += p.fixedQty
         ? (num(p.costUnit) * num(p.qty)) / kq   // costo amortizado
@@ -450,37 +454,49 @@ export default function Presupuesto() {
   }
 
   /* ── Cálculo de precio desde margen ────────────────────────────────────
-     Fórmula: price = cost / (1 - m/100)
-     Así si ponés 35% de margen, el "Margen real" mostrado dará exactamente 35%
-     (margen sobre precio de venta, no markup sobre costo). Capada en 99% para
-     evitar división por cero / explosión de precios. */
+     Fórmula base: price = cost / (1 - m/100) — margen sobre precio de venta.
+     Capada en 99% para evitar división por cero / explosión de precios. */
   const priceFromMargin = (cost, marginPct) => {
     const m = Math.min(99, Math.max(0, num(marginPct))) / 100
     return Math.round(num(cost) / (1 - m))
   }
 
-  /* ── Margen: cambiar el % recalcula precios en vivo en TODAS las alternativas y kits ── */
-  const setMarginAndReprice = (val) => {
-    setF('margin', val)
-    setAlternatives(prev => prev.map(alt => ({
-      ...alt,
-      kits: (alt.kits || []).map(item => {
-        if (item.type === 'kit') {
-          const cu = kitCostUnit(item)
-          return cu > 0 ? { ...item, priceUnit: priceFromMargin(cu, val) } : item
-        }
-        const cu = num(item.costUnit)
-        return cu > 0 ? { ...item, priceUnit: priceFromMargin(cu, val) } : item
-      })
-    })))
+  /* ── Costo unitario EFECTIVO de un ítem = costo propio + parte pro-rata de los costos fijos.
+     Los costos fijos del presupuesto (envío cargado al cliente + logística/comisionista) se
+     distribuyen entre los ítems en proporción a su costo total. Así el priceUnit ya cubre
+     su porción de overhead → "Margen real" en el panel coincide con el % ingresado. */
+  const _effectiveItemCostUnit = (item, sharedFixed, totalItemsBaseCost) => {
+    const ownCost = item.type === 'kit' ? kitCostUnit(item) : num(item.costUnit)
+    const qty = Math.max(1, num(item.qty))
+    if (ownCost <= 0 || totalItemsBaseCost <= 0 || sharedFixed <= 0) return ownCost
+    const itemTotalCost = ownCost * qty
+    const share = (itemTotalCost / totalItemsBaseCost) * sharedFixed
+    return ownCost + (share / qty)
   }
 
-  /* ── Auto-reprice de un kit: cuando cambian sus componentes (packaging/products/personalización),
-     recalcula priceUnit con el margen actual. Garantiza que el precio nunca quede stale. */
-  const repriceKitInPlace = (kit) => {
-    const cu = kitCostUnit(kit)
-    if (cu <= 0) return kit
-    return { ...kit, priceUnit: priceFromMargin(cu, form.margin) }
+  /* ── Margen: cambiar el % recalcula precios en TODAS las alternativas y kits,
+     distribuyendo los costos fijos pro-rata para que el margen real = % ingresado. */
+  const setMarginAndReprice = (val) => {
+    setF('margin', val)
+    setAlternatives(prev => prev.map(alt => {
+      const kits = alt.kits || []
+      // Costos fijos del presupuesto que NO se escalan con qty: logística + envío cargado al cliente
+      const shipCharged = form.shipCharged !== false
+      const sharedFixed = Math.max(0, num(form.shipCost)) * (shipCharged ? 1 : 0)
+        + Math.round((form.logisticaParadas || []).reduce((s, p) => s + Math.max(0, num(p.cost)), 0))
+      // Costo total de los ítems (suma de qty × costoPropio) — base para la distribución
+      const totalItemsBaseCost = kits.reduce((s, it) => {
+        const c = it.type === 'kit' ? kitCostUnit(it) : num(it.costUnit)
+        return s + Math.max(0, c) * Math.max(0, num(it.qty))
+      }, 0)
+      return {
+        ...alt,
+        kits: kits.map(item => {
+          const effCost = _effectiveItemCostUnit(item, sharedFixed, totalItemsBaseCost)
+          return effCost > 0 ? { ...item, priceUnit: priceFromMargin(effCost, val) } : item
+        })
+      }
+    }))
   }
 
   /* ── Logística / Comisionista — paradas atribuidas a ESTE presupuesto ── */
@@ -1844,6 +1860,50 @@ export default function Presupuesto() {
                         {num(kit.personalizacion?.designCost) > 0 && (
                           <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>
                             {fmt(num(kit.personalizacion.designCost))} ÷ {num(kit.qty)} u. = <strong style={{ color: 'var(--money)' }}>{fmt(Math.round(num(kit.personalizacion.designCost) / Math.max(1, num(kit.qty))))}</strong> amortizado por kit
+                          </div>
+                        )}
+
+                        {/* 🛠️ Mano de Obra (honorario único, se amortiza por kit) */}
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)', flexWrap: 'wrap' }}>
+                          <div style={{ flex: 1, minWidth: 130 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                              🛠️ Costo Mano de Obra
+                            </div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Honorario único — se amortiza por cantidad</div>
+                          </div>
+                          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ total</span>
+                            <input type="text" inputMode="numeric" value={fmtTbl(kit.personalizacion?.laborCost)}
+                              onFocus={selectOnFocus}
+                              onChange={e => { const r = parseTbl(e.target.value); updatePersonalizacion(kitIdx, 'laborCost', r === '' ? 0 : Number(r)) }}
+                              style={{ width: 90, textAlign: 'right', fontSize: 12, padding: '6px 8px', height: 32, fontVariantNumeric: 'tabular-nums' }} />
+                          </div>
+                        </div>
+                        {num(kit.personalizacion?.laborCost) > 0 && (
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>
+                            {fmt(num(kit.personalizacion.laborCost))} ÷ {num(kit.qty)} u. = <strong style={{ color: 'var(--money)' }}>{fmt(Math.round(num(kit.personalizacion.laborCost) / Math.max(1, num(kit.qty))))}</strong> amortizado por kit
+                          </div>
+                        )}
+
+                        {/* 🖨️ Impresión General (valor fijo total) */}
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)', flexWrap: 'wrap' }}>
+                          <div style={{ flex: 1, minWidth: 130 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                              🖨️ Costo de Impresión General
+                            </div>
+                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Valor fijo total del proceso de estampado/grabado</div>
+                          </div>
+                          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 11, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ total</span>
+                            <input type="text" inputMode="numeric" value={fmtTbl(kit.personalizacion?.printCost)}
+                              onFocus={selectOnFocus}
+                              onChange={e => { const r = parseTbl(e.target.value); updatePersonalizacion(kitIdx, 'printCost', r === '' ? 0 : Number(r)) }}
+                              style={{ width: 90, textAlign: 'right', fontSize: 12, padding: '6px 8px', height: 32, fontVariantNumeric: 'tabular-nums' }} />
+                          </div>
+                        </div>
+                        {num(kit.personalizacion?.printCost) > 0 && (
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 4 }}>
+                            {fmt(num(kit.personalizacion.printCost))} ÷ {num(kit.qty)} u. = <strong style={{ color: 'var(--money)' }}>{fmt(Math.round(num(kit.personalizacion.printCost) / Math.max(1, num(kit.qty))))}</strong> amortizado por kit
                           </div>
                         )}
                       </div>
