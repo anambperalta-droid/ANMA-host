@@ -2604,33 +2604,115 @@ export default function Presupuesto() {
                 </div>
               )
             })()}
-            {/* ── Desglose por kit ── */}
+            {/* ── Desglose por kit (con anidamiento de componentes) ── */}
             {items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).length > 0 && (
               <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.28)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>Desglose</div>
-                {items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).map((it, idx) => (
-                  <div key={idx} style={{ marginBottom: 5 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: 'rgba(255,255,255,.75)', fontWeight: 600 }}>
-                        {it.type === 'kit' ? (it.name || 'Kit') : it.name}
-                      </span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.9)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                        {fmt(num(it.qty) * num(it.priceUnit))}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.35)', marginTop: 1 }}>
-                      {(() => {
-                        const isKit = it.type === 'kit'
-                        const unitLabel = isKit ? (it.qty !== 1 ? 'kits' : 'kit') : (it.qty !== 1 ? 'unidades' : 'unidad')
-                        const costPerUnit = isKit ? Math.round(kitCostUnit(it)) : Math.round(num(it.costUnit))
-                        return `${it.qty} ${unitLabel} · Costo u.: ${fmt(costPerUnit)}`
-                      })()}
-                      {num(it.personalizacion?.designCost) > 0 && (
-                        <span style={{ marginLeft: 5, color: 'rgba(167,139,250,.6)' }}>+ diseñador</span>
+                {items.filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name).map((it, idx) => {
+                  const isKit = it.type === 'kit'
+                  const kitQty = num(it.qty) || 1
+                  // Componentes anidados — solo en modo kit
+                  const products  = isKit ? (it.products  || []).filter(p => p.name) : []
+                  const packaging = isKit ? (it.packaging || []).filter(p => p.name) : []
+                  const hasPers   = isKit && (it.personalizacion?.desc || num(it.personalizacion?.costUnit) > 0)
+                  const hasDesign = isKit && num(it.personalizacion?.designCost) > 0
+                  const hasLabor  = isKit && num(it.personalizacion?.laborCost)  > 0
+                  const hasPrint  = isKit && num(it.personalizacion?.printCost)  > 0
+                  return (
+                    <div key={idx} style={{ marginBottom: 8, padding: isKit && (products.length || packaging.length || hasPers || hasDesign || hasLabor || hasPrint) ? '6px 8px 4px' : 0, background: isKit && (products.length || packaging.length) ? 'rgba(255,255,255,.03)' : 'transparent', borderRadius: 6, border: isKit && (products.length || packaging.length) ? '1px solid rgba(255,255,255,.06)' : 'none' }}>
+                      {/* Header del ítem (kit o producto simple) */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11.5, color: 'rgba(255,255,255,.85)', fontWeight: 700 }}>
+                          {isKit ? '📦 ' : ''}{isKit ? (it.name || 'Kit') : it.name}
+                          <span style={{ fontWeight: 400, color: 'rgba(255,255,255,.45)', marginLeft: 4, fontSize: 10 }}>
+                            ({it.qty} {isKit ? (it.qty !== 1 ? 'uds' : 'ud') : (it.qty !== 1 ? 'unidades' : 'unidad')})
+                          </span>
+                        </span>
+                        <span style={{ fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,.95)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                          {fmt(num(it.qty) * num(it.priceUnit))}
+                        </span>
+                      </div>
+
+                      {/* Subtítulo cost u. — sólo para productos simples (no kits anidados) */}
+                      {!isKit && (
+                        <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.35)', marginTop: 1 }}>
+                          Costo u.: {fmt(Math.round(num(it.costUnit)))}
+                        </div>
+                      )}
+
+                      {/* ── Componentes anidados del kit ── */}
+                      {isKit && (products.length > 0 || packaging.length > 0 || hasPers || hasDesign || hasLabor || hasPrint) && (
+                        <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {/* B — Productos del kit */}
+                          {products.map((p, pi) => (
+                            <div key={`p-${pi}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(255,255,255,.55)' }}>
+                              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>↳</span>
+                                🎁 {p.name}
+                                <span style={{ color: 'rgba(255,255,255,.3)', marginLeft: 4, fontSize: 9.5 }}>× {num(p.qty) || 1}</span>
+                              </span>
+                              {num(p.costUnit) > 0 && (
+                                <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                                  {fmt(num(p.costUnit) * num(p.qty) * kitQty)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {/* A — Packaging del kit */}
+                          {packaging.map((p, pi) => (
+                            <div key={`pk-${pi}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(255,255,255,.55)' }}>
+                              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>↳</span>
+                                📦 {p.name}
+                                <span style={{ color: 'rgba(255,255,255,.3)', marginLeft: 4, fontSize: 9.5 }}>
+                                  × {p.fixedQty ? (num(p.qty) || 1) : (num(p.qty) || 1) * kitQty}
+                                  {p.fixedQty ? <span style={{ marginLeft: 3, color: 'rgba(167,139,250,.55)', fontWeight: 700 }}>(fijo)</span> : null}
+                                </span>
+                              </span>
+                              {num(p.costUnit) > 0 && (
+                                <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                                  {fmt(p.fixedQty ? num(p.costUnit) * num(p.qty) : num(p.costUnit) * num(p.qty) * kitQty)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {/* C — Personalización */}
+                          {hasPers && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(255,255,255,.55)' }}>
+                              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>↳</span>
+                                🎨 {it.personalizacion?.desc || 'Personalización'}
+                              </span>
+                              {num(it.personalizacion?.costUnit) > 0 && (
+                                <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                                  {fmt(num(it.personalizacion.costUnit) * kitQty)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {hasDesign && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(167,139,250,.6)' }}>
+                              <span><span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>↳</span>✏️ Diseñador <span style={{ fontSize: 9, opacity: .7 }}>(único)</span></span>
+                              <span style={{ fontSize: 10, fontVariantNumeric: 'tabular-nums' }}>{fmt(num(it.personalizacion.designCost))}</span>
+                            </div>
+                          )}
+                          {hasLabor && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(167,139,250,.6)' }}>
+                              <span><span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>↳</span>🛠️ Mano de obra <span style={{ fontSize: 9, opacity: .7 }}>(único)</span></span>
+                              <span style={{ fontSize: 10, fontVariantNumeric: 'tabular-nums' }}>{fmt(num(it.personalizacion.laborCost))}</span>
+                            </div>
+                          )}
+                          {hasPrint && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(167,139,250,.6)' }}>
+                              <span><span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>↳</span>🖨️ Impresión <span style={{ fontSize: 9, opacity: .7 }}>(fijo)</span></span>
+                              <span style={{ fontSize: 10, fontVariantNumeric: 'tabular-nums' }}>{fmt(num(it.personalizacion.printCost))}</span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
