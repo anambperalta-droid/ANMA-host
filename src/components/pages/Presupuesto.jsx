@@ -1288,17 +1288,25 @@ export default function Presupuesto() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
     <style>{`
-      /* ── Kit builder responsive ── */
+      /* ── Kit builder responsive — tabla coherente con modo simple ── */
       .kit-comp-row{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:8px;padding:5px 8px;border:1px solid var(--border);flex-wrap:wrap}
       .kit-comp-name-group{flex:1;display:flex;gap:4px;min-width:140px}
       .kit-comp-nums{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:nowrap}
       .kit-qty-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);borderRadius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--brand);margin-left:4px;flex-shrink:0}
+      /* Nueva tabla unificada: PRODUCTO / QTY / COSTO U. / SUBTOTAL / × */
+      .kit-tbl{display:flex;flex-direction:column;gap:5px}
+      .kit-tbl-hdr{display:grid;grid-template-columns:14px 1fr 64px 96px 90px 26px;gap:6px;padding:5px 8px 7px;border-bottom:1.5px solid var(--border);margin-bottom:6px;align-items:end}
+      .kit-tbl-hdr span{font-size:9px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
+      .kit-tbl-row{display:grid;grid-template-columns:14px 1fr 64px 96px 90px 26px;gap:6px;align-items:center;background:var(--surface);border-radius:8px;padding:5px 8px;border:1px solid var(--border)}
+      .kit-tbl-row .ico{display:flex;align-items:center;justify-content:center}
       @media(max-width:640px){
         .kit-comp-row{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
         .kit-comp-name-group{min-width:0;width:100%}
         .kit-comp-nums{width:100%;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:6px;margin-top:0}
         .kit-comp-nums input[type=number]{width:64px!important}
         .kit-comp-nums input[type=text]{width:80px!important}
+        .kit-tbl-hdr{display:none}
+        .kit-tbl-row{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
         .kit-hdr{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
         .kit-hdr-right{flex-wrap:wrap;gap:6px!important}
         .kit-hdr input{min-width:0}
@@ -1804,12 +1812,13 @@ export default function Presupuesto() {
 
                     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-                      {/* ─ Componente A: Packaging / Insumos ─ */}
+                      {/* ─ Componente A: Packaging / Insumos ─ (tabla coherente con modo simple) */}
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>A</div>
                             <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Packaging / Insumos</span>
+                            <span style={{ fontSize: 10, color: 'var(--txt3)', marginLeft: 2 }}>cajas, bolsas, cintas...</span>
                           </div>
                           <button className="btn btn-ghost btn-xs" onClick={() => addPackComp(kitIdx)}>
                             <i className="fa fa-plus" /> Agregar
@@ -1821,81 +1830,86 @@ export default function Presupuesto() {
                             Sin insumos — agregá cajas, bolsas, cintas, papel de seda, etc.
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                          <div className="kit-tbl">
+                            {/* Header de columnas — mismo patrón que modo simple */}
+                            <div className="kit-tbl-hdr">
+                              <span></span>
+                              <span style={{ textAlign: 'left' }}>Insumo</span>
+                              <span style={{ textAlign: 'center' }}>Cant.</span>
+                              <span style={{ textAlign: 'right' }}>Costo u.</span>
+                              <span style={{ textAlign: 'right' }}>Subtotal</span>
+                              <span></span>
+                            </div>
                             {(kit.packaging || []).map((comp, cIdx) => (
-                              <div key={cIdx} className="kit-comp-row">
-                                <i className="fa fa-box" style={{ fontSize: 11, color: 'var(--brand)', flexShrink: 0, opacity: .65 }} />
-                                {/* Nombre del insumo — autocomplete predictivo */}
-                                <div className="kit-comp-name-group" style={{ flex: 1, minWidth: 0 }}>
-                                  <ProductAutocomplete
-                                    value={comp.name}
-                                    products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
-                                    onChangeText={(v) => updatePackComp(kitIdx, cIdx, 'name', v)}
-                                    onPick={(ins) => {
-                                      updatePackComp(kitIdx, cIdx, 'id', ins.id || '')
-                                      updatePackComp(kitIdx, cIdx, 'name', ins.name || '')
-                                      updatePackComp(kitIdx, cIdx, 'costUnit', num(ins.cost))
-                                    }}
-                                    placeholder="Ej: Caja kraft, Bolsa organza..."
-                                    inputStyle={{ fontSize: 12, padding: '4px 8px', height: 30 }}
-                                  />
-                                </div>
-                                <div className="kit-comp-nums">
-                                  {/* Costo unitario */}
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                                    <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
-                                    <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
-                                      onChange={e => { const r = parseTbl(e.target.value); updatePackComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
-                                      style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
+                              <div key={cIdx} className="kit-tbl-row">
+                                <span className="ico" style={{ color: 'var(--brand)', opacity: .7, fontSize: 11 }}>
+                                  <i className="fa fa-box" />
+                                </span>
+                                {/* Nombre del insumo — autocomplete + toggle inline ×kit/fijo */}
+                                <div style={{ minWidth: 0, display: 'flex', gap: 4, alignItems: 'center' }}>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <ProductAutocomplete
+                                      value={comp.name}
+                                      products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
+                                      onChangeText={(v) => updatePackComp(kitIdx, cIdx, 'name', v)}
+                                      onPick={(ins) => {
+                                        updatePackComp(kitIdx, cIdx, 'id', ins.id || '')
+                                        updatePackComp(kitIdx, cIdx, 'name', ins.name || '')
+                                        updatePackComp(kitIdx, cIdx, 'costUnit', num(ins.cost))
+                                      }}
+                                      placeholder="Ej: Caja kraft, Bolsa organza..."
+                                      inputStyle={{ fontSize: 12, padding: '5px 8px', height: 32 }}
+                                    />
                                   </div>
-                                  {/* Toggle: ×kit (default) vs fijo (cantidad total fija para todo el pedido) */}
+                                  {/* Toggle ×kit / fijo — inline al lado del nombre */}
                                   <button
                                     onClick={() => updatePackComp(kitIdx, cIdx, 'fixedQty', !comp.fixedQty)}
                                     title={comp.fixedQty ? 'Cantidad fija para todo el pedido — clic para cambiar a ×kit' : 'Cantidad por kit — clic para fijar cantidad total del pedido'}
-                                    style={{ height: 28, padding: '0 7px', borderRadius: 6, border: `1.5px solid ${comp.fixedQty ? 'var(--brand)' : 'var(--border)'}`, background: comp.fixedQty ? 'rgba(124,58,237,.1)' : 'transparent', color: comp.fixedQty ? 'var(--brand)' : 'var(--txt4)', cursor: 'pointer', fontSize: 9, fontWeight: 700, fontFamily: 'inherit', flexShrink: 0, lineHeight: 1 }}>
+                                    style={{ height: 32, padding: '0 8px', borderRadius: 6, border: `1.5px solid ${comp.fixedQty ? 'var(--brand)' : 'var(--border)'}`, background: comp.fixedQty ? 'rgba(124,58,237,.1)' : 'transparent', color: comp.fixedQty ? 'var(--brand)' : 'var(--txt4)', cursor: 'pointer', fontSize: 10, fontWeight: 700, fontFamily: 'inherit', flexShrink: 0, lineHeight: 1 }}>
                                     {comp.fixedQty ? '📦 fijo' : '×kit'}
                                   </button>
-                                  {/* Qty — modo ×kit muestra total, modo fijo muestra cantidad directa */}
-                                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                                    <span style={{ fontSize: 8, color: comp.fixedQty ? 'var(--brand)' : 'var(--txt3)', lineHeight: 1, fontWeight: comp.fixedQty ? 700 : 400 }}>
-                                      {comp.fixedQty ? 'cant. fija' : 'cant. total'}
-                                    </span>
-                                    <input type="number" min="1"
-                                      value={comp.fixedQty ? (num(comp.qty) || 1) : (num(comp.qty) || 1) * (num(kit.qty) || 1)}
-                                      onFocus={selectOnFocus}
-                                      onChange={e => {
-                                        const val = Math.max(1, parseInt(e.target.value) || 1)
-                                        updatePackComp(kitIdx, cIdx, 'qty', comp.fixedQty ? val : Math.max(1, Math.round(val / (num(kit.qty) || 1))))
-                                      }}
-                                      style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700, borderColor: comp.fixedQty ? 'var(--brand)' : undefined }} />
-                                  </div>
-                                  {/* Subtotal */}
-                                  {num(comp.costUnit) > 0 && (
-                                    <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 58, textAlign: 'right' }}>
-                                      {fmt(comp.fixedQty
-                                        ? num(comp.costUnit) * num(comp.qty)
-                                        : num(comp.costUnit) * num(comp.qty) * num(kit.qty))}
-                                    </span>
-                                  )}
-                                  <button onClick={() => removePackComp(kitIdx, cIdx)}
-                                    style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
-                                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
-                                    <i className="fa fa-xmark" />
-                                  </button>
                                 </div>
+                                {/* Cant. — modo ×kit muestra cantidad por kit; modo fijo muestra cantidad total del pedido */}
+                                <input type="number" min="1"
+                                  value={num(comp.qty) || 1}
+                                  onFocus={selectOnFocus}
+                                  onChange={e => updatePackComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
+                                  title={comp.fixedQty
+                                    ? `Cantidad fija total del pedido: ${num(comp.qty) || 1}`
+                                    : `${num(comp.qty) || 1} por kit × ${num(kit.qty) || 1} kits = ${(num(comp.qty) || 1) * (num(kit.qty) || 1)} total`}
+                                  style={{ height: 32, textAlign: 'center', fontSize: 12, padding: '0 4px', fontWeight: 700, borderColor: comp.fixedQty ? 'var(--brand)' : undefined }} />
+                                {/* Costo unitario */}
+                                <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                  onChange={e => { const r = parseTbl(e.target.value); updatePackComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                  style={{ height: 32, textAlign: 'right', fontSize: 12, padding: '0 8px', fontVariantNumeric: 'tabular-nums' }} />
+                                {/* Subtotal */}
+                                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: num(comp.costUnit) > 0 ? 'var(--money)' : 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>
+                                  {num(comp.costUnit) > 0
+                                    ? fmt(comp.fixedQty
+                                        ? num(comp.costUnit) * num(comp.qty)
+                                        : num(comp.costUnit) * num(comp.qty) * num(kit.qty))
+                                    : '—'}
+                                </div>
+                                {/* Remove */}
+                                <button onClick={() => removePackComp(kitIdx, cIdx)}
+                                  style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt4)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt4)'; e.currentTarget.style.background = 'transparent' }}>
+                                  <i className="fa fa-xmark" />
+                                </button>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
 
-                      {/* ─ Componente B: Contenido del kit ─ */}
+                      {/* ─ Componente B: Contenido del kit ─ (tabla coherente con modo simple) */}
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 20, height: 20, borderRadius: 6, background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>B</div>
                             <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Contenido del kit</span>
+                            <span style={{ fontSize: 10, color: 'var(--txt3)', marginLeft: 2 }}>productos incluidos en cada caja</span>
                           </div>
                           <button className="btn btn-ghost btn-xs" onClick={() => addProdComp(kitIdx)}>
                             <i className="fa fa-plus" /> Agregar
@@ -1907,11 +1921,22 @@ export default function Presupuesto() {
                             Sin productos — agregá mates, termos, tazas, libretas, etc.
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                          <div className="kit-tbl">
+                            {/* Header de columnas — mismo patrón que modo simple */}
+                            <div className="kit-tbl-hdr">
+                              <span></span>
+                              <span style={{ textAlign: 'left' }}>Producto</span>
+                              <span style={{ textAlign: 'center' }}>Cant. ×kit</span>
+                              <span style={{ textAlign: 'right' }}>Costo u.</span>
+                              <span style={{ textAlign: 'right' }}>Subtotal</span>
+                              <span></span>
+                            </div>
                             {(kit.products || []).map((comp, cIdx) => (
-                              <div key={cIdx} className="kit-comp-row">
-                                <i className="fa fa-gift" style={{ fontSize: 11, color: '#059669', flexShrink: 0, opacity: .65 }} />
-                                <div className="kit-comp-name-group" style={{ flex: 1, minWidth: 0 }}>
+                              <div key={cIdx} className="kit-tbl-row">
+                                <span className="ico" style={{ color: '#059669', opacity: .7, fontSize: 11 }}>
+                                  <i className="fa fa-gift" />
+                                </span>
+                                <div style={{ minWidth: 0 }}>
                                   <ProductAutocomplete
                                     value={comp.name}
                                     products={products}
@@ -1922,44 +1947,37 @@ export default function Presupuesto() {
                                       updateProdComp(kitIdx, cIdx, 'id', p.id)
                                     }}
                                     placeholder="Nombre del producto..."
-                                    inputStyle={{ fontSize: 12, padding: '4px 8px', height: 30 }}
+                                    inputStyle={{ fontSize: 12, padding: '5px 8px', height: 32 }}
                                   />
                                 </div>
-                                <div className="kit-comp-nums">
-                                  {/* Costo unitario */}
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                                    <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
-                                    <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
-                                      onChange={e => { const r = parseTbl(e.target.value); updateProdComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
-                                      style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
-                                  </div>
-                                  {/* Qty — muestra TOTAL (kit.qty × comp.qty), guarda por-kit */}
-                                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                                    <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>cant. total</span>
-                                    <input type="number" min="1"
-                                      value={(num(comp.qty) || 1) * (num(kit.qty) || 1)}
-                                      onFocus={selectOnFocus}
-                                      onChange={e => {
-                                        const total = Math.max(1, parseInt(e.target.value) || 1)
-                                        updateProdComp(kitIdx, cIdx, 'qty', Math.max(1, Math.round(total / (num(kit.qty) || 1))))
-                                      }}
-                                      style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700 }} />
-                                  </div>
-                                  {/* Subtotal total */}
-                                  {num(comp.costUnit) > 0 && (
-                                    <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 58, textAlign: 'right' }}>
-                                      {fmt(num(comp.costUnit) * num(comp.qty) * num(kit.qty))}
-                                    </span>
-                                  )}
-                                  <button onClick={() => removeProdComp(kitIdx, cIdx)}
-                                    style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
-                                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
-                                    <i className="fa fa-xmark" />
-                                  </button>
+                                {/* Cant. por kit (1 = una unidad por cada caja) */}
+                                <input type="number" min="1"
+                                  value={num(comp.qty) || 1}
+                                  onFocus={selectOnFocus}
+                                  onChange={e => updateProdComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
+                                  title={`Total = ${(num(comp.qty) || 1) * (num(kit.qty) || 1)} unidades (${num(comp.qty) || 1} × ${num(kit.qty) || 1} kits)`}
+                                  style={{ height: 32, textAlign: 'center', fontSize: 12, padding: '0 4px', fontWeight: 700 }} />
+                                {/* Costo unitario */}
+                                <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                  onChange={e => { const r = parseTbl(e.target.value); updateProdComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                  style={{ height: 32, textAlign: 'right', fontSize: 12, padding: '0 8px', fontVariantNumeric: 'tabular-nums' }} />
+                                {/* Subtotal = qty × kit.qty × costUnit */}
+                                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: num(comp.costUnit) > 0 ? 'var(--money)' : 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>
+                                  {num(comp.costUnit) > 0 ? fmt(num(comp.costUnit) * num(comp.qty) * num(kit.qty)) : '—'}
                                 </div>
+                                {/* Remove */}
+                                <button onClick={() => removeProdComp(kitIdx, cIdx)}
+                                  style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt4)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt4)'; e.currentTarget.style.background = 'transparent' }}>
+                                  <i className="fa fa-xmark" />
+                                </button>
                               </div>
                             ))}
+                            <div style={{ fontSize: 10, color: 'var(--txt3)', fontStyle: 'italic', textAlign: 'right', padding: '4px 8px 0' }}>
+                              <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .6 }} />
+                              Cant. ×kit es lo que lleva <strong>cada caja</strong>. El total cobrado se multiplica por {num(kit.qty) || 1} kits.
+                            </div>
                           </div>
                         )}
                       </div>
