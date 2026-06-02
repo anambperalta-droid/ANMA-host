@@ -918,13 +918,15 @@ export default function Presupuesto() {
           })
         }
 
-        const hasPers = kit.personalizacion?.desc || num(kit.personalizacion?.costUnit) > 0
-        if (hasPers) {
-          const persTotal = num(kit.personalizacion?.costUnit) * kQty
-          lines.push(`  🎨 *Personalización:* ${kit.personalizacion?.desc || ''}${persTotal > 0 ? ` — ${fmt(persTotal)}` : ''}`)
-        }
-        if (num(kit.personalizacion?.designCost) > 0) {
-          lines.push(`  ✏️ *Diseñador:* ${fmt(num(kit.personalizacion.designCost))} (honorario único)`)
+        // ── Personalización: UNA SOLA LÍNEA al cliente — desglose interno oculto ──
+        // El total incluye costUnit (por unidad × kits) + designCost + laborCost + printCost
+        // (los 3 fijos amortizan por qty pero al cliente le mostramos sólo el total).
+        const persPerKit = num(kit.personalizacion?.costUnit) * kQty
+        const persFixed  = num(kit.personalizacion?.designCost) + num(kit.personalizacion?.laborCost) + num(kit.personalizacion?.printCost)
+        const persTotal  = persPerKit + persFixed
+        const hasPersAny = kit.personalizacion?.desc || persTotal > 0
+        if (hasPersAny) {
+          lines.push(`  🎨 *Personalización:* ${kit.personalizacion?.desc || 'Logo, grabado, impresión'}${persTotal > 0 ? ` — ${fmt(persTotal)}` : ''}`)
         }
       })
 
@@ -1119,21 +1121,32 @@ export default function Presupuesto() {
           return subRow(c.name, num(c.qty || 1), num(c.costUnit), isLast)
         })
 
-        /* ── Bloque C: Personalización ── */
-        const hasPers    = i.personalizacion?.desc || num(i.personalizacion?.costUnit) > 0
-        const hasDesign  = num(i.personalizacion?.designCost) > 0
-        const persHdr    = (hasPers || hasDesign) ? blockHdrRow('🎨', 'C. Personalización', '#FFFBEB') : ''
-        const persRow    = hasPers ? subRow(
-          i.personalizacion?.desc || 'Personalización / Logo',
-          1, num(i.personalizacion?.costUnit), !hasDesign
-        ) : ''
-        const designRow  = hasDesign ? subRow('Honorario diseñador (único)', 1, num(i.personalizacion.designCost), true) : ''
+        /* ── Bloque C: Personalización ── UNA SOLA fila con el total consolidado.
+           Internamente sumamos costUnit (por unidad) + designCost + laborCost + printCost
+           pero al cliente sólo le mostramos UN renglón "Personalización — $TOTAL". */
+        const kQty       = Math.max(1, num(i.qty))
+        const persPerKit = num(i.personalizacion?.costUnit) * kQty
+        const persFixed  = num(i.personalizacion?.designCost) + num(i.personalizacion?.laborCost) + num(i.personalizacion?.printCost)
+        const persTotal  = persPerKit + persFixed
+        const hasPersAny = (i.personalizacion?.desc && persTotal === 0) || persTotal > 0
+        const persHdr    = hasPersAny ? blockHdrRow('🎨', 'C. Personalización', '#FFFBEB') : ''
+        // Construimos UNA sub-fila personalizada con el TOTAL consolidado del bloque
+        // (oculta el desglose interno de diseñador/mano de obra/impresión al cliente)
+        const persRow    = hasPersAny ? `<tr>
+          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:4px 9px 4px 30px">
+            <span style="color:${bc};opacity:.35;font-size:10px;margin-right:5px">↳</span>
+            <span style="color:#374151;font-size:9.5px">${i.personalizacion?.desc || 'Logo, grabado, impresión'}</span>
+          </td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:center;font-size:9px;color:#6B7280">1</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums">${persTotal > 0 ? fmt(persTotal) : ''}</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums;font-weight:600">${persTotal > 0 ? fmt(persTotal) : ''}</td>
+        </tr>` : ''
 
         /* Fila de cierre si no hay sub-filas */
-        const closingRow = (!packItems.length && !prodItems.length && !hasPers && !hasDesign)
+        const closingRow = (!packItems.length && !prodItems.length && !hasPersAny)
           ? `<tr><td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:3px 0"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td><td style="background:${bg2};border-bottom:2px solid ${bdr}"></td></tr>` : ''
 
-        return [kitSep, kitRow, packHdr, ...packRowsHtml, prodHdr, ...prodRowsHtml, persHdr, persRow, designRow, closingRow].filter(Boolean)
+        return [kitSep, kitRow, packHdr, ...packRowsHtml, prodHdr, ...prodRowsHtml, persHdr, persRow, closingRow].filter(Boolean)
       }).join('')
 
       /* Fila de total por alternativa (solo si hay más de una) */
@@ -2277,17 +2290,17 @@ export default function Presupuesto() {
                   </label>
                 </div>
 
-                {/* Fila 4: Parámetros financieros */}
-                <div className="grid2" style={{ marginTop: 4 }}>
+                {/* Fila 4: Parámetros financieros — todos en una línea */}
+                <div className={feats.descuentoCliente ? 'grid3' : 'grid2'} style={{ marginTop: 4 }}>
                   <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" /></div>
                   <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
+                  {feats.descuentoCliente && (
+                    <div className="fg">
+                      <label>Descuento al cliente (%)</label>
+                      <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setDiscountAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setDiscountAndReprice(0) }} min="0" max="100" />
+                    </div>
+                  )}
                 </div>
-                {feats.descuentoCliente && (
-                  <div className="fg" style={{ maxWidth: 200, marginTop: 4 }}>
-                    <label>Descuento al cliente (%)</label>
-                    <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setDiscountAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setDiscountAndReprice(0) }} min="0" max="100" />
-                  </div>
-                )}
 
                 <div className="grid2" style={{ marginTop: 12 }}>
                   {feats.notasInternas && (
@@ -2931,7 +2944,7 @@ export default function Presupuesto() {
       {/* MODAL PREVIEW */}
       {previewHtml && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setPreviewHtml('') }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 940, height: 'min(900px, 90vh)', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0, margin: 'auto 0' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 940, height: 'min(900px, 88vh)', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', borderRadius: '18px 18px 0 0' }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Vista previa — {budgetNum}</h3>
               <div style={{ display: 'flex', gap: 6 }}>
