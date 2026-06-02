@@ -517,7 +517,7 @@ export default function Presupuesto() {
     if (i !== kitIdx) return k
     const patched = patcher(k)
     const cu = kitCostUnit(patched)
-    return cu > 0 ? { ...patched, priceUnit: priceFromMargin(cu, form.margin) } : patched
+    return cu > 0 ? { ...patched, priceUnit: priceFromMargin(cu, form.margin, form.discount) } : patched
   }))
 
   // Componente A — Packaging / Insumos
@@ -573,12 +573,15 @@ export default function Presupuesto() {
     return cu
   }
 
-  /* ── Cálculo de precio desde margen ────────────────────────────────────
-     Fórmula base: price = cost / (1 - m/100) — margen sobre precio de venta.
-     Capada en 99% para evitar división por cero / explosión de precios. */
-  const priceFromMargin = (cost, marginPct) => {
+  /* ── Cálculo de precio desde margen + descuento ───────────────────────
+     price = cost / ((1 - m/100) × (1 - d/100))
+     Pre-compensa el descuento al cliente. Garantía: si ponés 15% margen y
+     5% descuento, el "Margen real" del panel da 15% (no 9.5%). */
+  const priceFromMargin = (cost, marginPct, discountPct = 0) => {
     const m = Math.min(99, Math.max(0, num(marginPct))) / 100
-    return Math.round(num(cost) / (1 - m))
+    const d = Math.min(99, Math.max(0, num(discountPct))) / 100
+    const denom = (1 - m) * (1 - d)
+    return denom > 0 ? Math.round(num(cost) / denom) : Math.round(num(cost))
   }
 
   /* ── Costo unitario EFECTIVO de un ítem = costo propio + parte pro-rata de los costos fijos.
@@ -594,17 +597,14 @@ export default function Presupuesto() {
     return ownCost + (share / qty)
   }
 
-  /* ── Margen: cambiar el % recalcula precios en TODAS las alternativas y kits,
-     distribuyendo los costos fijos pro-rata para que el margen real = % ingresado. */
-  const setMarginAndReprice = (val) => {
-    setF('margin', val)
+  /* ── Reprice unificado: margen + descuento + costos fijos pro-rata.
+     Garantía: el margen real del panel = % de margen ingresado, independiente del descuento. */
+  const _repriceAllKits = (marginPct, discountPct) => {
     setAlternatives(prev => prev.map(alt => {
       const kits = alt.kits || []
-      // Costos fijos del presupuesto que NO se escalan con qty: logística + envío cargado al cliente
       const shipCharged = form.shipCharged !== false
       const sharedFixed = Math.max(0, num(form.shipCost)) * (shipCharged ? 1 : 0)
         + Math.round((form.logisticaParadas || []).reduce((s, p) => s + Math.max(0, num(p.cost)), 0))
-      // Costo total de los ítems (suma de qty × costoPropio) — base para la distribución
       const totalItemsBaseCost = kits.reduce((s, it) => {
         const c = it.type === 'kit' ? kitCostUnit(it) : num(it.costUnit)
         return s + Math.max(0, c) * Math.max(0, num(it.qty))
@@ -613,10 +613,19 @@ export default function Presupuesto() {
         ...alt,
         kits: kits.map(item => {
           const effCost = _effectiveItemCostUnit(item, sharedFixed, totalItemsBaseCost)
-          return effCost > 0 ? { ...item, priceUnit: priceFromMargin(effCost, val) } : item
+          return effCost > 0 ? { ...item, priceUnit: priceFromMargin(effCost, marginPct, discountPct) } : item
         })
       }
     }))
+  }
+
+  const setMarginAndReprice = (val) => {
+    setF('margin', val)
+    _repriceAllKits(val, form.discount)
+  }
+  const setDiscountAndReprice = (val) => {
+    setF('discount', val)
+    _repriceAllKits(form.margin, val)
   }
 
   /* ── Logística / Comisionista — paradas atribuidas a ESTE presupuesto ── */
@@ -1449,7 +1458,7 @@ export default function Presupuesto() {
                                 kits: alt.kits.map((it, i) => i !== idx ? it : {
                                   ...it, name: p.name,
                                   costUnit: p.cost || 0,
-                                  priceUnit: num(p.cost) > 0 ? priceFromMargin(num(p.cost), form.margin) : 0,
+                                  priceUnit: num(p.cost) > 0 ? priceFromMargin(num(p.cost), form.margin, form.discount) : 0,
                                 })
                               }))}
                               placeholder="Nombre del producto..."
@@ -2161,7 +2170,7 @@ export default function Presupuesto() {
                 {feats.descuentoCliente && (
                   <div className="fg" style={{ maxWidth: 200, marginTop: 4 }}>
                     <label>Descuento al cliente (%)</label>
-                    <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setF('discount', e.target.value)} onBlur={e => { if (e.target.value === '') setF('discount', 0) }} min="0" max="100" style={{ maxWidth: 120 }} />
+                    <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setDiscountAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setDiscountAndReprice(0) }} min="0" max="100" style={{ maxWidth: 120 }} />
                   </div>
                 )}
 
