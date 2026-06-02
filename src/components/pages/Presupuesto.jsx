@@ -1478,10 +1478,15 @@ export default function Presupuesto() {
                         </div>
                       ))}
                     </div>
-                    {/* add row */}
-                    <button className="btn btn-ghost btn-sm" onClick={addItem}
-                      style={{ marginTop: 8, width: '100%', borderStyle: 'dashed', justifyContent: 'center', fontSize: 11 }}>
-                      <i className="fa fa-plus" /> Agregar producto
+                    {/* add row — botón más grande, directamente debajo del último producto */}
+                    <button onClick={addItem}
+                      style={{ marginTop: 10, width: '100%', padding: '14px 16px', fontSize: 14, fontWeight: 700,
+                               border: '2px dashed var(--brand)', borderRadius: 10, background: 'var(--brand-xlt, #F5F3FF)',
+                               color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                               justifyContent: 'center', gap: 8, transition: 'all .15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand)'; e.currentTarget.style.color = '#fff' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--brand-xlt, #F5F3FF)'; e.currentTarget.style.color = 'var(--brand)' }}>
+                      <i className="fa fa-plus-circle" style={{ fontSize: 16 }} /> Agregar producto
                     </button>
                     {/* tip */}
                     <div className="wiz-tip" style={{ marginTop: 12 }}>
@@ -1509,17 +1514,18 @@ export default function Presupuesto() {
                           {simplePack.map((comp, cIdx) => (
                             <div key={cIdx} className="kit-comp-row">
                               <i className="fa fa-box" style={{ fontSize: 11, color: 'var(--brand)', flexShrink: 0, opacity: .65 }} />
-                              <div className="kit-comp-name-group">
-                                <input type="text" value={comp.name || ''}
-                                  onChange={e => updateSimplePack(cIdx, 'name', e.target.value)}
+                              <div className="kit-comp-name-group" style={{ flex: 1, minWidth: 0 }}>
+                                <ProductAutocomplete
+                                  value={comp.name}
+                                  products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
+                                  onChangeText={(v) => updateSimplePack(cIdx, 'name', v)}
+                                  onPick={(ins) => {
+                                    updateSimplePack(cIdx, 'name', ins.name || '')
+                                    updateSimplePack(cIdx, 'costUnit', num(ins.cost))
+                                  }}
                                   placeholder="Ej: Caja kraft, Bolsa organza..."
-                                  style={{ flex: 1, fontSize: 12, padding: '4px 8px', height: 30, minWidth: 0 }} />
-                                {insumos.length > 0 && (
-                                  <button onClick={() => { setInsPickerTarget({ kitIdx: -1, cIdx }); setInsPickerOpen(true) }} type="button" title="Elegir de Insumos"
-                                    style={{ width: 30, height: 30, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                                    <i className="fa fa-list" />
-                                  </button>
-                                )}
+                                  inputStyle={{ fontSize: 12, padding: '4px 8px', height: 30 }}
+                                />
                               </div>
                               <div className="kit-comp-nums">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
@@ -1810,18 +1816,20 @@ export default function Presupuesto() {
                             {(kit.packaging || []).map((comp, cIdx) => (
                               <div key={cIdx} className="kit-comp-row">
                                 <i className="fa fa-box" style={{ fontSize: 11, color: 'var(--brand)', flexShrink: 0, opacity: .65 }} />
-                                {/* Nombre libre + picker opcional de DB */}
-                                <div className="kit-comp-name-group">
-                                  <input type="text" value={comp.name || ''}
-                                    onChange={e => updatePackComp(kitIdx, cIdx, 'name', e.target.value)}
+                                {/* Nombre del insumo — autocomplete predictivo */}
+                                <div className="kit-comp-name-group" style={{ flex: 1, minWidth: 0 }}>
+                                  <ProductAutocomplete
+                                    value={comp.name}
+                                    products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
+                                    onChangeText={(v) => updatePackComp(kitIdx, cIdx, 'name', v)}
+                                    onPick={(ins) => {
+                                      updatePackComp(kitIdx, cIdx, 'id', ins.id || '')
+                                      updatePackComp(kitIdx, cIdx, 'name', ins.name || '')
+                                      updatePackComp(kitIdx, cIdx, 'costUnit', num(ins.cost))
+                                    }}
                                     placeholder="Ej: Caja kraft, Bolsa organza..."
-                                    style={{ flex: 1, fontSize: 12, padding: '4px 8px', height: 30, minWidth: 0 }} />
-                                  {insumos.length > 0 && (
-                                    <button onClick={() => { setInsPickerTarget({ kitIdx, cIdx }); setInsPickerOpen(true) }} type="button" title="Elegir de Insumos"
-                                      style={{ width: 30, height: 30, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                                      <i className="fa fa-list" />
-                                    </button>
-                                  )}
+                                    inputStyle={{ fontSize: 12, padding: '4px 8px', height: 30 }}
+                                  />
                                 </div>
                                 <div className="kit-comp-nums">
                                   {/* Costo unitario */}
