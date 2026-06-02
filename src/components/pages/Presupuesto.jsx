@@ -2485,8 +2485,15 @@ export default function Presupuesto() {
           <div className="calc-panel">
             <div className="cp-title"><i className="fa fa-calculator" />Resumen</div>
             <div className="cp-row"><span className="cp-lbl">N° Presupuesto</span><span className="cp-val">{budgetNum}</span></div>
-            {feats.costoInterno && <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : undefined}>{calc.costPending ? 'Pendiente' : fmt(calc.totalCost)}</span></div>}
+            {feats.costoInterno && <div className="cp-row"><span className="cp-lbl">Costo proveedor</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : undefined} title="Suma de qty × costoUnit de todos los productos/kits + packaging + personalización fija">{calc.costPending ? 'Pendiente' : fmt(calc.totalCost)}</span></div>}
+            {calc.persFixedTotal > 0 && (
+              <div className="cp-row" style={{ paddingLeft: 12 }} title="Honorarios fijos (Diseñador + Mano de Obra + Impresión General). Se amortizan según las cantidades del pedido.">
+                <span className="cp-lbl" style={{ fontSize: 10.5, opacity: .75 }}>↳ Personalización fija</span>
+                <span className="cp-val" style={{ fontSize: 11.5, opacity: .9 }}>{fmt(calc.persFixedTotal)}</span>
+              </div>
+            )}
             {calc.logTotal > 0 && <div className="cp-row"><span className="cp-lbl">Impresión</span><span className="cp-val">{fmt(calc.logTotal)}</span></div>}
+            {num(form.shipCost) > 0 && <div className="cp-row"><span className="cp-lbl">Envío</span><span className="cp-val">{fmt(num(form.shipCost))}</span></div>}
             {calc.viajesCost > 0 && <div className="cp-row"><span className="cp-lbl">🚚 Logística</span><span className="cp-val">{fmt(calc.viajesCost)}</span></div>}
             {feats.costoInterno && (() => {
               const breakdown = [
@@ -2509,7 +2516,33 @@ export default function Presupuesto() {
               )
             })()}
             {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : { color: '#86EFAC' }}>{calc.costPending ? 'Pendiente' : fmt(calc.gain)}</span></div>}
-            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Margen real</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : (calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : undefined)}>{calc.costPending ? 'Pendiente' : `${calc.marginReal}%`}{!calc.costPending && calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}{calc.costPending && <i className="fa fa-circle-info" style={{ marginLeft: 4, fontSize: 10 }} title="Cargá el costo de los productos para calcular el margen real" />}</span></div>}
+            {feats.margenTabla && (() => {
+              const target = num(form.margin)
+              const real = Number(calc.marginReal) || 0
+              const drift = Math.abs(real - target)
+              const matches = !calc.costPending && drift < 0.5
+              return (
+                <>
+                  <div className="cp-row">
+                    <span className="cp-lbl" title="El margen que ingresaste como objetivo">
+                      <i className="fa fa-bullseye" style={{ fontSize: 9, marginRight: 4, opacity: .6 }} />
+                      Margen objetivo
+                    </span>
+                    <span className="cp-val" style={{ opacity: .85, fontWeight: 700 }}>{target}%</span>
+                  </div>
+                  <div className="cp-row">
+                    <span className="cp-lbl">Margen real</span>
+                    <span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : (calc.marginLow ? { color: 'var(--red)', fontWeight: 800 } : (matches ? { color: '#86EFAC', fontWeight: 700 } : undefined))}>
+                      {calc.costPending ? 'Pendiente' : `${calc.marginReal}%`}
+                      {!calc.costPending && matches && <i className="fa fa-check" style={{ marginLeft: 4, fontSize: 9, color: '#86EFAC' }} title="Coincide con el objetivo" />}
+                      {!calc.costPending && !matches && drift >= 0.5 && drift < 2 && <i className="fa fa-circle-info" style={{ marginLeft: 4, fontSize: 9, opacity: .6 }} title={`Drift de ${drift.toFixed(1)} pts por redondeo de precio por unidad`} />}
+                      {!calc.costPending && calc.marginLow && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 4, fontSize: 10 }} title={`Margen bajo (< ${calc.marginThreshold}%)`} />}
+                      {calc.costPending && <i className="fa fa-circle-info" style={{ marginLeft: 4, fontSize: 10 }} title="Cargá el costo de los productos para calcular el margen real" />}
+                    </span>
+                  </div>
+                </>
+              )
+            })()}
             {calc.discountAmt > 0 && (
               <div className="cp-row" style={{ borderTop: '1px dashed rgba(255,255,255,.10)', marginTop: 2, paddingTop: 4 }}>
                 <span className="cp-lbl" style={{ color: 'rgba(255,255,255,.55)', display: 'flex', alignItems: 'center', gap: 4 }}>
