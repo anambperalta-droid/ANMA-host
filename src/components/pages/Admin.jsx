@@ -2,6 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 
+// Multi-tenant scope: este Admin pertenece a ANMA Regalos. Solo deben listarse
+// workspaces que tengan datos sincronizados en este sitio (filtro suave vía
+// presencia de fila en anma_user_data con site_key = 'anma-regalos'). Workspaces
+// que solo usan Pro quedan excluidos automáticamente.
+const SITE_KEY = 'anma-regalos'
+
 // Plan → default seats mapping used by the "Cambiar plan" dropdown.
 const PLANS = [
   { key: 'solo',      label: 'Solo',      seats: 0 },
@@ -21,14 +27,26 @@ export default function Admin() {
   const load = useCallback(async () => {
     setLoading(true); setErr('')
     try {
-      // 1. All workspaces (RLS lets global admin see all).
+      // 1. Scope multi-tenant: traemos los user_id que tienen blob en ESTE sitio.
+      //    Solo esos workspaces son "de esta app" — el resto son de la otra app
+      //    (mismo proyecto Supabase, separados por site_key).
+      const { data: siteUsers, error: e0 } = await supabase
+        .from('anma_user_data')
+        .select('user_id')
+        .eq('site_key', SITE_KEY)
+      if (e0) throw e0
+      const allowedWsIds = new Set((siteUsers || []).map(r => r.user_id))
+
+      // 2. All workspaces (RLS lets global admin see all → filtramos client-side).
       const { data: wss, error: e1 } = await supabase
         .from('workspaces')
         .select('id, name, plan, seats_allowed, status, created_at')
         .order('created_at', { ascending: false })
       if (e1) throw e1
+      const scopedWss = (wss || []).filter(w => allowedWsIds.has(w.id))
 
-      // 2. Seats used per workspace (count non-owner active/invited memberships).
+      // 3. Seats used per workspace (count non-owner active/invited memberships).
+      //    Solo contamos memberships de workspaces ya scopeados a esta app.
       const { data: mems, error: e2 } = await supabase
         .from('memberships')
         .select('workspace_id, role, status, user_id, created_at')
@@ -37,6 +55,7 @@ export default function Admin() {
       const used = {}
       const byWs = {}
       ;(mems || []).forEach(m => {
+        if (!allowedWsIds.has(m.workspace_id)) return
         if (m.role !== 'owner' && (m.status === 'active' || m.status === 'invited')) {
           used[m.workspace_id] = (used[m.workspace_id] || 0) + 1
         }
@@ -44,7 +63,7 @@ export default function Admin() {
         byWs[m.workspace_id].push(m)
       })
 
-      setRows((wss || []).map(w => ({ ...w, seats_used: used[w.id] || 0 })))
+      setRows(scopedWss.map(w => ({ ...w, seats_used: used[w.id] || 0 })))
       setMembers(byWs)
     } catch (e) {
       setErr(e.message || 'Error cargando workspaces')
