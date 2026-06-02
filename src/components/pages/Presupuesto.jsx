@@ -1344,6 +1344,24 @@ export default function Presupuesto() {
         border-color:var(--brand)!important;background:#fff!important;outline:none;
         box-shadow:0 0 0 3px rgba(124,58,237,.08);
       }
+      /* Fila de parada de Logística — grid 4 col limpio, sin saltos */
+      .logi-parada-row{
+        display:grid!important;
+        grid-template-columns:170px 1fr 110px 26px!important;
+        gap:8px!important;align-items:center!important;
+        padding:8px 4px!important;
+        border-bottom:1px solid #F3F4F6!important;background:transparent!important;border-radius:0!important;
+      }
+      .logi-parada-row:last-child{border-bottom:none!important}
+      @media(max-width:640px){
+        .logi-parada-row{
+          display:flex!important;flex-wrap:wrap!important;
+          padding:10px 4px!important;
+        }
+        .logi-parada-row > select{flex:1 1 60%!important}
+        .logi-parada-row > input[type=text]{flex:1 1 100%!important}
+        .logi-parada-row > input[type=number]{flex:1 1 50%!important}
+      }
       /* Botón Agregar minimalista — alineado izquierda, borde punteado sutil */
       .tbl-add-btn{
         display:inline-flex;align-items:center;gap:6px;
@@ -2211,6 +2229,7 @@ export default function Presupuesto() {
             {currentStep === 3 && (
               <>
                 <PaneHeader icon="fa-truck" title="Paso 3 · Entrega y precio" subtitle="Configurá modalidad, fechas y parámetros" />
+                {/* Fila 1: Entrega */}
                 <div className="grid2">
                   <div className="fg"><label>Modalidad</label>
                     <select value={form.delivery} onChange={e => setF('delivery', e.target.value)}>
@@ -2227,13 +2246,11 @@ export default function Presupuesto() {
                       </div>
                     )}
                   </div>
-                  <div className="fg">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}>
-                      <input type="checkbox" checked={form.envioACotizar !== false} onChange={e => setF('envioACotizar', e.target.checked)} style={{ width: 'auto' }} />
-                      Envío a cotizar (mostrar leyenda en PDF)
-                    </label>
-                  </div>
-                  <div className="fg"><label>Estado</label>
+                </div>
+
+                {/* Fila 2: Estados — pedido + pago lado a lado */}
+                <div className="grid2">
+                  <div className="fg"><label>Estado del pedido</label>
                     <select value={form.status} onChange={e => setF('status', e.target.value)}>
                       <option value="draft">Borrador</option>
                       <option value="sent">Enviado al cliente</option>
@@ -2251,31 +2268,44 @@ export default function Presupuesto() {
                     </select>
                   </div>
                 </div>
-                <div className="grid3" style={{ marginTop: 4 }}>
-                  <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
-                  <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" style={{ maxWidth: 120 }} /></div>
-                  {/* "Impresión/logo x u." removido — el costo de impresión vive ahora en Personalización (Costo de Impresión General, fijo total) */}
+
+                {/* Fila 3: checkbox envío a cotizar — compacto */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#FAFAFB', borderRadius: 8, border: '1px solid #ECECF1', marginBottom: 14, marginTop: 2 }}>
+                  <input type="checkbox" id="envCotizarR" checked={form.envioACotizar !== false} onChange={e => setF('envioACotizar', e.target.checked)} style={{ width: 'auto', cursor: 'pointer' }} />
+                  <label htmlFor="envCotizarR" style={{ fontSize: 12, color: 'var(--txt2)', cursor: 'pointer', margin: 0, textTransform: 'none', letterSpacing: 0, fontWeight: 500 }}>
+                    Envío a cotizar — mostrar leyenda en PDF
+                  </label>
+                </div>
+
+                {/* Fila 4: Parámetros financieros */}
+                <div className="grid2" style={{ marginTop: 4 }}>
+                  <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" /></div>
+                  <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
                 </div>
                 {feats.descuentoCliente && (
                   <div className="fg" style={{ maxWidth: 200, marginTop: 4 }}>
                     <label>Descuento al cliente (%)</label>
-                    <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setDiscountAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setDiscountAndReprice(0) }} min="0" max="100" style={{ maxWidth: 120 }} />
+                    <input type="number" value={form.discount} onFocus={selectOnFocus} onChange={e => setDiscountAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setDiscountAndReprice(0) }} min="0" max="100" />
                   </div>
                 )}
 
-                {/* ─── 🚚 Logística / Comisionista ─── */}
-                <div style={{ marginTop: 20, padding: '18px 20px', background: 'var(--bg-card, #fff)', border: '1px solid var(--border, #E5E7EB)', borderRadius: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>🚚</span> Logística / Comisionista
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                        Paradas del viaje (insumos, mercadería o entrega). Suma al costo total y se sincroniza con Control de Viajes.
-                      </div>
+                <div className="grid2" style={{ marginTop: 12 }}>
+                  {feats.notasInternas && (
+                    <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
+                  )}
+                  <div className="fg"><label>Nota al cliente (PDF)</label><textarea value={form.noteCli} onChange={e => setF('noteCli', e.target.value)} rows={2} placeholder="Visible en el presupuesto..." /></div>
+                </div>
+
+                {/* ─── 🚚 Logística / Comisionista — al FINAL para no obstruir el flujo principal ─── */}
+                <div className="tbl-card" style={{ marginTop: 18 }}>
+                  <div className="tbl-section-hd">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13 }}>🚚</span>
+                      <span className="label">Logística / Comisionista</span>
+                      <span className="hint">opcional · suma al costo total</span>
                     </div>
                     {form.viajeId && (
-                      <span style={{ background: '#EDE9FE', color: '#5B21B6', padding: '3px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 700 }} title="Vinculado a un viaje registrado en Logística">
+                      <span style={{ background: '#EDE9FE', color: '#5B21B6', padding: '3px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 700 }} title="Vinculado a un viaje registrado en Control de Viajes">
                         <i className="fa fa-link" /> Viaje #{form.viajeId}
                       </span>
                     )}
@@ -2291,53 +2321,52 @@ export default function Presupuesto() {
                     </div>
                   </div>
 
-                  {(form.logisticaParadas || []).length === 0 && (
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '8px 0', fontStyle: 'italic' }}>
-                      Sin paradas cargadas. Agregá las paradas que componen este viaje.
+                  {(form.logisticaParadas || []).length === 0 ? (
+                    <div style={{ fontSize: 11.5, color: '#9CA3AF', padding: '8px 4px', fontStyle: 'italic', textAlign: 'center' }}>
+                      Sin paradas cargadas. Sumá una desde los botones de abajo.
+                    </div>
+                  ) : (
+                    <div className="kit-tbl">
+                      {(form.logisticaParadas || []).map((p, idx) => (
+                        <div key={idx} className="kit-tbl-row logi-parada-row">
+                          <select value={p.category} onChange={e => updateParada(idx, 'category', e.target.value)}>
+                            {PARADA_CATEGORIES.map(t => <option key={t.val} value={t.val}>{t.lbl}</option>)}
+                          </select>
+                          <input type="text" value={p.detail || ''} onChange={e => updateParada(idx, 'detail', e.target.value)} placeholder="Descripción (dónde / qué)" />
+                          <input type="number" min="0" value={p.cost || 0} onFocus={selectOnFocus}
+                            onChange={e => updateParada(idx, 'cost', e.target.value === '' ? 0 : Number(e.target.value))}
+                            placeholder="$ 0" style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }} />
+                          <button type="button" onClick={() => removeParada(idx)} title="Quitar"
+                            style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: 'transparent', color: '#9CA3AF', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                            onMouseLeave={e => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'transparent' }}>
+                            <i className="fa fa-trash" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
-                  {(form.logisticaParadas || []).map((p, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                      <select value={p.category} onChange={e => updateParada(idx, 'category', e.target.value)} style={{ flex: '0 0 180px' }}>
-                        {PARADA_CATEGORIES.map(t => <option key={t.val} value={t.val}>{t.lbl}</option>)}
-                      </select>
-                      <input type="text" value={p.detail || ''} onChange={e => updateParada(idx, 'detail', e.target.value)} placeholder="Descripción (dónde / qué)" style={{ flex: '1 1 180px', minWidth: 140 }} />
-                      <input type="number" min="0" value={p.cost || 0} onFocus={selectOnFocus}
-                        onChange={e => updateParada(idx, 'cost', e.target.value === '' ? 0 : Number(e.target.value))}
-                        placeholder="Costo $" style={{ width: 110, textAlign: 'right' }} />
-                      <button type="button" className="btn btn-ghost btn-xs" onClick={() => removeParada(idx)} style={{ color: 'var(--red, #EF4444)', padding: '2px 6px' }}>
-                        <i className="fa fa-trash" />
-                      </button>
-                    </div>
-                  ))}
 
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-                    <button type="button" className="btn btn-ghost btn-xs" onClick={() => addParada('Insumos')}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                    <button type="button" className="tbl-add-btn" onClick={() => addParada('Insumos')}>
                       <i className="fa fa-plus" /> Retiro Insumos
                     </button>
-                    <button type="button" className="btn btn-ghost btn-xs" onClick={() => addParada('Mercadería')}>
+                    <button type="button" className="tbl-add-btn" onClick={() => addParada('Mercadería')}>
                       <i className="fa fa-plus" /> Retiro Mercadería
                     </button>
-                    <button type="button" className="btn btn-ghost btn-xs" onClick={() => addParada('Entrega Pedido')}>
+                    <button type="button" className="tbl-add-btn" onClick={() => addParada('Entrega Pedido')}>
                       <i className="fa fa-plus" /> Entrega Pedido
                     </button>
                   </div>
 
                   {calc.viajesCost > 0 && (
-                    <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11.5, color: '#9CA3AF' }}>
                         Total logística ({(form.logisticaParadas || []).length} parada{(form.logisticaParadas || []).length !== 1 ? 's' : ''})
                       </span>
-                      <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{fmt(calc.viajesCost)}</span>
+                      <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--money)' }}>{fmt(calc.viajesCost)}</span>
                     </div>
                   )}
-                </div>
-
-                <div className="grid2">
-                  {feats.notasInternas && (
-                    <div className="fg"><label>Nota interna</label><textarea value={form.noteInt} onChange={e => setF('noteInt', e.target.value)} rows={2} placeholder="Solo para vos..." /></div>
-                  )}
-                  <div className="fg"><label>Nota al cliente (PDF)</label><textarea value={form.noteCli} onChange={e => setF('noteCli', e.target.value)} rows={2} placeholder="Visible en el presupuesto..." /></div>
                 </div>
               </>
             )}
