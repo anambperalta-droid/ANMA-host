@@ -397,6 +397,19 @@ export default function Presupuesto() {
   const updateSimplePack = (idx, key, val) => setSimplePack(p => p.map((c, i) => i !== idx ? c : { ...c, [key]: val }))
   const updateSimplePers = (key, val) => setSimplePers(p => ({ ...p, [key]: val }))
 
+  /* ── Auto-reprice cuando cambian los costos fijos del modo simple ──
+     simplePers (desc/costUnit/designCost/laborCost/printCost) y simplePack
+     son costos fijos del pedido. Cuando cambian, los precios unitarios
+     necesitan recalcularse para que el margen real coincida con el objetivo.
+     useEffect dispara _repriceAllKits sólo en modo simple. */
+  const _firstReprice = useRef(true)
+  useEffect(() => {
+    if (_firstReprice.current) { _firstReprice.current = false; return }
+    if (!kitMode) _repriceAllKits(form.margin, form.discount)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [simplePers.costUnit, simplePers.designCost, simplePers.laborCost, simplePers.printCost,
+       simplePack.length, simplePack.map(p => `${p.costUnit}-${p.qty}`).join('|')])
+
   const clients = get('clients')
   const products = get('products')
   const insumos = get('insumos', [])
@@ -657,8 +670,24 @@ export default function Presupuesto() {
     setAlternatives(prev => prev.map(alt => {
       const kits = alt.kits || []
       const shipCharged = form.shipCharged !== false
-      const sharedFixed = Math.max(0, num(form.shipCost)) * (shipCharged ? 1 : 0)
+      // Costos fijos del presupuesto que NO escalan con qty del ítem individual:
+      //   - envío cargado al cliente
+      //   - logística/comisionista
+      //   - en MODO SIMPLE: simplePack (packaging global) + simplePers fijo
+      //     (designCost + laborCost + printCost) + simplePers.costUnit × totalQty
+      let sharedFixed = Math.max(0, num(form.shipCost)) * (shipCharged ? 1 : 0)
         + Math.round((form.logisticaParadas || []).reduce((s, p) => s + Math.max(0, num(p.cost)), 0))
+      if (!kitMode) {
+        const totalQty = kits.reduce((s, it) => s + Math.max(0, num(it.qty)), 0)
+        // Packaging global (modo simple)
+        sharedFixed += simplePack.reduce((s, p) => s + Math.max(0, num(p.costUnit)) * Math.max(0, num(p.qty)), 0)
+        // Personalización por unidad × cantidad total del pedido
+        sharedFixed += Math.max(0, num(simplePers.costUnit)) * totalQty
+        // Honorarios fijos (diseñador + mano de obra + impresión)
+        sharedFixed += Math.max(0, num(simplePers.designCost))
+          + Math.max(0, num(simplePers.laborCost))
+          + Math.max(0, num(simplePers.printCost))
+      }
       const totalItemsBaseCost = kits.reduce((s, it) => {
         const c = it.type === 'kit' ? kitCostUnit(it) : num(it.costUnit)
         return s + Math.max(0, c) * Math.max(0, num(it.qty))
@@ -952,7 +981,7 @@ export default function Presupuesto() {
           })
         }
 
-        // ── Personalización: solo título y total al cliente — descripción y desglose son internos ──
+        // ── Personalización (kit): solo título y total al cliente, sin desglose ──
         const persPerKit = num(kit.personalizacion?.costUnit) * kQty
         const persFixed  = num(kit.personalizacion?.designCost) + num(kit.personalizacion?.laborCost) + num(kit.personalizacion?.printCost)
         const persTotal  = persPerKit + persFixed
@@ -960,6 +989,20 @@ export default function Presupuesto() {
           lines.push(`  🎨 *Personalización:* ${fmt(persTotal)}`)
         }
       })
+
+      // ── MODO SIMPLE: Personalización GLOBAL consolidada al pie de la lista ──
+      if (!kitMode) {
+        const totalQty = validKits.reduce((s, it) => s + Math.max(0, num(it.qty)), 0)
+        const persFromUnit = Math.max(0, num(simplePers.costUnit)) * totalQty
+        const persFixed = Math.max(0, num(simplePers.designCost))
+                        + Math.max(0, num(simplePers.laborCost))
+                        + Math.max(0, num(simplePers.printCost))
+        const packTotal = simplePack.reduce((s, p) => s + Math.max(0, num(p.costUnit)) * Math.max(0, num(p.qty)), 0)
+        const persGlobalTotal = persFromUnit + persFixed + packTotal
+        if (persGlobalTotal > 0) {
+          lines.push(`\n🎨 *Personalización:* ${fmt(persGlobalTotal)}`)
+        }
+      }
 
       const discAmt = Math.round(altRev * discPct / 100)
       const altTotal = altRev - discAmt
@@ -1191,7 +1234,30 @@ export default function Presupuesto() {
           <td style="text-align:right;padding:7px 12px;background:${bc}1a;font-weight:800;font-size:14px;color:${bc};font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</td>
         </tr>` : ''
 
-      return altSep + altHdr + kitRows + altTotalRow
+      /* ── MODO SIMPLE: línea consolidada de Personalización (global, no por ítem) ── */
+      // El cliente ve un único renglón "Personalización" con el total. Internamente
+      // se compone de simplePers (costUnit × totalQty + designCost + laborCost + printCost)
+      // + simplePack (packaging global del pedido). Se renderiza como sub-fila al pie de los items.
+      let persGlobalRow = ''
+      if (!kitMode) {
+        const totalQty = altKits.reduce((s, it) => s + Math.max(0, num(it.qty)), 0)
+        const persFromUnit = Math.max(0, num(simplePers.costUnit)) * totalQty
+        const persFixed = Math.max(0, num(simplePers.designCost))
+                        + Math.max(0, num(simplePers.laborCost))
+                        + Math.max(0, num(simplePers.printCost))
+        const packTotal = simplePack.reduce((s, p) => s + Math.max(0, num(p.costUnit)) * Math.max(0, num(p.qty)), 0)
+        const persGlobalTotal = persFromUnit + persFixed + packTotal
+        if (persGlobalTotal > 0) {
+          persGlobalRow = `<tr>
+            <td colspan="3" style="background:#FFFBEB;border-left:3px solid #F59E0B;padding:7px 12px 7px 16px;font-size:11px;font-weight:700;color:#92400E">
+              🎨 Personalización
+            </td>
+            <td style="background:#FFFBEB;border-left:none;text-align:right;padding:7px 12px;font-size:12px;font-weight:800;color:#92400E;font-variant-numeric:tabular-nums">${fmt(persGlobalTotal)}</td>
+          </tr>`
+        }
+      }
+
+      return altSep + altHdr + kitRows + persGlobalRow + altTotalRow
     }).join('')
 
     /* ── Totales del footer: usar alt aprobada (o primera) ── */
