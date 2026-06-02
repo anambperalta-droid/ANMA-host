@@ -1262,10 +1262,10 @@ td b{color:var(--txt);font-weight:600}
     padding:20px 16px calc(48px + env(safe-area-inset-bottom))!important;
   }
   .modal-form-card{
-    max-height:calc(100vh - env(safe-area-inset-top, 0px))!important;
+    max-height:none!important;
     height:auto!important;
-    overflow:hidden!important;
-    padding:0!important;
+    overflow:visible!important;
+    padding:0 0 calc(40px + env(safe-area-inset-bottom))!important;
   }
   .modal-lg,.modal-xl{max-width:100vw!important;width:100vw!important}
   .modal::before{content:'';display:block;width:36px;height:4px;border-radius:4px;background:var(--border2);margin:0 auto 14px;flex-shrink:0}
@@ -1579,13 +1579,25 @@ td b{color:var(--txt);font-weight:600}
   width:calc(100vw - 32px);box-shadow:var(--sh-lg);
   animation:pgIn .2s ease both;margin:0 0 24px;flex-shrink:0;
   display:flex;flex-direction:column;
-  /* Header / Body scrolleable / Footer fijo — patrón estándar para forms.
-     Altura natural cap al viewport: si el contenido cabe, el modal es
-     pequeño; si excede, scrollea SOLO el body interno (footer siempre visible). */
-  overflow:hidden;
-  padding:0;
+  /* SIN scroll interno: altura natural, contenido fluye hacia abajo. El
+     .modal-bg (overlay) maneja el scroll de página completa. */
+  overflow:visible;
+  padding:0 0 max(32px, env(safe-area-inset-bottom, 14px));
   height:auto;
-  max-height:calc(100vh - 32px);
+  max-height:none;
+}
+/* Forzamos a que los body internos NO scrolleen — los componentes los
+   declaran con overflow-y:auto inline, los neutralizamos acá */
+.modal-form-card > div[style*="overflow-y"],
+.modal-form-card > div[style*="overflow:auto"],
+.modal-form-card > div[style*="overflow: auto"]{
+  overflow:visible!important;max-height:none!important;
+  flex:none!important;min-height:auto!important;
+}
+/* Footers sticky declarados inline → flujo natural */
+.modal-form-card > div[style*="position: sticky"],
+.modal-form-card > div[style*="position:sticky"]{
+  position:static!important;bottom:auto!important;
 }
 .modal-form-card > .mfooter,
 .modal-form-card > footer,
