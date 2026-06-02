@@ -18,6 +18,9 @@ const emptyKit = () => ({
   name: '',
   qty: 1,
   priceUnit: 0,
+  // Flag: si false (default), el precio se calcula automático desde costos + margen
+  // objetivo. Si el usuario edita el input → pasa a true y queda el valor literal.
+  manualPriceUnit: false,
   packaging: [],
   products: [],
   personalizacion: { desc: '', costUnit: 0, designCost: 0 },
@@ -516,6 +519,8 @@ export default function Presupuesto() {
   const _patchKitAndReprice = (kitIdx, patcher) => setItems(prev => prev.map((k, i) => {
     if (i !== kitIdx) return k
     const patched = patcher(k)
+    // Respeta el modo manual: si el usuario fijó el precio, no lo recalcula
+    if (patched.manualPriceUnit) return patched
     const cu = kitCostUnit(patched)
     return cu > 0 ? { ...patched, priceUnit: priceFromMargin(cu, form.margin, form.discount) } : patched
   }))
@@ -584,6 +589,17 @@ export default function Presupuesto() {
     return denom > 0 ? Math.round(num(cost) / denom) : Math.round(num(cost))
   }
 
+  /* ── Precio EFECTIVO del kit ─────────────────────────────────────────
+     Si manualPriceUnit === true → respeta lo que tipeó el usuario.
+     Si no → calcula automáticamente con la fórmula del margen objetivo.
+     Esto se actualiza solo cuando cambian componentes o margen. */
+  const effectiveKitPrice = (kit) => {
+    if (kit?.manualPriceUnit) return Math.max(0, num(kit.priceUnit))
+    const cu = kitCostUnit(kit)
+    if (cu <= 0) return Math.max(0, num(kit.priceUnit))
+    return priceFromMargin(cu, form.margin, form.discount)
+  }
+
   /* ── Costo unitario EFECTIVO de un ítem = costo propio + parte pro-rata de los costos fijos.
      Los costos fijos del presupuesto (envío cargado al cliente + logística/comisionista) se
      distribuyen entre los ítems en proporción a su costo total. Así el priceUnit ya cubre
@@ -612,6 +628,8 @@ export default function Presupuesto() {
       return {
         ...alt,
         kits: kits.map(item => {
+          // Si el usuario fijó el precio manualmente, NO lo pisamos al cambiar margen/descuento
+          if (item.manualPriceUnit) return item
           const effCost = _effectiveItemCostUnit(item, sharedFixed, totalItemsBaseCost)
           return effCost > 0 ? { ...item, priceUnit: priceFromMargin(effCost, marginPct, discountPct) } : item
         })
@@ -648,9 +666,11 @@ export default function Presupuesto() {
       if (item.type === 'kit') {
         const q = Math.max(0, num(item.qty))
         const cu = Math.max(0, kitCostUnit(item))
+        // Precio efectivo: respeta override manual o calcula auto desde margen
+        const pEff = effectiveKitPrice(item)
         // Round per-item to avoid floating-point accumulation across kit components
         totalCost    += Math.round(q * cu)
-        totalRevenue += Math.round(q * Math.max(0, num(item.priceUnit)))
+        totalRevenue += Math.round(q * pEff)
         totalQty     += q
         if (item.name || (item.packaging?.length > 0) || (item.products?.length > 0)) itemsWithName++
         if (cu > 0 && (item.name || item.packaging?.length || item.products?.length)) itemsWithCost++
@@ -872,8 +892,9 @@ export default function Presupuesto() {
 
       validKits.forEach(kit => {
         const kQty = num(kit.qty)
-        altRev += kQty * num(kit.priceUnit)
-        lines.push(`\n*🎁 ${kit.name || 'Kit sin nombre'}* ×${kQty}  →  ${fmt(kQty * num(kit.priceUnit))}`)
+        const pEff = effectiveKitPrice(kit)
+        altRev += kQty * pEff
+        lines.push(`\n*🎁 ${kit.name || 'Kit sin nombre'}* ×${kQty}  →  ${fmt(kQty * pEff)}`)
 
         const packItems = (kit.packaging || []).filter(c => c.name)
         if (packItems.length) {
@@ -1798,14 +1819,36 @@ export default function Presupuesto() {
                             style={{ background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 7, color: '#fff', fontWeight: 700, fontSize: 13, textAlign: 'center', width: 58, padding: '5px 6px', fontFamily: 'inherit' }} />
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2 }}>Precio u.</div>
-                          <input type="text" inputMode="numeric" value={fmtTbl(kit.priceUnit)} onFocus={selectOnFocus}
-                            onChange={e => { const r = parseTbl(e.target.value); updateKit(kitIdx, 'priceUnit', r === '' ? 0 : Number(r)) }}
-                            style={{ background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 7, color: '#fff', fontWeight: 700, fontSize: 13, textAlign: 'right', width: 88, padding: '5px 8px', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums' }} />
+                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                            <span>Precio u.</span>
+                            {kit.manualPriceUnit ? (
+                              <button onClick={() => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, manualPriceUnit: false, priceUnit: effectiveKitPrice({ ...k, manualPriceUnit: false }) }))}
+                                title="Volver a precio automático según margen"
+                                style={{ background: 'rgba(255,255,255,.18)', border: 'none', color: '#fff', borderRadius: 999, padding: '0 6px', fontSize: 8, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', height: 12, lineHeight: 1 }}>
+                                ✎ manual · reset
+                              </button>
+                            ) : (
+                              <span title="Calculado automáticamente desde Costo Real + Margen objetivo"
+                                style={{ background: 'rgba(52,211,153,.22)', color: '#A7F3D0', borderRadius: 999, padding: '0 6px', fontSize: 8, fontWeight: 800, height: 12, lineHeight: '12px' }}>
+                                ⚙ auto
+                              </span>
+                            )}
+                          </div>
+                          <input type="text" inputMode="numeric"
+                            value={fmtTbl(effectiveKitPrice(kit))}
+                            onFocus={selectOnFocus}
+                            onChange={e => {
+                              const r = parseTbl(e.target.value)
+                              const v = r === '' ? 0 : Number(r)
+                              // Editar manualmente → marca el flag y guarda literal
+                              setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, manualPriceUnit: true, priceUnit: v }))
+                            }}
+                            title={kit.manualPriceUnit ? 'Precio manual — clic en "reset" para volver al cálculo automático' : 'Sugerido por costo + margen objetivo. Tipeá para sobreescribir.'}
+                            style={{ background: 'rgba(255,255,255,.14)', border: `1px solid ${kit.manualPriceUnit ? 'rgba(167,139,250,.55)' : 'rgba(255,255,255,.22)'}`, borderRadius: 7, color: '#fff', fontWeight: 700, fontSize: 13, textAlign: 'right', width: 92, padding: '5px 8px', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums' }} />
                         </div>
                         <div style={{ borderLeft: '1px solid rgba(255,255,255,.2)', paddingLeft: 10, textAlign: 'right' }}>
                           <div style={{ fontSize: 9, color: 'rgba(255,255,255,.55)', marginBottom: 1 }}>Subtotal</div>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{fmt(num(kit.qty) * num(kit.priceUnit))}</div>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{fmt(num(kit.qty) * effectiveKitPrice(kit))}</div>
                         </div>
                       </div>
                     </div>
@@ -2102,8 +2145,9 @@ export default function Presupuesto() {
                           <span style={{ fontSize: 11, color: 'var(--txt3)' }}>
                             Costo real u.: <strong style={{ color: 'var(--txt2)', fontVariantNumeric: 'tabular-nums' }}>{fmt(kitCostUnit(kit))}</strong>
                           </span>
-                          {num(kit.priceUnit) > 0 && (() => {
-                            const margin = ((num(kit.priceUnit) - kitCostUnit(kit)) / num(kit.priceUnit) * 100)
+                          {effectiveKitPrice(kit) > 0 && (() => {
+                            const pEff = effectiveKitPrice(kit)
+                            const margin = ((pEff - kitCostUnit(kit)) / pEff * 100)
                             const ok = margin >= (num(c.marginLowThreshold) || 10)
                             return (
                               <span style={{ fontSize: 11, color: 'var(--txt3)' }}>
@@ -2629,7 +2673,7 @@ export default function Presupuesto() {
                           </span>
                         </span>
                         <span style={{ fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,.95)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                          {fmt(num(it.qty) * num(it.priceUnit))}
+                          {fmt(num(it.qty) * (isKit ? effectiveKitPrice(it) : num(it.priceUnit)))}
                         </span>
                       </div>
 
@@ -2640,9 +2684,9 @@ export default function Presupuesto() {
                         </div>
                       )}
 
-                      {/* ── Componentes anidados del kit ── */}
+                      {/* ── Componentes anidados del kit (sangrado + línea vertical) ── */}
                       {isKit && (products.length > 0 || packaging.length > 0 || hasPers || hasDesign || hasLabor || hasPrint) && (
-                        <div style={{ marginTop: 5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <div style={{ marginTop: 6, marginLeft: 16, paddingLeft: 10, borderLeft: '1.5px solid rgba(167,139,250,.28)', display: 'flex', flexDirection: 'column', gap: 3 }}>
                           {/* B — Productos del kit */}
                           {products.map((p, pi) => (
                             <div key={`p-${pi}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(255,255,255,.55)' }}>
