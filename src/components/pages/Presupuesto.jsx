@@ -1901,6 +1901,16 @@ export default function Presupuesto() {
                             ))}
                           </div>
                         )}
+                        {/* Botón Agregar insumo — debajo del último ítem */}
+                        <button onClick={() => addPackComp(kitIdx)}
+                          style={{ marginTop: 8, width: '100%', padding: '9px 14px', fontSize: 12.5, fontWeight: 600,
+                                   border: '1.5px dashed var(--brand)', borderRadius: 8, background: 'var(--brand-xlt, #F5F3FF)',
+                                   color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                                   justifyContent: 'center', gap: 6, transition: 'all .15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand)'; e.currentTarget.style.color = '#fff' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'var(--brand-xlt, #F5F3FF)'; e.currentTarget.style.color = 'var(--brand)' }}>
+                          <i className="fa fa-plus-circle" style={{ fontSize: 13 }} /> Agregar insumo al kit
+                        </button>
                       </div>
 
                       {/* ─ Componente B: Contenido del kit ─ (tabla coherente con modo simple) */}
@@ -1980,6 +1990,16 @@ export default function Presupuesto() {
                             </div>
                           </div>
                         )}
+                        {/* Botón Agregar producto — debajo del último ítem, coherente con modo simple */}
+                        <button onClick={() => addProdComp(kitIdx)}
+                          style={{ marginTop: 8, width: '100%', padding: '9px 14px', fontSize: 12.5, fontWeight: 600,
+                                   border: '1.5px dashed #059669', borderRadius: 8, background: 'rgba(5,150,105,.06)',
+                                   color: '#059669', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                                   justifyContent: 'center', gap: 6, transition: 'all .15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = '#fff' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(5,150,105,.06)'; e.currentTarget.style.color = '#059669' }}>
+                          <i className="fa fa-plus-circle" style={{ fontSize: 13 }} /> Agregar producto al kit
+                        </button>
                       </div>
 
                       {/* ─ Componente C: Personalización ─ */}
