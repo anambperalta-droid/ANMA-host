@@ -1309,25 +1309,65 @@ export default function Presupuesto() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
     <style>{`
-      /* ── Kit builder responsive — tabla coherente con modo simple ── */
+      /* ── Lavado visual unificado — tablas ligeras y coherentes ── */
+      /* Wrapper tipo Card — fondo gris ultra claro, borde sutil */
+      .tbl-card{background:#FAFAFB;border:1px solid #ECECF1;border-radius:12px;padding:6px 12px 10px;margin-top:2px}
+      /* Header de columnas — tipografía secundaria gris */
+      .kit-tbl-hdr,.simple-tbl-hdr{display:grid;gap:6px;padding:8px 8px 10px;border-bottom:1px solid #F3F4F6;align-items:end}
+      .kit-tbl-hdr{grid-template-columns:14px 1fr 64px 96px 90px 26px}
+      .simple-tbl-hdr{grid-template-columns:1fr 58px 96px 78px 28px}
+      .kit-tbl-hdr span,.simple-tbl-hdr span{font-size:9.5px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.08em}
+      /* Filas — aire vertical, sin bordes pesados, divisor sutil entre filas */
+      .kit-tbl{display:flex;flex-direction:column}
+      .simple-tbl{display:flex;flex-direction:column}
+      .kit-tbl-row,.simple-tbl-row{display:grid;gap:6px;align-items:center;padding:10px 8px;background:transparent;border:none;border-bottom:1px solid #F3F4F6;border-radius:0}
+      .kit-tbl-row{grid-template-columns:14px 1fr 64px 96px 90px 26px}
+      .simple-tbl-row{grid-template-columns:1fr 58px 96px 78px 28px}
+      .kit-tbl-row:last-child,.simple-tbl-row:last-child{border-bottom:none}
+      .kit-tbl-row .ico{display:flex;align-items:center;justify-content:center}
+      /* Inputs limpios: transparentes en reposo, borde brand sólo al focus */
+      .kit-tbl-row input[type=text],.kit-tbl-row input[type=number],.kit-tbl-row select,
+      .simple-tbl-row input[type=text],.simple-tbl-row input[type=number],.simple-tbl-row select{
+        border:1px solid transparent!important;background:transparent!important;
+        transition:border-color .15s,background .15s;
+      }
+      .kit-tbl-row input[type=text]:hover,.kit-tbl-row input[type=number]:hover,
+      .simple-tbl-row input[type=text]:hover,.simple-tbl-row input[type=number]:hover{
+        background:rgba(0,0,0,.025)!important;
+      }
+      .kit-tbl-row input[type=text]:focus,.kit-tbl-row input[type=number]:focus,.kit-tbl-row select:focus,
+      .simple-tbl-row input[type=text]:focus,.simple-tbl-row input[type=number]:focus,.simple-tbl-row select:focus{
+        border-color:var(--brand)!important;background:#fff!important;outline:none;
+        box-shadow:0 0 0 3px rgba(124,58,237,.08);
+      }
+      /* Botón Agregar minimalista — alineado izquierda, borde punteado sutil */
+      .tbl-add-btn{
+        display:inline-flex;align-items:center;gap:6px;
+        background:transparent;border:1px dashed #D1D5DB;border-radius:8px;
+        padding:7px 12px;margin-top:8px;
+        font-family:inherit;font-size:11.5px;font-weight:600;color:#6B7280;
+        cursor:pointer;transition:all .15s;
+      }
+      .tbl-add-btn:hover{border-color:var(--brand);color:var(--brand);background:rgba(124,58,237,.04)}
+      .tbl-add-btn i{font-size:11px}
+      /* Header de sección (A / B / C) — más liviano dentro del card */
+      .tbl-section-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 2px 8px}
+      .tbl-section-hd .badge{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0}
+      .tbl-section-hd .label{font-size:11px;font-weight:700;color:#374151;letter-spacing:.02em}
+      .tbl-section-hd .hint{font-size:10px;color:#9CA3AF}
+      /* Legacy classes (compat) */
       .kit-comp-row{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:8px;padding:5px 8px;border:1px solid var(--border);flex-wrap:wrap}
       .kit-comp-name-group{flex:1;display:flex;gap:4px;min-width:140px}
       .kit-comp-nums{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:nowrap}
       .kit-qty-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);borderRadius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--brand);margin-left:4px;flex-shrink:0}
-      /* Nueva tabla unificada: PRODUCTO / QTY / COSTO U. / SUBTOTAL / × */
-      .kit-tbl{display:flex;flex-direction:column;gap:5px}
-      .kit-tbl-hdr{display:grid;grid-template-columns:14px 1fr 64px 96px 90px 26px;gap:6px;padding:5px 8px 7px;border-bottom:1.5px solid var(--border);margin-bottom:6px;align-items:end}
-      .kit-tbl-hdr span{font-size:9px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}
-      .kit-tbl-row{display:grid;grid-template-columns:14px 1fr 64px 96px 90px 26px;gap:6px;align-items:center;background:var(--surface);border-radius:8px;padding:5px 8px;border:1px solid var(--border)}
-      .kit-tbl-row .ico{display:flex;align-items:center;justify-content:center}
       @media(max-width:640px){
         .kit-comp-row{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
         .kit-comp-name-group{min-width:0;width:100%}
         .kit-comp-nums{width:100%;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:6px;margin-top:0}
         .kit-comp-nums input[type=number]{width:64px!important}
         .kit-comp-nums input[type=text]{width:80px!important}
-        .kit-tbl-hdr{display:none}
-        .kit-tbl-row{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+        .kit-tbl-hdr,.simple-tbl-hdr{display:none}
+        .kit-tbl-row,.simple-tbl-row{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;padding:8px 4px}
         .kit-hdr{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
         .kit-hdr-right{flex-wrap:wrap;gap:6px!important}
         .kit-hdr input{min-width:0}
@@ -1454,28 +1494,27 @@ export default function Presupuesto() {
                 {!kitMode && (
                   <>
                     {/* header */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 11, color: 'var(--txt3)' }}>
                         {items.filter(i => i.name).length
                           ? `${items.filter(i => i.name).length} producto${items.filter(i => i.name).length !== 1 ? 's' : ''} cargado${items.filter(i => i.name).length !== 1 ? 's' : ''}`
                           : 'Cargá los productos del pedido'}
                       </span>
-                      <button className="btn btn-ghost btn-sm" onClick={addItem}>
-                        <i className="fa fa-plus" /> Agregar
-                      </button>
                     </div>
-                    {/* column headers */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 58px 96px 78px 28px', gap: 6, padding: '5px 8px 7px', borderBottom: '1.5px solid var(--border)', marginBottom: 6 }}>
-                      {[['Producto', 'left'], ['Qty', 'center'], ['Precio u.', 'right'], ['Total', 'right'], ['', '']].map(([h, a], i) => (
-                        <span key={i} style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: a }}>{h}</span>
-                      ))}
-                    </div>
-                    {/* rows */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {items.map((item, idx) => (
-                        <div key={idx}
+                    {/* Card wrapper — fondo gris ultra claro, tabla limpia adentro */}
+                    <div className="tbl-card">
+                      {/* column headers — tipografía secundaria */}
+                      <div className="simple-tbl-hdr">
+                        {[['Producto', 'left'], ['Qty', 'center'], ['Precio u.', 'right'], ['Total', 'right'], ['', '']].map(([h, a], i) => (
+                          <span key={i} style={{ textAlign: a }}>{h}</span>
+                        ))}
+                      </div>
+                      {/* rows */}
+                      <div className="simple-tbl">
+                        {items.map((item, idx) => (
+                        <div key={idx} className="simple-tbl-row"
                           draggable onDragStart={handleDragStart(idx)} onDragOver={handleDragOver(idx)} onDragLeave={handleDragLeave} onDrop={handleDrop(idx)}
-                          style={{ display: 'grid', gridTemplateColumns: '1fr 58px 96px 78px 28px', gap: 6, alignItems: 'center', background: dragOver === idx ? 'rgba(124,58,237,.04)' : 'transparent', borderRadius: 8, transition: 'background .1s', padding: '2px 0' }}>
+                          style={{ background: dragOver === idx ? 'rgba(124,58,237,.04)' : undefined, transition: 'background .1s' }}>
                           {/* Nombre del producto (autocomplete predictivo) */}
                           <div style={{ minWidth: 0 }}>
                             <ProductAutocomplete
@@ -1515,17 +1554,12 @@ export default function Presupuesto() {
                           </button>
                         </div>
                       ))}
+                      </div>
+                      {/* add row — botón minimalista, alineado izquierda */}
+                      <button className="tbl-add-btn" onClick={addItem}>
+                        <i className="fa fa-plus" /> Agregar producto
+                      </button>
                     </div>
-                    {/* add row — directamente debajo del último producto */}
-                    <button onClick={addItem}
-                      style={{ marginTop: 8, width: '100%', padding: '9px 14px', fontSize: 12.5, fontWeight: 600,
-                               border: '1.5px dashed var(--brand)', borderRadius: 8, background: 'var(--brand-xlt, #F5F3FF)',
-                               color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                               justifyContent: 'center', gap: 6, transition: 'all .15s' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand)'; e.currentTarget.style.color = '#fff' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--brand-xlt, #F5F3FF)'; e.currentTarget.style.color = 'var(--brand)' }}>
-                      <i className="fa fa-plus-circle" style={{ fontSize: 13 }} /> Agregar producto
-                    </button>
                     {/* tip */}
                     <div className="wiz-tip" style={{ marginTop: 12 }}>
                       <i className="fa fa-lightbulb" /> Empezá a escribir el nombre del producto para autocompletar desde tu catálogo — el costo y precio se llenan solos.
@@ -1855,17 +1889,14 @@ export default function Presupuesto() {
 
                     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-                      {/* ─ Componente A: Packaging / Insumos ─ (tabla coherente con modo simple) */}
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+                      {/* ─ Componente A: Packaging / Insumos ─ */}
+                      <div className="tbl-card">
+                        <div className="tbl-section-hd">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>A</div>
-                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Packaging / Insumos</span>
-                            <span style={{ fontSize: 10, color: 'var(--txt3)', marginLeft: 2 }}>cajas, bolsas, cintas...</span>
+                            <div className="badge" style={{ background: 'var(--brand)' }}>A</div>
+                            <span className="label">Packaging / Insumos</span>
+                            <span className="hint">cajas, bolsas, cintas...</span>
                           </div>
-                          <button className="btn btn-ghost btn-xs" onClick={() => addPackComp(kitIdx)}>
-                            <i className="fa fa-plus" /> Agregar
-                          </button>
                         </div>
                         {(kit.packaging || []).length === 0 ? (
                           <div style={{ textAlign: 'center', padding: '9px 12px', background: 'var(--surface)', borderRadius: 8, border: '1px dashed var(--border)', color: 'var(--txt3)', fontSize: 11 }}>
@@ -1944,29 +1975,20 @@ export default function Presupuesto() {
                             ))}
                           </div>
                         )}
-                        {/* Botón Agregar insumo — debajo del último ítem */}
-                        <button onClick={() => addPackComp(kitIdx)}
-                          style={{ marginTop: 8, width: '100%', padding: '9px 14px', fontSize: 12.5, fontWeight: 600,
-                                   border: '1.5px dashed var(--brand)', borderRadius: 8, background: 'var(--brand-xlt, #F5F3FF)',
-                                   color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                                   justifyContent: 'center', gap: 6, transition: 'all .15s' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand)'; e.currentTarget.style.color = '#fff' }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'var(--brand-xlt, #F5F3FF)'; e.currentTarget.style.color = 'var(--brand)' }}>
-                          <i className="fa fa-plus-circle" style={{ fontSize: 13 }} /> Agregar insumo al kit
+                        {/* Botón Agregar insumo — minimalista, alineado izquierda */}
+                        <button className="tbl-add-btn" onClick={() => addPackComp(kitIdx)}>
+                          <i className="fa fa-plus" /> Agregar insumo
                         </button>
                       </div>
 
-                      {/* ─ Componente B: Contenido del kit ─ (tabla coherente con modo simple) */}
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+                      {/* ─ Componente B: Contenido del kit ─ */}
+                      <div className="tbl-card">
+                        <div className="tbl-section-hd">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ width: 20, height: 20, borderRadius: 6, background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>B</div>
-                            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Contenido del kit</span>
-                            <span style={{ fontSize: 10, color: 'var(--txt3)', marginLeft: 2 }}>productos incluidos en cada caja</span>
+                            <div className="badge" style={{ background: '#059669' }}>B</div>
+                            <span className="label">Contenido del kit</span>
+                            <span className="hint">productos incluidos en cada caja</span>
                           </div>
-                          <button className="btn btn-ghost btn-xs" onClick={() => addProdComp(kitIdx)}>
-                            <i className="fa fa-plus" /> Agregar
-                          </button>
                         </div>
                         {(kit.products || []).length === 0 ? (
                           <div style={{ textAlign: 'center', padding: '9px 12px', background: 'var(--surface)', borderRadius: 8, border: '1px dashed var(--border)', color: 'var(--txt3)', fontSize: 11 }}>
@@ -2033,15 +2055,9 @@ export default function Presupuesto() {
                             </div>
                           </div>
                         )}
-                        {/* Botón Agregar producto — debajo del último ítem, coherente con modo simple */}
-                        <button onClick={() => addProdComp(kitIdx)}
-                          style={{ marginTop: 8, width: '100%', padding: '9px 14px', fontSize: 12.5, fontWeight: 600,
-                                   border: '1.5px dashed #059669', borderRadius: 8, background: 'rgba(5,150,105,.06)',
-                                   color: '#059669', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                                   justifyContent: 'center', gap: 6, transition: 'all .15s' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = '#fff' }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(5,150,105,.06)'; e.currentTarget.style.color = '#059669' }}>
-                          <i className="fa fa-plus-circle" style={{ fontSize: 13 }} /> Agregar producto al kit
+                        {/* Botón Agregar producto — minimalista, alineado izquierda */}
+                        <button className="tbl-add-btn" onClick={() => addProdComp(kitIdx)}>
+                          <i className="fa fa-plus" /> Agregar producto
                         </button>
                       </div>
 
