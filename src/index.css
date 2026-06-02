@@ -1245,23 +1245,24 @@ td b{color:var(--txt);font-weight:600}
 @keyframes bsheetUp{from{transform:translateY(100%);opacity:.8}to{transform:translateY(0);opacity:1}}
 @media(max-width:768px){
   .modal-bg.open{padding:0;align-items:flex-end}
-  /* Mobile: SIN scroll interno — el .modal-bg scrollea la página entera.
-     Top-aligned para que el modal crezca hacia abajo sin cortes. */
+  /* Mobile: .modal usa scroll de página, .modal-form-card mantiene body
+     interno scrolleable con footer sticky para no perder Guardar. */
   .modal-bg.open{align-items:flex-start!important;padding:0!important}
   .modal,.modal-form-card{
     width:100vw!important;max-width:100vw!important;
     border-radius:0 0 20px 20px!important;
-    max-height:none!important;
-    height:auto!important;
-    overflow:visible!important;
     animation:pgIn .25s ease both!important;
     margin:0 0 24px!important;
   }
   .modal{
+    max-height:none!important;height:auto!important;overflow:visible!important;
     padding:20px 16px calc(48px + env(safe-area-inset-bottom))!important;
   }
   .modal-form-card{
-    padding:0 0 calc(40px + env(safe-area-inset-bottom))!important;
+    max-height:calc(100vh - env(safe-area-inset-top, 0px))!important;
+    height:auto!important;
+    overflow:hidden!important;
+    padding:0!important;
   }
   .modal-lg,.modal-xl{max-width:100vw!important;width:100vw!important}
   .modal::before{content:'';display:block;width:36px;height:4px;border-radius:4px;background:var(--border2);margin:0 auto 14px;flex-shrink:0}
@@ -1575,21 +1576,21 @@ td b{color:var(--txt);font-weight:600}
   width:calc(100vw - 32px);box-shadow:var(--sh-lg);
   animation:pgIn .2s ease both;margin:0 0 24px;flex-shrink:0;
   display:flex;flex-direction:column;
-  /* SIN scroll interno: altura libre y el .modal-bg scrollea la página
-     completa para mostrar TODO el contenido apilado hasta el footer. */
-  overflow:visible;
-  padding:0 0 max(32px, env(safe-area-inset-bottom, 24px));
+  /* Header / Body scrolleable / Footer fijo — patrón estándar para forms.
+     Altura natural cap al viewport: si el contenido cabe, el modal es
+     pequeño; si excede, scrollea SOLO el body interno (footer siempre visible). */
+  overflow:hidden;
+  padding:0;
   height:auto;
+  max-height:calc(100vh - 32px);
 }
-/* Footer al final del modal en flujo natural — visible al scrollear
-   el overlay completo hasta el fondo. */
 .modal-form-card > .mfooter,
 .modal-form-card > footer,
 .modal-form-card > .modal-actions,
 .modal-form-card > .ma{
   background:var(--surface);
   border-top:1px solid var(--border);
-  padding:14px 16px;
+  padding:14px 16px max(14px, env(safe-area-inset-bottom, 14px));
   display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;
 }
 /* Mantener selectores legacy por compatibilidad */
