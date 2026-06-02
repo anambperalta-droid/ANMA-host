@@ -558,11 +558,14 @@ export default function Presupuesto() {
     })
   }
 
-  /* ── Helper: costo unitario de un kit ──
-     fixedQty:    el insumo tiene cant. fija (total pedido, no ×kit) → se amortiza
-     designCost:  honorario único del diseñador → se amortiza por cant. de kits
-     laborCost:   honorario único de mano de obra → se amortiza por cant. de kits
-     printCost:   costo fijo total de impresión/grabado → se amortiza por cant. de kits */
+  /* ── Helper: costo unitario de UN kit (1 regalo terminado) ──────────────
+     Nueva semántica: comp.qty es SIEMPRE el TOTAL del pedido (no por kit).
+     Así no hay multiplicador oculto: si ponés 20 bolsas para 20 kits, son 20.
+     El costo de 1 kit = (Σ qty_total × costo_unitario) / cant. kits + personalización.
+       packaging:  (qty_total × costUnit) / kit.qty
+       products:   (qty_total × costUnit) / kit.qty
+       designCost / laborCost / printCost: honorario único / kit.qty
+       personalizacion.costUnit: costo por kit (literal). */
   const kitCostUnit = (kit) => {
     const kq = Math.max(1, num(kit.qty))
     let cu = num(kit.personalizacion?.costUnit)
@@ -570,11 +573,12 @@ export default function Presupuesto() {
     if (num(kit.personalizacion?.laborCost)  > 0) cu += num(kit.personalizacion.laborCost)  / kq
     if (num(kit.personalizacion?.printCost)  > 0) cu += num(kit.personalizacion.printCost)  / kq
     ;(kit.packaging || []).forEach(p => {
-      cu += p.fixedQty
-        ? (num(p.costUnit) * num(p.qty)) / kq   // costo amortizado
-        : num(p.costUnit) * num(p.qty)           // costo por kit (default)
+      // qty es TOTAL del pedido → costo del lote / cant. kits = aporte a UN kit
+      cu += (num(p.costUnit) * num(p.qty)) / kq
     })
-    ;(kit.products || []).forEach(p => { cu += num(p.costUnit) * num(p.qty) })
+    ;(kit.products || []).forEach(p => {
+      cu += (num(p.costUnit) * num(p.qty)) / kq
+    })
     return cu
   }
 
@@ -1847,14 +1851,14 @@ export default function Presupuesto() {
                       />
                       <div className="kit-hdr-right" style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2 }}>Cant. kits</div>
+                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2 }}>Cant. regalos</div>
                           <input type="number" min="1" value={kit.qty || 1} onFocus={selectOnFocus}
                             onChange={e => updateKit(kitIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
                             style={{ background: 'rgba(255,255,255,.14)', border: '1px solid rgba(255,255,255,.22)', borderRadius: 7, color: '#fff', fontWeight: 700, fontSize: 13, textAlign: 'center', width: 58, padding: '5px 6px', fontFamily: 'inherit' }} />
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                            <span>Precio u.</span>
+                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }} title="Precio que cobrás por 1 regalo terminado">
+                            <span>Precio / 1 regalo</span>
                             {kit.manualPriceUnit ? (
                               <button onClick={() => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, manualPriceUnit: false, priceUnit: effectiveKitPrice({ ...k, manualPriceUnit: false }) }))}
                                 title="Volver a precio automático según margen"
@@ -1881,7 +1885,7 @@ export default function Presupuesto() {
                             style={{ background: 'rgba(255,255,255,.14)', border: `1px solid ${kit.manualPriceUnit ? 'rgba(167,139,250,.55)' : 'rgba(255,255,255,.22)'}`, borderRadius: 7, color: '#fff', fontWeight: 700, fontSize: 13, textAlign: 'right', width: 92, padding: '5px 8px', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums' }} />
                         </div>
                         <div style={{ borderLeft: '1px solid rgba(255,255,255,.2)', paddingLeft: 10, textAlign: 'right' }}>
-                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.55)', marginBottom: 1 }}>Subtotal</div>
+                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,.55)', marginBottom: 1 }} title="Total a cobrar por todo el lote de regalos">Subtotal del lote</div>
                           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{fmt(num(kit.qty) * effectiveKitPrice(kit))}</div>
                         </div>
                       </div>
@@ -1909,7 +1913,7 @@ export default function Presupuesto() {
                             <div className="kit-tbl-hdr">
                               <span></span>
                               <span style={{ textAlign: 'left' }}>Insumo</span>
-                              <span style={{ textAlign: 'center' }}>Cant.</span>
+                              <span style={{ textAlign: 'center' }}>Cant. total</span>
                               <span style={{ textAlign: 'right' }}>Costo u.</span>
                               <span style={{ textAlign: 'right' }}>Subtotal</span>
                               <span></span>
@@ -1935,34 +1939,21 @@ export default function Presupuesto() {
                                       inputStyle={{ fontSize: 12, padding: '5px 8px', height: 32 }}
                                     />
                                   </div>
-                                  {/* Toggle ×kit / fijo — inline al lado del nombre */}
-                                  <button
-                                    onClick={() => updatePackComp(kitIdx, cIdx, 'fixedQty', !comp.fixedQty)}
-                                    title={comp.fixedQty ? 'Cantidad fija para todo el pedido — clic para cambiar a ×kit' : 'Cantidad por kit — clic para fijar cantidad total del pedido'}
-                                    style={{ height: 32, padding: '0 8px', borderRadius: 6, border: `1.5px solid ${comp.fixedQty ? 'var(--brand)' : 'var(--border)'}`, background: comp.fixedQty ? 'rgba(124,58,237,.1)' : 'transparent', color: comp.fixedQty ? 'var(--brand)' : 'var(--txt4)', cursor: 'pointer', fontSize: 10, fontWeight: 700, fontFamily: 'inherit', flexShrink: 0, lineHeight: 1 }}>
-                                    {comp.fixedQty ? '📦 fijo' : '×kit'}
-                                  </button>
                                 </div>
-                                {/* Cant. — modo ×kit muestra cantidad por kit; modo fijo muestra cantidad total del pedido */}
+                                {/* Cant. TOTAL — cantidad real que necesitás para todo el pedido (no se multiplica por kit.qty) */}
                                 <input type="number" min="1"
                                   value={num(comp.qty) || 1}
                                   onFocus={selectOnFocus}
                                   onChange={e => updatePackComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
-                                  title={comp.fixedQty
-                                    ? `Cantidad fija total del pedido: ${num(comp.qty) || 1}`
-                                    : `${num(comp.qty) || 1} por kit × ${num(kit.qty) || 1} kits = ${(num(comp.qty) || 1) * (num(kit.qty) || 1)} total`}
-                                  style={{ height: 32, textAlign: 'center', fontSize: 12, padding: '0 4px', fontWeight: 700, borderColor: comp.fixedQty ? 'var(--brand)' : undefined }} />
+                                  title={`Total de ${num(comp.qty) || 1} unidades para todo el pedido de ${num(kit.qty) || 1} kits`}
+                                  style={{ height: 32, textAlign: 'center', fontSize: 12, padding: '0 4px', fontWeight: 700 }} />
                                 {/* Costo unitario */}
                                 <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
                                   onChange={e => { const r = parseTbl(e.target.value); updatePackComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
                                   style={{ height: 32, textAlign: 'right', fontSize: 12, padding: '0 8px', fontVariantNumeric: 'tabular-nums' }} />
-                                {/* Subtotal */}
+                                {/* Subtotal = cant.total × costo u. — sin multiplicador oculto */}
                                 <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: num(comp.costUnit) > 0 ? 'var(--money)' : 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>
-                                  {num(comp.costUnit) > 0
-                                    ? fmt(comp.fixedQty
-                                        ? num(comp.costUnit) * num(comp.qty)
-                                        : num(comp.costUnit) * num(comp.qty) * num(kit.qty))
-                                    : '—'}
+                                  {num(comp.costUnit) > 0 ? fmt(num(comp.costUnit) * num(comp.qty)) : '—'}
                                 </div>
                                 {/* Remove */}
                                 <button onClick={() => removePackComp(kitIdx, cIdx)}
@@ -2001,7 +1992,7 @@ export default function Presupuesto() {
                             <div className="kit-tbl-hdr">
                               <span></span>
                               <span style={{ textAlign: 'left' }}>Producto</span>
-                              <span style={{ textAlign: 'center' }}>Cant. ×kit</span>
+                              <span style={{ textAlign: 'center' }}>Cant. total</span>
                               <span style={{ textAlign: 'right' }}>Costo u.</span>
                               <span style={{ textAlign: 'right' }}>Subtotal</span>
                               <span></span>
@@ -2025,20 +2016,20 @@ export default function Presupuesto() {
                                     inputStyle={{ fontSize: 12, padding: '5px 8px', height: 32 }}
                                   />
                                 </div>
-                                {/* Cant. por kit (1 = una unidad por cada caja) */}
+                                {/* Cant. TOTAL — del pedido completo (no por kit) */}
                                 <input type="number" min="1"
                                   value={num(comp.qty) || 1}
                                   onFocus={selectOnFocus}
                                   onChange={e => updateProdComp(kitIdx, cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
-                                  title={`Total = ${(num(comp.qty) || 1) * (num(kit.qty) || 1)} unidades (${num(comp.qty) || 1} × ${num(kit.qty) || 1} kits)`}
+                                  title={`Total de ${num(comp.qty) || 1} unidades para todo el pedido de ${num(kit.qty) || 1} kits`}
                                   style={{ height: 32, textAlign: 'center', fontSize: 12, padding: '0 4px', fontWeight: 700 }} />
                                 {/* Costo unitario */}
                                 <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
                                   onChange={e => { const r = parseTbl(e.target.value); updateProdComp(kitIdx, cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
                                   style={{ height: 32, textAlign: 'right', fontSize: 12, padding: '0 8px', fontVariantNumeric: 'tabular-nums' }} />
-                                {/* Subtotal = qty × kit.qty × costUnit */}
+                                {/* Subtotal = cant.total × costo u. — sin multiplicador oculto */}
                                 <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: num(comp.costUnit) > 0 ? 'var(--money)' : 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>
-                                  {num(comp.costUnit) > 0 ? fmt(num(comp.costUnit) * num(comp.qty) * num(kit.qty)) : '—'}
+                                  {num(comp.costUnit) > 0 ? fmt(num(comp.costUnit) * num(comp.qty)) : '—'}
                                 </div>
                                 {/* Remove */}
                                 <button onClick={() => removeProdComp(kitIdx, cIdx)}
@@ -2051,7 +2042,7 @@ export default function Presupuesto() {
                             ))}
                             <div style={{ fontSize: 10, color: 'var(--txt3)', fontStyle: 'italic', textAlign: 'right', padding: '4px 8px 0' }}>
                               <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .6 }} />
-                              Cant. ×kit es lo que lleva <strong>cada caja</strong>. El total cobrado se multiplica por {num(kit.qty) || 1} kits.
+                              Cargá la cantidad <strong>total</strong> que necesitás para los {num(kit.qty) || 1} kits del pedido.
                             </div>
                           </div>
                         )}
@@ -2703,7 +2694,7 @@ export default function Presupuesto() {
                       {/* ── Componentes anidados del kit (sangrado + línea vertical) ── */}
                       {isKit && (products.length > 0 || packaging.length > 0 || hasPers || hasDesign || hasLabor || hasPrint) && (
                         <div style={{ marginTop: 6, marginLeft: 16, paddingLeft: 10, borderLeft: '1.5px solid rgba(167,139,250,.28)', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          {/* B — Productos del kit */}
+                          {/* B — Productos del kit (cant. es TOTAL del pedido) */}
                           {products.map((p, pi) => (
                             <div key={`p-${pi}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(255,255,255,.55)' }}>
                               <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -2713,25 +2704,22 @@ export default function Presupuesto() {
                               </span>
                               {num(p.costUnit) > 0 && (
                                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                                  {fmt(num(p.costUnit) * num(p.qty) * kitQty)}
+                                  {fmt(num(p.costUnit) * num(p.qty))}
                                 </span>
                               )}
                             </div>
                           ))}
-                          {/* A — Packaging del kit */}
+                          {/* A — Packaging del kit (cant. es TOTAL del pedido) */}
                           {packaging.map((p, pi) => (
                             <div key={`pk-${pi}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(255,255,255,.55)' }}>
                               <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                <span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>↳</span>
-                                📦 {p.name}
-                                <span style={{ color: 'rgba(255,255,255,.3)', marginLeft: 4, fontSize: 9.5 }}>
-                                  × {p.fixedQty ? (num(p.qty) || 1) : (num(p.qty) || 1) * kitQty}
-                                  {p.fixedQty ? <span style={{ marginLeft: 3, color: 'rgba(167,139,250,.55)', fontWeight: 700 }}>(fijo)</span> : null}
-                                </span>
+                                <span style={{ color: 'rgba(255,255,255,.35)', marginRight: 5 }}>📦</span>
+                                {p.name}
+                                <span style={{ color: 'rgba(255,255,255,.3)', marginLeft: 4, fontSize: 9.5 }}>× {num(p.qty) || 1}</span>
                               </span>
                               {num(p.costUnit) > 0 && (
                                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                                  {fmt(p.fixedQty ? num(p.costUnit) * num(p.qty) : num(p.costUnit) * num(p.qty) * kitQty)}
+                                  {fmt(num(p.costUnit) * num(p.qty))}
                                 </span>
                               )}
                             </div>
