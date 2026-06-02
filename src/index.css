@@ -1581,27 +1581,37 @@ td b{color:var(--txt);font-weight:600}
 .modal-form-card{
   background:var(--surface);border-radius:var(--r-xl);
   width:calc(100vw - 32px);box-shadow:var(--sh-lg);
-  animation:pgIn .2s ease both;margin:0 0 24px;flex-shrink:0;
+  animation:pgIn .2s ease both;margin:0 0 24px;
   display:flex;flex-direction:column;
-  /* SIN scroll interno: altura natural, contenido fluye hacia abajo. El
-     .modal-bg (overlay) maneja el scroll de página completa. */
+  /* SIN scroll interno: contenido fluye natural. El overlay scrollea si excede.
+     min-height generoso: el modal tiene presencia visual aunque el contenido
+     sea corto (footer queda al pie de la tarjeta, no flotando). */
   overflow:visible;
   padding:0 0 max(32px, env(safe-area-inset-bottom, 14px));
   height:auto;
   max-height:none;
+  min-height:min(82vh, 720px);
 }
-/* Forzamos a que los body internos NO scrolleen — los componentes los
-   declaran con overflow-y:auto inline, los neutralizamos acá */
+/* Body internos no scrollean — los neutralizamos manteniendo flex:1 para
+   que empuje el footer al fondo en formularios cortos. */
 .modal-form-card > div[style*="overflow-y"],
 .modal-form-card > div[style*="overflow:auto"],
 .modal-form-card > div[style*="overflow: auto"]{
   overflow:visible!important;max-height:none!important;
-  flex:none!important;min-height:auto!important;
+  min-height:0!important;
 }
-/* Footers sticky declarados inline → flujo natural */
+/* Footers sticky declarados inline → flujo natural, anclado al fondo
+   por margin-top:auto en el flex column del modal-form-card */
 .modal-form-card > div[style*="position: sticky"],
 .modal-form-card > div[style*="position:sticky"]{
   position:static!important;bottom:auto!important;
+  margin-top:auto!important;
+}
+.modal-form-card > .mfooter,
+.modal-form-card > footer,
+.modal-form-card > .modal-actions,
+.modal-form-card > .ma{
+  margin-top:auto!important;
 }
 .modal-form-card > .mfooter,
 .modal-form-card > footer,
