@@ -1478,19 +1478,19 @@ export default function Presupuesto() {
                         </div>
                       ))}
                     </div>
-                    {/* add row — botón más grande, directamente debajo del último producto */}
+                    {/* add row — directamente debajo del último producto */}
                     <button onClick={addItem}
-                      style={{ marginTop: 10, width: '100%', padding: '14px 16px', fontSize: 14, fontWeight: 700,
-                               border: '2px dashed var(--brand)', borderRadius: 10, background: 'var(--brand-xlt, #F5F3FF)',
+                      style={{ marginTop: 8, width: '100%', padding: '9px 14px', fontSize: 12.5, fontWeight: 600,
+                               border: '1.5px dashed var(--brand)', borderRadius: 8, background: 'var(--brand-xlt, #F5F3FF)',
                                color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                               justifyContent: 'center', gap: 8, transition: 'all .15s' }}
+                               justifyContent: 'center', gap: 6, transition: 'all .15s' }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand)'; e.currentTarget.style.color = '#fff' }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'var(--brand-xlt, #F5F3FF)'; e.currentTarget.style.color = 'var(--brand)' }}>
-                      <i className="fa fa-plus-circle" style={{ fontSize: 16 }} /> Agregar producto
+                      <i className="fa fa-plus-circle" style={{ fontSize: 13 }} /> Agregar producto
                     </button>
                     {/* tip */}
                     <div className="wiz-tip" style={{ marginTop: 12 }}>
-                      <i className="fa fa-lightbulb" /> Hacé clic en <i className="fa fa-list" style={{ margin: '0 2px' }} /> para seleccionar del catálogo. El precio se completa automáticamente.
+                      <i className="fa fa-lightbulb" /> Empezá a escribir el nombre del producto para autocompletar desde tu catálogo — el costo y precio se llenan solos.
                     </div>
 
                     {/* ─ Packaging / Insumos (simple mode) ─ */}
