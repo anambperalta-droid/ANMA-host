@@ -97,6 +97,7 @@ export default function Logistica() {
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState({})
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [lateAlertDismissed, setLateAlertDismissed] = useState(() => {
     try { return sessionStorage.getItem('logistica_late_dismissed') === '1' } catch { return false }
   })
@@ -1354,22 +1355,19 @@ export default function Logistica() {
             </div>
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '14px 22px' }}>
 
+            {/* ── 1. ENVÍO — datos esenciales ─────────────────────────── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10 }}>
-                <i className="fa fa-file-lines" style={{ marginRight: 6, color: 'var(--brand)' }} />Datos del envío
+                <i className="fa fa-truck-fast" style={{ marginRight: 6, color: 'var(--brand)' }} />Envío
+              </div>
+              <div className="fg" style={{ marginBottom: 10 }}>
+                <label>Presupuesto asociado</label>
+                <select value={form.budgetId || ''} onChange={e => onBudgetChange(e.target.value)}>
+                  <option value="">Sin asociar</option>
+                  {budgets.map(b => <option key={b.id} value={b.id}>{b.num} — {b.company || b.contact}</option>)}
+                </select>
               </div>
               <div className="grid2">
-                <div className="fg" style={{ marginBottom: 10 }}>
-                  <label>Presupuesto asociado</label>
-                  <select value={form.budgetId || ''} onChange={e => onBudgetChange(e.target.value)}>
-                    <option value="">Sin asociar</option>
-                    {budgets.map(b => <option key={b.id} value={b.id}>{b.num} — {b.company || b.contact}</option>)}
-                  </select>
-                </div>
-                <div className="fg" style={{ marginBottom: 10 }}>
-                  <label>N° Remito</label>
-                  <input type="text" value={form.remito || ''} onChange={e => setF('remito', e.target.value)} placeholder="VC-001234" />
-                </div>
                 <div className="fg" style={{ marginBottom: 10 }}>
                   <label>Fecha</label>
                   <input type="date" value={form.date || ''} onChange={e => setF('date', e.target.value)} />
@@ -1380,37 +1378,19 @@ export default function Logistica() {
                     {statusList.map(s => <option key={s}>{s}</option>)}
                   </select>
                 </div>
-                <div className="fg" style={{ marginBottom: 10 }}>
-                  <label>Servicio</label>
-                  <select value={form.service || 'Estándar'} onChange={e => setF('service', e.target.value)}>
-                    {Object.keys(SERVICE_MULTIPLIER).map(s => (
-                      <option key={s}>{s}{SERVICE_MULTIPLIER[s] !== 1 ? ` (×${SERVICE_MULTIPLIER[s]})` : ''}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="fg" style={{ marginBottom: 10 }}>
-                  <label>Empresa de envío</label>
-                  <input type="text" list="carriers-list" value={form.carrier || ''} onChange={e => setF('carrier', e.target.value)} placeholder="Vía Cargo…" autoComplete="off" />
-                  <datalist id="carriers-list">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
-                </div>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>N° Seguimiento / URL</label>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input type="text" value={form.trackingUrl || ''} onChange={e => setF('trackingUrl', e.target.value)} placeholder="Código o URL de tracking…" style={{ flex: 1 }} />
-                    {trackingLink && (
-                      <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0, padding: '0 10px' }} onClick={() => window.open(trackingLink, '_blank')} title="Abrir seguimiento en línea">
-                        <i className="fa fa-arrow-up-right-from-square" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+              </div>
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label>Empresa de envío</label>
+                <input type="text" list="carriers-list" value={form.carrier || ''} onChange={e => setF('carrier', e.target.value)} placeholder="Vía Cargo…" autoComplete="off" />
+                <datalist id="carriers-list">{CARRIERS.map(c => <option key={c} value={c} />)}</datalist>
               </div>
             </div>
 
+            {/* ── 2. DESTINATARIO ──────────────────────────────────────── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <i className="fa fa-location-dot" style={{ color: 'var(--brand)' }} />Destinatario
-                {form.budgetId && <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', background: '#F0FDF4', padding: '1px 8px', borderRadius: 10 }}>Auto-completado del presupuesto</span>}
+                {form.budgetId && <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', background: '#F0FDF4', padding: '1px 8px', borderRadius: 10 }}>Auto-completado</span>}
               </div>
               <div className="grid2">
                 <div className="fg" style={{ marginBottom: 10 }}>
@@ -1434,66 +1414,21 @@ export default function Logistica() {
               )}
             </div>
 
+            {/* ── 3. FLETE — solo "quién paga" arriba; el resto en detalles ── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10 }}>
-                <i className="fa fa-box" style={{ marginRight: 6, color: 'var(--brand)' }} />Paquete
-              </div>
-              <div className="grid2">
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>Bultos</label>
-                  <input type="number" value={form.bulks || 1} onChange={e => setF('bulks', Number(e.target.value))} min="1" />
-                </div>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label>Peso (kg)</label>
-                  <input type="number" value={form.weight || ''} onChange={e => setF('weight', e.target.value)} placeholder="0" step="0.1" />
-                </div>
-              </div>
-            </div>
-
-            <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10 }}>
-                <i className="fa fa-dollar-sign" style={{ marginRight: 6, color: 'var(--brand)' }} />Finanzas
-              </div>
-              {fleteEstimado !== null && (
-                <div style={{ background: '#EFF6FF', border: '1.5px solid #93C5FD', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
-                    <i className="fa fa-calculator" style={{ marginRight: 6, color: '#3B82F6' }} />
-                    Flete estimado · <b>{form.service}</b>
-                    {(SERVICE_MULTIPLIER[form.service] || 1) !== 1 && (
-                      <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#3B82F6', background: '#DBEAFE', padding: '1px 6px', borderRadius: 8 }}>
-                        ×{SERVICE_MULTIPLIER[form.service]}
-                      </span>
-                    )}
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: '#1D4ED8' }}>{fmt(fleteEstimado)}</span>
-                    <button className="btn btn-primary btn-sm" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => setF('freight', fleteEstimado)}>
-                      Usar
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="grid2">
-                {feats.costoInterno && (
-                  <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
-                    <label>Costo flete ($)</label>
-                    <input type="number" value={form.freight || 0} onChange={e => setF('freight', Number(e.target.value))} />
-                  </div>
-                )}
-                <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
-                  <label>¿Quién paga el flete?</label>
-                  <select value={form.payer || 'Mi negocio'} onChange={e => setF('payer', e.target.value)}>
-                    <option>Mi negocio</option>
-                    <option>El cliente</option>
-                    <option>Incluido en precio</option>
-                  </select>
-                </div>
+              <div className="fg" style={{ marginBottom: marginImpact !== null ? 10 : 0 }}>
+                <label>¿Quién paga el flete?</label>
+                <select value={form.payer || 'Mi negocio'} onChange={e => setF('payer', e.target.value)}>
+                  <option>Mi negocio</option>
+                  <option>El cliente</option>
+                  <option>Incluido en precio</option>
+                </select>
               </div>
               {marginImpact !== null && (
                 <div style={{ background: marginImpact >= 0 ? '#F0FDF4' : '#FFF1F2', border: `1.5px solid ${marginImpact >= 0 ? '#86EFAC' : '#FCA5A5'}`, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
                     <i className="fa fa-chart-line" style={{ marginRight: 6, color: marginImpact >= 0 ? '#16A34A' : '#DC2626' }} />
-                    Ganancia neta del presupuesto <span style={{ fontSize: 10, color: 'var(--txt3)' }}>(después del flete)</span>
+                    Ganancia neta <span style={{ fontSize: 10, color: 'var(--txt3)' }}>(después del flete)</span>
                   </span>
                   <span style={{ fontSize: 18, fontWeight: 800, color: marginImpact >= 0 ? '#16A34A' : '#DC2626' }}>
                     {fmt(marginImpact)}
@@ -1501,6 +1436,91 @@ export default function Logistica() {
                 </div>
               )}
             </div>
+
+            {/* ── 4. DETALLES AVANZADOS — colapsable ─────────────────── */}
+            {(() => {
+              const hasAdv = !!(form.remito || form.trackingUrl || form.bulks > 1 || form.weight || form.freight || (form.service && form.service !== 'Estándar'))
+              const open = showAdvanced || hasAdv
+              return (
+                <div style={{ marginBottom: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(s => !s)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      background: 'transparent', border: '1px dashed var(--border)', borderRadius: 8,
+                      padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--txt2)',
+                    }}>
+                    <span><i className="fa fa-sliders" style={{ marginRight: 8, color: 'var(--brand)' }} />Detalles avanzados</span>
+                    <i className={`fa fa-chevron-${open ? 'up' : 'down'}`} style={{ color: 'var(--txt3)' }} />
+                  </button>
+                  {open && (
+                    <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginTop: 8, border: '1.5px solid var(--border)' }}>
+                      <div className="grid2">
+                        <div className="fg" style={{ marginBottom: 10 }}>
+                          <label>N° Remito</label>
+                          <input type="text" value={form.remito || ''} onChange={e => setF('remito', e.target.value)} placeholder="VC-001234" />
+                        </div>
+                        <div className="fg" style={{ marginBottom: 10 }}>
+                          <label>Servicio</label>
+                          <select value={form.service || 'Estándar'} onChange={e => setF('service', e.target.value)}>
+                            {Object.keys(SERVICE_MULTIPLIER).map(s => (
+                              <option key={s}>{s}{SERVICE_MULTIPLIER[s] !== 1 ? ` (×${SERVICE_MULTIPLIER[s]})` : ''}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="fg" style={{ marginBottom: 10 }}>
+                        <label>N° Seguimiento / URL</label>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <input type="text" value={form.trackingUrl || ''} onChange={e => setF('trackingUrl', e.target.value)} placeholder="Código o URL de tracking…" style={{ flex: 1 }} />
+                          {trackingLink && (
+                            <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0, padding: '0 10px' }} onClick={() => window.open(trackingLink, '_blank')} title="Abrir seguimiento en línea">
+                              <i className="fa fa-arrow-up-right-from-square" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid2">
+                        <div className="fg" style={{ marginBottom: feats.costoInterno ? 10 : 0 }}>
+                          <label>Bultos</label>
+                          <input type="number" value={form.bulks || 1} onChange={e => setF('bulks', Number(e.target.value))} min="1" />
+                        </div>
+                        <div className="fg" style={{ marginBottom: feats.costoInterno ? 10 : 0 }}>
+                          <label>Peso (kg)</label>
+                          <input type="number" value={form.weight || ''} onChange={e => setF('weight', e.target.value)} placeholder="0" step="0.1" />
+                        </div>
+                      </div>
+                      {fleteEstimado !== null && (
+                        <div style={{ background: '#EFF6FF', border: '1.5px solid #93C5FD', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: feats.costoInterno ? 10 : 0 }}>
+                          <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
+                            <i className="fa fa-calculator" style={{ marginRight: 6, color: '#3B82F6' }} />
+                            Flete estimado · <b>{form.service}</b>
+                            {(SERVICE_MULTIPLIER[form.service] || 1) !== 1 && (
+                              <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#3B82F6', background: '#DBEAFE', padding: '1px 6px', borderRadius: 8 }}>
+                                ×{SERVICE_MULTIPLIER[form.service]}
+                              </span>
+                            )}
+                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 18, fontWeight: 800, color: '#1D4ED8' }}>{fmt(fleteEstimado)}</span>
+                            <button className="btn btn-primary btn-sm" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => setF('freight', fleteEstimado)}>
+                              Usar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {feats.costoInterno && (
+                        <div className="fg" style={{ marginBottom: 0 }}>
+                          <label>Costo flete ($)</label>
+                          <input type="number" value={form.freight || 0} onChange={e => setF('freight', Number(e.target.value))} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             <div className="fg" style={{ marginBottom: 0 }}>
               <label>Notas</label>
