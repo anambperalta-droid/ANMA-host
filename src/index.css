@@ -295,8 +295,12 @@ td b{color:var(--txt);font-weight:600}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 
 /* ─── MODALS ─── */
-.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000;background:rgba(15,12,60,.5);backdrop-filter:blur(6px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 16px}
-.modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
+/* Overlay backdrop — único scrolleable. Block para que el modal pueda crecer
+   naturalmente y el overlay scrollee la página entera (no más flex). */
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000;background:rgba(15,12,60,.5);backdrop-filter:blur(6px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:24px 16px}
+.modal-bg.open{display:block}
+.modal-bg.open > .modal,
+.modal-bg.open > .modal-form-card{margin-left:auto;margin-right:auto}
 /* ── Modal base (ARQUITECTURA GLOBAL) ────────────────────────────────────
    SIN scroll interno. El modal crece TODO lo que necesite y, si excede
    el viewport, el .modal-bg (overlay) scrollea la página entera para
