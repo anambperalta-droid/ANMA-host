@@ -217,12 +217,15 @@ export default function Catalogo() {
       toast('Agregá al menos un componente al kit.', 'er'); return
     }
     const finalCost = productMode === 'kit' ? kitTotal : num(form.cost)
+    // NOTA: `price` y `margin` ya no se persisten desde el catálogo.
+    // El margen y precio final se calculan al armar el presupuesto.
+    // Removemos esos campos del payload para mantener la BD limpia.
+    const { price: _omitPrice, margin: _omitMargin, priceB2C: _omitPriceB2C, ...formClean } = form
     saveEntity('products', {
-      ...form,
-      cat:         form.cat ?? '',
+      ...formClean,
+      cat:         formClean.cat ?? '',
       cost:        finalCost,
-      price:       num(form.price),
-      stock:       form.stock === '' ? null : num(form.stock),
+      stock:       formClean.stock === '' ? null : num(formClean.stock),
       tipo:        productMode === 'kit' ? 'kit' : 'producto',
       componentes:    productMode === 'kit' ? componentes : [],
       packagingItems: productMode === 'kit' ? packagingItems : [],
@@ -514,9 +517,8 @@ export default function Catalogo() {
               {p.componentes.length} componente{p.componentes.length !== 1 ? 's' : ''}
             </div>
           )}
-          <div className="prod-card-price">{fmt(suggestedPrice(p.cost))}</div>
-          {!opHideCosts && <div className="prod-card-cost">Costo: {fmt(p.cost)}</div>}
-          {pct !== null && <div className="prod-card-margin" style={{ color: marginColor(pct) }}>{pct}% margen</div>}
+          {/* Precio sugerido y % margen removidos — se calculan al armar el presupuesto */}
+          {!opHideCosts && <div className="prod-card-cost" style={{ fontWeight: 800, fontSize: 14, color: 'var(--money)' }}>{fmt(p.cost)}</div>}
           {p.stock != null && (
             <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
               <i className="fa fa-cubes-stacked" style={{ fontSize: 8 }} />
@@ -566,11 +568,7 @@ export default function Catalogo() {
             <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 4 }}>({p.componentes.length} comp.)</span>
           )}
         </td>}
-        {!opHideCosts && <td className="col-hide-mobile">
-          {pct !== null ? (
-            <span style={{ fontWeight: 800, fontSize: 13, color: marginColor(pct) }}>{pct}%</span>
-          ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-        </td>}
+        {/* Columna % Margen removida — el margen lo define el presupuesto */}
         {showCostInfo && (
           <td className="col-hide-mobile" style={{ fontSize: 11 }}>
             {p.updatedAt ? (
@@ -589,7 +587,7 @@ export default function Catalogo() {
             : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>
           }
         </td>
-        <td style={{ fontWeight: 700, color: 'var(--money)' }}>{fmt(suggestedPrice(p.cost))}</td>
+        {/* Columna Precio sugerido removida — se calcula al armar el presupuesto */}
         <td><div className="acts" style={{ display:'flex',gap:5 }}>
           <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
           <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-trash" /></button>
@@ -741,7 +739,7 @@ export default function Catalogo() {
                     )}
                   </div>
                 </div>
-                <span className="cat-mob-item-price">{fmt(suggestedPrice(p.cost))}</span>
+                <span className="cat-mob-item-price">{fmt(p.cost)}</span>
               </div>
               <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5,alignItems:'center',flexShrink:0 }}>
                 <button onClick={() => open(p)} title="Editar" style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
@@ -783,21 +781,20 @@ export default function Catalogo() {
                     </button>
                   </span>
                 </th>}
-                {!opHideCosts && <th className="col-hide-mobile">% Margen</th>}
+                {/* % Margen y Precio sugerido removidos — el margen se aplica al armar el presupuesto */}
                 {showCostInfo && <th className="col-hide-mobile">Últ. actualización</th>}
                 <th className="col-hide-mobile">Stock</th>
-                <th>Precio sugerido ($)</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? [1,2,3,4].map(i => (
-                <tr key={i}><td colSpan={showCostInfo ? 10 : 9}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
+                <tr key={i}><td colSpan={showCostInfo ? 8 : 7}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
               )) : filtered.length ? (groupByType
                 ? [
                     ...(prodsFiltered.length > 0 ? [
                       <tr key="__hd_prod" style={{ background: 'var(--surface)' }}>
-                        <td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                        <td colSpan={showCostInfo ? 8 : 7} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
                           <div className="grp-section-hd" style={{ marginTop: 0 }} onClick={() => toggleGrp('prods')}>
                             <i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />
                             Productos
@@ -810,7 +807,7 @@ export default function Catalogo() {
                     ] : []),
                     ...(kitsFiltered.length > 0 ? [
                       <tr key="__hd_kit" style={{ background: 'var(--surface)' }}>
-                        <td colSpan={showCostInfo ? 10 : 9} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                        <td colSpan={showCostInfo ? 8 : 7} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
                           <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
                             <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />
                             Kits & Boxes
@@ -822,7 +819,7 @@ export default function Catalogo() {
                       ...(collapsedGrps.kits ? [] : kitsFiltered.map(p => renderTableRow(p)))
                     ] : []),
                   ]
-                : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={showCostInfo ? 10 : 9}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+                : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={showCostInfo ? 8 : 7}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
             </tbody>
           </table>
         </div>
@@ -1405,10 +1402,10 @@ export default function Catalogo() {
               </div>
               {productMode === 'kit' && (
                 <div style={{ fontSize: 10, color: 'var(--txt4)', marginBottom: 10 }}>
-                  Definí el precio de venta de <strong style={{ color: 'var(--txt3)' }}>1 solo kit</strong> — la cantidad total se calcula abajo
+                  Cargá el costo del kit (auto si tiene componentes) — el precio final lo definís en el presupuesto.
                 </div>
               )}
-              <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr 28px 1fr', gap: '0 6px', alignItems: 'end' }}>
+              <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0 6px', alignItems: 'end', maxWidth: 320 }}>
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} />
@@ -1437,29 +1434,12 @@ export default function Catalogo() {
                     <input tabIndex={5} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
                   )}
                 </div>
-                <div className="cat-price-arrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <i className="fa fa-percent" style={{ color: 'var(--txt3)', fontSize: 10 }} />
-                    Margen deseado (%)
-                  </label>
-                  <input tabIndex={5} type="number" value={marginInput} onChange={e => onMarginChange(e.target.value)} placeholder="%" min="0" />
-                </div>
-                <div className="cat-price-arrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <i className="fa fa-tag" style={{ color: 'var(--green)', fontSize: 10 }} />
-                    Precio de Venta
-                  </label>
-                  <input tabIndex={6} type="number" value={form.price || ''} onChange={e => onPriceChange(e.target.value)} placeholder="0" min="0" style={{ borderColor: 'var(--green)', borderWidth: 2 }} />
-                </div>
+                {/* Margen y Precio de Venta removidos — se aplican al armar el presupuesto */}
               </div>
-              {(productMode === 'kit' ? kitTotal : num(form.cost)) > 0 && num(form.price) > 0 && (
-                <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className={`fa fa-arrow-${num(form.price) > (productMode === 'kit' ? kitTotal : num(form.cost)) ? 'trend-up' : 'trend-down'}`} />
-                  Ganancia por unidad: ${(num(form.price) - (productMode === 'kit' ? kitTotal : num(form.cost))).toLocaleString('es-AR')} · Margen real: {marginInput || 0}%
-                </div>
-              )}
+              <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 8, fontStyle: 'italic' }}>
+                <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
+                El margen y precio de venta se definen al armar el presupuesto. Acá solo cargás el costo.
+              </div>
             </div>
 
             {/* ── CARD PRODUCCIÓN & STOCK (kit mode only) ── */}
@@ -1595,36 +1575,18 @@ export default function Catalogo() {
                 {/* Card costo producto */}
                 <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <i className="fa fa-coins" /> Costo · Margen · Precio
+                    <i className="fa fa-coins" /> Costo unitario
                   </div>
-                  <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr 28px 1fr', gap: '0 6px', alignItems: 'end' }}>
-                    <div className="fg" style={{ marginBottom: 0 }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} /> Costo del producto
-                      </label>
-                      <input type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
-                    <div className="fg" style={{ marginBottom: 0 }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <i className="fa fa-percent" style={{ color: 'var(--txt3)', fontSize: 10 }} /> Margen (%)
-                      </label>
-                      <input type="number" value={marginInput} onChange={e => onMarginChange(e.target.value)} placeholder="%" min="0" />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: 2, color: 'var(--txt4)', fontSize: 14, fontWeight: 700 }}>→</div>
-                    <div className="fg" style={{ marginBottom: 0 }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <i className="fa fa-tag" style={{ color: 'var(--green)', fontSize: 10 }} /> Precio de Venta
-                      </label>
-                      <input type="number" value={form.price || ''} onChange={e => onPriceChange(e.target.value)} placeholder="0" min="0" style={{ borderColor: 'var(--green)', borderWidth: 2 }} />
+                  <div className="fg" style={{ marginBottom: 0, maxWidth: 240 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} /> Costo del producto ($)
+                    </label>
+                    <input type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
+                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 5, fontStyle: 'italic' }}>
+                      <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
+                      El margen y precio final se calculan al armar el presupuesto.
                     </div>
                   </div>
-                  {num(form.cost) > 0 && num(form.price) > 0 && (
-                    <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: num(form.price) > num(form.cost) ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${num(form.price) > num(form.cost) ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 12, color: num(form.price) > num(form.cost) ? 'var(--green)' : 'var(--red)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <i className={`fa fa-arrow-trend-${num(form.price) > num(form.cost) ? 'up' : 'down'}`} />
-                      Ganancia: ${(num(form.price) - num(form.cost)).toLocaleString('es-AR')} · Margen: {marginInput || 0}%
-                    </div>
-                  )}
                 </div>
                 {/* Configuración avanzada producto */}
                 <button onClick={() => setShowAdvanced(s => !s)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: showAdvanced ? '10px 10px 0 0' : 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: showAdvanced ? 0 : 4 }}>
