@@ -1569,28 +1569,35 @@ export default function Presupuesto() {
                       <i className="fa fa-lightbulb" /> Empezá a escribir el nombre del producto para autocompletar desde tu catálogo — el costo y precio se llenan solos.
                     </div>
 
-                    {/* ─ Packaging / Insumos (simple mode) ─ */}
-                    <div style={{ marginTop: 14, border: '1.5px solid var(--border)', borderRadius: 12, overflow: 'hidden', background: 'var(--surface2)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: simplePack.length > 0 ? '1px solid var(--border)' : 'none', background: 'var(--surface2)' }}>
+                    {/* ─ Packaging / Insumos (simple mode) — estética unificada ─ */}
+                    <div className="tbl-card" style={{ marginTop: 14 }}>
+                      <div className="tbl-section-hd">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>A</div>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Packaging / Insumos</span>
-                          <span style={{ fontSize: 10, color: 'var(--txt3)' }}>cajas, bolsas, cintas...</span>
+                          <div className="badge" style={{ background: 'var(--brand)' }}>A</div>
+                          <span className="label">Packaging / Insumos</span>
+                          <span className="hint">cajas, bolsas, cintas...</span>
                         </div>
-                        <button className="btn btn-ghost btn-xs" onClick={addSimplePack}>
-                          <i className="fa fa-plus" /> Agregar
-                        </button>
                       </div>
                       {simplePack.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '9px 14px', color: 'var(--txt3)', fontSize: 11 }}>
-                          <i className="fa fa-inbox" style={{ marginRight: 5, opacity: .45 }} /> Sin insumos — opcional
+                        <div style={{ textAlign: 'center', padding: '12px 8px', color: '#9CA3AF', fontSize: 11 }}>
+                          <i className="fa fa-inbox" style={{ marginRight: 5, opacity: .5 }} /> Sin insumos — opcional
                         </div>
                       ) : (
-                        <div style={{ padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        <div className="kit-tbl">
+                          <div className="kit-tbl-hdr">
+                            <span></span>
+                            <span style={{ textAlign: 'left' }}>Insumo</span>
+                            <span style={{ textAlign: 'center' }}>Cant.</span>
+                            <span style={{ textAlign: 'right' }}>Costo u.</span>
+                            <span style={{ textAlign: 'right' }}>Subtotal</span>
+                            <span></span>
+                          </div>
                           {simplePack.map((comp, cIdx) => (
-                            <div key={cIdx} className="kit-comp-row">
-                              <i className="fa fa-box" style={{ fontSize: 11, color: 'var(--brand)', flexShrink: 0, opacity: .65 }} />
-                              <div className="kit-comp-name-group" style={{ flex: 1, minWidth: 0 }}>
+                            <div key={cIdx} className="kit-tbl-row">
+                              <span className="ico" style={{ color: 'var(--brand)', opacity: .7, fontSize: 11 }}>
+                                <i className="fa fa-box" />
+                              </span>
+                              <div style={{ minWidth: 0 }}>
                                 <ProductAutocomplete
                                   value={comp.name}
                                   products={insumos.map(ins => ({ ...ins, cost: num(ins.cost || ins.costUnit || 0), cat: ins.unit || ins.cat || '' }))}
@@ -1600,38 +1607,31 @@ export default function Presupuesto() {
                                     updateSimplePack(cIdx, 'costUnit', num(ins.cost))
                                   }}
                                   placeholder="Ej: Caja kraft, Bolsa organza..."
-                                  inputStyle={{ fontSize: 12, padding: '4px 8px', height: 30 }}
+                                  inputStyle={{ fontSize: 12, padding: '5px 8px', height: 32 }}
                                 />
                               </div>
-                              <div className="kit-comp-nums">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                                  <span style={{ fontSize: 9, color: 'var(--txt3)', whiteSpace: 'nowrap' }}>$ u.</span>
-                                  <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
-                                    onChange={e => { const r = parseTbl(e.target.value); updateSimplePack(cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
-                                    style={{ width: 70, textAlign: 'right', height: 30, fontSize: 12, padding: '0 6px', fontVariantNumeric: 'tabular-nums' }} />
-                                </div>
-                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                                  <span style={{ fontSize: 8, color: 'var(--txt3)', lineHeight: 1 }}>cantidad</span>
-                                  <input type="number" min="1" value={num(comp.qty) || 1} onFocus={selectOnFocus}
-                                    onChange={e => updateSimplePack(cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
-                                    style={{ width: 54, textAlign: 'center', height: 28, fontSize: 12, padding: '0 4px', marginTop: 1, fontWeight: 700 }} />
-                                </div>
-                                {num(comp.costUnit) > 0 && (
-                                  <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: 58, textAlign: 'right' }}>
-                                    {fmt(num(comp.costUnit) * num(comp.qty))}
-                                  </span>
-                                )}
-                                <button onClick={() => removeSimplePack(cIdx)}
-                                  style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
-                                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
-                                  <i className="fa fa-xmark" />
-                                </button>
+                              <input type="number" min="1" value={num(comp.qty) || 1} onFocus={selectOnFocus}
+                                onChange={e => updateSimplePack(cIdx, 'qty', Math.max(1, parseInt(e.target.value) || 1))}
+                                style={{ height: 32, textAlign: 'center', fontSize: 12, padding: '0 4px', fontWeight: 700 }} />
+                              <input type="text" inputMode="numeric" value={fmtTbl(comp.costUnit)} onFocus={selectOnFocus}
+                                onChange={e => { const r = parseTbl(e.target.value); updateSimplePack(cIdx, 'costUnit', r === '' ? 0 : Number(r)) }}
+                                style={{ height: 32, textAlign: 'right', fontSize: 12, padding: '0 8px', fontVariantNumeric: 'tabular-nums' }} />
+                              <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: num(comp.costUnit) > 0 ? 'var(--money)' : 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>
+                                {num(comp.costUnit) > 0 ? fmt(num(comp.costUnit) * num(comp.qty)) : '—'}
                               </div>
+                              <button onClick={() => removeSimplePack(cIdx)}
+                                style={{ width: 26, height: 26, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt4)', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.background = 'var(--red-lt)' }}
+                                onMouseLeave={e => { e.currentTarget.style.color = 'var(--txt4)'; e.currentTarget.style.background = 'transparent' }}>
+                                <i className="fa fa-xmark" />
+                              </button>
                             </div>
                           ))}
                         </div>
                       )}
+                      <button className="tbl-add-btn" onClick={addSimplePack}>
+                        <i className="fa fa-plus" /> Agregar insumo
+                      </button>
                     </div>
 
                     {/* ─ Personalización (simple mode) ─ */}
