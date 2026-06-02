@@ -348,16 +348,42 @@ export default function Presupuesto() {
 
   /* ── Modo: simple (lista de productos) | kit (constructor regalo) ── */
   const [kitMode, setKitMode] = useState(false)
+  /* Buffers de auto-guardado: cuando el usuario cambia de pestaña, no perdemos
+     los datos. Cada modo guarda su propia copia de `alternatives` y se restaura
+     al volver. Si ambos tienen datos cargados, mostramos un aviso. */
+  const [simpleBuffer, setSimpleBuffer] = useState(null) // alternatives del modo simple
+  const [kitBuffer, setKitBuffer]       = useState(null) // alternatives del modo kit
+
+  const hasMeaningfulItems = (alts) =>
+    Array.isArray(alts) && alts.some(a =>
+      (a.kits || []).some(k =>
+        k.type === 'kit'
+          ? (k.name || (k.packaging?.length > 0) || (k.products?.length > 0))
+          : (k.name || num(k.costUnit) > 0 || num(k.priceUnit) > 0)
+      )
+    )
+
   const handleModeSwitch = (toKit) => {
     if (toKit === kitMode) return
+    // 1) Snapshot del modo actual antes de cambiar
+    if (kitMode) setKitBuffer(alternatives)
+    else         setSimpleBuffer(alternatives)
+    // 2) Cambio de modo
     setKitMode(toKit)
     setActiveAltIdx(0)
+    // 3) Restauro buffer del modo destino, o creo uno vacío si no había nada
     if (toKit) {
-      setAlternatives([emptyAlt()])
+      if (kitBuffer && hasMeaningfulItems(kitBuffer)) setAlternatives(kitBuffer)
+      else setAlternatives([emptyAlt()])
     } else {
-      setAlternatives([{ label: 'Pedido', kits: [emptyItem()] }])
+      if (simpleBuffer && hasMeaningfulItems(simpleBuffer)) setAlternatives(simpleBuffer)
+      else setAlternatives([{ label: 'Pedido', kits: [emptyItem()] }])
     }
   }
+  // Detectamos si HAY datos en el modo opuesto (para el banner de aviso)
+  const otherModeHasData = kitMode
+    ? hasMeaningfulItems(simpleBuffer)
+    : hasMeaningfulItems(kitBuffer)
   /* ── Pedido simple: packaging global + personalización global ── */
   const [simplePack, setSimplePack] = useState([])
   // simplePers: costos de personalización centralizados (modo simple).
@@ -431,6 +457,9 @@ export default function Presupuesto() {
         setKitMode(draftHasKit)
         if (saved.sp?.length) setSimplePack(saved.sp)
         if (saved.spers) setSimplePers(prev => ({ ...prev, ...saved.spers }))
+        // Restauramos también los buffers de auto-guardado del otro modo
+        if (saved.simBuf) setSimpleBuffer(saved.simBuf)
+        if (saved.kitBuf) setKitBuffer(saved.kitBuf)
         setDraftRestored(true)
         toast('Borrador restaurado — tus datos anteriores están cargados', 'ok')
       }
@@ -440,10 +469,15 @@ export default function Presupuesto() {
   useEffect(() => {
     if (id) return
     const hasSomeData = form.contact || form.company || alternatives.some(a => a.kits.some(i => i.name))
+                       || hasMeaningfulItems(simpleBuffer) || hasMeaningfulItems(kitBuffer)
     if (hasSomeData) {
-      dbW(DRAFT_KEY, { f: form, it: alternatives, step: currentStep, km: kitMode, sp: simplePack, spers: simplePers })
+      dbW(DRAFT_KEY, {
+        f: form, it: alternatives, step: currentStep,
+        km: kitMode, sp: simplePack, spers: simplePers,
+        simBuf: simpleBuffer, kitBuf: kitBuffer,
+      })
     }
-  }, [form, items, currentStep]) // eslint-disable-line
+  }, [form, items, currentStep, simpleBuffer, kitBuffer]) // eslint-disable-line
 
   const setF = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -918,15 +952,12 @@ export default function Presupuesto() {
           })
         }
 
-        // ── Personalización: UNA SOLA LÍNEA al cliente — desglose interno oculto ──
-        // El total incluye costUnit (por unidad × kits) + designCost + laborCost + printCost
-        // (los 3 fijos amortizan por qty pero al cliente le mostramos sólo el total).
+        // ── Personalización: solo título y total al cliente — descripción y desglose son internos ──
         const persPerKit = num(kit.personalizacion?.costUnit) * kQty
         const persFixed  = num(kit.personalizacion?.designCost) + num(kit.personalizacion?.laborCost) + num(kit.personalizacion?.printCost)
         const persTotal  = persPerKit + persFixed
-        const hasPersAny = kit.personalizacion?.desc || persTotal > 0
-        if (hasPersAny) {
-          lines.push(`  🎨 *Personalización:* ${kit.personalizacion?.desc || 'Logo, grabado, impresión'}${persTotal > 0 ? ` — ${fmt(persTotal)}` : ''}`)
+        if (persTotal > 0) {
+          lines.push(`  🎨 *Personalización:* ${fmt(persTotal)}`)
         }
       })
 
@@ -1130,16 +1161,17 @@ export default function Presupuesto() {
         const persTotal  = persPerKit + persFixed
         const hasPersAny = (i.personalizacion?.desc && persTotal === 0) || persTotal > 0
         const persHdr    = hasPersAny ? blockHdrRow('🎨', 'C. Personalización', '#FFFBEB') : ''
-        // Construimos UNA sub-fila personalizada con el TOTAL consolidado del bloque
-        // (oculta el desglose interno de diseñador/mano de obra/impresión al cliente)
+        // UNA sub-fila con SOLO el título "Personalización" + total — sin descripción ni desglose.
+        // La descripción ingresada y los honorarios internos (diseñador / mano de obra / impresión)
+        // quedan ocultos al cliente; son datos internos para tu gestión de costos.
         const persRow    = hasPersAny ? `<tr>
           <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:4px 9px 4px 30px">
             <span style="color:${bc};opacity:.35;font-size:10px;margin-right:5px">↳</span>
-            <span style="color:#374151;font-size:9.5px">${i.personalizacion?.desc || 'Logo, grabado, impresión'}</span>
+            <span style="color:#374151;font-size:9.5px;font-weight:600">Personalización</span>
           </td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:center;font-size:9px;color:#6B7280">1</td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums">${persTotal > 0 ? fmt(persTotal) : ''}</td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums;font-weight:600">${persTotal > 0 ? fmt(persTotal) : ''}</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:center;font-size:9px;color:#6B7280">—</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums">—</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9.5px;color:#1E1B4B;font-variant-numeric:tabular-nums;font-weight:700">${persTotal > 0 ? fmt(persTotal) : ''}</td>
         </tr>` : ''
 
         /* Fila de cierre si no hay sub-filas */
@@ -1522,6 +1554,26 @@ export default function Presupuesto() {
                     <div style={{ fontSize: 10.5, color: 'var(--txt3)', paddingLeft: 38, lineHeight: 1.4 }}>Constructor completo: packaging, personalización y alternativas.</div>
                   </button>
                 </div>
+
+                {/* ── Banner: datos guardados en el modo opuesto ── */}
+                {otherModeHasData && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(245,158,11,.10)', border: '1.5px solid rgba(245,158,11,.32)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, flexWrap: 'wrap' }}>
+                    <i className="fa fa-floppy-disk" style={{ color: '#D97706', fontSize: 14, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#92400E', lineHeight: 1.3 }}>
+                        Tenés datos guardados en <strong>{kitMode ? 'Pedido simple' : 'Kit / Box regalo'}</strong>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#A16207', marginTop: 2 }}>
+                        No se perdieron — vas a verlos al cambiar de pestaña.
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleModeSwitch(!kitMode)}
+                      style={{ background: '#D97706', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
+                      Ir a {kitMode ? 'Pedido simple' : 'Kit'} →
+                    </button>
+                  </div>
+                )}
 
                 {/* ══════════════════════════════════════════
                     MODO SIMPLE — lista de productos
