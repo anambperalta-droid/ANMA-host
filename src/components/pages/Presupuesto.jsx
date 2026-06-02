@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
@@ -25,7 +26,126 @@ const emptyKit = () => ({
 /* ── Alternativa de cotización ── */
 const emptyAlt = (label = 'Alternativa 1') => ({ label, kits: [emptyKit()] })
 
-/* ── Selector de producto (BottomSheet / modal) ── */
+/* ── ProductAutocomplete ────────────────────────────────────────────────
+   Input predictivo con dropdown relativo (renderizado en portal con
+   posición fixed para no quedar cortado por overflow del padre). Filtra
+   en vivo mientras se escribe. Navegación con teclado (↑↓ Enter Esc). */
+function ProductAutocomplete({ value, products, onChangeText, onPick, placeholder, style, inputStyle, formatLine }) {
+  const [open, setOpen] = useState(false)
+  const [highlight, setHighlight] = useState(0)
+  const [rect, setRect] = useState(null)
+  const wrapRef = useRef(null)
+  const inputRef = useRef(null)
+  const dropdownRef = useRef(null)
+
+  const lq = (value || '').toLowerCase().trim()
+  const filtered = useMemo(() => {
+    if (!products || products.length === 0) return []
+    if (!lq) return products.slice(0, 50)
+    return products.filter(p =>
+      (p.name || '').toLowerCase().includes(lq) ||
+      (p.cat || '').toLowerCase().includes(lq)
+    ).slice(0, 50)
+  }, [products, lq])
+
+  const recalc = () => {
+    if (!inputRef.current) return
+    const r = inputRef.current.getBoundingClientRect()
+    setRect({ top: r.bottom + 2, left: r.left, width: r.width })
+  }
+  useLayoutEffect(() => { if (open) recalc() }, [open])
+  useEffect(() => {
+    if (!open) return
+    const onScroll = () => recalc()
+    const onResize = () => recalc()
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e) => {
+      if (wrapRef.current?.contains(e.target)) return
+      if (dropdownRef.current?.contains(e.target)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [open])
+
+  const handleKey = (e) => {
+    if (!open && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { setOpen(true); return }
+    if (!open) return
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight(h => Math.min(filtered.length - 1, h + 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight(h => Math.max(0, h - 1)) }
+    else if (e.key === 'Enter') { if (filtered[highlight]) { e.preventDefault(); pick(filtered[highlight]) } }
+    else if (e.key === 'Escape') { setOpen(false) }
+  }
+
+  const pick = (p) => { onPick(p); setOpen(false); setHighlight(0) }
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%', ...style }}>
+      <input
+        ref={inputRef}
+        type="text"
+        value={value || ''}
+        onChange={e => { onChangeText(e.target.value); setOpen(true); setHighlight(0) }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={handleKey}
+        placeholder={placeholder || 'Buscar producto...'}
+        autoComplete="off"
+        style={{ width: '100%', ...inputStyle }}
+      />
+      {open && rect && filtered.length > 0 && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'fixed', top: rect.top, left: rect.left,
+            width: Math.max(260, rect.width), maxHeight: 280, overflowY: 'auto',
+            background: 'var(--surface, #fff)', border: '1.5px solid var(--brand, #7C3AED)',
+            borderRadius: 10, boxShadow: '0 10px 32px rgba(0,0,0,.18)', zIndex: 9999, padding: 4,
+          }}
+        >
+          {filtered.map((p, i) => (
+            <button key={p.id}
+              onMouseDown={e => { e.preventDefault(); pick(p) }}
+              onMouseEnter={() => setHighlight(i)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                padding: '8px 10px', border: 'none',
+                background: i === highlight ? 'var(--brand-xlt, #F5F3FF)' : 'transparent',
+                borderRadius: 6, cursor: 'pointer', textAlign: 'left',
+                color: 'var(--txt, #111)', fontFamily: 'inherit', fontSize: 12.5,
+              }}
+            >
+              <i className="fa fa-box-open" style={{ color: 'var(--brand)', fontSize: 11, opacity: .8 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                {(p.cat || typeof p.cost === 'number') && (
+                  <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>
+                    {p.cat ? <span>{p.cat}</span> : null}
+                    {p.cat && typeof p.cost === 'number' ? ' · ' : ''}
+                    {typeof p.cost === 'number' ? `Costo: ${fmt(p.cost || 0)}` : ''}
+                  </div>
+                )}
+              </div>
+              {formatLine && formatLine(p)}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
+  )
+}
+
+/* ── Selector de producto (BottomSheet / modal) — legacy, mantenido para
+   los pickers de insumos y productos de kit que aún lo usan ── */
 function ProductPicker({ open, onClose, products, onSelect }) {
   const [q, setQ] = useState('')
   const inputRef = useRef(null)
@@ -1318,15 +1438,23 @@ export default function Presupuesto() {
                         <div key={idx}
                           draggable onDragStart={handleDragStart(idx)} onDragOver={handleDragOver(idx)} onDragLeave={handleDragLeave} onDrop={handleDrop(idx)}
                           style={{ display: 'grid', gridTemplateColumns: '1fr 58px 96px 78px 28px', gap: 6, alignItems: 'center', background: dragOver === idx ? 'rgba(124,58,237,.04)' : 'transparent', borderRadius: 8, transition: 'background .1s', padding: '2px 0' }}>
-                          {/* Nombre + picker catálogo */}
-                          <div style={{ display: 'flex', gap: 4, minWidth: 0 }}>
-                            <input type="text" value={item.name || ''} onChange={e => updateItem(idx, 'name', e.target.value)}
+                          {/* Nombre del producto (autocomplete predictivo) */}
+                          <div style={{ minWidth: 0 }}>
+                            <ProductAutocomplete
+                              value={item.name}
+                              products={products}
+                              onChangeText={(v) => updateItem(idx, 'name', v)}
+                              onPick={(p) => setAlternatives(prev => prev.map((alt, ai) => ai !== activeAltIdx ? alt : {
+                                ...alt,
+                                kits: alt.kits.map((it, i) => i !== idx ? it : {
+                                  ...it, name: p.name,
+                                  costUnit: p.cost || 0,
+                                  priceUnit: num(p.cost) > 0 ? priceFromMargin(num(p.cost), form.margin) : 0,
+                                })
+                              }))}
                               placeholder="Nombre del producto..."
-                              style={{ flex: 1, fontSize: 12, padding: '5px 8px', height: 32, minWidth: 0 }} />
-                            <button onClick={() => openPicker(idx)} type="button" title="Elegir del catálogo"
-                              style={{ width: 30, height: 32, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flexShrink: 0 }}>
-                              <i className="fa fa-list" />
-                            </button>
+                              inputStyle={{ fontSize: 12, padding: '5px 8px', height: 32 }}
+                            />
                           </div>
                           {/* Qty */}
                           <input type="number" min="1" value={item.qty || 1} onFocus={selectOnFocus}
@@ -1766,14 +1894,19 @@ export default function Presupuesto() {
                             {(kit.products || []).map((comp, cIdx) => (
                               <div key={cIdx} className="kit-comp-row">
                                 <i className="fa fa-gift" style={{ fontSize: 11, color: '#059669', flexShrink: 0, opacity: .65 }} />
-                                <div className="kit-comp-name-group">
-                                  <input type="text" value={comp.name || ''} onChange={e => updateProdComp(kitIdx, cIdx, 'name', e.target.value)}
+                                <div className="kit-comp-name-group" style={{ flex: 1, minWidth: 0 }}>
+                                  <ProductAutocomplete
+                                    value={comp.name}
+                                    products={products}
+                                    onChangeText={(v) => updateProdComp(kitIdx, cIdx, 'name', v)}
+                                    onPick={(p) => {
+                                      updateProdComp(kitIdx, cIdx, 'name', p.name)
+                                      updateProdComp(kitIdx, cIdx, 'costUnit', p.cost || 0)
+                                      updateProdComp(kitIdx, cIdx, 'id', p.id)
+                                    }}
                                     placeholder="Nombre del producto..."
-                                    style={{ flex: 1, fontSize: 12, padding: '4px 8px', height: 30, minWidth: 0 }} />
-                                  <button onClick={() => { setKitProdPickerTarget({ kitIdx, cIdx }); setKitProdPickerOpen(true) }} type="button" title="Elegir del catálogo"
-                                    style={{ width: 30, height: 30, borderRadius: 7, border: '1.5px solid var(--border)', background: 'var(--surface2)', color: '#059669', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                                    <i className="fa fa-list" />
-                                  </button>
+                                    inputStyle={{ fontSize: 12, padding: '4px 8px', height: 30 }}
+                                  />
                                 </div>
                                 <div className="kit-comp-nums">
                                   {/* Costo unitario */}

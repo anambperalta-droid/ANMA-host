@@ -673,6 +673,10 @@ export default function Config() {
                   <div className="fg cfg-flex">
                     <label>Margen por defecto (%)</label>
                     <input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ borderRadius: 12 }} />
+                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 4, fontStyle: 'italic' }}>
+                      <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
+                      Este valor se aplica solo a presupuestos nuevos. Los existentes mantienen su propio margen.
+                    </div>
                   </div>
                 </div>
                 {/* Fila 3: Seña + Validez — grid2 colapsa a 1col en mobile */}
