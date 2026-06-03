@@ -1089,27 +1089,32 @@ export default function Presupuesto() {
     const bg2 = bc + '07'
     const bdr = bc + '28'
 
-    /* ── Helper: sub-fila — qty y precio por kit individual (sin multiplicar por pedido) ── */
+    /* ── Helper: sub-fila — qty y precio por kit individual (sin multiplicar por pedido)
+       Tipografía actualizada para legibilidad:
+         · Nombre item:  13px regular
+         · Cant / valores: 13px medium
+       (Antes eran 9.5px — muy chicos) */
     const subRow = (label, qtyPerKit, unitCost, isLast = false) => {
       const qty       = num(qtyPerKit || 1)
       const lineTotal = num(unitCost) * qty
-      const botBdr    = isLast ? `2px solid ${bdr}` : `1px solid #EBEBF2`
+      const botBdr    = isLast ? `2px solid ${bdr}` : `1px solid #E8EAF2`
       return `
         <tr>
-          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:4px 9px 4px 30px">
-            <span style="color:${bc};opacity:.35;font-size:10px;margin-right:5px">↳</span>
-            <span style="color:#374151;font-size:9.5px">${label}</span>
+          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:8px 12px 8px 36px">
+            <span style="color:${bc};opacity:.4;font-size:13px;margin-right:6px">↳</span>
+            <span style="color:#1F1B45;font-size:13px;font-weight:400;line-height:1.4">${label}</span>
           </td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:9px;color:#6B7280">${qty}</td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums">${unitCost > 0 ? fmt(unitCost) : ''}</td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums;font-weight:${lineTotal > 0 ? 600 : 400}">${lineTotal > 0 ? fmt(lineTotal) : ''}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:13px;color:#1F1B45;font-weight:500">${qty}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:13px;color:#1F1B45;font-variant-numeric:tabular-nums;font-weight:500">${unitCost > 0 ? fmt(unitCost) : ''}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:13px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:${lineTotal > 0 ? 600 : 400}">${lineTotal > 0 ? fmt(lineTotal) : ''}</td>
         </tr>`
     }
 
-    /* ── Helper: fila de encabezado de bloque A / B / C ── */
+    /* ── Helper: fila de encabezado de bloque A / B / C
+       Headers de sección — 13px bold (era 8px, ilegible) */
     const blockHdrRow = (emoji, label, blockBg) => `
       <tr>
-        <td colspan="4" style="background:${blockBg};border-left:3px solid ${bc};padding:4px 9px 3px 20px;font-size:8px;font-weight:700;color:#374151;letter-spacing:.35px;text-transform:uppercase;border-bottom:1px solid #EBEBF2">
+        <td colspan="4" style="background:${blockBg};border-left:3px solid ${bc};padding:7px 12px 6px 22px;font-size:13px;font-weight:700;color:#1F1B45;letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid #E8EAF2">
           ${emoji}&nbsp; ${label}
         </td>
       </tr>`
@@ -1141,18 +1146,18 @@ export default function Presupuesto() {
       const altSep = (altIdx > 0 && isMultiAlt)
         ? `<tr><td colspan="4" style="height:16px;padding:0;background:#fff;border:none"></td></tr>` : ''
 
-      /* Encabezado de alternativa (solo si hay más de una) */
+      /* Encabezado de alternativa — TÍTULO PRINCIPAL 15pt bold (era 12px) */
       const altHdr = isMultiAlt ? `
         <tr>
-          <td colspan="4" style="background:${bc};padding:8px 12px;border:none">
+          <td colspan="4" style="background:${bc};padding:12px 16px;border:none">
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td style="vertical-align:middle">
-                <span style="display:inline-block;text-align:center;width:18px;height:18px;line-height:18px;background:rgba(255,255,255,.2);color:#fff;border-radius:4px;font-size:9px;font-weight:800">${altIdx + 1}</span>
-                <span style="font-size:12px;font-weight:800;color:#fff;letter-spacing:-.1px">${altLabel}</span>
-                ${alt.approved ? '<span style="font-size:8px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px">✓ Aprobada</span>' : ''}
+                <span style="display:inline-block;text-align:center;width:26px;height:26px;line-height:26px;background:rgba(255,255,255,.2);color:#fff;border-radius:6px;font-size:13px;font-weight:800;margin-right:10px">${altIdx + 1}</span>
+                <span style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-.2px;line-height:1.2">${altLabel}</span>
+                ${alt.approved ? '<span style="font-size:11px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.4px;margin-left:10px">✓ Aprobada</span>' : ''}
               </td>
               <td style="text-align:right;vertical-align:middle">
-                <span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.9)">${fmt(altTotals.total)}</span>
+                <span style="font-size:18px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</span>
               </td>
             </tr></table>
           </td>
@@ -1164,16 +1169,16 @@ export default function Presupuesto() {
         const kitSep = kitN > 0
           ? `<tr><td colspan="4" style="height:10px;padding:0;background:${isMultiAlt ? '#FAFAFA' : '#fff'};border:none"></td></tr>` : ''
 
-        /* Fila principal del kit */
+        /* Fila principal del kit — TÍTULO 15pt bold + montos 12pt medium */
         const kitRow = `
           <tr>
-            <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:9px 9px 5px">
-              <span style="display:inline-block;text-align:center;width:17px;height:17px;line-height:17px;background:${bc};color:#fff;border-radius:4px;font-size:8px;font-weight:800;letter-spacing:-.2px">K</span>
-              <strong style="font-size:12px;color:#1E1B4B;letter-spacing:-.2px">${i.name || 'Kit sin nombre'}</strong>
+            <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:12px 14px 8px">
+              <span style="display:inline-block;text-align:center;width:24px;height:24px;line-height:24px;background:${bc};color:#fff;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:-.2px;margin-right:10px">K</span>
+              <strong style="font-size:20px;color:#0F0C2E;font-weight:700;letter-spacing:-.3px;line-height:1.2">${i.name || 'Kit sin nombre'}</strong>
             </td>
-            <td style="background:${bg};border-bottom:none;text-align:center;font-weight:700;font-size:12px;padding:9px 9px 5px">${i.qty}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;padding:9px 9px 5px">${fmt(i.priceUnit)}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:13px;color:${bc};padding:9px 9px 5px">${fmt(num(i.qty) * num(i.priceUnit))}</td>
+            <td style="background:${bg};border-bottom:none;text-align:center;font-weight:600;font-size:16px;color:#0F0C2E;padding:12px 14px 8px">${i.qty}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-size:16px;font-weight:500;color:#0F0C2E;padding:12px 14px 8px;font-variant-numeric:tabular-nums">${fmt(i.priceUnit)}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:18px;color:${bc};padding:12px 14px 8px;font-variant-numeric:tabular-nums">${fmt(num(i.qty) * num(i.priceUnit))}</td>
           </tr>`
 
         /* ── Bloque A: Packaging / Insumos ── */
@@ -1208,13 +1213,13 @@ export default function Presupuesto() {
         // La descripción ingresada y los honorarios internos (diseñador / mano de obra / impresión)
         // quedan ocultos al cliente; son datos internos para tu gestión de costos.
         const persRow    = hasPersAny ? `<tr>
-          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:4px 9px 4px 30px">
-            <span style="color:${bc};opacity:.35;font-size:10px;margin-right:5px">↳</span>
-            <span style="color:#374151;font-size:9.5px;font-weight:600">Personalización</span>
+          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:8px 12px 8px 36px">
+            <span style="color:${bc};opacity:.4;font-size:13px;margin-right:6px">↳</span>
+            <span style="color:#1F1B45;font-size:13px;font-weight:600">Personalización</span>
           </td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:center;font-size:9px;color:#6B7280">—</td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9px;color:#6B7280;font-variant-numeric:tabular-nums">—</td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:9.5px;color:#1E1B4B;font-variant-numeric:tabular-nums;font-weight:700">${persTotal > 0 ? fmt(persTotal) : ''}</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:center;font-size:13px;color:#6B7280">—</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:13px;color:#6B7280;font-variant-numeric:tabular-nums">—</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:14px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:700">${persTotal > 0 ? fmt(persTotal) : ''}</td>
         </tr>` : ''
 
         /* Fila de cierre si no hay sub-filas */
@@ -1224,14 +1229,14 @@ export default function Presupuesto() {
         return [kitSep, kitRow, packHdr, ...packRowsHtml, prodHdr, ...prodRowsHtml, persHdr, persRow, closingRow].filter(Boolean)
       }).join('')
 
-      /* Fila de total por alternativa (solo si hay más de una) */
+      /* Fila de total por alternativa — montos 14-18px (era 11-14px) */
       const altTotalRow = isMultiAlt ? `
         <tr>
-          <td colspan="2" style="padding:7px 12px;background:${bc}1a;font-size:10px;color:#6B7280;font-style:italic">
+          <td colspan="2" style="padding:10px 14px;background:${bc}1a;font-size:13px;color:#1F1B45;font-style:italic">
             ${alt.approved ? '✓ Opción aprobada para producción' : `Opción ${altIdx + 1} de ${alternatives.length}`}
           </td>
-          <td style="text-align:right;padding:7px 12px;background:${bc}1a;font-weight:700;font-size:11px;color:#1E1B4B">Total ${altLabel}</td>
-          <td style="text-align:right;padding:7px 12px;background:${bc}1a;font-weight:800;font-size:14px;color:${bc};font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</td>
+          <td style="text-align:right;padding:10px 14px;background:${bc}1a;font-weight:700;font-size:14px;color:#0F0C2E">Total ${altLabel}</td>
+          <td style="text-align:right;padding:10px 14px;background:${bc}1a;font-weight:800;font-size:20px;color:${bc};font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</td>
         </tr>` : ''
 
       /* ── MODO SIMPLE: línea consolidada de Personalización (global, no por ítem) ── */
@@ -1249,10 +1254,10 @@ export default function Presupuesto() {
         const persGlobalTotal = persFromUnit + persFixed + packTotal
         if (persGlobalTotal > 0) {
           persGlobalRow = `<tr>
-            <td colspan="3" style="background:#FFFBEB;border-left:3px solid #F59E0B;padding:7px 12px 7px 16px;font-size:11px;font-weight:700;color:#92400E">
+            <td colspan="3" style="background:#FFFBEB;border-left:3px solid #F59E0B;padding:11px 14px 11px 18px;font-size:16px;font-weight:700;color:#92400E">
               🎨 Personalización
             </td>
-            <td style="background:#FFFBEB;border-left:none;text-align:right;padding:7px 12px;font-size:12px;font-weight:800;color:#92400E;font-variant-numeric:tabular-nums">${fmt(persGlobalTotal)}</td>
+            <td style="background:#FFFBEB;border-left:none;text-align:right;padding:11px 14px;font-size:16px;font-weight:800;color:#92400E;font-variant-numeric:tabular-nums">${fmt(persGlobalTotal)}</td>
           </tr>`
         }
       }
@@ -1278,48 +1283,95 @@ export default function Presupuesto() {
     const showEnvioLeyenda = form.envioACotizar !== false
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${budgetNum}</title>
     <style>
-      *{box-sizing:border-box}
-      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;padding:18px 26px 70px;color:#1E1B4B;font-size:11.5px;line-height:1.45;background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+      /* ═══════════════════════════════════════════════════════════════════════════
+         TIPOGRAFÍA — Máxima legibilidad (también para personas con vista baja)
+         · Títulos principales:  15pt = 20px, bold 700
+         · Detalles / nombres:   12pt = 16px, regular 400
+         · Montos / valores:     12pt = 16px, medium 500
+         · TOTAL:                20pt = 27px, bold 800
+         ═══════════════════════════════════════════════════════════════════════════ */
+      *{box-sizing:border-box;font-variant-numeric:tabular-nums}
+      body{
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;
+        margin:0;padding:24px 30px 80px;color:#0F0C2E;
+        font-size:13px;line-height:1.55;background:#fff;
+        print-color-adjust:exact;-webkit-print-color-adjust:exact;
+        -webkit-font-smoothing:antialiased;
+      }
       .pdf-hd{width:100%;border-collapse:collapse;margin-bottom:0}
-      .pdf-hd td{padding-bottom:9px;vertical-align:top}
-      .pdf-brand .bname{font-size:22px;font-weight:800;color:${brandColor};letter-spacing:-.5px;line-height:1.1}
-      .pdf-brand img{height:34px;display:block}
-      .pdf-brand .bsub{font-size:9px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
-      .pdf-meta{text-align:right;font-size:10.5px;color:#555;line-height:1.7}
-      .pdf-meta b{color:#1E1B4B;font-weight:700}
-      .pdf-div{height:1.5px;background:#b45309;opacity:.3;margin:8px 0 12px}
-      .vig{display:inline-block;margin-top:2px;padding:2px 7px;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;border-radius:3px;letter-spacing:.2px}
-      table{width:100%;border-collapse:collapse;margin:4px 0 0}
-      th{background:${brandColor};color:#fff;padding:7px 9px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
-      td{padding:6px 9px;border-bottom:1px solid #EEF0F7;font-size:11px}
+      .pdf-hd td{padding-bottom:12px;vertical-align:top}
+      .pdf-brand .bname{font-size:26px;font-weight:800;color:${brandColor};letter-spacing:-.5px;line-height:1.1}
+      .pdf-brand img{height:44px;display:block}
+      .pdf-brand .bsub{font-size:11px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.8px;margin-top:5px}
+      .pdf-meta{text-align:right;font-size:13px;color:#1F1B45;line-height:1.75}
+      .pdf-meta b{color:#0F0C2E;font-weight:700}
+      .pdf-div{height:2px;background:#b45309;opacity:.3;margin:10px 0 14px}
+      .vig{display:inline-block;margin-top:4px;padding:4px 10px;background:#FEF3C7;color:#92400E;font-size:11.5px;font-weight:700;border-radius:5px;letter-spacing:.3px}
+      /* Tabla principal */
+      table{width:100%;border-collapse:collapse;margin:6px 0 0}
+      /* TÍTULOS — 15pt bold */
+      th{
+        background:${brandColor};color:#fff;
+        padding:12px 14px;text-align:left;
+        font-size:20px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;
+        line-height:1.2;
+      }
+      /* DETALLES — 12pt regular */
+      td{
+        padding:11px 12px;border-bottom:1px solid #E8EAF2;
+        font-size:16px;font-weight:400;color:#1F1B45;line-height:1.45;
+      }
       tr:last-child td{border-bottom:none}
-      .totals{margin-top:6px}
-      .totals-box{width:260px;margin-left:auto;padding:10px 14px;background:linear-gradient(135deg,${brandColor}0d,${brandColor}1a);border-radius:8px;border:1px solid ${brandColor}33}
-      .totals-row{width:100%;border-collapse:collapse;font-size:11px;color:#555;margin:2px 0}
-      .totals-row td{padding:2px 0}
-      .totals-row .tv{text-align:right;font-family:monospace;font-weight:600;white-space:nowrap}
-      .tr-big td{font-size:16px;font-weight:800;color:${brandColor};padding-top:6px;border-top:1px solid ${brandColor}33}
-      .tr-big .tv{font-size:16px;font-weight:800}
-      .tr-senia td{font-size:11.5px;font-weight:700;color:${brandColor}}
-      .note{margin-top:12px;padding:9px 12px;background:#F4F6FD;border-left:3px solid ${brandColor};border-radius:4px;font-size:11px;color:#333}
-      .footer{margin-top:14px;padding-top:8px;border-top:1px solid #E5E7F0;font-size:9.5px;color:#999;line-height:1.5}
-      .cobro-block{margin-top:12px;padding:10px 14px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:8px}
-      .cobro-title{font-size:10px;font-weight:700;color:#065F46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-      .cobro-tbl{width:100%;border-collapse:collapse;font-size:11px}
-      .cobro-tbl td{padding:3px 0}
-      .cobro-lbl{color:#666;font-weight:500}
-      .cobro-val{font-weight:700;color:#1E1B4B;font-family:monospace;text-align:right}
-      .copy-cbu{background:#fff;border:1px solid #86EFAC;border-radius:5px;padding:2px 8px;font-size:9.5px;color:#065F46;cursor:pointer;margin-left:8px;font-family:inherit}
+      /* Totals box */
+      .totals{margin-top:14px}
+      .totals-box{
+        width:340px;margin-left:auto;padding:16px 20px;
+        background:linear-gradient(135deg,${brandColor}10,${brandColor}22);
+        border-radius:12px;border:1.5px solid ${brandColor}40;
+      }
+      .totals-row{width:100%;border-collapse:collapse;font-size:14px;color:#1F1B45;margin:3px 0}
+      .totals-row td{padding:5px 0;border:none}
+      .totals-row .tv{text-align:right;font-weight:500;white-space:nowrap;color:#0F0C2E}
+      /* TOTAL — 20pt bold */
+      .tr-big td{
+        font-size:27px;font-weight:800;color:${brandColor};
+        padding-top:10px;
+        border-top:1.5px solid ${brandColor}40;
+        letter-spacing:-.5px;line-height:1.15;
+      }
+      .tr-big .tv{font-size:27px;font-weight:800;color:${brandColor}}
+      .tr-senia td{font-size:15px;font-weight:700;color:${brandColor};padding-top:6px}
+      .tr-senia .tv{font-size:15px;font-weight:700;color:${brandColor}}
+      /* Notas y footer */
+      .note{
+        margin-top:18px;padding:14px 18px;
+        background:#F4F6FD;border-left:4px solid ${brandColor};
+        border-radius:6px;font-size:14px;color:#1F1B45;line-height:1.6;
+      }
+      .footer{
+        margin-top:20px;padding-top:12px;border-top:1px solid #E5E7F0;
+        font-size:12px;color:#6B7280;line-height:1.65;
+      }
+      /* Cobro */
+      .cobro-block{margin-top:16px;padding:14px 18px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px}
+      .cobro-title{font-size:13px;font-weight:800;color:#065F46;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+      .cobro-tbl{width:100%;border-collapse:collapse;font-size:14px}
+      .cobro-tbl td{padding:5px 0;border:none}
+      .cobro-lbl{color:#15803D;font-weight:500}
+      .cobro-val{font-weight:700;color:#0F0C2E;text-align:right;font-size:14px}
+      .copy-cbu{background:#fff;border:1px solid #86EFAC;border-radius:6px;padding:4px 10px;font-size:11.5px;color:#065F46;cursor:pointer;margin-left:8px;font-family:inherit;font-weight:600}
       .copy-cbu:hover{background:#DCFCE7}
       @media print{.copy-cbu{display:none}}
-      .iva-box{margin-top:10px;padding:10px 14px;background:#FAFBFD;border:1px solid #E5E7F0;border-radius:6px;font-size:10.5px;color:#374151}
-      .iva-title{font-weight:700;margin-bottom:5px;font-size:10px;color:#1E1B4B;text-transform:uppercase;letter-spacing:.3px}
+      /* IVA */
+      .iva-box{margin-top:14px;padding:14px 18px;background:#FAFBFD;border:1px solid #E5E7F0;border-radius:8px;font-size:13px;color:#1F1B45}
+      .iva-title{font-weight:800;margin-bottom:8px;font-size:12px;color:#0F0C2E;text-transform:uppercase;letter-spacing:.4px}
       .iva-tbl{width:100%;border-collapse:collapse}
-      .iva-tbl td{padding:1.5px 0}
-      .iva-tbl .iv{text-align:right;font-family:monospace;font-weight:600}
-      .accept-fab{position:fixed;bottom:18px;right:18px;background:#25D366;color:#fff;padding:13px 20px;border-radius:999px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(37,211,102,.4);font-size:12.5px;display:inline-flex;align-items:center;gap:7px}
+      .iva-tbl td{padding:3px 0;border:none;font-size:13px}
+      .iva-tbl .iv{text-align:right;font-weight:600;color:#0F0C2E}
+      /* Accept FAB */
+      .accept-fab{position:fixed;bottom:22px;right:22px;background:#25D366;color:#fff;padding:15px 24px;border-radius:999px;font-weight:700;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,.45);font-size:14px;display:inline-flex;align-items:center;gap:8px}
       .accept-fab:hover{background:#1da851}
-      @media print{.accept-fab{display:none}body{padding:18px 22px}}
+      @media print{.accept-fab{display:none}body{padding:20px 26px}}
     </style></head><body>
     <table class="pdf-hd" width="100%" cellpadding="0" cellspacing="0"><tr>
       <td class="pdf-brand">
