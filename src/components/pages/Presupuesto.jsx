@@ -1089,32 +1089,30 @@ export default function Presupuesto() {
     const bg2 = bc + '07'
     const bdr = bc + '28'
 
-    /* ── Helper: sub-fila — qty y precio por kit individual (sin multiplicar por pedido)
-       Tipografía actualizada para legibilidad:
-         · Nombre item:  13px regular
-         · Cant / valores: 13px medium
-       (Antes eran 9.5px — muy chicos) */
+    /* ── Helper: sub-fila — qty y precio por kit individual
+       TIPOGRAFÍA DE DETALLES — 17px = 12.7pt regular (legibilidad alta).
+       (Originalmente 9.5px → ahora casi 2x más grande para vista baja) */
     const subRow = (label, qtyPerKit, unitCost, isLast = false) => {
       const qty       = num(qtyPerKit || 1)
       const lineTotal = num(unitCost) * qty
       const botBdr    = isLast ? `2px solid ${bdr}` : `1px solid #E8EAF2`
       return `
         <tr>
-          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:8px 12px 8px 36px">
-            <span style="color:${bc};opacity:.4;font-size:13px;margin-right:6px">↳</span>
-            <span style="color:#1F1B45;font-size:13px;font-weight:400;line-height:1.4">${label}</span>
+          <td style="background:${bg2};border-left:4px solid ${bc};border-bottom:${botBdr};padding:11px 14px 11px 42px">
+            <span style="color:${bc};opacity:.45;font-size:16px;margin-right:8px">↳</span>
+            <span style="color:#1F1B45;font-size:17px;font-weight:400;line-height:1.45">${label}</span>
           </td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:13px;color:#1F1B45;font-weight:500">${qty}</td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:13px;color:#1F1B45;font-variant-numeric:tabular-nums;font-weight:500">${unitCost > 0 ? fmt(unitCost) : ''}</td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:13px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:${lineTotal > 0 ? 600 : 400}">${lineTotal > 0 ? fmt(lineTotal) : ''}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:17px;color:#0F0C2E;font-weight:500;padding:11px 12px">${qty}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:17px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:500;padding:11px 12px">${unitCost > 0 ? fmt(unitCost) : ''}</td>
+          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:17px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:${lineTotal > 0 ? 700 : 400};padding:11px 14px">${lineTotal > 0 ? fmt(lineTotal) : ''}</td>
         </tr>`
     }
 
     /* ── Helper: fila de encabezado de bloque A / B / C
-       Headers de sección — 13px bold (era 8px, ilegible) */
+       Headers de sección — 15px bold uppercase para identificar secciones rápido */
     const blockHdrRow = (emoji, label, blockBg) => `
       <tr>
-        <td colspan="4" style="background:${blockBg};border-left:3px solid ${bc};padding:7px 12px 6px 22px;font-size:13px;font-weight:700;color:#1F1B45;letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid #E8EAF2">
+        <td colspan="4" style="background:${blockBg};border-left:4px solid ${bc};padding:11px 14px 10px 24px;font-size:15px;font-weight:800;color:#0F0C2E;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid #E8EAF2">
           ${emoji}&nbsp; ${label}
         </td>
       </tr>`
@@ -1146,18 +1144,18 @@ export default function Presupuesto() {
       const altSep = (altIdx > 0 && isMultiAlt)
         ? `<tr><td colspan="4" style="height:16px;padding:0;background:#fff;border:none"></td></tr>` : ''
 
-      /* Encabezado de alternativa — TÍTULO PRINCIPAL 15pt bold (era 12px) */
+      /* Encabezado de alternativa — TÍTULO PRINCIPAL 23px bold (impacto visual fuerte) */
       const altHdr = isMultiAlt ? `
         <tr>
-          <td colspan="4" style="background:${bc};padding:12px 16px;border:none">
+          <td colspan="4" style="background:${bc};padding:16px 20px;border:none">
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td style="vertical-align:middle">
-                <span style="display:inline-block;text-align:center;width:26px;height:26px;line-height:26px;background:rgba(255,255,255,.2);color:#fff;border-radius:6px;font-size:13px;font-weight:800;margin-right:10px">${altIdx + 1}</span>
-                <span style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-.2px;line-height:1.2">${altLabel}</span>
-                ${alt.approved ? '<span style="font-size:11px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.4px;margin-left:10px">✓ Aprobada</span>' : ''}
+                <span style="display:inline-block;text-align:center;width:32px;height:32px;line-height:32px;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;font-size:16px;font-weight:800;margin-right:12px">${altIdx + 1}</span>
+                <span style="font-size:23px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1.2">${altLabel}</span>
+                ${alt.approved ? '<span style="font-size:13px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:5px 12px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px;margin-left:12px">✓ Aprobada</span>' : ''}
               </td>
               <td style="text-align:right;vertical-align:middle">
-                <span style="font-size:18px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</span>
+                <span style="font-size:22px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</span>
               </td>
             </tr></table>
           </td>
@@ -1169,16 +1167,16 @@ export default function Presupuesto() {
         const kitSep = kitN > 0
           ? `<tr><td colspan="4" style="height:10px;padding:0;background:${isMultiAlt ? '#FAFAFA' : '#fff'};border:none"></td></tr>` : ''
 
-        /* Fila principal del kit — TÍTULO 15pt bold + montos 12pt medium */
+        /* Fila principal del kit — nombre 22px bold, montos 18px medium */
         const kitRow = `
           <tr>
-            <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:12px 14px 8px">
-              <span style="display:inline-block;text-align:center;width:24px;height:24px;line-height:24px;background:${bc};color:#fff;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:-.2px;margin-right:10px">K</span>
-              <strong style="font-size:20px;color:#0F0C2E;font-weight:700;letter-spacing:-.3px;line-height:1.2">${i.name || 'Kit sin nombre'}</strong>
+            <td style="background:${bg};border-left:4px solid ${bc};border-bottom:none;padding:15px 16px 11px">
+              <span style="display:inline-block;text-align:center;width:30px;height:30px;line-height:30px;background:${bc};color:#fff;border-radius:7px;font-size:14px;font-weight:800;letter-spacing:-.2px;margin-right:12px">K</span>
+              <strong style="font-size:22px;color:#0F0C2E;font-weight:800;letter-spacing:-.3px;line-height:1.2">${i.name || 'Kit sin nombre'}</strong>
             </td>
-            <td style="background:${bg};border-bottom:none;text-align:center;font-weight:600;font-size:16px;color:#0F0C2E;padding:12px 14px 8px">${i.qty}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;font-size:16px;font-weight:500;color:#0F0C2E;padding:12px 14px 8px;font-variant-numeric:tabular-nums">${fmt(i.priceUnit)}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:18px;color:${bc};padding:12px 14px 8px;font-variant-numeric:tabular-nums">${fmt(num(i.qty) * num(i.priceUnit))}</td>
+            <td style="background:${bg};border-bottom:none;text-align:center;font-weight:700;font-size:18px;color:#0F0C2E;padding:15px 14px 11px">${i.qty}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-size:18px;font-weight:500;color:#0F0C2E;padding:15px 14px 11px;font-variant-numeric:tabular-nums">${fmt(i.priceUnit)}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:20px;color:${bc};padding:15px 16px 11px;font-variant-numeric:tabular-nums">${fmt(num(i.qty) * num(i.priceUnit))}</td>
           </tr>`
 
         /* ── Bloque A: Packaging / Insumos ── */
@@ -1213,13 +1211,13 @@ export default function Presupuesto() {
         // La descripción ingresada y los honorarios internos (diseñador / mano de obra / impresión)
         // quedan ocultos al cliente; son datos internos para tu gestión de costos.
         const persRow    = hasPersAny ? `<tr>
-          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:2px solid ${bdr};padding:8px 12px 8px 36px">
-            <span style="color:${bc};opacity:.4;font-size:13px;margin-right:6px">↳</span>
-            <span style="color:#1F1B45;font-size:13px;font-weight:600">Personalización</span>
+          <td style="background:${bg2};border-left:4px solid ${bc};border-bottom:2px solid ${bdr};padding:11px 14px 11px 42px">
+            <span style="color:${bc};opacity:.45;font-size:16px;margin-right:8px">↳</span>
+            <span style="color:#1F1B45;font-size:17px;font-weight:600">Personalización</span>
           </td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:center;font-size:13px;color:#6B7280">—</td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:13px;color:#6B7280;font-variant-numeric:tabular-nums">—</td>
-          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:14px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:700">${persTotal > 0 ? fmt(persTotal) : ''}</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:center;font-size:17px;color:#6B7280;padding:11px 12px">—</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:17px;color:#6B7280;font-variant-numeric:tabular-nums;padding:11px 12px">—</td>
+          <td style="background:${bg2};border-bottom:2px solid ${bdr};text-align:right;font-size:18px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:700;padding:11px 14px">${persTotal > 0 ? fmt(persTotal) : ''}</td>
         </tr>` : ''
 
         /* Fila de cierre si no hay sub-filas */
@@ -1229,14 +1227,14 @@ export default function Presupuesto() {
         return [kitSep, kitRow, packHdr, ...packRowsHtml, prodHdr, ...prodRowsHtml, persHdr, persRow, closingRow].filter(Boolean)
       }).join('')
 
-      /* Fila de total por alternativa — montos 14-18px (era 11-14px) */
+      /* Fila de total por alternativa — TOTAL del bloque en 24px bold */
       const altTotalRow = isMultiAlt ? `
         <tr>
-          <td colspan="2" style="padding:10px 14px;background:${bc}1a;font-size:13px;color:#1F1B45;font-style:italic">
+          <td colspan="2" style="padding:14px 18px;background:${bc}1a;font-size:15px;color:#1F1B45;font-style:italic">
             ${alt.approved ? '✓ Opción aprobada para producción' : `Opción ${altIdx + 1} de ${alternatives.length}`}
           </td>
-          <td style="text-align:right;padding:10px 14px;background:${bc}1a;font-weight:700;font-size:14px;color:#0F0C2E">Total ${altLabel}</td>
-          <td style="text-align:right;padding:10px 14px;background:${bc}1a;font-weight:800;font-size:20px;color:${bc};font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</td>
+          <td style="text-align:right;padding:14px 14px;background:${bc}1a;font-weight:700;font-size:17px;color:#0F0C2E">Total ${altLabel}</td>
+          <td style="text-align:right;padding:14px 18px;background:${bc}1a;font-weight:800;font-size:24px;color:${bc};font-variant-numeric:tabular-nums">${fmt(altTotals.total)}</td>
         </tr>` : ''
 
       /* ── MODO SIMPLE: línea consolidada de Personalización (global, no por ítem) ── */
@@ -1293,55 +1291,55 @@ export default function Presupuesto() {
       *{box-sizing:border-box;font-variant-numeric:tabular-nums}
       body{
         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;
-        margin:0;padding:24px 30px 80px;color:#0F0C2E;
-        font-size:13px;line-height:1.55;background:#fff;
+        margin:0;padding:28px 34px 90px;color:#0F0C2E;
+        font-size:16px;line-height:1.6;background:#fff;
         print-color-adjust:exact;-webkit-print-color-adjust:exact;
         -webkit-font-smoothing:antialiased;
       }
       .pdf-hd{width:100%;border-collapse:collapse;margin-bottom:0}
-      .pdf-hd td{padding-bottom:12px;vertical-align:top}
-      .pdf-brand .bname{font-size:26px;font-weight:800;color:${brandColor};letter-spacing:-.5px;line-height:1.1}
-      .pdf-brand img{height:44px;display:block}
-      .pdf-brand .bsub{font-size:11px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.8px;margin-top:5px}
-      .pdf-meta{text-align:right;font-size:13px;color:#1F1B45;line-height:1.75}
+      .pdf-hd td{padding-bottom:14px;vertical-align:top}
+      .pdf-brand .bname{font-size:34px;font-weight:800;color:${brandColor};letter-spacing:-.6px;line-height:1.1}
+      .pdf-brand img{height:52px;display:block}
+      .pdf-brand .bsub{font-size:14px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:1px;margin-top:7px}
+      .pdf-meta{text-align:right;font-size:16px;color:#1F1B45;line-height:1.75}
       .pdf-meta b{color:#0F0C2E;font-weight:700}
-      .pdf-div{height:2px;background:#b45309;opacity:.3;margin:10px 0 14px}
-      .vig{display:inline-block;margin-top:4px;padding:4px 10px;background:#FEF3C7;color:#92400E;font-size:11.5px;font-weight:700;border-radius:5px;letter-spacing:.3px}
+      .pdf-div{height:2.5px;background:#b45309;opacity:.35;margin:12px 0 16px}
+      .vig{display:inline-block;margin-top:6px;padding:6px 13px;background:#FEF3C7;color:#92400E;font-size:14px;font-weight:700;border-radius:6px;letter-spacing:.3px}
       /* Tabla principal */
-      table{width:100%;border-collapse:collapse;margin:6px 0 0}
-      /* TÍTULOS — 15pt bold */
+      table{width:100%;border-collapse:collapse;margin:8px 0 0}
+      /* TÍTULOS — 22px bold uppercase (header de columnas) */
       th{
         background:${brandColor};color:#fff;
-        padding:12px 14px;text-align:left;
-        font-size:20px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;
+        padding:15px 16px;text-align:left;
+        font-size:22px;text-transform:uppercase;letter-spacing:.6px;font-weight:800;
         line-height:1.2;
       }
-      /* DETALLES — 12pt regular */
+      /* DETALLES — 17px regular */
       td{
-        padding:11px 12px;border-bottom:1px solid #E8EAF2;
-        font-size:16px;font-weight:400;color:#1F1B45;line-height:1.45;
+        padding:13px 14px;border-bottom:1px solid #E8EAF2;
+        font-size:17px;font-weight:400;color:#1F1B45;line-height:1.5;
       }
       tr:last-child td{border-bottom:none}
-      /* Totals box */
-      .totals{margin-top:14px}
+      /* Totals box — más ancho y prominente */
+      .totals{margin-top:18px}
       .totals-box{
-        width:340px;margin-left:auto;padding:16px 20px;
+        width:400px;margin-left:auto;padding:20px 26px;
         background:linear-gradient(135deg,${brandColor}10,${brandColor}22);
-        border-radius:12px;border:1.5px solid ${brandColor}40;
+        border-radius:14px;border:2px solid ${brandColor}40;
       }
-      .totals-row{width:100%;border-collapse:collapse;font-size:14px;color:#1F1B45;margin:3px 0}
-      .totals-row td{padding:5px 0;border:none}
-      .totals-row .tv{text-align:right;font-weight:500;white-space:nowrap;color:#0F0C2E}
-      /* TOTAL — 20pt bold */
+      .totals-row{width:100%;border-collapse:collapse;font-size:17px;color:#1F1B45;margin:4px 0}
+      .totals-row td{padding:6px 0;border:none}
+      .totals-row .tv{text-align:right;font-weight:600;white-space:nowrap;color:#0F0C2E}
+      /* TOTAL — 33px bold (era 27px, ahora más prominente) */
       .tr-big td{
-        font-size:27px;font-weight:800;color:${brandColor};
-        padding-top:10px;
-        border-top:1.5px solid ${brandColor}40;
-        letter-spacing:-.5px;line-height:1.15;
+        font-size:33px;font-weight:800;color:${brandColor};
+        padding-top:12px;
+        border-top:2px solid ${brandColor}40;
+        letter-spacing:-.6px;line-height:1.15;
       }
-      .tr-big .tv{font-size:27px;font-weight:800;color:${brandColor}}
-      .tr-senia td{font-size:15px;font-weight:700;color:${brandColor};padding-top:6px}
-      .tr-senia .tv{font-size:15px;font-weight:700;color:${brandColor}}
+      .tr-big .tv{font-size:33px;font-weight:800;color:${brandColor}}
+      .tr-senia td{font-size:18px;font-weight:700;color:${brandColor};padding-top:8px}
+      .tr-senia .tv{font-size:18px;font-weight:700;color:${brandColor}}
       /* Notas y footer */
       .note{
         margin-top:18px;padding:14px 18px;
