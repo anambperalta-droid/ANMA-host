@@ -12,6 +12,24 @@ export default function Bienvenida() {
   const [sessionReady, setSessionReady] = useState(false)
   const navigate = useNavigate()
 
+  // OAuth-aware detection: users de Google no necesitan elegir contraseña.
+  const isOAuthSession = (session) => {
+    if (!session?.user) return false
+    const provider = session.user.app_metadata?.provider
+    const providers = session.user.app_metadata?.providers || []
+    if (provider === 'google') return true
+    if (Array.isArray(providers) && providers.includes('google')) return true
+    return false
+  }
+  const finishAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (isOAuthSession(session)) {
+      navigate('/', { replace: true })
+      return true
+    }
+    return false
+  }
+
   useEffect(() => {
     async function detectSession() {
       // 1) PKCE flow: ?code= in query params
@@ -20,17 +38,18 @@ export default function Bienvenida() {
       if (code) {
         const { error: codeErr } = await supabase.auth.exchangeCodeForSession(code)
         if (codeErr) {
-          setError('El enlace de invitacion expiro o es invalido.')
+          setError('El enlace expiró o es inválido. Volvé a /login para reintentar.')
           setLoading(false)
           return
         }
         window.history.replaceState(null, '', window.location.pathname)
+        if (await finishAuth()) return
         setSessionReady(true)
         setLoading(false)
         return
       }
 
-      // 2) Implicit flow: #access_token= in hash
+      // 2) Implicit flow: #access_token= in hash (legacy OAuth)
       const hash = window.location.hash
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1))
@@ -42,18 +61,19 @@ export default function Bienvenida() {
             refresh_token: refreshToken,
           })
           if (sessErr) {
-            setError('El enlace de invitacion expiro o es invalido.')
+            setError('El enlace expiró o es inválido. Volvé a /login.')
             setLoading(false)
             return
           }
           window.history.replaceState(null, '', window.location.pathname)
+          if (await finishAuth()) return
           setSessionReady(true)
           setLoading(false)
           return
         }
       }
 
-      // 3) Token hash flow (email OTP): ?token_hash=&type=
+      // 3) Token hash flow (email OTP / invitation)
       const tokenHash = url.searchParams.get('token_hash')
       const type = url.searchParams.get('type')
       if (tokenHash && type) {
@@ -62,7 +82,7 @@ export default function Bienvenida() {
           type: type,
         })
         if (otpErr) {
-          setError('El enlace de invitacion expiro o es invalido.')
+          setError('El enlace expiró o es inválido. Solicitá uno nuevo.')
           setLoading(false)
           return
         }
@@ -72,9 +92,13 @@ export default function Bienvenida() {
         return
       }
 
-      // 4) Already has a session (user refreshed the page)
+      // 4) Sesión ya activa
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
+        if (isOAuthSession(session)) {
+          navigate('/', { replace: true })
+          return
+        }
         setSessionReady(true)
         setLoading(false)
         return
