@@ -513,7 +513,16 @@ export default function Presupuesto() {
     }))
   }
   const addItem = () => setItems(prev => [...prev, emptyItem()])
-  const removeItem = (idx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)
+  /* Si es la única fila, en vez de no hacer nada → resetea a estado vacío (limpia
+     nombre, costo, precio, qty=1). Si hay más de 1 → la borra normal. */
+  const removeItem = (idx) => setItems(prev => {
+    if (prev.length > 1) return prev.filter((_, i) => i !== idx)
+    return prev.map((it, i) => i !== idx ? it : emptyItem())
+  })
+  const removeKit = (kitIdx) => setItems(prev => {
+    if (prev.length > 1) return prev.filter((_, i) => i !== kitIdx)
+    return prev.map((it, i) => i !== kitIdx ? it : emptyKit())
+  })
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerIdx, setPickerIdx] = useState(null)
@@ -555,9 +564,10 @@ export default function Presupuesto() {
   const [insPickerOpen, setInsPickerOpen] = useState(false)
   const [insPickerTarget, setInsPickerTarget] = useState(null) // { kitIdx, cIdx }
 
-  /* ── Kit builder — funciones de manipulación ── */
+  /* ── Kit builder — funciones de manipulación ──
+     (removeKit ya está definida arriba junto con removeItem para mantener
+     comportamiento simétrico: si es el único, resetea en vez de no hacer nada) */
   const addKit = () => setItems(prev => [...prev, emptyKit()])
-  const removeKit = (kitIdx) => setItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== kitIdx) : prev)
   const updateKit = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, [key]: val }))
 
   // Helper local: aplica el patch al kit y luego re-precia con el margen actual.
