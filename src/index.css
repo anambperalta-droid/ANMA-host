@@ -146,6 +146,13 @@ input,select,textarea{font-family:inherit}
 .sb-logo img{width:100%;height:100%;object-fit:cover;border-radius:10px}
 .sb-logo-txt .n{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
 .sb-logo-txt .s{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;letter-spacing:.2px}
+/* Versión del build — chip discreto al pie del sidebar */
+.sb-version{
+  font-size:9px;color:rgba(255,255,255,.25);
+  text-align:center;padding:6px 0 0;letter-spacing:.3px;
+  font-family:ui-monospace, 'SF Mono', Consolas, monospace;
+}
+.sidebar.slim .sb-version{display:none}
 .sb-nav{flex:1;padding:10px 10px}
 .sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:1.2px;text-transform:uppercase;padding:14px 12px 5px}
 .sb-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;transition:all var(--tr);margin-bottom:2px;position:relative;user-select:none}
@@ -1314,22 +1321,55 @@ td b{color:var(--txt);font-weight:600}
   .bulk-float{bottom:calc(78px + env(safe-area-inset-bottom) + 8px)!important}
 }
 
-/* ── Presupuesto wizard: horizontal scroll steps on mobile ── */
+/* ── Presupuesto wizard tablet (768-1099px): hereda budget en 1 col, mejor spacing ── */
+@media(max-width:1099px) and (min-width:769px){
+  .wiz-pane{padding:20px 22px!important}
+  .wiz-pane-head{margin-bottom:16px!important;padding-bottom:12px!important}
+  .wiz-pane-title{font-size:17px!important}
+  .wiz-pane table td{padding:10px 8px!important;font-size:13.5px!important}
+  .wiz-pane table th{padding:9px 8px!important;font-size:10.5px!important}
+  .budget-layout .calc-panel{
+    margin-top:18px!important;width:100%!important;
+    padding:22px 24px!important;border-radius:16px!important;
+  }
+  .wizard-steps{padding:12px 14px!important;gap:8px!important}
+  .wiz-step{padding:10px 12px!important}
+  .wiz-step-num{width:30px!important;height:30px!important;font-size:13px!important}
+  .wiz-step-lbl{font-size:12.5px!important}
+  .wiz-step-desc{font-size:11px!important}
+}
+
+/* ── Presupuesto wizard mobile (≤768px): horizontal scroll steps + cleaner spacing ── */
 @media(max-width:768px){
   .wizard-steps{
     overflow-x:auto!important;flex-wrap:nowrap!important;
     -webkit-overflow-scrolling:touch;scrollbar-width:none;
-    padding:10px 8px!important;gap:4px!important;
+    padding:10px 10px!important;gap:6px!important;
   }
   .wizard-steps::-webkit-scrollbar{display:none}
   .wiz-step-wrap{flex-shrink:0!important;flex-basis:auto!important;min-width:auto!important}
-  .wiz-step{padding:8px 12px!important;gap:8px!important}
+  .wiz-step{padding:9px 13px!important;gap:8px!important;border-radius:10px!important}
+  .wiz-step-num{width:28px!important;height:28px!important;font-size:12px!important}
+  .wiz-step-lbl{font-size:12.5px!important;font-weight:700!important}
   .wiz-step-bgicon{display:none!important}
-  .wiz-pane{padding:16px 14px 14px!important}
-  .wiz-pane-ico{width:36px!important;height:36px!important;font-size:15px!important;border-radius:10px!important}
-  .wiz-pane-title{font-size:15px!important}
-  .budget-layout{display:flex!important;flex-direction:column!important}
-  .calc-panel{position:static!important;width:100%!important;margin-top:14px}
+  .wiz-pane{padding:18px 16px 16px!important;border-radius:14px!important}
+  .wiz-pane-head{margin-bottom:14px!important;padding-bottom:12px!important;gap:10px!important}
+  .wiz-pane-ico{width:38px!important;height:38px!important;font-size:15px!important;border-radius:11px!important}
+  .wiz-pane-title{font-size:15px!important;line-height:1.25!important}
+  .wiz-pane-sub{font-size:11.5px!important}
+  /* Form fields: más respiro y touch targets correctos */
+  .wiz-pane .fg{margin-bottom:14px!important}
+  .wiz-pane .fg label{font-size:11px!important;margin-bottom:5px!important;font-weight:700!important;letter-spacing:.3px!important}
+  .wiz-pane .fg input,.wiz-pane .fg select,.wiz-pane .fg textarea{
+    min-height:44px!important;font-size:14.5px!important;
+    border-radius:10px!important;padding:0 12px!important;
+  }
+  .wiz-pane .fg textarea{padding:10px 12px!important;min-height:80px!important}
+  .wiz-pane .grid2,.wiz-pane .grid3,.wiz-pane .grid4{
+    grid-template-columns:1fr!important;gap:10px!important;
+  }
+  .budget-layout{display:flex!important;flex-direction:column!important;gap:12px!important}
+  .calc-panel{position:static!important;width:100%!important;margin-top:14px;padding:18px 20px!important;border-radius:14px!important}
 }
 
 /* ── Presupuesto table: mobile card layout ── */
@@ -1583,22 +1623,23 @@ td b{color:var(--txt);font-weight:600}
   width:calc(100vw - 32px);box-shadow:var(--sh-lg);
   animation:pgIn .2s ease both;margin:0 0 24px;
   display:flex;flex-direction:column;
-  /* SIN scroll interno: contenido fluye natural. El overlay scrollea si excede.
-     min-height generoso: el modal tiene presencia visual aunque el contenido
-     sea corto (footer queda al pie de la tarjeta, no flotando). */
+  /* h-auto sin altura mínima artificial. Modal crece según contenido.
+     Si cabe en viewport → NO hay scroll. Si excede → overlay scrollea. */
   overflow:visible;
-  padding:0 0 max(32px, env(safe-area-inset-bottom, 14px));
+  padding:0 0 max(20px, env(safe-area-inset-bottom, 14px));
   height:auto;
   max-height:none;
-  min-height:min(82vh, 720px);
+  min-height:240px;
 }
-/* Body internos no scrollean — los neutralizamos manteniendo flex:1 para
-   que empuje el footer al fondo en formularios cortos. */
+/* Body internos NO scrollean ni se estiran (flex:1 que clipeaba) */
 .modal-form-card > div[style*="overflow-y"],
 .modal-form-card > div[style*="overflow:auto"],
 .modal-form-card > div[style*="overflow: auto"]{
-  overflow:visible!important;max-height:none!important;
+  overflow:visible!important;
+  max-height:none!important;
   min-height:0!important;
+  flex:0 0 auto!important;
+  height:auto!important;
 }
 /* Footers sticky declarados inline → flujo natural, anclado al fondo
    por margin-top:auto en el flex column del modal-form-card */
