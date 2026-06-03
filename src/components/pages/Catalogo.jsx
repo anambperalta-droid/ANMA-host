@@ -136,6 +136,36 @@ export default function Catalogo() {
   const products = get('products')
   const suppliers = get('suppliers')
   const cats = c.productCats || []
+  // ── Detector: cats desactualizadas vs las sugeridas para regalos ──
+  const SUGGESTED_REGALOS_CATS = [
+    'Bebidas y vinos', 'Picadas y gourmet', 'Mates y termos', 'Vasos y cristalería',
+    'Tablas y bazar', 'Indumentaria', 'Bolsos y mochilas', 'Tecnología',
+    'Papelería y oficina', 'Aromas y bienestar', 'Packaging y cajas', 'Otros',
+  ]
+  const OLD_REGALOS_CATS = ['Tazas / Libretas / Lapiceras', 'Ropa y Textiles', 'Tecnología', 'Packaging / Cajas', 'Otros']
+  const dismissKey = 'cats_upgrade_regalos_dismissed'
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    try { return localStorage.getItem(dismissKey) === '1' } catch { return false }
+  })
+  const sortedCurrent = [...cats].sort().join('|')
+  const sortedOld = [...OLD_REGALOS_CATS].sort().join('|')
+  const sortedNew = [...SUGGESTED_REGALOS_CATS].sort().join('|')
+  const showCatsUpgrade = !bannerDismissed && cats.length > 0 && sortedCurrent !== sortedNew && (sortedCurrent === sortedOld || (() => {
+    const catSet = new Set(cats)
+    const overlap = OLD_REGALOS_CATS.filter(p => catSet.has(p)).length
+    return OLD_REGALOS_CATS.length > 0 && overlap / OLD_REGALOS_CATS.length >= 0.6
+  })())
+  const applyCatsUpgrade = () => {
+    if (window.confirm(`¿Reemplazar tus ${cats.length} categorías actuales por las 12 sugeridas para regalos?\n\nLos productos con una categoría que ya no esté quedarán como "Sin categoría" hasta que los reasignes.`)) {
+      updateConfig({ productCats: SUGGESTED_REGALOS_CATS })
+      toast('Categorías actualizadas a las sugeridas para regalos', 'ok')
+      try { localStorage.removeItem(dismissKey) } catch {}
+    }
+  }
+  const dismissCatsUpgrade = () => {
+    try { localStorage.setItem(dismissKey, '1') } catch {}
+    setBannerDismissed(true)
+  }
   const margin = c.defaultMargin || 40
 
   const filtered = useMemo(() => {
@@ -616,6 +646,32 @@ export default function Catalogo() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
+      {/* Banner: categorías desactualizadas para regalos */}
+      {showCatsUpgrade && (
+        <div style={{
+          background: 'linear-gradient(135deg, #F5F3FF 0%, #EFF6FF 100%)',
+          border: '1px solid #C4B5FD', borderRadius: 12,
+          padding: '12px 16px', marginBottom: 12,
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        }}>
+          <i className="fa fa-wand-magic-sparkles" style={{ color: '#7C3AED', fontSize: 18, flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 220, fontSize: 12.5, color: '#1E1B4B', lineHeight: 1.5 }}>
+            <b>Tenemos 12 categorías más realistas para regalos.</b>
+            <br/>
+            <span style={{ color: '#4C1D95', opacity: .8 }}>Bebidas y vinos, picadas y gourmet, mates y termos, tablas, bolsos… ¿Querés actualizarlas?</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={dismissCatsUpgrade}
+              style={{ background: 'transparent', border: '1px solid #C4B5FD', color: '#6D28D9', padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              Ahora no
+            </button>
+            <button onClick={applyCatsUpgrade}
+              style={{ background: '#7C3AED', border: 'none', color: '#fff', padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <i className="fa fa-wand-magic-sparkles" /> Aplicar sugeridas
+            </button>
+          </div>
+        </div>
+      )}
       <div className="ph cat-ph" style={{ marginBottom: 6 }}>
         <div className="ph-right" style={{ gap: 6 }}>
           <div className="cli-pill-group">
