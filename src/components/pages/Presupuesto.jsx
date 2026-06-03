@@ -1107,10 +1107,10 @@ export default function Presupuesto() {
         </tr>`
     }
 
-    /* ── Helper: fila de encabezado de bloque A / B / C — 11px bold uppercase */
+    /* ── Helper: fila de encabezado de bloque A / B / C — 10.5px semibold uppercase */
     const blockHdrRow = (emoji, label, blockBg) => `
       <tr>
-        <td colspan="4" style="background:${blockBg};border-left:3px solid ${bc};padding:6px 12px 5px 18px;font-size:11px;font-weight:800;color:#0F0C2E;letter-spacing:.45px;text-transform:uppercase;border-bottom:1px solid #E8EAF2">
+        <td colspan="4" style="background:${blockBg};border-left:3px solid ${bc};padding:6px 12px 5px 18px;font-size:10.5px;font-weight:600;color:#4B5563;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid #EEF0F5">
           ${emoji}&nbsp; ${label}
         </td>
       </tr>`
@@ -1165,16 +1165,16 @@ export default function Presupuesto() {
         const kitSep = kitN > 0
           ? `<tr><td colspan="4" style="height:10px;padding:0;background:${isMultiAlt ? '#FAFAFA' : '#fff'};border:none"></td></tr>` : ''
 
-        /* Fila principal del kit — nombre 13.5px bold, montos 12-13px medium */
+        /* Fila principal del kit — peso aligerado (semibold en vez de extra-bold) */
         const kitRow = `
           <tr>
             <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:9px 12px 6px">
-              <span style="display:inline-block;text-align:center;width:20px;height:20px;line-height:20px;background:${bc};color:#fff;border-radius:5px;font-size:10px;font-weight:800;letter-spacing:-.2px;margin-right:8px">K</span>
-              <strong style="font-size:13.5px;color:#0F0C2E;font-weight:800;letter-spacing:-.2px;line-height:1.2">${i.name || 'Kit sin nombre'}</strong>
+              <span style="display:inline-block;text-align:center;width:20px;height:20px;line-height:20px;background:${bc};color:#fff;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:-.2px;margin-right:8px">K</span>
+              <strong style="font-size:13px;color:#1F1B45;font-weight:700;letter-spacing:-.2px;line-height:1.2">${i.name || 'Kit sin nombre'}</strong>
             </td>
-            <td style="background:${bg};border-bottom:none;text-align:center;font-weight:700;font-size:13px;color:#0F0C2E;padding:9px 12px 6px">${i.qty}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;font-size:12.5px;font-weight:500;color:#0F0C2E;padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(i.priceUnit)}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:800;font-size:13.5px;color:${bc};padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(num(i.qty) * num(i.priceUnit))}</td>
+            <td style="background:${bg};border-bottom:none;text-align:center;font-weight:600;font-size:13px;color:#1F1B45;padding:9px 12px 6px">${i.qty}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-size:12.5px;font-weight:500;color:#1F1B45;padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(i.priceUnit)}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:700;font-size:13px;color:${bc};padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(num(i.qty) * num(i.priceUnit))}</td>
           </tr>`
 
         /* ── Bloque A: Packaging / Insumos ── */
@@ -1288,56 +1288,56 @@ export default function Presupuesto() {
          ═══════════════════════════════════════════════════════════════════════════ */
       *{box-sizing:border-box;font-variant-numeric:tabular-nums}
       body{
-        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;
-        margin:0;padding:22px 28px 80px;color:#0F0C2E;
-        font-size:12.5px;line-height:1.5;background:#fff;
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,'Helvetica Neue',Arial,sans-serif;
+        margin:0;padding:22px 28px 80px;color:#1F1B45;
+        font-size:12.5px;line-height:1.55;background:#fff;font-weight:400;
         print-color-adjust:exact;-webkit-print-color-adjust:exact;
         -webkit-font-smoothing:antialiased;
       }
       .pdf-hd{width:100%;border-collapse:collapse;margin-bottom:0}
       .pdf-hd td{padding-bottom:10px;vertical-align:top}
-      .pdf-brand .bname{font-size:22px;font-weight:800;color:${brandColor};letter-spacing:-.4px;line-height:1.1}
+      .pdf-brand .bname{font-size:22px;font-weight:700;color:${brandColor};letter-spacing:-.3px;line-height:1.1}
       .pdf-brand img{height:40px;display:block}
-      .pdf-brand .bsub{font-size:10px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.7px;margin-top:4px}
-      .pdf-meta{text-align:right;font-size:12px;color:#1F1B45;line-height:1.65}
-      .pdf-meta b{color:#0F0C2E;font-weight:700}
-      .pdf-div{height:1.5px;background:#b45309;opacity:.3;margin:8px 0 12px}
-      .vig{display:inline-block;margin-top:4px;padding:3px 10px;background:#FEF3C7;color:#92400E;font-size:10.5px;font-weight:700;border-radius:4px;letter-spacing:.3px}
-      /* Tabla principal — profesional, no de cartel */
+      .pdf-brand .bsub{font-size:9.5px;font-weight:600;color:#b45309;text-transform:uppercase;letter-spacing:.8px;margin-top:4px}
+      .pdf-meta{text-align:right;font-size:12px;color:#4B5563;line-height:1.65}
+      .pdf-meta b{color:#1F1B45;font-weight:600}
+      .pdf-div{height:1px;background:#b45309;opacity:.3;margin:8px 0 12px}
+      .vig{display:inline-block;margin-top:4px;padding:3px 10px;background:#FEF3C7;color:#92400E;font-size:10.5px;font-weight:600;border-radius:4px;letter-spacing:.3px}
+      /* Tabla principal — profesional y elegante */
       table{width:100%;border-collapse:collapse;margin:6px 0 0}
-      /* TÍTULOS de columnas — 12px uppercase bold */
+      /* TÍTULOS de columnas — 11px uppercase, peso 600 (no agresivo) */
       th{
         background:${brandColor};color:#fff;
         padding:9px 12px;text-align:left;
-        font-size:12px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;
+        font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;
         line-height:1.2;
       }
       /* DETALLES — 12px regular */
       td{
-        padding:8px 12px;border-bottom:1px solid #E8EAF2;
-        font-size:12px;font-weight:400;color:#1F1B45;line-height:1.45;
+        padding:9px 12px;border-bottom:1px solid #EEF0F5;
+        font-size:12px;font-weight:400;color:#1F1B45;line-height:1.5;
       }
       tr:last-child td{border-bottom:none}
-      /* Totals box — proporción profesional */
+      /* Totals box — más sobrio */
       .totals{margin-top:12px}
       .totals-box{
         width:300px;margin-left:auto;padding:14px 18px;
-        background:linear-gradient(135deg,${brandColor}10,${brandColor}22);
-        border-radius:10px;border:1.5px solid ${brandColor}40;
+        background:linear-gradient(135deg,${brandColor}08,${brandColor}14);
+        border-radius:10px;border:1px solid ${brandColor}33;
       }
-      .totals-row{width:100%;border-collapse:collapse;font-size:12.5px;color:#1F1B45;margin:2px 0}
+      .totals-row{width:100%;border-collapse:collapse;font-size:12px;color:#4B5563;margin:2px 0}
       .totals-row td{padding:3px 0;border:none}
-      .totals-row .tv{text-align:right;font-weight:600;white-space:nowrap;color:#0F0C2E}
-      /* TOTAL — 19px bold (prominente pero NO cartel publicitario) */
+      .totals-row .tv{text-align:right;font-weight:500;white-space:nowrap;color:#1F1B45}
+      /* TOTAL — 18px semibold (elegante, NO cartel) */
       .tr-big td{
-        font-size:19px;font-weight:800;color:${brandColor};
-        padding-top:8px;
-        border-top:1.5px solid ${brandColor}40;
-        letter-spacing:-.3px;line-height:1.2;
+        font-size:18px;font-weight:700;color:${brandColor};
+        padding-top:9px;
+        border-top:1px solid ${brandColor}33;
+        letter-spacing:-.2px;line-height:1.2;
       }
-      .tr-big .tv{font-size:19px;font-weight:800;color:${brandColor}}
-      .tr-senia td{font-size:13px;font-weight:700;color:${brandColor};padding-top:5px}
-      .tr-senia .tv{font-size:13px;font-weight:700;color:${brandColor}}
+      .tr-big .tv{font-size:18px;font-weight:700;color:${brandColor}}
+      .tr-senia td{font-size:12.5px;font-weight:600;color:${brandColor};padding-top:5px}
+      .tr-senia .tv{font-size:12.5px;font-weight:600;color:${brandColor}}
       /* Notas y footer */
       .note{
         margin-top:18px;padding:14px 18px;
@@ -1753,55 +1753,47 @@ export default function Presupuesto() {
             {/* ─── PASO 2: PRODUCTOS / KIT ─── */}
             {currentStep === 2 && (
               <>
-                <PaneHeader icon="fa-gift" title="Paso 2 · Productos" subtitle="¿Qué tipo de pedido es este?" />
+                <PaneHeader icon={kitMode ? 'fa-gift' : 'fa-list-ul'} title="Paso 2 · Productos" subtitle={kitMode ? 'Constructor de kits con packaging y alternativas' : 'Lista de productos con precio directo'} />
 
-                {/* ── Selector de modo ── */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-                  {/* Tab: Pedido simple */}
+                {/* ── Selector compacto: chip activo + opción para cambiar ── */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+                  {/* Chip del modo actual (activo, prominente) */}
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '8px 14px', borderRadius: 999,
+                    background: 'var(--brand)', color: '#fff',
+                    fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit',
+                  }}>
+                    <i className={`fa ${kitMode ? 'fa-gift' : 'fa-list-ul'}`} style={{ fontSize: 12 }} />
+                    {kitMode ? 'Kit / Box regalo' : 'Pedido simple'}
+                    <i className="fa fa-circle-check" style={{ fontSize: 11, marginLeft: 2, opacity: .9 }} />
+                  </div>
+                  {/* Link discreto para cambiar al otro modo */}
                   <button
-                    onClick={() => handleModeSwitch(false)}
-                    style={{ padding: '13px 14px', borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit', border: `2px solid ${!kitMode ? 'var(--brand)' : 'var(--border)'}`, background: !kitMode ? 'rgba(124,58,237,.07)' : 'var(--surface2)', textAlign: 'left', transition: 'all .15s', outline: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                      <div style={{ width: 30, height: 30, borderRadius: 8, background: !kitMode ? 'var(--grad)' : 'var(--surface)', border: `1.5px solid ${!kitMode ? 'transparent' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                        <i className="fa fa-list-ul" style={{ color: !kitMode ? '#fff' : 'var(--txt3)' }} />
-                      </div>
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color: !kitMode ? 'var(--brand)' : 'var(--txt2)', flex: 1 }}>Pedido simple</span>
-                      {!kitMode && <i className="fa fa-circle-check" style={{ color: 'var(--brand)', fontSize: 14, flexShrink: 0 }} />}
-                    </div>
-                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', paddingLeft: 38, lineHeight: 1.4 }}>Productos con precio directo. Sin packaging ni personalización.</div>
-                  </button>
-                  {/* Tab: Kit / Box */}
-                  <button
-                    onClick={() => handleModeSwitch(true)}
-                    style={{ padding: '13px 14px', borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit', border: `2px solid ${kitMode ? 'var(--brand)' : 'var(--border)'}`, background: kitMode ? 'rgba(124,58,237,.07)' : 'var(--surface2)', textAlign: 'left', transition: 'all .15s', outline: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                      <div style={{ width: 30, height: 30, borderRadius: 8, background: kitMode ? 'var(--grad)' : 'var(--surface)', border: `1.5px solid ${kitMode ? 'transparent' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                        <i className="fa fa-gift" style={{ color: kitMode ? '#fff' : 'var(--txt3)' }} />
-                      </div>
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color: kitMode ? 'var(--brand)' : 'var(--txt2)', flex: 1 }}>Kit / Box regalo</span>
-                      {kitMode && <i className="fa fa-circle-check" style={{ color: 'var(--brand)', fontSize: 14, flexShrink: 0 }} />}
-                    </div>
-                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', paddingLeft: 38, lineHeight: 1.4 }}>Constructor completo: packaging, personalización y alternativas.</div>
+                    onClick={() => handleModeSwitch(!kitMode)}
+                    style={{
+                      background: 'transparent', border: '1px dashed var(--border2)',
+                      borderRadius: 999, padding: '7px 13px',
+                      fontSize: 11.5, fontWeight: 600, color: 'var(--txt3)',
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      transition: 'all .15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; e.currentTarget.style.color = 'var(--brand)'; e.currentTarget.style.background = 'rgba(124,58,237,.04)' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--txt3)'; e.currentTarget.style.background = 'transparent' }}>
+                    <i className={`fa ${kitMode ? 'fa-list-ul' : 'fa-gift'}`} style={{ fontSize: 10 }} />
+                    Cambiar a {kitMode ? 'Pedido simple' : 'Kit / Box'}
+                    {otherModeHasData && <span title="Tenés datos guardados allá" style={{ width: 7, height: 7, borderRadius: '50%', background: '#F59E0B' }} />}
                   </button>
                 </div>
 
-                {/* ── Banner: datos guardados en el modo opuesto ── */}
+                {/* ── Banner: datos guardados en el modo opuesto — más compacto ── */}
                 {otherModeHasData && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(245,158,11,.10)', border: '1.5px solid rgba(245,158,11,.32)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, flexWrap: 'wrap' }}>
-                    <i className="fa fa-floppy-disk" style={{ color: '#D97706', fontSize: 14, flexShrink: 0 }} />
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#92400E', lineHeight: 1.3 }}>
-                        Tenés datos guardados en <strong>{kitMode ? 'Pedido simple' : 'Kit / Box regalo'}</strong>
-                      </div>
-                      <div style={{ fontSize: 11, color: '#A16207', marginTop: 2 }}>
-                        No se perdieron — vas a verlos al cambiar de pestaña.
-                      </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 8, padding: '7px 12px', marginBottom: 14 }}>
+                    <i className="fa fa-floppy-disk" style={{ color: '#D97706', fontSize: 11, flexShrink: 0 }} />
+                    <div style={{ flex: 1, fontSize: 11.5, color: '#92400E', lineHeight: 1.3 }}>
+                      Datos guardados en <strong>{kitMode ? 'Pedido simple' : 'Kit / Box'}</strong> — no se pierden al cambiar.
                     </div>
-                    <button
-                      onClick={() => handleModeSwitch(!kitMode)}
-                      style={{ background: '#D97706', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}>
-                      Ir a {kitMode ? 'Pedido simple' : 'Kit'} →
-                    </button>
                   </div>
                 )}
 
@@ -3225,7 +3217,7 @@ export default function Presupuesto() {
 
       {/* MODAL PREVIEW */}
       {previewHtml && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setPreviewHtml('') }}>
+        <div className="modal-bg open" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }} onClick={e => { if (e.target === e.currentTarget) setPreviewHtml('') }}>
           <div style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 940, height: 'min(900px, 88vh)', boxShadow: 'var(--sh-lg)', animation: 'pgIn .2s ease both', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface2)', borderRadius: '18px 18px 0 0' }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Vista previa — {budgetNum}</h3>
