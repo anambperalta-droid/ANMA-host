@@ -1472,37 +1472,60 @@ export default function Presupuesto() {
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
     <style>{`
-      /* ── Lavado visual unificado — tablas ligeras y coherentes ── */
-      /* Wrapper tipo Card — fondo gris ultra claro, borde sutil */
-      .tbl-card{background:#FAFAFB;border:1px solid #ECECF1;border-radius:12px;padding:6px 12px 10px;margin-top:2px}
-      /* Header de columnas — tipografía secundaria gris */
-      .kit-tbl-hdr,.simple-tbl-hdr{display:grid;gap:6px;padding:8px 8px 10px;border-bottom:1px solid #F3F4F6;align-items:end}
+      /* ══════════════════════════════════════════════════════════════
+         TABLAS MODERNAS (Linear/Notion style)
+         · Card wrapper sutil
+         · Headers minimal (solo columnas numéricas)
+         · Rows con hover state + delete que solo aparece en hover
+         · Divisores ultra sutiles
+         · Inputs invisibles que solo se "encienden" al focus
+         ══════════════════════════════════════════════════════════════ */
+      /* Card wrapper — fondo blanco con borde y sombra mínima */
+      .tbl-card{background:#fff;border:1px solid #E8EAF2;border-radius:14px;padding:4px 14px 8px;margin-top:2px;box-shadow:0 1px 2px rgba(15,12,46,.02)}
+      /* Header de columnas — ultra-discreto, solo las numéricas */
+      .kit-tbl-hdr,.simple-tbl-hdr{display:grid;gap:6px;padding:6px 8px 8px;border-bottom:1px solid #F1F2F6;align-items:end}
       .kit-tbl-hdr{grid-template-columns:14px 1fr 64px 96px 90px 26px}
       .simple-tbl-hdr{grid-template-columns:1fr 58px 96px 78px 28px}
-      .kit-tbl-hdr span,.simple-tbl-hdr span{font-size:9.5px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.08em}
-      /* Filas — aire vertical, sin bordes pesados, divisor sutil entre filas */
+      .kit-tbl-hdr span,.simple-tbl-hdr span{font-size:9px;font-weight:600;color:#B0B3BF;text-transform:uppercase;letter-spacing:.09em}
+      /* Filas — sin bordes en reposo, hover suave que reveals el delete */
       .kit-tbl{display:flex;flex-direction:column}
       .simple-tbl{display:flex;flex-direction:column}
-      .kit-tbl-row,.simple-tbl-row{display:grid;gap:6px;align-items:center;padding:10px 8px;background:transparent;border:none;border-bottom:1px solid #F3F4F6;border-radius:0}
+      .kit-tbl-row,.simple-tbl-row{
+        display:grid;gap:6px;align-items:center;
+        padding:10px 8px;background:transparent;border:none;
+        border-bottom:1px solid #F4F5F9;border-radius:8px;
+        transition:background .12s;
+      }
+      .kit-tbl-row:hover,.simple-tbl-row:hover{background:#FAFAFC}
       .kit-tbl-row{grid-template-columns:14px 1fr 64px 96px 90px 26px}
       .simple-tbl-row{grid-template-columns:1fr 58px 96px 78px 28px}
       .kit-tbl-row:last-child,.simple-tbl-row:last-child{border-bottom:none}
-      .kit-tbl-row .ico{display:flex;align-items:center;justify-content:center}
-      /* Inputs limpios: transparentes en reposo, borde brand sólo al focus */
+      .kit-tbl-row .ico{display:flex;align-items:center;justify-content:center;opacity:.5;transition:opacity .12s}
+      .kit-tbl-row:hover .ico{opacity:.85}
+      /* Inputs limpios: transparentes en reposo, sólo se ven al hover/focus */
       .kit-tbl-row input[type=text],.kit-tbl-row input[type=number],.kit-tbl-row select,
       .simple-tbl-row input[type=text],.simple-tbl-row input[type=number],.simple-tbl-row select{
         border:1px solid transparent!important;background:transparent!important;
-        transition:border-color .15s,background .15s;
+        transition:border-color .15s,background .15s,box-shadow .15s;
       }
       .kit-tbl-row input[type=text]:hover,.kit-tbl-row input[type=number]:hover,
       .simple-tbl-row input[type=text]:hover,.simple-tbl-row input[type=number]:hover{
-        background:rgba(0,0,0,.025)!important;
+        background:rgba(15,12,46,.025)!important;border-color:#E8EAF2!important;
       }
       .kit-tbl-row input[type=text]:focus,.kit-tbl-row input[type=number]:focus,.kit-tbl-row select:focus,
       .simple-tbl-row input[type=text]:focus,.simple-tbl-row input[type=number]:focus,.simple-tbl-row select:focus{
         border-color:var(--brand)!important;background:#fff!important;outline:none;
-        box-shadow:0 0 0 3px rgba(124,58,237,.08);
+        box-shadow:0 0 0 3px rgba(124,58,237,.10);
       }
+      /* Delete button — sólo visible en hover de la fila */
+      .kit-tbl-row > button:last-child,
+      .simple-tbl-row > button:last-child{
+        opacity:0;transition:opacity .15s,background .15s,color .15s;
+      }
+      .kit-tbl-row:hover > button:last-child,
+      .simple-tbl-row:hover > button:last-child,
+      .kit-tbl-row > button:last-child:focus,
+      .simple-tbl-row > button:last-child:focus{opacity:1}
       /* Fila de parada de Logística — grid 4 col limpio, sin saltos */
       .logi-parada-row{
         display:grid!important;
@@ -1521,21 +1544,26 @@ export default function Presupuesto() {
         .logi-parada-row > input[type=text]{flex:1 1 100%!important}
         .logi-parada-row > input[type=number]{flex:1 1 50%!important}
       }
-      /* Botón Agregar minimalista — alineado izquierda, borde punteado sutil */
+      /* Botón Agregar minimalista — más sutil */
       .tbl-add-btn{
         display:inline-flex;align-items:center;gap:6px;
-        background:transparent;border:1px dashed #D1D5DB;border-radius:8px;
-        padding:7px 12px;margin-top:8px;
-        font-family:inherit;font-size:11.5px;font-weight:600;color:#6B7280;
+        background:transparent;border:1px dashed #D8DAE3;border-radius:8px;
+        padding:8px 13px;margin-top:8px;
+        font-family:inherit;font-size:11.5px;font-weight:600;color:#8B8FA3;
         cursor:pointer;transition:all .15s;
       }
-      .tbl-add-btn:hover{border-color:var(--brand);color:var(--brand);background:rgba(124,58,237,.04)}
+      .tbl-add-btn:hover{border-color:var(--brand);color:var(--brand);background:rgba(124,58,237,.04);border-style:solid}
       .tbl-add-btn i{font-size:11px}
-      /* Header de sección (A / B / C) — más liviano dentro del card */
-      .tbl-section-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 2px 8px}
-      .tbl-section-hd .badge{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0}
-      .tbl-section-hd .label{font-size:11px;font-weight:700;color:#374151;letter-spacing:.02em}
-      .tbl-section-hd .hint{font-size:10px;color:#9CA3AF}
+      /* Header de sección (A / B / C) — más refinado, fuera del card */
+      .tbl-section-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 10px}
+      .tbl-section-hd .badge{
+        width:20px;height:20px;border-radius:6px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:10px;font-weight:700;color:#fff;flex-shrink:0;
+        box-shadow:0 1px 2px rgba(15,12,46,.08);
+      }
+      .tbl-section-hd .label{font-size:12px;font-weight:700;color:#1F1B45;letter-spacing:-.01em}
+      .tbl-section-hd .hint{font-size:11px;color:#A0A3B1;font-weight:400}
       /* Legacy classes (compat) */
       .kit-comp-row{display:flex;align-items:center;gap:6px;background:var(--surface);border-radius:8px;padding:5px 8px;border:1px solid var(--border);flex-wrap:wrap}
       .kit-comp-name-group{flex:1;display:flex;gap:4px;min-width:140px}
@@ -2214,11 +2242,11 @@ export default function Presupuesto() {
                           </div>
                         ) : (
                           <div className="kit-tbl">
-                            {/* Header de columnas — mismo patrón que modo simple */}
+                            {/* Headers compactos — solo columnas numéricas, sin "Insumo" redundante */}
                             <div className="kit-tbl-hdr">
                               <span></span>
-                              <span style={{ textAlign: 'left' }}>Insumo</span>
-                              <span style={{ textAlign: 'center' }}>Cant. total</span>
+                              <span></span>
+                              <span style={{ textAlign: 'center' }}>Cant.</span>
                               <span style={{ textAlign: 'right' }}>Costo u.</span>
                               <span style={{ textAlign: 'right' }}>Subtotal</span>
                               <span></span>
@@ -2293,11 +2321,11 @@ export default function Presupuesto() {
                           </div>
                         ) : (
                           <div className="kit-tbl">
-                            {/* Header de columnas — mismo patrón que modo simple */}
+                            {/* Headers compactos — sin "Producto" redundante */}
                             <div className="kit-tbl-hdr">
                               <span></span>
-                              <span style={{ textAlign: 'left' }}>Producto</span>
-                              <span style={{ textAlign: 'center' }}>Cant. total</span>
+                              <span></span>
+                              <span style={{ textAlign: 'center' }}>Cant.</span>
                               <span style={{ textAlign: 'right' }}>Costo u.</span>
                               <span style={{ textAlign: 'right' }}>Subtotal</span>
                               <span></span>
