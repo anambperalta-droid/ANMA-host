@@ -1480,10 +1480,10 @@ export default function Presupuesto() {
          · Divisores ultra sutiles
          · Inputs invisibles que solo se "encienden" al focus
          ══════════════════════════════════════════════════════════════ */
-      /* Card wrapper — fondo blanco con borde y sombra mínima */
-      .tbl-card{background:#fff;border:1px solid #E8EAF2;border-radius:14px;padding:4px 14px 8px;margin-top:2px;box-shadow:0 1px 2px rgba(15,12,46,.02)}
-      /* Header de columnas — ultra-discreto, solo las numéricas */
-      .kit-tbl-hdr,.simple-tbl-hdr{display:grid;gap:6px;padding:6px 8px 8px;border-bottom:1px solid #F1F2F6;align-items:end}
+      /* Card wrapper — compacto, sin padding excesivo */
+      .tbl-card{background:#fff;border:1px solid #E8EAF2;border-radius:12px;padding:10px 12px;margin-top:0;box-shadow:0 1px 2px rgba(15,12,46,.02)}
+      /* Header de columnas — minimal, solo cuando hay valores que etiquetar */
+      .kit-tbl-hdr,.simple-tbl-hdr{display:grid;gap:6px;padding:2px 6px 4px;align-items:end}
       .kit-tbl-hdr{grid-template-columns:14px 1fr 64px 96px 90px 26px}
       .simple-tbl-hdr{grid-template-columns:1fr 58px 96px 78px 28px}
       .kit-tbl-hdr span,.simple-tbl-hdr span{font-size:9px;font-weight:600;color:#B0B3BF;text-transform:uppercase;letter-spacing:.09em}
@@ -1492,8 +1492,8 @@ export default function Presupuesto() {
       .simple-tbl{display:flex;flex-direction:column}
       .kit-tbl-row,.simple-tbl-row{
         display:grid;gap:6px;align-items:center;
-        padding:10px 8px;background:transparent;border:none;
-        border-bottom:1px solid #F4F5F9;border-radius:8px;
+        padding:7px 6px;background:transparent;border:none;
+        border-bottom:1px solid #F4F5F9;border-radius:6px;
         transition:background .12s;
       }
       .kit-tbl-row:hover,.simple-tbl-row:hover{background:#FAFAFC}
@@ -1554,13 +1554,11 @@ export default function Presupuesto() {
       }
       .tbl-add-btn:hover{border-color:var(--brand);color:var(--brand);background:rgba(124,58,237,.04);border-style:solid}
       .tbl-add-btn i{font-size:11px}
-      /* Header de sección (A / B / C) — más refinado, fuera del card */
-      .tbl-section-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 10px}
+      /* Header de sección — compacto, sin letras, badge mini de color */
+      .tbl-section-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px 6px}
       .tbl-section-hd .badge{
-        width:20px;height:20px;border-radius:6px;
-        display:flex;align-items:center;justify-content:center;
-        font-size:10px;font-weight:700;color:#fff;flex-shrink:0;
-        box-shadow:0 1px 2px rgba(15,12,46,.08);
+        width:12px;height:12px;border-radius:4px;
+        flex-shrink:0;box-shadow:0 1px 2px rgba(15,12,46,.08);
       }
       .tbl-section-hd .label{font-size:12px;font-weight:700;color:#1F1B45;letter-spacing:-.01em}
       .tbl-section-hd .hint{font-size:11px;color:#A0A3B1;font-weight:400}
@@ -1906,7 +1904,7 @@ export default function Presupuesto() {
                     <div className="tbl-card" style={{ marginTop: 14 }}>
                       <div className="tbl-section-hd">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div className="badge" style={{ background: 'var(--brand)' }}>A</div>
+                          <div className="badge" style={{ background: 'var(--brand)' }} />
                           <span className="label">Packaging / Insumos</span>
                           <span className="hint">cajas, bolsas, cintas...</span>
                         </div>
@@ -2224,13 +2222,13 @@ export default function Presupuesto() {
                       </div>
                     </div>
 
-                    <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
                       {/* ─ Componente A: Packaging / Insumos ─ */}
                       <div className="tbl-card">
                         <div className="tbl-section-hd">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div className="badge" style={{ background: 'var(--brand)' }}>A</div>
+                            <div className="badge" style={{ background: 'var(--brand)' }} />
                             <span className="label">Packaging / Insumos</span>
                             <span className="hint">cajas, bolsas, cintas...</span>
                           </div>
@@ -2309,7 +2307,7 @@ export default function Presupuesto() {
                       <div className="tbl-card">
                         <div className="tbl-section-hd">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div className="badge" style={{ background: '#059669' }}>B</div>
+                            <div className="badge" style={{ background: '#059669' }} />
                             <span className="label">Contenido del kit</span>
                             <span className="hint">productos incluidos en cada caja</span>
                           </div>
@@ -2388,7 +2386,7 @@ export default function Presupuesto() {
                       {/* ─ Componente C: Personalización ─ */}
                       <div style={{ background: 'var(--surface)', borderRadius: 8, padding: '10px 12px', border: '1px solid var(--border)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: 6, background: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>C</div>
+                          <div style={{ width: 12, height: 12, borderRadius: 4, background: '#D97706', flexShrink: 0, boxShadow: '0 1px 2px rgba(15,12,46,.08)' }} />
                           <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--txt2)' }}>Personalización</span>
                           <span style={{ fontSize: 10, color: 'var(--txt3)', marginLeft: 2 }}>logo, grabado, impresión</span>
                         </div>
