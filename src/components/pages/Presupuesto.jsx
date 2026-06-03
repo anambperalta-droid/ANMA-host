@@ -1542,16 +1542,132 @@ export default function Presupuesto() {
       .kit-comp-nums{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:nowrap}
       .kit-qty-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);borderRadius:6px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--brand);margin-left:4px;flex-shrink:0}
       @media(max-width:640px){
+        /* ══════════════════════════════════════════════════════════════
+           HEADER DEL KIT — Compacto: nombre arriba, datos en grid 3 col
+           ══════════════════════════════════════════════════════════════ */
+        .kit-hdr{
+          padding:12px!important;gap:10px!important;
+          display:grid!important;grid-template-columns:1fr!important;align-items:stretch!important;
+        }
+        .kit-hdr > input{
+          width:100%!important;min-width:0!important;font-size:14px!important;
+          padding:9px 12px!important;min-height:42px!important;border-radius:10px!important;
+        }
+        .kit-hdr-right{
+          display:grid!important;grid-template-columns:1fr 1fr 1.2fr!important;
+          gap:8px!important;align-items:end!important;flex-wrap:nowrap!important;
+        }
+        .kit-hdr-right > div{text-align:center!important;padding:0!important;border:none!important;min-width:0!important}
+        .kit-hdr-right > div:last-child{
+          text-align:right!important;border-left:1px solid rgba(255,255,255,.2)!important;
+          padding-left:8px!important;
+        }
+        .kit-hdr-right input{
+          width:100%!important;min-width:0!important;font-size:13px!important;
+          padding:7px 6px!important;min-height:36px!important;
+        }
+        .kit-hdr-right > div > div:first-child{font-size:9px!important;line-height:1.2!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+        /* ══════════════════════════════════════════════════════════════
+           FILAS DE ITEMS (Packaging/Contenido) — Grid 2x3 explícito
+           Layout:
+             ┌────────────────┬─────┐
+             │ nombre del ítem│ [X] │
+             ├────────┬───────┴─────┤
+             │ Cant.  │ Costo unit. │
+             ├────────┴─────────────┤
+             │       Subtotal: $XXX │
+             └──────────────────────┘
+           ══════════════════════════════════════════════════════════════ */
+        .kit-tbl{display:flex!important;flex-direction:column!important;gap:8px!important;padding:6px 0!important}
+        .kit-tbl-row{
+          display:grid!important;
+          grid-template-areas:
+            "name del"
+            "qty  cost"
+            "sub  sub"!important;
+          grid-template-columns:1fr 1fr!important;
+          gap:8px 10px!important;padding:10px 12px!important;
+          background:#fff!important;border:1px solid #E8EAF2!important;
+          border-radius:10px!important;align-items:center!important;
+          margin:0!important;
+        }
+        /* 1: drag icon — oculto en mobile (no usable con dedo) */
+        .kit-tbl-row > :nth-child(1){display:none!important}
+        /* 2: nombre del item (autocomplete wrapper) */
+        .kit-tbl-row > :nth-child(2){
+          grid-area:name!important;min-width:0!important;width:100%!important;
+        }
+        .kit-tbl-row > :nth-child(2) input{
+          font-size:14px!important;font-weight:700!important;
+          padding:9px 10px!important;min-height:42px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
+        }
+        /* 3: cant (input number) */
+        .kit-tbl-row > :nth-child(3){
+          grid-area:qty!important;width:100%!important;
+          min-height:42px!important;height:42px!important;font-size:14px!important;
+          text-align:center!important;font-weight:700!important;
+          padding:0 8px!important;border-radius:8px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+        }
+        /* 4: costo unitario (input text) */
+        .kit-tbl-row > :nth-child(4){
+          grid-area:cost!important;width:100%!important;
+          min-height:42px!important;height:42px!important;font-size:14px!important;
+          text-align:right!important;font-weight:600!important;
+          padding:0 10px!important;border-radius:8px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+        }
+        /* 5: subtotal calculado (div) */
+        .kit-tbl-row > :nth-child(5){
+          grid-area:sub!important;
+          display:flex!important;justify-content:space-between!important;align-items:center!important;
+          padding:8px 10px 2px!important;border-top:1px solid #F3F4F6!important;
+          font-size:13px!important;font-weight:800!important;color:var(--money)!important;
+          text-align:right!important;
+        }
+        .kit-tbl-row > :nth-child(5)::before{
+          content:'Subtotal';font-size:10px;font-weight:600;color:#9CA3AF;
+          text-transform:uppercase;letter-spacing:.4px;
+        }
+        /* 6: botón eliminar */
+        .kit-tbl-row > :nth-child(6){
+          grid-area:del!important;
+          width:42px!important;height:42px!important;border-radius:10px!important;
+          background:#FEF2F2!important;color:#DC2626!important;
+          border:1.5px solid #FECACA!important;
+          display:flex!important;align-items:center!important;justify-content:center!important;
+          font-size:14px!important;justify-self:end!important;
+        }
+        /* Headers de cols ocultos en mobile */
+        .kit-tbl-hdr,.simple-tbl-hdr{display:none!important}
+
+        /* MODO SIMPLE — mismo tratamiento que kit-tbl-row pero con 1 fila menos
+           Estructura: name | qty | cost | subtotal | del */
+        .simple-tbl-row{
+          display:grid!important;
+          grid-template-areas:
+            "name del"
+            "qty  cost"
+            "sub  sub"!important;
+          grid-template-columns:1fr 1fr!important;
+          gap:8px 10px!important;padding:10px 12px!important;
+          background:#fff!important;border:1px solid #E8EAF2!important;
+          border-radius:10px!important;align-items:center!important;margin-bottom:8px!important;
+        }
+        .simple-tbl-row > :nth-child(1){grid-area:name!important;min-width:0!important;width:100%!important}
+        .simple-tbl-row > :nth-child(2){grid-area:qty!important;width:100%!important;min-height:42px!important;text-align:center!important}
+        .simple-tbl-row > :nth-child(3){grid-area:cost!important;width:100%!important;min-height:42px!important;text-align:right!important}
+        .simple-tbl-row > :nth-child(4){grid-area:sub!important;border-top:1px solid #F3F4F6!important;padding-top:8px!important;font-weight:800!important;color:var(--money)!important;text-align:right!important}
+        .simple-tbl-row > :nth-child(5){grid-area:del!important;width:42px!important;height:42px!important;justify-self:end!important;background:#FEF2F2!important;color:#DC2626!important;border-radius:10px!important;border:1.5px solid #FECACA!important}
+
+        /* Legacy compat */
         .kit-comp-row{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
         .kit-comp-name-group{min-width:0;width:100%}
         .kit-comp-nums{width:100%;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:6px;margin-top:0}
         .kit-comp-nums input[type=number]{width:64px!important}
         .kit-comp-nums input[type=text]{width:80px!important}
-        .kit-tbl-hdr,.simple-tbl-hdr{display:none}
-        .kit-tbl-row,.simple-tbl-row{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;padding:8px 4px}
-        .kit-hdr{flex-direction:column!important;align-items:stretch!important;gap:8px!important}
-        .kit-hdr-right{flex-wrap:wrap;gap:6px!important}
-        .kit-hdr input{min-width:0}
       }
     `}</style>
       <div className="ph ph-pres">
