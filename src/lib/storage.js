@@ -63,10 +63,18 @@ export const DEFAULTS = {
     'Córdoba Capital — A coordinar',
   ],
   productCats: [
-    'Tazas / Libretas / Lapiceras',
-    'Ropa y Textiles',
-    'Tecnología',
-    'Packaging / Cajas',
+    // ─── Universo de regalos corporativos / personales ───
+    'Bebidas y vinos',          // botellas, espumantes, whisky, fernet
+    'Picadas y gourmet',        // quesos, fiambres, salames, tablas, conservas
+    'Mates y termos',           // termos, mates, bombillas, yerbas
+    'Vasos y cristalería',      // vasos, copas, jarros, jarras
+    'Tablas y bazar',           // tablas de madera, picada, bandejas
+    'Indumentaria',             // remeras, camperas, gorros (con/sin logo)
+    'Bolsos y mochilas',        // mochilas, bolsos, neceseres, riñoneras
+    'Tecnología',               // auriculares, parlantes, cargadores, power banks
+    'Papelería y oficina',      // libretas, lapiceras, agendas
+    'Aromas y bienestar',       // velas, difusores, sahumerios, kits spa
+    'Packaging y cajas',        // cajas, bolsas de regalo, papel
     'Otros',
   ],
   occasions: [

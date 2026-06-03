@@ -771,8 +771,30 @@ export default function Config() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
           <ListEditor label="Modalidades de entrega" icon="fa-truck" accentColor="#D97706"
             items={c.deliveryModes || []} onAdd={v => handleListAdd('deliveryModes', v)} onRemove={i => handleListRemove('deliveryModes', i)} />
-          <ListEditor label="Categorías de productos" icon="fa-tag" accentColor="#7C3AED"
-            items={c.productCats || []} onAdd={v => handleListAdd('productCats', v)} onRemove={i => handleListRemove('productCats', i)} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <ListEditor label="Categorías de productos" icon="fa-tag" accentColor="#7C3AED"
+              items={c.productCats || []} onAdd={v => handleListAdd('productCats', v)} onRemove={i => handleListRemove('productCats', i)} />
+            <button
+              type="button"
+              onClick={() => {
+                const suggested = [
+                  'Bebidas y vinos', 'Picadas y gourmet', 'Mates y termos', 'Vasos y cristalería',
+                  'Tablas y bazar', 'Indumentaria', 'Bolsos y mochilas', 'Tecnología',
+                  'Papelería y oficina', 'Aromas y bienestar', 'Packaging y cajas', 'Otros',
+                ]
+                if (window.confirm('¿Reemplazar tus categorías actuales con las 12 sugeridas para regalos?\n\nLos productos que tengan una categoría que ya no esté en la lista pasarán a "Sin categoría" hasta que los reasignes.')) {
+                  updateConfig({ productCats: suggested })
+                  toast && toast('Categorías actualizadas a las sugeridas para regalos', 'ok')
+                }
+              }}
+              style={{
+                background: 'transparent', border: '1px dashed #C4B5FD', borderRadius: 8,
+                padding: '8px 12px', cursor: 'pointer', fontSize: 11.5, fontWeight: 600,
+                color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+              <i className="fa fa-wand-magic-sparkles" /> Aplicar categorías sugeridas para regalos
+            </button>
+          </div>
           <ListEditor label="Ocasiones" icon="fa-calendar-star" accentColor="#EC4899"
             items={c.occasions || []} onAdd={v => handleListAdd('occasions', v)} onRemove={i => handleListRemove('occasions', i)} />
           {(c.customLists || []).map((cl, idx) => {
