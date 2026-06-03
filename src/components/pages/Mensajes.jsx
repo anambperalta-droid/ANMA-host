@@ -14,32 +14,66 @@ const STAGE_ICONS = {
   'Post-Venta': 'fa-heart',
 }
 
-/* ═══ 12 templates default ═══ */
+/* ═══ Templates default — 22 mensajes para regalos corporativos ═══
+   Tonos: 3 de Captación (formales/seguimiento) + 3 de contacto inicial frío
+   (directos, cercanos, sin contacto previo) + alternativas en cada etapa */
 const DEFAULT_TEMPLATES = [
+  // ─────── CAPTACIÓN (6) ───────
   { stage: 'Captación', title: 'Presentacion inicial', isDefault: true,
     text: 'Hola {{nombre}}!\n\nSoy de *{{negocio}}*, trabajamos con productos personalizados para empresas.\n\nMe encantaria contarte que opciones tenemos para {{empresa}}. Tenes unos minutos esta semana?\n\nSaludos!' },
   { stage: 'Captación', title: 'Contacto por referencia', isDefault: true,
     text: 'Hola {{nombre}}!\n\nMe pasaron tu contacto como referente de {{empresa}}. Somos *{{negocio}}* y trabajamos con soluciones a medida para empresas.\n\nTe interesaria ver nuestro catalogo?\n\nQuedo atento!' },
   { stage: 'Captación', title: 'Seguimiento amable', isDefault: true,
     text: 'Hola {{nombre}}! Como andas?\n\nTe escribo para saber si pudiste revisar la propuesta que te mande el {{fecha}}.\n\nNecesitas que ajustemos algo? Estamos para ayudarte.\n\nSaludos!' },
+  /* ── Mensajes FRÍOS (sin contacto previo) — naturales y directos ── */
+  { stage: 'Captación', title: '❄️ Frio · Cierre de año', isDefault: true,
+    text: 'Hola {{nombre}}! Como va? 👋\n\nTe escribo de *{{negocio}}*. Vimos que en {{empresa}} suelen hacer regalos corporativos y queriamos contarte que estamos armando las cajas para fin de año.\n\nSi queres, te paso el catalogo con opciones — desde mate + alfajores hasta box premium con vino. Decime y te mando 👌' },
+  { stage: 'Captación', title: '❄️ Frio · Propuesta directa', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nSoy de *{{negocio}}*. Armamos kits y boxes corporativos a medida — desde 10 unidades, con tu logo, listos en 15 dias habiles.\n\nTenes algun evento o campaña en mente para los proximos meses?\n\nSi no es buen momento, no hay drama — quedo a la orden cuando necesites.' },
+  { stage: 'Captación', title: '❄️ Frio · Ocasion especifica', isDefault: true,
+    text: 'Hola {{nombre}}! Que tal?\n\nTe escribo de *{{negocio}}*. Estamos cerrando agenda para regalos del Dia de la Empresa / cumple del equipo / cierre de año.\n\nSi en {{empresa}} estan pensando algo, te puedo mandar 2-3 opciones armadas con precios. Sin compromiso 🙌' },
+
+  // ─────── PRESUPUESTOS (5) ───────
   { stage: 'Presupuestos', title: 'Envio de presupuesto', isDefault: true,
     text: 'Hola {{nombre}}!\n\nTe envio el presupuesto para {{empresa}}:\n\n- {{producto}}\n*Total:* {{precio}}\n*Entrega estimada:* {{fecha}}\n\nQuedamos a disposicion para cualquier ajuste. Esperamos tu confirmacion!' },
   { stage: 'Presupuestos', title: 'Presupuesto con opciones', isDefault: true,
     text: 'Hola {{nombre}}!\n\nTe arme las opciones que charlamos para {{empresa}}:\n\n- Opcion A: {{producto}} -- {{precio}}\n- Opcion B: [completar]\n\nAmbas incluyen personalizacion con logo. Cual te cierra mas?' },
   { stage: 'Presupuestos', title: 'Contrapropuesta', isDefault: true,
     text: 'Hola {{nombre}}!\n\nRevise los numeros para {{empresa}} y puedo ofrecerte:\n\n- {{producto}} x {{precio}} (con descuento del 5% por cantidad)\n- Envio bonificado\n\nEs nuestro mejor precio. Confirmamos?' },
+  { stage: 'Presupuestos', title: 'Recordatorio suave', isDefault: true,
+    text: 'Hola {{nombre}}! Como estas?\n\nTe llego el presupuesto que te mande el {{fecha}}? Quiero confirmar que no haya quedado en spam.\n\nCualquier duda sobre {{producto}} o el armado del kit, te respondo al toque.\n\nSaludos!' },
+  { stage: 'Presupuestos', title: 'Stock confirmado · listo para producir', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nTengo el stock disponible para arrancar con tu pedido de {{empresa}}:\n\n- {{producto}}\n*Total:* {{precio}}\n\nSi me confirmas hoy, lo ponemos en produccion y llegamos a {{fecha}} sin problema. Avisame!' },
+
+  // ─────── PAGOS (4) ───────
   { stage: 'Pagos', title: 'Confirmacion de pedido', isDefault: true,
     text: 'Excelente {{nombre}}!\n\nQueda confirmado el pedido para {{empresa}}:\n\n- {{producto}}\n*Total:* {{precio}}\n*Seña:* [monto seña]\n*Entrega:* {{fecha}}\n\nTe paso los datos para la transferencia. Gracias por confiar en *{{negocio}}*!' },
   { stage: 'Pagos', title: 'Recordatorio de pago', isDefault: true,
     text: 'Hola {{nombre}}!\n\nTe escribo para recordarte que queda pendiente el saldo del pedido de {{empresa}} por {{precio}}.\n\nNecesitas los datos bancarios de nuevo? Estamos para ayudarte.\n\nSaludos!' },
+  { stage: 'Pagos', title: 'Pago recibido · gracias', isDefault: true,
+    text: 'Hola {{nombre}}! ✅\n\nRecibimos tu pago de {{precio}}. Todo en orden.\n\nYa pasamos el pedido de {{empresa}} a produccion. Te aviso cuando este listo para despachar.\n\nGracias por elegirnos! 🙌' },
+  { stage: 'Pagos', title: 'Datos para transferencia', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nTe paso los datos para que puedas hacer la transferencia de la seña de {{empresa}}:\n\n*CBU:* [cargar]\n*Alias:* [cargar]\n*Titular:* [cargar]\n*Monto:* {{precio}}\n\nCuando lo hagas, mandame el comprobante y arrancamos!' },
+
+  // ─────── LOGÍSTICA (4) ───────
   { stage: 'Logística', title: 'Aviso de despacho', isDefault: true,
     text: 'Hola {{nombre}}!\n\nTe cuento que ya despachamos tu pedido para {{empresa}}.\n\n- {{producto}}\n*Entrega estimada:* {{fecha}}\n\nTe avisamos apenas llegue. Cualquier consulta, escribinos!' },
   { stage: 'Logística', title: 'Seguimiento con urgencia', isDefault: true,
     text: 'Hola {{nombre}}!\n\nLos tiempos de produccion estan corriendo y queria confirmar si avanzamos con el pedido de {{empresa}}.\n\nPara llegar a la fecha que necesitas, lo ideal es confirmar esta semana. Que te parece?' },
+  { stage: 'Logística', title: 'Coordinar entrega', isDefault: true,
+    text: 'Hola {{nombre}}! 📦\n\nTu pedido de {{empresa}} ya esta listo. Para coordinar la entrega:\n\n- Direccion: [confirmar]\n- Dia: {{fecha}}\n- Horario: ¿mañana o tarde?\n\nDecime que dia/horario te queda mejor y lo organizamos 🚚' },
+  { stage: 'Logística', title: 'Entrega completada', isDefault: true,
+    text: 'Hola {{nombre}}! ✅\n\nYa entregamos los regalos en {{empresa}}. Confirmame que llego todo bien!\n\nCualquier cosa que necesites — alguna pieza extra, ajuste, lo que sea — escribime al toque.\n\nGracias por elegirnos! 🙌' },
+
+  // ─────── POST-VENTA (4) ───────
   { stage: 'Post-Venta', title: 'Agradecimiento post-entrega', isDefault: true,
     text: 'Hola {{nombre}}!\n\nEsperamos que los regalos hayan sido un exito en {{empresa}}.\n\nNos contas como les fue? Tu feedback nos ayuda a mejorar.\n\nPara futuros pedidos, ya tenemos tu perfil guardado. Gracias!' },
   { stage: 'Post-Venta', title: 'Reactivacion de cliente', isDefault: true,
     text: 'Hola {{nombre}}!\n\nHace un tiempo que no hablamos. En *{{negocio}}* tenemos novedades y productos nuevos que creo que le pueden servir a {{empresa}}.\n\nTe mando el catalogo actualizado?\n\nSaludos!' },
+  { stage: 'Post-Venta', title: 'Feedback · 2 preguntas', isDefault: true,
+    text: 'Hola {{nombre}}! ⭐\n\nQueria pedirte un favor chico: ¿que les parecio el regalo en {{empresa}}?\n\n1. ¿Que les gusto mas?\n2. ¿Que mejorarias?\n\nCon 2 lineas me alcanza — nos ayuda muchisimo a seguir mejorando. ¡Gracias!' },
+  { stage: 'Post-Venta', title: 'Proxima ocasion · agenda', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nSe viene [Dia de la Madre / Navidad / Cierre de año] y empezamos a armar agenda con nuestros clientes recurrentes.\n\nSi en {{empresa}} ya estan pensando en algo, contame y te aparto produccion. Asi llegamos tranquilos a la fecha.\n\nUn abrazo!' },
 ]
 
 /* ── Paleta soft ── */
