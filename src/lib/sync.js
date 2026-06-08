@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { db, dbW, setWriteHook } from './storage'
+import { log } from './logger'
 
 const SITE_KEY = 'anma-regalos'
 const DATA_KEYS = ['budgets', 'clients', 'suppliers', 'products', 'cfg']
@@ -54,13 +55,13 @@ async function resolveWorkspace(userId) {
       .maybeSingle()
 
     if (error) {
-      console.warn('[sync] membership resolve error', error.message)
+      log.warn('[sync] membership resolve error', error.message)
       return { wsId: userId, role: 'owner' }
     }
     if (!data) return { wsId: userId, role: 'owner' }
     return { wsId: data.workspace_id, role: data.role }
   } catch (e) {
-    console.warn('[sync] membership resolve failed', e?.message)
+    log.warn('[sync] membership resolve failed', e?.message)
     return { wsId: userId, role: 'owner' }
   }
 }
@@ -77,13 +78,13 @@ async function doPush(retryCount = 0) {
     }, { onConflict: 'user_id,site_key' })
     if (error) {
       if (retryCount < 1) setTimeout(() => doPush(retryCount + 1), 4000)
-      else console.warn('[sync] push failed after retry', error.message)
+      else log.warn('[sync] push failed after retry', error.message)
       return
     }
     window.dispatchEvent(new CustomEvent('anma:cloud-saved'))
   } catch (e) {
     if (retryCount < 1) setTimeout(() => doPush(retryCount + 1), 4000)
-    else console.warn('[sync] push failed', e?.message)
+    else log.warn('[sync] push failed', e?.message)
   }
 }
 
@@ -184,7 +185,7 @@ export async function pullFromCloud(userId) {
     window.dispatchEvent(new CustomEvent('anma:synced'))
     return true
   } catch (e) {
-    console.warn('[sync] pull failed', e?.message)
+    log.warn('[sync] pull failed', e?.message)
     return false
   }
 }

@@ -74,10 +74,50 @@ export default function Login() {
 
   const openForgot = () => { setResetEmail(email); setResetSent(false); setResetErr(''); setForgotModal(true) }
 
+  // Rate limiting client-side: cooldown 60s + bloqueo 5min después de 3 intentos
+  const RESET_RL_KEY = 'anma_reset_rl'
+  const checkResetRateLimit = () => {
+    try {
+      const raw = localStorage.getItem(RESET_RL_KEY)
+      const data = raw ? JSON.parse(raw) : { attempts: [], blockedUntil: 0 }
+      const now = Date.now()
+      if (data.blockedUntil && data.blockedUntil > now) {
+        const mins = Math.ceil((data.blockedUntil - now) / 60000)
+        return { ok: false, msg: `Demasiados intentos. Esperá ${mins} min${mins !== 1 ? 's' : ''} antes de volver a probar.` }
+      }
+      data.attempts = (data.attempts || []).filter(t => now - t < 5 * 60000)
+      const last = data.attempts[data.attempts.length - 1]
+      if (last && now - last < 60000) {
+        const secs = Math.ceil((60000 - (now - last)) / 1000)
+        return { ok: false, msg: `Esperá ${secs}s antes de pedir otro enlace.` }
+      }
+      return { ok: true }
+    } catch { return { ok: true } }
+  }
+  const recordResetAttempt = () => {
+    try {
+      const raw = localStorage.getItem(RESET_RL_KEY)
+      const data = raw ? JSON.parse(raw) : { attempts: [], blockedUntil: 0 }
+      const now = Date.now()
+      data.attempts = [...(data.attempts || []).filter(t => now - t < 5 * 60000), now]
+      if (data.attempts.length >= 3) { data.blockedUntil = now + 5 * 60000; data.attempts = [] }
+      localStorage.setItem(RESET_RL_KEY, JSON.stringify(data))
+    } catch { /* ignorar */ }
+  }
+
   const handleReset = async () => {
     if (!resetEmail) { setResetErr('Ingresá tu email.'); return }
+    const { validateEmail } = await import('../../lib/validate')
+    const ve = validateEmail(resetEmail)
+    if (!ve.ok) { setResetErr(ve.msg); return }
+    const rl = checkResetRateLimit()
+    if (!rl.ok) { setResetErr(rl.msg); return }
     setResetSending(true); setResetErr('')
-    try { await resetPassword(resetEmail); setResetSent(true) }
+    try {
+      await resetPassword(resetEmail)
+      recordResetAttempt()
+      setResetSent(true)
+    }
     catch (e) { setResetErr(e.message || 'Error al enviar. Verificá el email.') }
     setResetSending(false)
   }

@@ -814,9 +814,22 @@ export default function Presupuesto() {
     return `${c.budgetPrefix || 'AN'}-${String(num).padStart(4, '0')}`
   }, [editId, c.nextNum, c.budgetPrefix])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.contact && !form.company) { toast('Falta el cliente. Cargá un nombre de contacto o empresa.', 'er'); return }
     if (form.wa && !isValidWA(form.wa)) { toast('El WhatsApp no tiene un formato válido. Ej: +54 351 1234567', 'er'); setWaTouched(true); return }
+    if (form.clientEmail && form.clientEmail.trim()) {
+      const { validateEmail } = await import('../../lib/validate')
+      const e = validateEmail(form.clientEmail)
+      if (!e.ok) { toast(e.msg, 'er'); return }
+    }
+    const { validatePercent, validatePrice } = await import('../../lib/validate')
+    const fchecks = [
+      validatePercent(form.margin, 'El margen'),
+      validatePercent(form.deposit, 'La seña'),
+      validatePercent(form.discount, 'El descuento'),
+      validatePrice(form.logoCost, 'El costo de logo'),
+    ]
+    for (const c of fchecks) { if (!c.ok) { toast(c.msg, 'er'); return } }
     const validItems = items.filter(i => i.type === 'kit'
       ? (i.name || (i.packaging?.length > 0) || (i.products?.length > 0))
       : i.name
@@ -825,6 +838,10 @@ export default function Presupuesto() {
       : { ...i, qty: num(i.qty), costUnit: num(i.costUnit), priceUnit: num(i.priceUnit) }
     )
     if (!validItems.length) { toast('Completá al menos un Kit o producto en el Paso 2.', 'er'); return }
+    for (const it of validItems) {
+      if (it.qty < 0) { toast(`Cantidad inválida en "${it.name || 'item'}".`, 'er'); return }
+      if (it.priceUnit < 0) { toast(`Precio inválido en "${it.name || 'item'}".`, 'er'); return }
+    }
     const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
     // Si los costos están pendientes (algún ítem sin costo) NO congelamos un margen 0 engañoso.
     const marginBudgeted = marginBudgetedSaved !== null

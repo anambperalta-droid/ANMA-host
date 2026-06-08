@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { passwordStrength } from '../../lib/validate'
+
+const STRENGTH_LABELS = ['', 'Débil', 'Aceptable', 'Buena', 'Excelente']
+const STRENGTH_COLORS = ['#E5E7EB', '#DC2626', '#D97706', '#10B981', '#059669']
 
 export default function Bienvenida() {
   const [password, setPassword] = useState('')
@@ -222,6 +226,25 @@ export default function Bienvenida() {
               <i className={`fa ${showPwd ? 'fa-eye-slash' : 'fa-eye'}`} />
             </button>
           </div>
+          {password && (() => {
+            const score = passwordStrength(password)
+            return (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} style={{
+                      flex: 1, height: 4, borderRadius: 99,
+                      background: i <= score ? STRENGTH_COLORS[score] : 'rgba(255,255,255,.08)',
+                      transition: 'background .2s',
+                    }} />
+                  ))}
+                </div>
+                <div style={{ marginTop: 6, fontSize: 11, color: STRENGTH_COLORS[score], fontWeight: 600, textAlign: 'right' }}>
+                  {STRENGTH_LABELS[score] || ''}
+                </div>
+              </div>
+            )
+          })()}
         </div>
 
         <div className="form-group fg" style={{ width: '100%' }}>

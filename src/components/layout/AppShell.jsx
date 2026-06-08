@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
@@ -12,17 +12,29 @@ import TaskFab from './TaskFab'
 import BottomNav from './BottomNav'
 import BottomSheet, { BottomSheetItem } from './BottomSheet'
 import PWAInstall from './PWAInstall'
-import Historial from '../pages/Historial'
-import Presupuesto from '../pages/Presupuesto'
-import Clientes from '../pages/Clientes'
-import Catalogo from '../pages/Catalogo'
-import Proveedores from '../pages/Proveedores'
-import Logistica from '../pages/Logistica'
-import Mensajes from '../pages/Mensajes'
-import Config from '../pages/Config'
-import Insumos from '../pages/Insumos'
-import Admin from '../pages/Admin'
-import Importador from '../pages/Importador'
+
+// Code splitting: rutas grandes on-demand
+const Historial   = lazy(() => import('../pages/Historial'))
+const Presupuesto = lazy(() => import('../pages/Presupuesto'))
+const Clientes    = lazy(() => import('../pages/Clientes'))
+const Catalogo    = lazy(() => import('../pages/Catalogo'))
+const Proveedores = lazy(() => import('../pages/Proveedores'))
+const Logistica   = lazy(() => import('../pages/Logistica'))
+const Mensajes    = lazy(() => import('../pages/Mensajes'))
+const Config      = lazy(() => import('../pages/Config'))
+const Insumos     = lazy(() => import('../pages/Insumos'))
+const Admin       = lazy(() => import('../pages/Admin'))
+const Importador  = lazy(() => import('../pages/Importador'))
+
+function RouteFallback() {
+  return (
+    <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="sk sk-kpi" style={{ height: 64 }} />
+      <div className="sk sk-kpi" style={{ height: 160 }} />
+      <div className="sk sk-kpi" style={{ height: 220 }} />
+    </div>
+  )
+}
 
 const PRIORITIES = [
   { key: 'today',    label: 'Urgente hoy',  color: '#DC2626', bg: '#FEF2F2' },
@@ -284,20 +296,22 @@ function AppShellInner() {
       <div className={`main${collapsed ? ' slim' : ''}`}>
         <Topbar onMenuClick={() => setSideOpen(!sideOpen)} onCollapseClick={toggleCollapsed} collapsed={collapsed} />
         <div className="content">
-          <Routes>
-            <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />
-            <Route path="/presupuesto" element={<Guard perm="pedido.create"><Presupuesto /></Guard>} />
-            <Route path="/presupuesto/:id" element={<Guard perm="pedido.edit"><Presupuesto /></Guard>} />
-            <Route path="/clientes" element={<Guard perm="cliente.view"><Clientes /></Guard>} />
-            <Route path="/catalogo" element={<Guard perm="catalogo.view"><Catalogo /></Guard>} />
-            <Route path="/proveedores" element={<Guard perm="proveedor.view"><Proveedores /></Guard>} />
-            <Route path="/insumos" element={<Guard perm="catalogo.view"><Insumos /></Guard>} />
-            <Route path="/logistica" element={<Guard perm="logistica.view"><Logistica /></Guard>} />
-            <Route path="/mensajes" element={<Guard perm="mensajes.view"><Mensajes /></Guard>} />
-            <Route path="/config" element={<Guard perm="config.access"><Config /></Guard>} />
-            <Route path="/importador" element={<Guard perm="config.access"><Importador /></Guard>} />
-            <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />
+              <Route path="/presupuesto" element={<Guard perm="pedido.create"><Presupuesto /></Guard>} />
+              <Route path="/presupuesto/:id" element={<Guard perm="pedido.edit"><Presupuesto /></Guard>} />
+              <Route path="/clientes" element={<Guard perm="cliente.view"><Clientes /></Guard>} />
+              <Route path="/catalogo" element={<Guard perm="catalogo.view"><Catalogo /></Guard>} />
+              <Route path="/proveedores" element={<Guard perm="proveedor.view"><Proveedores /></Guard>} />
+              <Route path="/insumos" element={<Guard perm="catalogo.view"><Insumos /></Guard>} />
+              <Route path="/logistica" element={<Guard perm="logistica.view"><Logistica /></Guard>} />
+              <Route path="/mensajes" element={<Guard perm="mensajes.view"><Mensajes /></Guard>} />
+              <Route path="/config" element={<Guard perm="config.access"><Config /></Guard>} />
+              <Route path="/importador" element={<Guard perm="config.access"><Importador /></Guard>} />
+              <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
       {cmdOpen && <CommandPalette onClose={() => setCmdOpen(false)} />}
