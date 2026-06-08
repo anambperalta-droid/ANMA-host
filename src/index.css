@@ -101,6 +101,41 @@ a{text-decoration:none;color:inherit}
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit}
 
+/* iOS zoom prevention */
+@media (max-width:768px){
+  input:not([type="checkbox"]):not([type="radio"]):not(.pill):not(.chip),
+  select,
+  textarea{
+    font-size:16px!important;
+  }
+}
+
+/* A11y: focus visible (WCAG 2.4.7) — solo teclado via :focus-visible */
+*:focus{outline:none}
+*:focus-visible{
+  outline:2px solid var(--brand);
+  outline-offset:2px;
+  border-radius:4px;
+}
+.btn:focus-visible,.f-inp:focus-visible,.fg input:focus-visible,
+.fg select:focus-visible,.fg textarea:focus-visible{
+  outline-offset:0;outline:2px solid var(--brand);
+}
+.skip-link{
+  position:absolute;left:-9999px;top:0;z-index:10000;
+  background:var(--brand);color:#fff;
+  padding:10px 16px;border-radius:0 0 8px 0;
+  font-weight:700;font-size:13px;text-decoration:none;
+}
+.skip-link:focus{left:0}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+  }
+}
+
 /* ─── LOGIN ─── */
 .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;min-height:100vh;transition:opacity .4s ease,transform .4s ease}
 .login-screen.out{opacity:0;transform:scale(1.03);pointer-events:none}

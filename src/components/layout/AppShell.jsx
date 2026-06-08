@@ -12,6 +12,7 @@ import TaskFab from './TaskFab'
 import BottomNav from './BottomNav'
 import BottomSheet, { BottomSheetItem } from './BottomSheet'
 import PWAInstall from './PWAInstall'
+import TrialBanner from './TrialBanner'
 
 // Code splitting: rutas grandes on-demand
 const Historial   = lazy(() => import('../pages/Historial'))
@@ -25,6 +26,7 @@ const Config      = lazy(() => import('../pages/Config'))
 const Insumos     = lazy(() => import('../pages/Insumos'))
 const Admin       = lazy(() => import('../pages/Admin'))
 const Importador  = lazy(() => import('../pages/Importador'))
+const NotFound    = lazy(() => import('../pages/NotFound'))
 
 function RouteFallback() {
   return (
@@ -291,11 +293,13 @@ function AppShellInner() {
 
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'clip' }}>
+      <a href="#main-content" className="skip-link">Saltar al contenido</a>
       <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} collapsed={collapsed} />
       {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
       <div className={`main${collapsed ? ' slim' : ''}`}>
+        <TrialBanner />
         <Topbar onMenuClick={() => setSideOpen(!sideOpen)} onCollapseClick={toggleCollapsed} collapsed={collapsed} />
-        <div className="content">
+        <div className="content" id="main-content" role="main">
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />
@@ -310,6 +314,7 @@ function AppShellInner() {
               <Route path="/config" element={<Guard perm="config.access"><Config /></Guard>} />
               <Route path="/importador" element={<Guard perm="config.access"><Importador /></Guard>} />
               <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </div>
