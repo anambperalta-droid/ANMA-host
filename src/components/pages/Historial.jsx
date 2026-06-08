@@ -765,7 +765,12 @@ export default function Historial() {
     toast(`${selectedIds.size} presupuestos actualizados`, 'ok')
     setSelectedIds(new Set()); setBulkStatus('')
   }
-  const csvEsc = (v) => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s }
+  // CSV escape + protección contra CSV injection (Excel/Sheets ejecutan fórmulas si la celda empieza con = + - @ \t \r).
+  const csvEsc = (v) => {
+    let s = String(v ?? '')
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+  }
   const CSV_HEADERS = ['N°','Fecha','Cliente','Empresa','Estado','Pago','Total','Costo','Ganancia','Margen%','Seña','Stock descontado','Fecha costo']
   const budgetToRow = (b) => [
     b.num, b.date,

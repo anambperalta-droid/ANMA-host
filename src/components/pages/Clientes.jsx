@@ -342,8 +342,22 @@ export default function Clientes() {
 
   const setF = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const openEdit = (c) => { setForm(c || { company: '', contact: '', wa: '', email: '', rubro: '', notes: '', discount: 0, cuit: '', razonSocial: '', ivaCondition: '' }); setModal(true); setPasteMode(false); setPasteText('') }
-  const save = () => {
+  const save = async () => {
     if (!form.company) { toast('Ingresá el nombre de la empresa.', 'er'); return }
+    // Validaciones de formato (email / WhatsApp / CUIT) — solo si están completos
+    const { validateEmail, validateWhatsApp, validateCUIT } = await import('../../lib/validate')
+    if (form.email && form.email.trim()) {
+      const e = validateEmail(form.email)
+      if (!e.ok) { toast(e.msg, 'er'); return }
+    }
+    if (form.wa && form.wa.trim()) {
+      const w = validateWhatsApp(form.wa)
+      if (!w.ok) { toast(w.msg, 'er'); return }
+    }
+    if (form.cuit && form.cuit.trim()) {
+      const c = validateCUIT(form.cuit)
+      if (!c.ok) { toast(c.msg, 'er'); return }
+    }
     saveEntity('clients', form); setModal(false); toast('Cliente guardado', 'ok')
     if (detailClient && form.id === detailClient.id) setDetailClient({ ...detailClient, ...form })
   }
@@ -353,9 +367,15 @@ export default function Clientes() {
   })
 
   const exportCSV = () => {
+    // Sanitizar contra CSV injection: si la celda empieza con = + - @ \t \r, anteponer '
+    const csvCell = (v) => {
+      let s = String(v ?? '')
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
+      return `"${s.replace(/"/g, '""')}"`
+    }
     const rows = [['Empresa', 'Contacto', 'WhatsApp', 'Email', 'Rubro', 'Notas'].join(',')]
-    clients.forEach(c => rows.push([c.company, c.contact, c.wa, c.email, c.rubro, c.notes].map(v => `"${(v || '').replace(/"/g, '""')}"`).join(',')))
-    const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+    clients.forEach(c => rows.push([c.company, c.contact, c.wa, c.email, c.rubro, c.notes].map(csvCell).join(',')))
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'clientes.csv'; a.click()
   }
 

@@ -131,8 +131,11 @@ export default function Bienvenida() {
 
   const handleSubmit = async () => {
     setError('')
-    if (!password || !confirm) { setError('Completa ambos campos.'); return }
-    if (password.length < 6) { setError('Minimo 6 caracteres.'); return }
+    if (!password || !confirm) { setError('Completá ambos campos.'); return }
+    // Validación robusta: 8+ chars con letra y número, rechaza passwords comunes
+    const { validatePassword } = await import('../../lib/validate')
+    const v = validatePassword(password)
+    if (!v.ok) { setError(v.msg); return }
     if (password !== confirm) { setError('Las contraseñas no coinciden.'); return }
     setSubmitting(true)
     const { data: updated, error: updateErr } = await supabase.auth.updateUser({ password })
@@ -208,7 +211,7 @@ export default function Bienvenida() {
             <input
               type={showPwd ? 'text' : 'password'}
               className="f-inp"
-              placeholder="Minimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres · letra + número"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKey}
