@@ -13,6 +13,8 @@ import BottomNav from './BottomNav'
 import BottomSheet, { BottomSheetItem } from './BottomSheet'
 import PWAInstall from './PWAInstall'
 import TrialBanner from './TrialBanner'
+import WelcomeTour from './WelcomeTour'
+import FirstBudgetCelebration from './FirstBudgetCelebration'
 
 // Code splitting: rutas grandes on-demand
 const Historial   = lazy(() => import('../pages/Historial'))
@@ -344,6 +346,8 @@ function AppShellInner() {
         )}
       </BottomSheet>
       <PWAInstall />
+      <WelcomeTour />
+      <FirstBudgetCelebration />
     </div>
   )
 }

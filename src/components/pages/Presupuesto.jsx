@@ -931,6 +931,7 @@ export default function Presupuesto() {
     setDraftRestored(false)
     dbDel(DRAFT_KEY)
     toast('Presupuesto guardado', 'ok')
+    try { window.dispatchEvent(new CustomEvent('anma:first-budget-saved')) } catch { /* ignorar */ }
     const gs = getSheetsConfig()
     if (gs.enabled && gs.autoSync && gs.url && savedBudget) {
       pushBudget(savedBudget).then(r => {
