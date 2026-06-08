@@ -136,6 +136,14 @@ input,select,textarea{font-family:inherit}
   }
 }
 
+/* Transición sutil entre rutas (re-mount via key={path} en AppShell) */
+@keyframes anma-route-in {
+  from { opacity: 0; transform: translateY(6px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
+.route-enter{animation:anma-route-in .22s cubic-bezier(.4,0,.2,1) both;min-height:100%}
+@media (prefers-reduced-motion:reduce){.route-enter{animation:none}}
+
 /* ─── LOGIN ─── */
 .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;min-height:100vh;transition:opacity .4s ease,transform .4s ease}
 .login-screen.out{opacity:0;transform:scale(1.03);pointer-events:none}

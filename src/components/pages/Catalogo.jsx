@@ -527,7 +527,7 @@ export default function Catalogo() {
       <div key={p.id} className="prod-card" onClick={() => open(p)}>
         <div className="prod-card-img" style={{ background: isKit ? '#F5F3FF' : cc.bg }}>
           {p.image
-            ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={p.image} alt={p.name} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ fontSize: 38, color: isKit ? '#8B5CF6' : cc.color, opacity: .5 }} />
           }
           <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
@@ -580,7 +580,7 @@ export default function Catalogo() {
           <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} style={{ cursor: 'pointer' }} />
         </td>
         <td>
-          {p.image && <img src={p.image} alt={p.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
+          {p.image && <img src={p.image} alt={p.name} loading="lazy" decoding="async" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
           {!p.image && isKit && <i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 8, fontSize: 16, verticalAlign: 'middle' }} />}
           <span style={{ fontWeight: 800 }}>{p.name}</span>
           {isKit && <span style={{ marginLeft: 6, verticalAlign: 'middle' }}><KitBadge small /></span>}
@@ -790,7 +790,7 @@ export default function Catalogo() {
                 onClick={e => e.stopPropagation()} />
               <div className="cat-mob-item-l">
                 {p.image
-                  ? <img src={p.image} className="cat-mob-item-img" alt={p.name} />
+                  ? <img src={p.image} className="cat-mob-item-img" alt={p.name} loading="lazy" decoding="async" />
                   : <div className="cat-mob-item-noimg">
                       <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ color: isKit ? '#8B5CF6' : cc.color, fontSize: 16, opacity: .6 }} />
                     </div>

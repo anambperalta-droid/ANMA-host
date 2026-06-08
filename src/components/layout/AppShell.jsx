@@ -1,5 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { useState, useEffect, Suspense } from 'react'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { applyThemeColors } from '../../lib/theme'
@@ -15,30 +15,13 @@ import PWAInstall from './PWAInstall'
 import TrialBanner from './TrialBanner'
 import WelcomeTour from './WelcomeTour'
 import FirstBudgetCelebration from './FirstBudgetCelebration'
+import RouteFallback from './RouteFallback'
 
-// Code splitting: rutas grandes on-demand
-const Historial   = lazy(() => import('../pages/Historial'))
-const Presupuesto = lazy(() => import('../pages/Presupuesto'))
-const Clientes    = lazy(() => import('../pages/Clientes'))
-const Catalogo    = lazy(() => import('../pages/Catalogo'))
-const Proveedores = lazy(() => import('../pages/Proveedores'))
-const Logistica   = lazy(() => import('../pages/Logistica'))
-const Mensajes    = lazy(() => import('../pages/Mensajes'))
-const Config      = lazy(() => import('../pages/Config'))
-const Insumos     = lazy(() => import('../pages/Insumos'))
-const Admin       = lazy(() => import('../pages/Admin'))
-const Importador  = lazy(() => import('../pages/Importador'))
-const NotFound    = lazy(() => import('../pages/NotFound'))
-
-function RouteFallback() {
-  return (
-    <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div className="sk sk-kpi" style={{ height: 64 }} />
-      <div className="sk sk-kpi" style={{ height: 160 }} />
-      <div className="sk sk-kpi" style={{ height: 220 }} />
-    </div>
-  )
-}
+// Code splitting + prefetch caching centralizados en lib/routes.js
+import {
+  Historial, Presupuesto, Clientes, Catalogo, Proveedores, Logistica,
+  Mensajes, Insumos, Config, Admin, Importador, NotFound,
+} from '../../lib/routes'
 
 const PRIORITIES = [
   { key: 'today',    label: 'Urgente hoy',  color: '#DC2626', bg: '#FEF2F2' },
@@ -247,6 +230,7 @@ function AppShellInner() {
   const { can } = useAuth()
   const { focusMode } = useTaskFab()
   const nav = useNavigate()
+  const loc = useLocation()
   const [cmdOpen, setCmdOpen] = useState(false)
   const [sideOpen, setSideOpen] = useState(false)
   const [moreSheet, setMoreSheet] = useState(false)
@@ -303,6 +287,7 @@ function AppShellInner() {
         <Topbar onMenuClick={() => setSideOpen(!sideOpen)} onCollapseClick={toggleCollapsed} collapsed={collapsed} />
         <div className="content" id="main-content" role="main">
           <Suspense fallback={<RouteFallback />}>
+            <div key={loc.pathname.split('/')[1] || 'root'} className="route-enter">
             <Routes>
               <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />
               <Route path="/presupuesto" element={<Guard perm="pedido.create"><Presupuesto /></Guard>} />
@@ -318,6 +303,7 @@ function AppShellInner() {
               <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </div>
           </Suspense>
         </div>
       </div>

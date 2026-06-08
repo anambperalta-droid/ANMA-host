@@ -1284,7 +1284,7 @@ export default function Historial() {
                         <div key={`${item._type}-${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 7 }}>
                           <div style={{ width: 32, height: 32, borderRadius: 8, background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                             {item._type === 'product' && item.image
-                              ? <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover' }} />
+                              ? <img src={item.image} alt={item.name} loading="lazy" decoding="async" style={{ width: 32, height: 32, objectFit: 'cover' }} />
                               : <i className={`fa ${item._type === 'product' ? 'fa-box-open' : 'fa-flask'}`} style={{ fontSize: 14, color: '#FB923C' }} />
                             }
                           </div>
