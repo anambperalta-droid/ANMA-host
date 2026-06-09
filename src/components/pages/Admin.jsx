@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
+import { useRealtimeSignups, ensureNotificationPermission, sendBrowserNotification } from '../../lib/useRealtimeSignups'
 
 /**
  * ANMA Regalos — Admin global (cross-tenant)
@@ -93,6 +95,9 @@ export default function Admin() {
   const [tab, setTab] = useState('trials')        // 'trials' | 'paid' | 'all'
   const [expanded, setExpanded] = useState(null)
   const [members, setMembers] = useState({})
+  const [notifPerm, setNotifPerm] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'denied')
+  const [recentSignups, setRecentSignups] = useState([])
+  const toast = useToast()
 
   const load = useCallback(async () => {
     setLoading(true); setErr('')
@@ -155,6 +160,34 @@ export default function Admin() {
   }, [])
 
   useEffect(() => { if (isGlobalAdmin) load() }, [isGlobalAdmin, load])
+
+  // ── Realtime: nuevos signups en vivo ──────────────────────────────────
+  useRealtimeSignups((newWs) => {
+    if (!newWs?.id) return
+    const wsName = newWs.name || 'Nuevo workspace'
+    toast(`🎉 Nuevo signup: ${wsName}`, 'ok')
+    const n = sendBrowserNotification('Nuevo signup en ANMA Regalos', {
+      body: `${wsName} acaba de registrarse. Mirá tu Admin para contactarlos.`,
+      tag: 'anma-signup',
+    })
+    if (n) { n.onclick = () => { window.focus(); n.close() } }
+    setRecentSignups(prev => [{ id: newWs.id, name: wsName, at: Date.now() }, ...prev].slice(0, 10))
+    load()
+  }, isGlobalAdmin)
+
+  const enableNotifs = async () => {
+    const perm = await ensureNotificationPermission()
+    setNotifPerm(perm)
+    if (perm === 'granted') {
+      sendBrowserNotification('Notificaciones activadas ✓', {
+        body: 'Te avisaremos cuando alguien nuevo se registre.',
+        tag: 'anma-notif-test',
+      })
+      toast('Notificaciones activadas. Te avisaremos en vivo.', 'ok')
+    } else if (perm === 'denied') {
+      toast('Bloqueadas. Activalas desde la barra del navegador.', 'in')
+    }
+  }
 
   // ── Acciones admin ─────────────────────────────────────────────────────
   const changePlan = async (wsId, planKey) => {
@@ -278,11 +311,43 @@ export default function Admin() {
             Gestión cross-tenant · {user?.email}
           </div>
         </div>
-        <button className="btn btn-secondary" onClick={load} disabled={loading}>
-          <i className={`fa ${loading ? 'fa-spinner fa-spin' : 'fa-rotate-right'}`} style={{ marginRight: 6 }} />
-          Refrescar
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {notifPerm !== 'granted' && (
+            <button
+              className="btn btn-secondary"
+              onClick={enableNotifs}
+              title={notifPerm === 'denied' ? 'Notificaciones bloqueadas en el navegador' : 'Activar notificaciones del navegador'}
+              style={notifPerm === 'denied' ? { opacity: .7 } : { background: 'rgba(124,58,237,.08)', color: '#7C3AED', borderColor: 'rgba(124,58,237,.25)' }}
+            >
+              <i className={`fa ${notifPerm === 'denied' ? 'fa-bell-slash' : 'fa-bell'}`} style={{ marginRight: 6 }} />
+              {notifPerm === 'denied' ? 'Notif. bloqueadas' : 'Activar avisos'}
+            </button>
+          )}
+          {notifPerm === 'granted' && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'rgba(22,163,74,.10)', color: '#16A34A', border: '1px solid rgba(22,163,74,.25)', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+              <i className="fa fa-bell" /> Avisos en vivo activos
+            </span>
+          )}
+          <button className="btn btn-secondary" onClick={load} disabled={loading}>
+            <i className={`fa ${loading ? 'fa-spinner fa-spin' : 'fa-rotate-right'}`} style={{ marginRight: 6 }} />
+            Refrescar
+          </button>
+        </div>
       </div>
+
+      {recentSignups.length > 0 && (
+        <div style={{ marginBottom: 14, padding: '10px 14px', background: 'linear-gradient(90deg, rgba(124,58,237,.08), rgba(99,102,241,.05))', border: '1px solid rgba(124,58,237,.25)', borderRadius: 10, fontSize: 12.5, color: 'var(--txt2)' }}>
+          <i className="fa fa-bolt" style={{ color: '#7C3AED', marginRight: 6 }} />
+          <strong>{recentSignups.length} signup{recentSignups.length !== 1 ? 's' : ''} en esta sesión:</strong>{' '}
+          {recentSignups.slice(0, 3).map((s, i) => (
+            <span key={s.id}>{i > 0 && ' · '}{s.name}</span>
+          ))}
+          {recentSignups.length > 3 && ` +${recentSignups.length - 3} más`}
+          <button onClick={() => setRecentSignups([])} style={{ marginLeft: 10, background: 'transparent', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 11 }}>
+            <i className="fa fa-xmark" />
+          </button>
+        </div>
+      )}
 
       {/* ── Métricas headline ────────────────────────────────────────── */}
       <div className="admin-mgrid">
