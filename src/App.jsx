@@ -5,6 +5,8 @@ import AppShell from './components/layout/AppShell'
 import Bienvenida from './components/pages/Bienvenida'
 import PortalProveedor from './components/pages/PortalProveedor'
 import Alta from './components/pages/Alta'
+import Activar from './components/pages/Activar'
+import PagoResultado from './components/pages/PagoResultado'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 
 function AuthRedirect() {
@@ -37,6 +39,11 @@ export default function App() {
           hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
           authed ? <Navigate to="/" /> : <Login />
         } />
+        {/* Activación + páginas de retorno post-checkout MP */}
+        <Route path="/activar" element={!authed ? <Navigate to="/login?next=/activar" replace /> : <Activar />} />
+        <Route path="/pago-exitoso" element={<PagoResultado variant="exitoso" />} />
+        <Route path="/pago-pendiente" element={<PagoResultado variant="pendiente" />} />
+        <Route path="/pago-error" element={<PagoResultado variant="error" />} />
         <Route path="/*" element={
           hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
           authed ? <AppShell /> : <Navigate to="/login" />
