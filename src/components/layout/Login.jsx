@@ -61,6 +61,9 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email || !pass) { setErr('Completá email y contraseña para continuar.'); return }
+    const { validateEmail } = await import('../../lib/validate')
+    const ev = validateEmail(email)
+    if (!ev.ok) { setErr(ev.msg); return }
     setSubmitting(true); setErr('')
     const result = await login(email, pass)
     if (result) { setErr(friendlyAuthError(result)); setSubmitting(false); return }
@@ -382,6 +385,24 @@ export default function Login() {
               ? <><i className="fa fa-spinner fa-spin" /> Ingresando...</>
               : <><i className="fa fa-arrow-right-to-bracket" /> Entrar a mi negocio</>}
           </button>
+
+          {/* Pedir acceso por WhatsApp (Regalos no tiene signup nativo) */}
+          <div style={{
+            textAlign: 'center', marginTop: 18, marginBottom: 14,
+            fontSize: 13, color: 'rgba(255,255,255,.65)',
+          }}>
+            ¿No tenés cuenta?{' '}
+            <a
+              href="https://wa.me/5491169456863?text=Hola%2C%20quiero%20pedir%20acceso%20a%20ANMA%20Regalos"
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                color: '#f0abfc', fontWeight: 700, textDecoration: 'none',
+                borderBottom: '1px dashed rgba(240,171,252,.5)', paddingBottom: 1,
+              }}
+            >
+              Pedí acceso por WhatsApp →
+            </a>
+          </div>
 
           <div className="lpr-divider">o</div>
 
