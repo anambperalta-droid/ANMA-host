@@ -87,9 +87,9 @@ export function getBillingStatus(workspace) {
       shouldShowBanner: true,
       shouldBlock: false,
       bannerCopy: {
-        title: `Tu cuota mensual venció hace ${overdueDays} día${overdueDays !== 1 ? 's' : ''}`,
-        body: 'Pagá ahora para evitar que pausemos el workspace. Tenés 7 días de gracia.',
-        cta: 'Pagar ahora ($30.000)',
+        title: `Cuota pendiente — ${overdueDays} día${overdueDays !== 1 ? 's' : ''} de retraso`,
+        body: `Si necesitás tiempo o tenés alguna duda, contanos por WhatsApp. Quedan ${7 - overdueDays} días de gracia.`,
+        cta: 'Regularizar ahora',
       },
     }
   }
@@ -137,9 +137,9 @@ export function getBillingStatus(workspace) {
         shouldShowBanner: true,
         shouldBlock: false,
         bannerCopy: {
-          title: 'Hoy vence tu cuota mensual',
-          body: 'Pagá ahora ($30.000) para mantener tu workspace activo.',
-          cta: 'Pagar ahora',
+          title: 'Tu cuota mensual vence hoy',
+          body: 'Aboná los $30.000 cuando te sea cómodo — ofrecemos varias opciones.',
+          cta: 'Pagar $30k',
         },
       }
     }
@@ -157,8 +157,8 @@ export function getBillingStatus(workspace) {
         shouldBlock: false,
         bannerCopy: {
           title: `Tu cuota vence en ${daysUntilDue} día${daysUntilDue !== 1 ? 's' : ''}`,
-          body: 'Pagá ahora ($30.000) para evitar interrupciones.',
-          cta: 'Pagar ahora',
+          body: 'Buen momento para adelantar el pago. $30.000 mensuales.',
+          cta: 'Pagar $30k',
         },
       }
     }
@@ -175,9 +175,9 @@ export function getBillingStatus(workspace) {
         shouldShowBanner: true,
         shouldBlock: false,
         bannerCopy: {
-          title: `Tu cuota mensual vence en ${daysUntilDue} días`,
-          body: 'Activá tu pago ahora y no te olvides. Son $30.000 mensuales.',
-          cta: 'Pagar $30.000',
+          title: `Próximo pago en ${daysUntilDue} días`,
+          body: 'Te avisamos con tiempo para que organices tu cuota mensual.',
+          cta: 'Adelantar pago',
         },
       }
     }
