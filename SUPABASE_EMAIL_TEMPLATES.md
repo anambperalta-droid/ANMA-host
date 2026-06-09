@@ -68,8 +68,8 @@ Supabase usa **Go templates** (mismo motor que Hugo). Variables expuestas:
           <p style="color:rgba(255,255,255,.85);margin:6px 0 0;font-size:14px">7 días para descubrir cómo armás tus kits de regalo en minutos</p>
         </td></tr>
         {{ else }}
-        <!-- ═══ HEADER ANMA PRO (violeta + verde) ═══ -->
-        <tr><td style="background:linear-gradient(135deg,#7C3AED,#059669);padding:40px 32px;text-align:center">
+        <!-- ═══ HEADER ANMA PRO (violeta — fiel a la landing) ═══ -->
+        <tr><td style="background:linear-gradient(135deg,#4C1D95,#7C3AED 50%,#A78BFA);padding:40px 32px;text-align:center">
           <div style="display:inline-block;width:60px;height:60px;background:#fff;border-radius:18px;line-height:60px;margin-bottom:16px;font-size:28px">🚀</div>
           <h1 style="color:#fff;margin:0;font-size:24px;font-weight:800;letter-spacing:-.3px">¡Bienvenido a ANMA Pro!</h1>
           <p style="color:rgba(255,255,255,.85);margin:6px 0 0;font-size:14px">7 días para descubrir cómo ANMA Pro ordena tu negocio</p>
@@ -198,7 +198,7 @@ Supabase usa **Go templates** (mismo motor que Hugo). Variables expuestas:
           <h1 style="color:#fff;margin:0;font-size:22px;font-weight:800">Te invitaron a ANMA Regalos</h1>
         </td></tr>
         {{ else }}
-        <tr><td style="background:linear-gradient(135deg,#059669,#10b981);padding:36px 32px;text-align:center">
+        <tr><td style="background:linear-gradient(135deg,#4C1D95,#7C3AED 50%,#6366F1);padding:36px 32px;text-align:center">
           <div style="display:inline-block;width:54px;height:54px;background:#fff;border-radius:16px;line-height:54px;margin-bottom:14px;font-size:24px">🎯</div>
           <h1 style="color:#fff;margin:0;font-size:22px;font-weight:800">Te invitaron a ANMA Pro</h1>
         </td></tr>
@@ -213,7 +213,7 @@ Supabase usa **Go templates** (mismo motor que Hugo). Variables expuestas:
             Aceptá la invitación y elegí tu contraseña para entrar:
           </p>
           <table cellpadding="0" cellspacing="0" align="center">
-            <tr><td style="background:linear-gradient(135deg,{{ if eq (index .Data.allowed_sites 0) "host" }}#D946EF,#EC4899{{ else }}#059669,#047857{{ end }});border-radius:12px">
+            <tr><td style="background:linear-gradient(135deg,{{ if eq (index .Data.allowed_sites 0) "host" }}#D946EF,#EC4899{{ else }}#7C3AED,#6366F1{{ end }});border-radius:12px">
               <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 32px;color:#fff;text-decoration:none;font-size:14.5px;font-weight:700">
                 Aceptar invitación
               </a>
