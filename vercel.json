@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron-daily",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/resend-api/:path*", "destination": "https://api.resend.com/:path*" },
     { "source": "/landing.html", "destination": "/landing.html" },

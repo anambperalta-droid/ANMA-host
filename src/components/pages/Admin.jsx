@@ -262,6 +262,64 @@ export default function Admin() {
 
   // ── Ver historial de pagos del workspace ────────────────────────────
   const [paymentHistoryFor, setPaymentHistoryFor] = useState(null)
+  // Selección múltiple en tab billing (bulk cobros)
+  const [selectedBilling, setSelectedBilling] = useState(new Set())
+  const [bulkProcessing, setBulkProcessing] = useState(false)
+  const toggleBillingSelection = (wsId) => {
+    setSelectedBilling(prev => {
+      const next = new Set(prev)
+      if (next.has(wsId)) next.delete(wsId)
+      else next.add(wsId)
+      return next
+    })
+  }
+  const clearBillingSelection = () => setSelectedBilling(new Set())
+
+  // Bulk: generar links MP para todos los seleccionados + abrir WA con cada uno
+  const bulkGenerateLinks = async () => {
+    const ids = Array.from(selectedBilling)
+    if (ids.length === 0) return
+    if (!confirm(`Generar links MP de $30k para ${ids.length} workspace${ids.length !== 1 ? 's' : ''} y abrir WhatsApp con cada uno?\n\n(Tu navegador puede bloquear pop-ups — autorizá si te pregunta.)`)) return
+    setBulkProcessing(true)
+    let success = 0
+    let failed = 0
+    for (const wsId of ids) {
+      const w = rows.find(r => r.id === wsId)
+      if (!w) { failed++; continue }
+      try {
+        const resp = await fetch('/api/mp-create-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workspaceId: w.id,
+            kind: 'monthly',
+            userEmail: w.contact_email || undefined,
+          }),
+        })
+        const data = await resp.json()
+        if (!data.ok) throw new Error(data.message)
+        const msg = buildPaymentReminderWAMessage({
+          workspaceName: w.name,
+          mpLink: data.init_point,
+          kind: 'monthly',
+        })
+        const phone = (w.contact_phone || '').replace(/[^\d]/g, '')
+        const waUrl = phone
+          ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+          : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`
+        // Abrir cada WA en pestaña nueva
+        window.open(waUrl, '_blank')
+        success++
+        // Pausa breve entre llamados para no romper rate limit ni pop-up blocker
+        await new Promise(r => setTimeout(r, 400))
+      } catch {
+        failed++
+      }
+    }
+    setBulkProcessing(false)
+    toast(`${success} link${success !== 1 ? 's' : ''} generado${success !== 1 ? 's' : ''}${failed > 0 ? ` · ${failed} falló${failed !== 1 ? 'aron' : ''}` : ''}`, failed > 0 ? 'in' : 'ok')
+    clearBillingSelection()
+  }
   const [paymentHistory, setPaymentHistory] = useState([])
   const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false)
   const showPaymentHistory = async (w) => {
@@ -346,6 +404,84 @@ export default function Admin() {
     }
     return rows
   }, [rows, tab])
+
+  // ── Tareas del día (TodayWidget) ────────────────────────────────────────
+  // Calcula las 4 acciones críticas que el admin debe ver al entrar.
+  const todayTasks = useMemo(() => {
+    const tasks = []
+
+    // 1. Cobros vencidos HOY o anteayer (acción urgente)
+    const overdueToday = rows.filter(w => w.billing.urgency === 'overdue' && w.billing.daysUntilDue !== null && w.billing.daysUntilDue >= -2)
+    if (overdueToday.length > 0) {
+      tasks.push({
+        kind: 'overdue',
+        urgency: 'critical',
+        icon: 'fa-fire',
+        color: '#DC2626',
+        title: `${overdueToday.length} cuota${overdueToday.length !== 1 ? 's' : ''} vencida${overdueToday.length !== 1 ? 's' : ''}`,
+        subtitle: 'Cobrá antes de que pasen a paused',
+        workspaces: overdueToday,
+        ctaLabel: 'Ver y cobrar',
+      })
+    }
+
+    // 2. Vencen hoy o mañana (próximos 1-2 días)
+    const dueSoon = rows.filter(w => w.billing.urgency === 'hot' && w.billing.daysUntilDue !== null && w.billing.daysUntilDue >= 0 && w.billing.daysUntilDue <= 1)
+    if (dueSoon.length > 0) {
+      tasks.push({
+        kind: 'due_soon',
+        urgency: 'high',
+        icon: 'fa-hourglass-half',
+        color: '#D97706',
+        title: `${dueSoon.length} cuota${dueSoon.length !== 1 ? 's' : ''} vence${dueSoon.length === 1 ? '' : 'n'} en 24-48h`,
+        subtitle: 'Adelantá el contacto para evitar fricción',
+        workspaces: dueSoon,
+        ctaLabel: 'Enviar recordatorio',
+      })
+    }
+
+    // 3. Trials a punto de cerrar (último día)
+    const trialsClosing = rows.filter(w => w.trial.isTrial && (w.trial.urgency === 'last' || w.trial.urgency === 'hot'))
+    if (trialsClosing.length > 0) {
+      tasks.push({
+        kind: 'trial_closing',
+        urgency: 'high',
+        icon: 'fa-rocket',
+        color: '#7C3AED',
+        title: `${trialsClosing.length} trial${trialsClosing.length !== 1 ? 's' : ''} cierra${trialsClosing.length === 1 ? '' : 'n'} pronto`,
+        subtitle: 'Última oportunidad de conversión',
+        workspaces: trialsClosing,
+        ctaLabel: 'Contactar',
+      })
+    }
+
+    // 4. Prospectos calientes en trial (alta intención de compra)
+    const hotProspects = rows.filter(w => w.trial.isTrial && w.trial.daysLeft >= 0 && w.temp.level === 'hot')
+    if (hotProspects.length > 0) {
+      tasks.push({
+        kind: 'hot_prospects',
+        urgency: 'medium',
+        icon: 'fa-temperature-three-quarters',
+        color: '#16A34A',
+        title: `${hotProspects.length} prospecto${hotProspects.length !== 1 ? 's' : ''} caliente${hotProspects.length !== 1 ? 's' : ''}`,
+        subtitle: 'Cargaron muchos datos — listos para convertir',
+        workspaces: hotProspects,
+        ctaLabel: 'Ver prospectos',
+      })
+    }
+
+    return tasks
+  }, [rows])
+
+  const goToTask = (task) => {
+    if (task.kind === 'overdue' || task.kind === 'due_soon') {
+      setTab('billing')
+      window.scrollTo({ top: 350, behavior: 'smooth' })
+    } else if (task.kind === 'trial_closing' || task.kind === 'hot_prospects') {
+      setTab('trials')
+      window.scrollTo({ top: 350, behavior: 'smooth' })
+    }
+  }
 
   // ── Métricas headline ──────────────────────────────────────────────────
   const metrics = useMemo(() => {
@@ -457,6 +593,106 @@ export default function Admin() {
         </div>
       )}
 
+      {/* ── Widget "Tareas de hoy" ───────────────────────────────────── */}
+      {!loading && todayTasks.length > 0 && (
+        <div style={{
+          marginBottom: 18,
+          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+          border: '1.5px solid #FDE68A',
+          borderRadius: 14,
+          padding: '14px 18px 16px',
+          boxShadow: '0 2px 10px rgba(217,119,6,.08)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: 'linear-gradient(135deg, #D97706, #F59E0B)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontSize: 13,
+              }}>
+                <i className="fa fa-bolt" />
+              </span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#78350F', letterSpacing: '-.2px' }}>
+                  Tareas de hoy
+                </div>
+                <div style={{ fontSize: 11, color: '#92400E', opacity: .8 }}>
+                  {todayTasks.length} acción{todayTasks.length !== 1 ? 'es' : ''} prioritaria{todayTasks.length !== 1 ? 's' : ''} · {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
+            {todayTasks.map((task, i) => (
+              <div
+                key={i}
+                onClick={() => goToTask(task)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && goToTask(task)}
+                style={{
+                  background: 'rgba(255,255,255,.7)',
+                  border: '1px solid rgba(217,119,6,.18)',
+                  borderRadius: 12,
+                  padding: '11px 13px',
+                  cursor: 'pointer',
+                  transition: 'all .15s ease',
+                  display: 'flex', alignItems: 'center', gap: 11,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#fff'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,.08)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,.7)'
+                  e.currentTarget.style.transform = ''
+                  e.currentTarget.style.boxShadow = ''
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: `${task.color}18`,
+                  color: task.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, flexShrink: 0,
+                }}>
+                  <i className={`fa ${task.icon}`} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1f2937', lineHeight: 1.3 }}>
+                    {task.title}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                    {task.subtitle}
+                  </div>
+                </div>
+                <i className="fa fa-arrow-right" style={{ color: task.color, fontSize: 11, flexShrink: 0, opacity: .7 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sin tareas → mensaje positivo */}
+      {!loading && todayTasks.length === 0 && rows.length > 0 && (
+        <div style={{
+          marginBottom: 14, padding: '11px 16px',
+          background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
+          border: '1px solid #86EFAC', borderRadius: 12,
+          display: 'flex', alignItems: 'center', gap: 10,
+          fontSize: 13, color: '#065F46',
+        }}>
+          <i className="fa fa-circle-check" style={{ color: '#10B981', fontSize: 16 }} />
+          <div>
+            <strong>Todo bajo control hoy.</strong>{' '}
+            <span style={{ opacity: .8 }}>Sin cobros pendientes ni trials a punto de cerrar.</span>
+          </div>
+        </div>
+      )}
+
       {/* ── Métricas headline ────────────────────────────────────────── */}
       <div className="admin-mgrid">
         <div className="admin-mcard">
@@ -552,12 +788,85 @@ export default function Admin() {
         </div>
       )}
 
+      {/* ── Bulk actions bar (solo tab billing con selección) ──────────── */}
+      {tab === 'billing' && selectedBilling.size > 0 && (
+        <div style={{
+          marginBottom: 10, padding: '12px 16px',
+          background: 'linear-gradient(135deg, #EDE9FE, #C7D2FE)',
+          border: '1.5px solid #A78BFA',
+          borderRadius: 12,
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          boxShadow: '0 4px 14px rgba(124,58,237,.12)',
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: 'linear-gradient(135deg, #7C3AED, #6366F1)',
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, flexShrink: 0,
+          }}>
+            <i className="fa fa-check" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#4C1D95' }}>
+              {selectedBilling.size} workspace{selectedBilling.size !== 1 ? 's' : ''} seleccionado{selectedBilling.size !== 1 ? 's' : ''}
+            </div>
+            <div style={{ fontSize: 11.5, color: '#6D28D9', opacity: .85, marginTop: 2 }}>
+              Total a cobrar: <strong>{fmtMoney(selectedBilling.size * MONTHLY_AMOUNT)}</strong>
+            </div>
+          </div>
+          <button
+            onClick={bulkGenerateLinks}
+            disabled={bulkProcessing}
+            style={{
+              padding: '9px 16px', borderRadius: 10, border: 'none',
+              background: 'linear-gradient(135deg, #25D366, #1eb955)',
+              color: '#fff', fontSize: 12.5, fontWeight: 700,
+              cursor: bulkProcessing ? 'wait' : 'pointer', fontFamily: 'inherit',
+              boxShadow: '0 4px 12px rgba(37,211,102,.35)',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              opacity: bulkProcessing ? .7 : 1,
+            }}
+          >
+            {bulkProcessing ? (
+              <><i className="fa fa-spinner fa-spin" /> Procesando…</>
+            ) : (
+              <><i className="fa-brands fa-whatsapp" /> Generar links + WhatsApp ({selectedBilling.size})</>
+            )}
+          </button>
+          <button
+            onClick={clearBillingSelection}
+            style={{
+              padding: '9px 14px', borderRadius: 10,
+              background: 'transparent', border: '1.5px solid #A78BFA',
+              color: '#6D28D9', fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            <i className="fa fa-xmark" /> Cancelar
+          </button>
+        </div>
+      )}
+
       {/* ── Tabla ───────────────────────────────────────────────────── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: tab === 'trials' ? 920 : tab === 'billing' ? 960 : 720 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: tab === 'trials' ? 920 : tab === 'billing' ? 980 : 720 }}>
             <thead>
               <tr style={{ background: 'var(--surface2)', textAlign: 'left' }}>
+                {tab === 'billing' && (
+                  <th style={{ ...th, width: 34, textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedBilling.size > 0 && selectedBilling.size === filtered.length}
+                      onChange={e => {
+                        if (e.target.checked) setSelectedBilling(new Set(filtered.map(w => w.id)))
+                        else clearBillingSelection()
+                      }}
+                      title="Seleccionar todos"
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </th>
+                )}
                 <th style={th}>Workspace</th>
                 {tab === 'trials' && <th style={{ ...th, textAlign: 'center' }}>Trial</th>}
                 {tab === 'trials' && <th style={{ ...th, textAlign: 'center' }}>Actividad</th>}
@@ -573,13 +882,13 @@ export default function Admin() {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: 'var(--txt3)' }}>
+                <tr><td colSpan={tab === 'billing' ? 9 : 8} style={{ padding: 24, textAlign: 'center', color: 'var(--txt3)' }}>
                   <i className="fa fa-spinner fa-spin" style={{ marginRight: 8 }} />
                   Cargando…
                 </td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: 32, textAlign: 'center', color: 'var(--txt3)' }}>
+                <tr><td colSpan={tab === 'billing' ? 9 : 8} style={{ padding: 32, textAlign: 'center', color: 'var(--txt3)' }}>
                   {tab === 'trials'  ? 'Sin trials por ahora — todo bajo control.' :
                    tab === 'billing' ? 'Sin cobros pendientes. ✓ Todo al día.' :
                    tab === 'paid'    ? 'Sin clientes pagos todavía.' :
@@ -596,7 +905,17 @@ export default function Admin() {
                   : w.plan !== 'solo' ? 'paid' : 'trial'
                 return (
                   <>
-                    <tr key={w.id} className="trial-row" style={{ borderTop: '1px solid var(--border)' }}>
+                    <tr key={w.id} className="trial-row" style={{ borderTop: '1px solid var(--border)', background: tab === 'billing' && selectedBilling.has(w.id) ? 'rgba(124,58,237,.06)' : undefined }}>
+                      {tab === 'billing' && (
+                        <td style={{ ...td, textAlign: 'center', width: 34 }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedBilling.has(w.id)}
+                            onChange={() => toggleBillingSelection(w.id)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        </td>
+                      )}
                       <td style={td}>
                         <div style={{ fontWeight: 600 }}>{w.name || 'Sin nombre'}</div>
                         <div style={{ fontSize: 11, color: 'var(--txt3)', fontFamily: 'monospace', marginTop: 2 }}>
