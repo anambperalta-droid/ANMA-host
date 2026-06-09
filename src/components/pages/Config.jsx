@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -152,6 +153,7 @@ export default function Config() {
   const { logout, changePassword, isGlobalAdmin, role } = useAuth()
   const toast   = useToast()
   const confirm = useConfirm()
+  const nav     = useNavigate()
   const [tab, setTab] = useState('identidad')
   const c = config()
 
@@ -1376,41 +1378,48 @@ export default function Config() {
               </button>
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-          <div className="card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-              <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff' }}>{(userName[0] || 'A').toUpperCase()}</div>
-              <div><div style={{ fontWeight: 700, fontSize: 16 }}>{userName}</div><div style={{ fontSize: 12, color: 'var(--txt3)' }}>Usuario activo</div></div>
+          {/* Banner: redirigir a Mi Cuenta para gestión de suscripción/password/datos */}
+          <div
+            onClick={() => nav('/mi-cuenta')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && nav('/mi-cuenta')}
+            style={{
+              background: 'linear-gradient(135deg, rgba(124,58,237,.08), rgba(217,70,239,.04))',
+              border: '1.5px solid rgba(124,58,237,.22)',
+              borderRadius: 14, padding: '14px 18px', marginBottom: 20,
+              display: 'flex', alignItems: 'center', gap: 14,
+              cursor: 'pointer', transition: 'all .15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#7C3AED' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(124,58,237,.22)' }}
+          >
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: 'linear-gradient(135deg, #7C3AED, #D946EF)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 18, flexShrink: 0,
+              boxShadow: '0 6px 16px rgba(124,58,237,.25)',
+            }}>
+              <i className="fa fa-user-gear" />
             </div>
-            <div className="fg"><label>Email de cuenta</label><input type="email" value={acctEmail} onChange={e => setAcctEmail(e.target.value)} /></div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt2)', letterSpacing: '.8px', textTransform: 'uppercase', margin: '8px 0 14px' }}>Cambiar contraseña</div>
-            <div className="fg">
-              <label>Nueva contraseña</label>
-              <div style={{ position: 'relative' }}>
-                <input type={showPass ? 'text' : 'password'} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Mínimo 6 caracteres" style={{ paddingRight: 36 }} />
-                <button type="button" onClick={() => setShowPass(v => !v)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, padding: 4 }} title={showPass ? 'Ocultar' : 'Mostrar'}>
-                  <i className={`fa ${showPass ? 'fa-eye-slash' : 'fa-eye'}`} />
-                </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--txt)' }}>
+                Mi suscripción · Contraseña · Datos personales
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
+                Tu plan ANMA, historial de pagos, cambiar tu password y descargar tus datos → <strong style={{ color: '#7C3AED' }}>Mi cuenta</strong>
               </div>
             </div>
-            <div className="fg">
-              <label>Repetir</label>
-              <div style={{ position: 'relative' }}>
-                <input type={showPass ? 'text' : 'password'} value={repPass} onChange={e => setRepPass(e.target.value)} placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" style={{ paddingRight: 36 }} />
-                <button type="button" onClick={() => setShowPass(v => !v)} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, padding: 4 }} title={showPass ? 'Ocultar' : 'Mostrar'}>
-                  <i className={`fa ${showPass ? 'fa-eye-slash' : 'fa-eye'}`} />
-                </button>
-              </div>
-            </div>
-            <button className="btn btn-primary btn-sm" onClick={handleChangePass}><i className="fa fa-key" /> Actualizar contraseña</button>
+            <i className="fa fa-arrow-right" style={{ color: '#7C3AED', fontSize: 13, flexShrink: 0 }} />
           </div>
+
           <div className="card">
             <div className="card-title" style={{ marginBottom: 16 }}>Sistema</div>
             {[['Versión', 'ANMA v3.0'], ['Clientes', get('clients').length], ['Presupuestos', get('budgets').length], ['Productos', get('products').length], ['Proveedores', get('suppliers').length]].map(([l, v], i) => (
               <div key={i} className="metric-row"><span className="mr-label">{l}</span><span className="mr-val">{v}</span></div>
             ))}
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button className="btn btn-secondary btn-sm" onClick={doBackup}><i className="fa fa-cloud-arrow-down" /> Exportar backup JSON</button>
               <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
                 <i className="fa fa-upload" /> Importar backup JSON
                 <input type="file" accept="application/json" onChange={doImport} style={{ display: 'none' }} />
@@ -1433,7 +1442,7 @@ export default function Config() {
               <button className="btn btn-ghost btn-sm" onClick={logout}><i className="fa fa-right-from-bracket" /> Cerrar sesión</button>
             </div>
           </div>
-          </div>{/* cierra grid 2 columnas */}
+          {/* (grid 2 cols eliminado) */}
         </div>
       )}
 

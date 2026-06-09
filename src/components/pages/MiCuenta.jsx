@@ -30,7 +30,7 @@ import {
  */
 
 export default function MiCuenta() {
-  const { user, role, changePassword } = useAuth()
+  const { user, role, changePassword, trial } = useAuth()
   const { config, get } = useData()
   const toast = useToast()
   const confirm = useConfirm()
@@ -259,16 +259,28 @@ export default function MiCuenta() {
         <div style={{
           background: 'rgba(255,255,255,.18)',
           border: '1px solid rgba(255,255,255,.3)',
-          padding: '6px 14px', borderRadius: 99,
+          padding: '7px 16px', borderRadius: 99,
           color: '#fff', fontSize: 12.5, fontWeight: 700,
           backdropFilter: 'blur(6px)',
+          display: 'inline-flex', alignItems: 'center', gap: 8,
         }}>
-          <i className="fa fa-circle" style={{ fontSize: 8, marginRight: 6, color: billing.urgency === 'paused' ? '#fca5a5' : billing.urgency === 'overdue' ? '#fbbf24' : '#86efac' }} />
-          {billing.status === STATUS.TRIAL ? 'Período de prueba' :
-           billing.status === STATUS.PENDING_SETUP ? 'Esperando setup' :
-           billing.status === STATUS.ACTIVE ? 'Al día' :
-           billing.status === STATUS.PENDING_PAYMENT ? 'Cuota pendiente' :
-           billing.status === STATUS.PAUSED ? 'Pausado' : billing.status}
+          <i className="fa fa-circle" style={{ fontSize: 8, color: billing.urgency === 'paused' ? '#fca5a5' : billing.urgency === 'overdue' ? '#fbbf24' : '#86efac' }} />
+          <span>
+            {billing.status === STATUS.TRIAL ? 'Período de prueba' :
+             billing.status === STATUS.PENDING_SETUP ? 'Esperando setup' :
+             billing.status === STATUS.ACTIVE ? 'Al día' :
+             billing.status === STATUS.PENDING_PAYMENT ? 'Cuota pendiente' :
+             billing.status === STATUS.PAUSED ? 'Pausado' : billing.status}
+          </span>
+          {billing.status === STATUS.TRIAL && trial?.daysLeft > 0 && (
+            <span style={{
+              background: 'rgba(255,255,255,.2)',
+              padding: '2px 9px', borderRadius: 99,
+              fontSize: 11, fontWeight: 800,
+            }}>
+              {trial.daysLeft}d
+            </span>
+          )}
         </div>
       </div>
 
@@ -325,8 +337,8 @@ export default function MiCuenta() {
             </div>
             <div className="mc-row">
               <span className="mc-row-lbl">Total pagado a la fecha</span>
-              <span className="mc-row-val" style={{ color: '#16A34A', fontWeight: 800 }}>
-                {fmtMoney(Number(workspace?.lifetime_revenue) || 0)}
+              <span className="mc-row-val" style={{ color: Number(workspace?.lifetime_revenue) > 0 ? '#16A34A' : 'var(--txt3)', fontWeight: 800 }}>
+                {Number(workspace?.lifetime_revenue) > 0 ? fmtMoney(Number(workspace.lifetime_revenue)) : 'Sin pagos aún'}
               </span>
             </div>
           </>
@@ -334,26 +346,55 @@ export default function MiCuenta() {
 
         {workspace?.subscription_status === STATUS.TRIAL && (
           <div style={{
-            marginTop: 14, padding: '12px 14px',
-            background: 'linear-gradient(135deg, rgba(5,150,105,.08), rgba(16,185,129,.04))',
-            border: '1px solid rgba(5,150,105,.2)', borderRadius: 10,
-            display: 'flex', alignItems: 'center', gap: 10,
+            marginTop: 14, padding: '14px 16px',
+            background: 'linear-gradient(135deg, rgba(5,150,105,.10), rgba(16,185,129,.04))',
+            border: '1px solid rgba(5,150,105,.22)', borderRadius: 12,
           }}>
-            <i className="fa fa-rocket" style={{ color: '#059669', fontSize: 18 }} />
-            <div style={{ flex: 1, fontSize: 12.5, color: 'var(--txt2)', lineHeight: 1.55 }}>
-              Estás en período de prueba. Activá tu plan para que tus datos no se pierdan después del día 7.
+            {/* Progress bar visual del trial */}
+            {trial?.daysLeft >= 0 && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <i className="fa fa-rocket" style={{ color: '#059669', fontSize: 13 }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#065F46', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                      Período de prueba
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: '#059669' }}>
+                    {trial.daysLeft === 1 ? 'Último día' : `${trial.daysLeft} días restantes`}
+                  </span>
+                </div>
+                <div style={{
+                  height: 6, background: 'rgba(5,150,105,.15)',
+                  borderRadius: 99, overflow: 'hidden', marginBottom: 12,
+                }}>
+                  <div style={{
+                    width: `${Math.max(0, Math.min(100, (trial.daysLeft / 7) * 100))}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #059669, #10B981)',
+                    transition: 'width .3s',
+                  }} />
+                </div>
+              </>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, fontSize: 12.5, color: 'var(--txt2)', lineHeight: 1.55, minWidth: 200 }}>
+                Activá tu plan ahora para mantener tus datos seguros después de los 7 días.
+              </div>
+              <button
+                onClick={() => nav('/activar')}
+                style={{
+                  padding: '10px 18px', borderRadius: 10, border: 'none',
+                  background: 'linear-gradient(135deg, #059669, #10b981)',
+                  color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                  fontFamily: 'inherit', flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(5,150,105,.3)',
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                }}
+              >
+                <i className="fa fa-bolt" /> Activar plan
+              </button>
             </div>
-            <button
-              onClick={() => nav('/activar')}
-              style={{
-                padding: '8px 14px', borderRadius: 8, border: 'none',
-                background: 'linear-gradient(135deg, #059669, #10b981)',
-                color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-                fontFamily: 'inherit', flexShrink: 0,
-              }}
-            >
-              Activar plan
-            </button>
           </div>
         )}
       </div>
@@ -409,9 +450,21 @@ export default function MiCuenta() {
             <i className="fa fa-spinner fa-spin" /> Cargando…
           </div>
         ) : payments.length === 0 ? (
-          <div style={{ padding: 28, textAlign: 'center', color: 'var(--txt3)', fontSize: 13 }}>
-            <i className="fa fa-inbox" style={{ fontSize: 22, opacity: .3, display: 'block', marginBottom: 8 }} />
-            Aún no hay pagos registrados.
+          <div style={{ padding: '36px 20px', textAlign: 'center' }}>
+            <div style={{
+              width: 60, height: 60, borderRadius: '50%',
+              background: 'linear-gradient(135deg, rgba(124,58,237,.10), rgba(99,102,241,.06))',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 12, color: '#7C3AED', fontSize: 22,
+            }}>
+              <i className="fa fa-receipt" />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 4 }}>
+              Aún no hay pagos registrados
+            </div>
+            <div style={{ fontSize: 12.5, color: 'var(--txt3)', maxWidth: 340, margin: '0 auto', lineHeight: 1.55 }}>
+              Cuando hagas tu primer pago (de ingreso o cuota mensual), aparecerá acá con su comprobante.
+            </div>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
