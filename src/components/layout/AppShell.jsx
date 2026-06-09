@@ -13,6 +13,7 @@ import BottomNav from './BottomNav'
 import BottomSheet, { BottomSheetItem } from './BottomSheet'
 import PWAInstall from './PWAInstall'
 import TrialBanner from './TrialBanner'
+import PaymentDueBanner from './PaymentDueBanner'
 import WelcomeTour from './WelcomeTour'
 import FirstBudgetCelebration from './FirstBudgetCelebration'
 import TrialReminderModal from './TrialReminderModal'
@@ -285,6 +286,7 @@ function AppShellInner() {
       {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
       <div className={`main${collapsed ? ' slim' : ''}`}>
         <TrialBanner />
+        <PaymentDueBanner />
         <Topbar onMenuClick={() => setSideOpen(!sideOpen)} onCollapseClick={toggleCollapsed} collapsed={collapsed} />
         <div className="content" id="main-content" role="main">
           <Suspense fallback={<RouteFallback />}>

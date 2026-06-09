@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useRealtimeSignups, ensureNotificationPermission, sendBrowserNotification } from '../../lib/useRealtimeSignups'
+import { getBillingStatus, STATUS, MONTHLY_AMOUNT, ONBOARDING_AMOUNT, buildPaymentReminderWAMessage, fmtMoney, fmtShortDate } from '../../lib/subscription'
 
 /**
  * ANMA Regalos — Admin global (cross-tenant)
@@ -96,7 +97,7 @@ export default function Admin() {
   const [expanded, setExpanded] = useState(null)
   const [members, setMembers] = useState({})
   const [notifPerm, setNotifPerm] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'denied')
-  const [recentSignups, setRecentSignups] = useState([])
+  const [recentSignups, setRecentSignups] = useState([])  // últimos signups detectados en vivo
   const toast = useToast()
 
   const load = useCallback(async () => {
@@ -113,10 +114,10 @@ export default function Admin() {
       ;(siteUsers || []).forEach(r => userActivity.set(r.user_id, { updated_at: r.updated_at, data: r.data }))
       const allowedWsIds = new Set(userActivity.keys())
 
-      // 2. Workspaces
+      // 2. Workspaces (con columnas de billing — requiere SUPABASE_MP_MIGRATION.sql aplicado)
       const { data: wss, error: e1 } = await supabase
         .from('workspaces')
-        .select('id, name, plan, seats_allowed, status, created_at')
+        .select('id, name, plan, seats_allowed, status, created_at, subscription_status, activated_at, next_payment_due_at, last_payment_at, lifetime_revenue, contact_email, contact_phone')
         .order('created_at', { ascending: false })
       if (e1) throw e1
       const scopedWss = (wss || []).filter(w => allowedWsIds.has(w.id))
@@ -138,7 +139,7 @@ export default function Admin() {
         byWs[m.workspace_id].push(m)
       })
 
-      // 4. Enriquecer cada workspace
+      // 4. Enriquecer cada workspace (trial + billing + temperature)
       const enriched = scopedWss.map(w => {
         const act = userActivity.get(w.id) || {}
         return {
@@ -147,6 +148,7 @@ export default function Admin() {
           last_activity: act.updated_at,
           trial: deriveTrialState(w),
           temp:  deriveTemperature(act.data),
+          billing: getBillingStatus(w),
         }
       })
 
@@ -162,6 +164,8 @@ export default function Admin() {
   useEffect(() => { if (isGlobalAdmin) load() }, [isGlobalAdmin, load])
 
   // ── Realtime: nuevos signups en vivo ──────────────────────────────────
+  // Solo activo si es admin global. El hook escucha INSERT en `workspaces`
+  // y dispara toast + browser notification + refresh.
   useRealtimeSignups((newWs) => {
     if (!newWs?.id) return
     const wsName = newWs.name || 'Nuevo workspace'
@@ -186,6 +190,95 @@ export default function Admin() {
       toast('Notificaciones activadas. Te avisaremos en vivo.', 'ok')
     } else if (perm === 'denied') {
       toast('Bloqueadas. Activalas desde la barra del navegador.', 'in')
+    }
+  }
+
+  // ── Generar link MP $30k (mensual) y abrir WhatsApp ─────────────────
+  // Llamamos a /api/mp-create-preference y devolvemos el init_point.
+  // El admin lo manda al cliente vía WhatsApp con un mensaje pre-cargado.
+  const generateMpLinkAndShare = async (w) => {
+    try {
+      toast(`Generando link MP para ${w.name}…`, 'in')
+      const resp = await fetch('/api/mp-create-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId: w.id,
+          kind: 'monthly',
+          userEmail: w.contact_email || undefined,
+        }),
+      })
+      const data = await resp.json()
+      if (!data.ok) throw new Error(data.message || 'Error generando link')
+      // Copiar al portapapeles + abrir WhatsApp con mensaje pre-cargado
+      try { await navigator.clipboard.writeText(data.init_point) } catch { /* ignorar */ }
+      const msg = buildPaymentReminderWAMessage({
+        workspaceName: w.name,
+        mpLink: data.init_point,
+        kind: 'monthly',
+      })
+      const phone = (w.contact_phone || '').replace(/[^\d]/g, '')
+      const waUrl = phone
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+        : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`
+      window.open(waUrl, '_blank')
+      toast('Link copiado + WhatsApp abierto', 'ok')
+    } catch (e) {
+      toast(`Error: ${e?.message || 'No se pudo generar el link'}`, 'er')
+    }
+  }
+
+  // ── Registrar pago manual (transferencia, efectivo) ─────────────────
+  const markAsPaid = async (w, kind = 'monthly') => {
+    const amount = kind === 'onboarding' ? ONBOARDING_AMOUNT : MONTHLY_AMOUNT
+    const label = kind === 'onboarding' ? 'pago de ingreso ($120.000)' : 'cuota mensual ($30.000)'
+    const notes = prompt(`Confirmar ${label} de "${w.name}".\n\nMétodo (transferencia / efectivo / otro):`)
+    if (notes === null) return  // cancelado
+    if (!confirm(`¿Registrar ${label} de "${w.name}"?\n\nEsto va a actualizar el estado del workspace.`)) return
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) { toast('Sin sesión activa', 'er'); return }
+      const resp = await fetch('/api/mark-paid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          workspaceId: w.id,
+          amount,
+          kind: 'manual',
+          notes: notes || `${label} manual`,
+        }),
+      })
+      const data = await resp.json()
+      if (!data.ok) throw new Error(data.message || 'Error')
+      toast(`Pago registrado: ${fmtMoney(amount)}`, 'ok')
+      await load()
+    } catch (e) {
+      toast(`Error: ${e?.message || 'No se pudo registrar el pago'}`, 'er')
+    }
+  }
+
+  // ── Ver historial de pagos del workspace ────────────────────────────
+  const [paymentHistoryFor, setPaymentHistoryFor] = useState(null)
+  const [paymentHistory, setPaymentHistory] = useState([])
+  const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false)
+  const showPaymentHistory = async (w) => {
+    setPaymentHistoryFor(w)
+    setPaymentHistoryLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('workspace_payments')
+        .select('*')
+        .eq('workspace_id', w.id)
+        .order('paid_at', { ascending: false })
+      if (error) throw error
+      setPaymentHistory(data || [])
+    } catch (e) {
+      toast(`Error cargando historial: ${e?.message || ''}`, 'er')
+    } finally {
+      setPaymentHistoryLoading(false)
     }
   }
 
@@ -231,30 +324,41 @@ export default function Admin() {
   // ── Filtrado por tab ───────────────────────────────────────────────────
   const filtered = useMemo(() => {
     if (tab === 'trials') {
-      // Trials activos + recientemente vencidos (recovery window), ordenados por urgencia
       return rows
         .filter(w => w.trial.isTrial)
         .sort((a, b) => {
-          // Prioridad: last (vence hoy) > hot > warm > fresh > expired
           const order = { last: 0, hot: 1, warm: 2, fresh: 3, expired: 4 }
           return (order[a.trial.urgency] ?? 99) - (order[b.trial.urgency] ?? 99)
         })
     }
-    if (tab === 'paid') {
-      return rows.filter(w => w.plan !== 'solo' || (w.plan === 'solo' && !w.trial.isTrial && w.trial.urgency === 'lost'))
-                 .filter(w => w.plan !== 'solo')
+    if (tab === 'billing') {
+      // COBROS: workspaces activos/vencidos (NO trials), priorizados por urgencia
+      return rows
+        .filter(w => [STATUS.ACTIVE, STATUS.PENDING_PAYMENT, STATUS.PAUSED, STATUS.PENDING_SETUP].includes(w.billing.status))
+        .sort((a, b) => {
+          // Prioridad: paused (urgente recovery) > overdue > hot > warm > ok > fresh
+          const order = { paused: 0, overdue: 1, hot: 2, warm: 3, ok: 4, fresh: 5 }
+          return (order[a.billing.urgency] ?? 99) - (order[b.billing.urgency] ?? 99)
+        })
     }
-    return rows  // 'all'
+    if (tab === 'paid') {
+      return rows.filter(w => w.billing.isPaying)
+    }
+    return rows
   }, [rows, tab])
 
   // ── Métricas headline ──────────────────────────────────────────────────
   const metrics = useMemo(() => {
     const trialsActivos = rows.filter(w => w.trial.isTrial && w.trial.daysLeft >= 0).length
     const vencenPronto  = rows.filter(w => w.trial.isTrial && w.trial.daysLeft >= 0 && w.trial.daysLeft <= 2).length
-    const pagados       = rows.filter(w => w.plan !== 'solo' && w.status === 'active').length
-    const convertidos30 = rows.filter(w => w.plan !== 'solo' && daysSince(w.created_at) <= 30).length
     const hotProspects  = rows.filter(w => w.trial.isTrial && w.trial.daysLeft >= 0 && w.temp.level === 'hot').length
-    return { trialsActivos, vencenPronto, pagados, convertidos30, hotProspects }
+    // Cobros
+    const pagados        = rows.filter(w => w.billing.isPaying).length
+    const cuotasVencidas = rows.filter(w => [STATUS.PENDING_PAYMENT, STATUS.PAUSED].includes(w.billing.status)).length
+    const vencenSemana   = rows.filter(w => w.billing.status === STATUS.ACTIVE && w.billing.daysUntilDue !== null && w.billing.daysUntilDue >= 0 && w.billing.daysUntilDue <= 7).length
+    const mrrPotencial   = pagados * MONTHLY_AMOUNT
+    const revenueTotal   = rows.reduce((sum, w) => sum + (Number(w.lifetime_revenue) || 0), 0)
+    return { trialsActivos, vencenPronto, hotProspects, pagados, cuotasVencidas, vencenSemana, mrrPotencial, revenueTotal }
   }, [rows])
 
   if (!isGlobalAdmin) {
@@ -316,7 +420,7 @@ export default function Admin() {
             <button
               className="btn btn-secondary"
               onClick={enableNotifs}
-              title={notifPerm === 'denied' ? 'Notificaciones bloqueadas en el navegador' : 'Activar notificaciones del navegador'}
+              title={notifPerm === 'denied' ? 'Notificaciones bloqueadas en el navegador — activalas manualmente' : 'Activar notificaciones del navegador'}
               style={notifPerm === 'denied' ? { opacity: .7 } : { background: 'rgba(124,58,237,.08)', color: '#7C3AED', borderColor: 'rgba(124,58,237,.25)' }}
             >
               <i className={`fa ${notifPerm === 'denied' ? 'fa-bell-slash' : 'fa-bell'}`} style={{ marginRight: 6 }} />
@@ -335,12 +439,16 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Banner de signups recientes detectados en esta sesión */}
       {recentSignups.length > 0 && (
         <div style={{ marginBottom: 14, padding: '10px 14px', background: 'linear-gradient(90deg, rgba(124,58,237,.08), rgba(99,102,241,.05))', border: '1px solid rgba(124,58,237,.25)', borderRadius: 10, fontSize: 12.5, color: 'var(--txt2)' }}>
           <i className="fa fa-bolt" style={{ color: '#7C3AED', marginRight: 6 }} />
           <strong>{recentSignups.length} signup{recentSignups.length !== 1 ? 's' : ''} en esta sesión:</strong>{' '}
           {recentSignups.slice(0, 3).map((s, i) => (
-            <span key={s.id}>{i > 0 && ' · '}{s.name}</span>
+            <span key={s.id}>
+              {i > 0 && ' · '}
+              {s.name}
+            </span>
           ))}
           {recentSignups.length > 3 && ` +${recentSignups.length - 3} más`}
           <button onClick={() => setRecentSignups([])} style={{ marginLeft: 10, background: 'transparent', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 11 }}>
@@ -380,6 +488,17 @@ export default function Admin() {
             <div className="admin-mcard-lbl">Prospectos calientes</div>
           </div>
         </div>
+        <div className="admin-mcard" onClick={() => setTab('billing')} style={{ cursor: 'pointer' }} title="Ver tab Cobros">
+          <div className="admin-mcard-ico" style={{ background: 'rgba(220,38,38,.12)', color: '#DC2626' }}>
+            <i className="fa fa-exclamation-circle" />
+          </div>
+          <div>
+            <div className="admin-mcard-val" style={{ color: metrics.cuotasVencidas > 0 ? '#DC2626' : undefined }}>
+              {metrics.cuotasVencidas}
+            </div>
+            <div className="admin-mcard-lbl">Cuotas vencidas</div>
+          </div>
+        </div>
         <div className="admin-mcard">
           <div className="admin-mcard-ico" style={{ background: 'rgba(22,163,74,.12)', color: '#16A34A' }}>
             <i className="fa fa-check-circle" />
@@ -390,12 +509,21 @@ export default function Admin() {
           </div>
         </div>
         <div className="admin-mcard">
+          <div className="admin-mcard-ico" style={{ background: 'rgba(124,58,237,.12)', color: '#7C3AED' }}>
+            <i className="fa fa-dollar-sign" />
+          </div>
+          <div>
+            <div className="admin-mcard-val" style={{ fontSize: 18 }}>{fmtMoney(metrics.mrrPotencial)}</div>
+            <div className="admin-mcard-lbl">MRR potencial</div>
+          </div>
+        </div>
+        <div className="admin-mcard">
           <div className="admin-mcard-ico" style={{ background: 'rgba(99,102,241,.12)', color: '#6366F1' }}>
             <i className="fa fa-chart-line" />
           </div>
           <div>
-            <div className="admin-mcard-val">{metrics.convertidos30}</div>
-            <div className="admin-mcard-lbl">Convertidos · 30d</div>
+            <div className="admin-mcard-val" style={{ fontSize: 18 }}>{fmtMoney(metrics.revenueTotal)}</div>
+            <div className="admin-mcard-lbl">Revenue total</div>
           </div>
         </div>
       </div>
@@ -405,8 +533,13 @@ export default function Admin() {
         <button className={`admin-tab ${tab === 'trials' ? 'active' : ''}`} onClick={() => setTab('trials')}>
           <i className="fa fa-rocket" /> Trials <span className="chip">{rows.filter(w => w.trial.isTrial).length}</span>
         </button>
+        <button className={`admin-tab ${tab === 'billing' ? 'active' : ''}`} onClick={() => setTab('billing')}>
+          <i className="fa fa-credit-card" /> Cobros
+          {metrics.cuotasVencidas > 0 && <span className="chip" style={{ background: '#DC2626' }}>{metrics.cuotasVencidas}</span>}
+          {metrics.cuotasVencidas === 0 && <span className="chip">{rows.filter(w => [STATUS.ACTIVE, STATUS.PENDING_PAYMENT, STATUS.PAUSED, STATUS.PENDING_SETUP].includes(w.billing.status)).length}</span>}
+        </button>
         <button className={`admin-tab ${tab === 'paid' ? 'active' : ''}`} onClick={() => setTab('paid')}>
-          <i className="fa fa-credit-card" /> Pagados <span className="chip">{rows.filter(w => w.plan !== 'solo').length}</span>
+          <i className="fa fa-check" /> Pagados <span className="chip">{metrics.pagados}</span>
         </button>
         <button className={`admin-tab ${tab === 'all' ? 'active' : ''}`} onClick={() => setTab('all')}>
           <i className="fa fa-list" /> Todos <span className="chip">{rows.length}</span>
@@ -422,30 +555,34 @@ export default function Admin() {
       {/* ── Tabla ───────────────────────────────────────────────────── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: tab === 'trials' ? 920 : 720 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: tab === 'trials' ? 920 : tab === 'billing' ? 960 : 720 }}>
             <thead>
               <tr style={{ background: 'var(--surface2)', textAlign: 'left' }}>
                 <th style={th}>Workspace</th>
                 {tab === 'trials' && <th style={{ ...th, textAlign: 'center' }}>Trial</th>}
                 {tab === 'trials' && <th style={{ ...th, textAlign: 'center' }}>Actividad</th>}
                 {tab === 'trials' && <th style={{ ...th, textAlign: 'center' }}>Últ. uso</th>}
-                <th style={th}>Plan</th>
-                {tab !== 'trials' && <th style={{ ...th, textAlign: 'center' }}>Seats</th>}
+                {tab === 'billing' && <th style={{ ...th, textAlign: 'center' }}>Cobro</th>}
+                {tab === 'billing' && <th style={{ ...th, textAlign: 'center' }}>Próximo</th>}
+                {tab === 'billing' && <th style={{ ...th, textAlign: 'right' }}>Revenue</th>}
+                {tab !== 'billing' && <th style={th}>Plan</th>}
+                {tab !== 'trials' && tab !== 'billing' && <th style={{ ...th, textAlign: 'center' }}>Seats</th>}
                 <th style={{ ...th, textAlign: 'center' }}>Estado</th>
                 <th style={{ ...th, textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={tab === 'trials' ? 7 : 5} style={{ padding: 24, textAlign: 'center', color: 'var(--txt3)' }}>
+                <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: 'var(--txt3)' }}>
                   <i className="fa fa-spinner fa-spin" style={{ marginRight: 8 }} />
                   Cargando…
                 </td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={tab === 'trials' ? 7 : 5} style={{ padding: 32, textAlign: 'center', color: 'var(--txt3)' }}>
-                  {tab === 'trials' ? 'Sin trials por ahora — todo bajo control.' :
-                   tab === 'paid'   ? 'Sin clientes pagos todavía.' :
+                <tr><td colSpan={8} style={{ padding: 32, textAlign: 'center', color: 'var(--txt3)' }}>
+                  {tab === 'trials'  ? 'Sin trials por ahora — todo bajo control.' :
+                   tab === 'billing' ? 'Sin cobros pendientes. ✓ Todo al día.' :
+                   tab === 'paid'    ? 'Sin clientes pagos todavía.' :
                    'Sin workspaces.'}
                 </td></tr>
               )}
@@ -486,12 +623,34 @@ export default function Admin() {
                           </td>
                         </>
                       )}
-                      <td style={td}>
-                        <select value={w.plan} onChange={e => changePlan(w.id, e.target.value)} style={sel}>
-                          {PLANS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-                        </select>
-                      </td>
-                      {tab !== 'trials' && (
+                      {tab === 'billing' && (
+                        <>
+                          <td style={{ ...td, textAlign: 'center' }}>
+                            <span className="urgency-pill" style={{ background: w.billing.tone.bg, color: w.billing.tone.fg }}>
+                              {w.billing.urgency === 'paused'  ? <i className="fa fa-pause" /> :
+                               w.billing.urgency === 'overdue' ? <i className="fa fa-fire" /> :
+                               w.billing.urgency === 'hot'     ? <i className="fa fa-exclamation" /> :
+                               w.billing.urgency === 'warm'    ? <i className="fa fa-hourglass-half" /> :
+                               <i className="fa fa-check" />}
+                              {w.billing.label}
+                            </span>
+                          </td>
+                          <td style={{ ...td, textAlign: 'center', fontSize: 12, color: 'var(--txt2)' }}>
+                            {w.next_payment_due_at ? fmtShortDate(w.next_payment_due_at) : '—'}
+                          </td>
+                          <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--txt)' }}>
+                            {fmtMoney(Number(w.lifetime_revenue) || 0)}
+                          </td>
+                        </>
+                      )}
+                      {tab !== 'billing' && (
+                        <td style={td}>
+                          <select value={w.plan} onChange={e => changePlan(w.id, e.target.value)} style={sel}>
+                            {PLANS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+                          </select>
+                        </td>
+                      )}
+                      {tab !== 'trials' && tab !== 'billing' && (
                         <td style={{ ...td, textAlign: 'center' }}>
                           <input
                             type="number" min={0} value={w.seats_allowed}
@@ -512,15 +671,31 @@ export default function Admin() {
                       </td>
                       <td style={{ ...td, textAlign: 'right' }}>
                         <div className="trial-actions" style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                          <a href={waLink(w.name, waKind)} target="_blank" rel="noopener noreferrer" className="wa-btn">
-                            <i className="fa-brands fa-whatsapp" /> WhatsApp
-                          </a>
-                          <button onClick={() => setExpanded(isOpen ? null : w.id)} title="Ver miembros">
-                            <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} /> Miembros
-                          </button>
-                          <button onClick={() => toggleStatus(w.id, w.status)} title={w.status === 'active' ? 'Pausar' : 'Activar'}>
-                            <i className={`fa fa-${w.status === 'active' ? 'pause' : 'play'}`} />
-                          </button>
+                          {tab === 'billing' ? (
+                            <>
+                              <button onClick={() => generateMpLinkAndShare(w)} className="wa-btn" title="Generar link MP $30k y abrir WhatsApp">
+                                <i className="fa-brands fa-whatsapp" /> Cobrar $30k
+                              </button>
+                              <button onClick={() => markAsPaid(w, 'monthly')} title="Registrar pago manual (transferencia / efectivo)">
+                                <i className="fa fa-check" /> Marcar pagado
+                              </button>
+                              <button onClick={() => showPaymentHistory(w)} title="Ver historial de pagos">
+                                <i className="fa fa-clock-rotate-left" /> Historial
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <a href={waLink(w.name, waKind)} target="_blank" rel="noopener noreferrer" className="wa-btn">
+                                <i className="fa-brands fa-whatsapp" /> WhatsApp
+                              </a>
+                              <button onClick={() => setExpanded(isOpen ? null : w.id)} title="Ver miembros">
+                                <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} /> Miembros
+                              </button>
+                              <button onClick={() => toggleStatus(w.id, w.status)} title={w.status === 'active' ? 'Pausar' : 'Activar'}>
+                                <i className={`fa fa-${w.status === 'active' ? 'pause' : 'play'}`} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -569,6 +744,118 @@ export default function Admin() {
           <span style={{ color: '#DC2626' }}>1-3d</span> contactar urgente ·{' '}
           <span style={{ color: '#D97706' }}>4-5d</span> a tiempo ·{' '}
           🔥 caliente (cargó muchos datos, alta intención) · ❄️ frío (sin uso, probablemente abandone)
+        </div>
+      )}
+      {tab === 'billing' && filtered.length > 0 && (
+        <div style={{ marginTop: 14, padding: '10px 14px', background: 'var(--surface2)', borderRadius: 10, fontSize: 11.5, color: 'var(--txt3)', lineHeight: 1.6 }}>
+          <strong style={{ color: 'var(--txt2)' }}>Acciones:</strong>{' '}
+          <strong style={{ color: '#25D366' }}>Cobrar $30k</strong> genera link MP + abre WhatsApp con mensaje precargado ·{' '}
+          <strong style={{ color: '#7C3AED' }}>Marcar pagado</strong> registra pago manual (transferencia/efectivo) ·{' '}
+          <strong style={{ color: '#6B7280' }}>Historial</strong> muestra todos los pagos del workspace
+        </div>
+      )}
+
+      {/* ═══ Modal: historial de pagos ═══ */}
+      {paymentHistoryFor && (
+        <div
+          onClick={() => setPaymentHistoryFor(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9998,
+            background: 'rgba(15,12,60,.6)',
+            backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--surface)', borderRadius: 16,
+              maxWidth: 720, width: '100%', maxHeight: '85vh',
+              boxShadow: '0 25px 70px rgba(15,12,60,.3)',
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              padding: '18px 22px', borderBottom: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'var(--surface2)',
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--txt)' }}>
+                  <i className="fa fa-clock-rotate-left" style={{ marginRight: 8, color: '#7C3AED' }} />
+                  Historial de pagos
+                </h3>
+                <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
+                  {paymentHistoryFor.name} · Total acumulado: <strong style={{ color: 'var(--txt)' }}>{fmtMoney(Number(paymentHistoryFor.lifetime_revenue) || 0)}</strong>
+                </div>
+              </div>
+              <button onClick={() => setPaymentHistoryFor(null)} aria-label="Cerrar" style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: 'transparent', border: 'none', color: 'var(--txt3)',
+                cursor: 'pointer', fontSize: 14,
+              }}>
+                <i className="fa fa-xmark" />
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 22px 22px' }}>
+              {paymentHistoryLoading ? (
+                <div style={{ padding: 32, textAlign: 'center', color: 'var(--txt3)' }}>
+                  <i className="fa fa-spinner fa-spin" style={{ marginRight: 8 }} /> Cargando…
+                </div>
+              ) : paymentHistory.length === 0 ? (
+                <div style={{ padding: 32, textAlign: 'center', color: 'var(--txt3)' }}>
+                  <i className="fa fa-inbox" style={{ fontSize: 28, marginBottom: 8, opacity: .4, display: 'block' }} />
+                  Sin pagos registrados todavía.
+                </div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--surface2)', textAlign: 'left' }}>
+                      <th style={th}>Fecha</th>
+                      <th style={th}>Concepto</th>
+                      <th style={{ ...th, textAlign: 'right' }}>Monto</th>
+                      <th style={{ ...th, textAlign: 'center' }}>Estado</th>
+                      <th style={th}>Método</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paymentHistory.map(p => {
+                      const kindLabel = p.kind === 'onboarding' ? 'Pago de ingreso' : p.kind === 'monthly' ? 'Cuota mensual' : p.kind === 'manual' ? 'Pago manual' : p.kind
+                      const statusOk = p.mp_status === 'approved' || p.mp_status === 'manual_confirmed'
+                      return (
+                        <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
+                          <td style={{ ...td, fontSize: 12, color: 'var(--txt2)' }}>
+                            {new Date(p.paid_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </td>
+                          <td style={{ ...td, fontWeight: 600 }}>
+                            {kindLabel}
+                            {p.notes && <div style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 400, marginTop: 2 }}>{p.notes}</div>}
+                          </td>
+                          <td style={{ ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: '#059669' }}>
+                            {fmtMoney(Number(p.amount) || 0)}
+                          </td>
+                          <td style={{ ...td, textAlign: 'center' }}>
+                            <span style={{
+                              fontSize: 10.5, fontWeight: 700, padding: '3px 8px', borderRadius: 99,
+                              background: statusOk ? 'rgba(22,163,74,.12)' : 'rgba(217,119,6,.12)',
+                              color: statusOk ? '#16A34A' : '#D97706',
+                            }}>
+                              {p.mp_status || 'pendiente'}
+                            </span>
+                          </td>
+                          <td style={{ ...td, fontSize: 11.5, color: 'var(--txt3)' }}>
+                            {p.mp_payment_method || (p.kind === 'manual' ? 'Manual' : '—')}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
