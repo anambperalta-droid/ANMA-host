@@ -1492,8 +1492,10 @@ td b{color:var(--txt);font-weight:600}
   .wiz-pane-title{font-size:13px!important;line-height:1.2!important}
   .wiz-pane-sub{font-size:11px!important}
   .calc-panel{display:none!important}
-  /* Inputs/selects: full-width (excl. checkbox) */
-  .wiz-pane{padding:12px 16px 220px!important}
+  /* Inputs/selects: full-width (excl. checkbox)
+     padding-bottom 260px: reserva para las 3 barras flotantes apiladas
+     (bottom-nav + wiz-nav + barra TOTAL) — evita que tapen contenido. */
+  .wiz-pane{padding:12px 16px 260px!important}
   .wiz-pane input:not([type=checkbox]),.wiz-pane select{min-height:46px!important;width:100%!important;box-sizing:border-box!important}
   /* Paso 2: tabla → cards compactos (anma-regalos: 7 cols: drag|name|qty|cost|price|sub|del) */
   .items-scroll{overflow-x:visible!important}
