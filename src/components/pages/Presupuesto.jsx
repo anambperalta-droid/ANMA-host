@@ -1644,13 +1644,29 @@ export default function Presupuesto() {
       }
       .logi-parada-row:last-child{border-bottom:none!important}
       @media(max-width:640px){
+        /* Parada: descripción full arriba; tipo + costo lado a lado abajo.
+           Inputs con caja visible y altura uniforme — sin números flotando. */
         .logi-parada-row{
           display:flex!important;flex-wrap:wrap!important;
-          padding:10px 4px!important;
+          gap:8px!important;padding:10px 4px!important;align-items:center!important;
         }
-        .logi-parada-row > select{flex:1 1 60%!important}
-        .logi-parada-row > input[type=text]{flex:1 1 100%!important}
-        .logi-parada-row > input[type=number]{flex:1 1 50%!important}
+        .logi-parada-row > input[type=text]{
+          flex:1 1 100%!important;order:1!important;
+          min-height:42px!important;padding:0 12px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
+        }
+        .logi-parada-row > select{
+          flex:1 1 52%!important;order:2!important;min-width:0!important;
+          min-height:42px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
+        }
+        .logi-parada-row > input[type=number]{
+          flex:1 1 32%!important;order:3!important;min-width:0!important;
+          min-height:42px!important;text-align:right!important;font-weight:700!important;
+          padding:0 10px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
+        }
+        .logi-parada-row > button{order:4!important;opacity:1!important}
       }
       /* Botón Agregar minimalista — más sutil */
       .tbl-add-btn{
@@ -1725,6 +1741,14 @@ export default function Presupuesto() {
           background:#fff!important;border:1px solid #E8EAF2!important;
           border-radius:10px!important;align-items:center!important;
           margin:0!important;
+        }
+        /* FIX especificidad: la regla base hace los inputs transparentes
+           (.kit-tbl-row input[type=text] es más específica que :nth-child).
+           En mobile los números quedaban "flotando" sin caja → desfasado.
+           Esta regla, con la misma especificidad y después en cascada, gana. */
+        .kit-tbl-row input[type=text],.kit-tbl-row input[type=number],
+        .simple-tbl-row input[type=text],.simple-tbl-row input[type=number]{
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
         }
         /* 1: drag icon — oculto en mobile (no usable con dedo) */
         .kit-tbl-row > :nth-child(1){display:none!important}
@@ -2690,8 +2714,9 @@ export default function Presupuesto() {
                   </div>
                 </div>
 
-                {/* Fila 3: Parámetros financieros — todos en una línea */}
-                <div className={feats.descuentoCliente ? 'grid3' : 'grid2'} style={{ marginTop: 4 }}>
+                {/* Fila 3: Parámetros financieros — todos en una línea (wiz-money-grid
+                    los mantiene lado a lado también en mobile, igual que Pro) */}
+                <div className={`wiz-money-grid ${feats.descuentoCliente ? 'grid3' : 'grid2'}`} style={{ marginTop: 4 }}>
                   <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" /></div>
                   <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
                   {feats.descuentoCliente && (
