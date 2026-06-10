@@ -72,11 +72,27 @@ export default function Bienvenida() {
         return
       }
 
+      // detectSessionInUrl:true puede consumir el ?code= automáticamente →
+      // el exchange manual falla con "already used" aunque la sesión exista.
+      // Chequear sesión antes y después para no mostrar un error falso.
       const code = params.get('code')
       if (code) {
+        let { data: { session: preSession } } = await supabase.auth.getSession()
+        if (preSession) {
+          window.history.replaceState(null, '', window.location.pathname)
+          if (await finishAuth()) return
+          setSessionReady(true); setLoading(false); return
+        }
         const { error: codeErr } = await supabase.auth.exchangeCodeForSession(code)
         if (codeErr) {
           logAuth('pkce-error', codeErr)
+          await new Promise(r => setTimeout(r, 600))
+          const { data: { session: postSession } } = await supabase.auth.getSession()
+          if (postSession) {
+            window.history.replaceState(null, '', window.location.pathname)
+            if (await finishAuth()) return
+            setSessionReady(true); setLoading(false); return
+          }
           setError('El enlace expiró o ya fue usado. Pedí uno nuevo desde Ingresar.')
           setLoading(false); return
         }
