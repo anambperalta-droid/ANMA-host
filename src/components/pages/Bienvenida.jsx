@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { passwordStrength } from '../../lib/validate'
 
+function isInAppBrowser() {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  return /FBAN|FBAV|Instagram|Line\/|MicroMessenger|GSA\/|Pinterest|TikTok/i.test(ua)
+    || (/iPhone|iPad/i.test(ua) && /Mobile\/\w+ (?!Safari)/i.test(ua))
+}
+function logAuth(stage, info) {
+  try { console.log(`[anma-regalos-auth] ${stage}`, info) } catch { /* ignorar */ }
+}
+
 const STRENGTH_LABELS = ['', 'Débil', 'Aceptable', 'Buena', 'Excelente']
 const STRENGTH_COLORS = ['#E5E7EB', '#DC2626', '#D97706', '#10B981', '#059669']
 
@@ -34,100 +44,120 @@ export default function Bienvenida() {
     return false
   }
 
+  const [authFlow, setAuthFlow] = useState(null)
+
   useEffect(() => {
     async function detectSession() {
-      // 1) PKCE flow: ?code= in query params
       const url = new URL(window.location.href)
-      const code = url.searchParams.get('code')
+      const params = url.searchParams
+      const hash = window.location.hash || ''
+      logAuth('start', { href: window.location.href })
+
+      const errorParam = params.get('error') || params.get('error_code')
+      const errorDesc = params.get('error_description')
+      if (errorParam) {
+        const desc = (errorDesc || '').toLowerCase()
+        setError(
+          desc.includes('expired') ? 'El enlace expiró. Pedí uno nuevo desde Ingresar → ¿La olvidaste?'
+          : desc.includes('used') ? 'Este enlace ya fue usado. Pedí uno nuevo.'
+          : (errorDesc || 'El enlace no es válido. Pedí uno nuevo.')
+        )
+        setLoading(false)
+        return
+      }
+
+      if (isInAppBrowser() && (params.get('code') || params.get('token_hash') || params.get('token') || hash.includes('access_token'))) {
+        setError('Abrí este enlace en Safari o Chrome (no en Gmail/Instagram). Tocá los 3 puntos → "Abrir en navegador".')
+        setLoading(false)
+        return
+      }
+
+      const code = params.get('code')
       if (code) {
         const { error: codeErr } = await supabase.auth.exchangeCodeForSession(code)
         if (codeErr) {
-          setError('El enlace expiró o es inválido. Volvé a /login para reintentar.')
-          setLoading(false)
-          return
+          logAuth('pkce-error', codeErr)
+          setError('El enlace expiró o ya fue usado. Pedí uno nuevo desde Ingresar.')
+          setLoading(false); return
         }
         window.history.replaceState(null, '', window.location.pathname)
         if (await finishAuth()) return
-        setSessionReady(true)
-        setLoading(false)
-        return
+        setSessionReady(true); setLoading(false); return
       }
 
-      // 2) Implicit flow: #access_token= in hash (legacy OAuth)
-      const hash = window.location.hash
       if (hash && hash.includes('access_token')) {
-        const params = new URLSearchParams(hash.substring(1))
-        const accessToken = params.get('access_token')
-        const refreshToken = params.get('refresh_token')
+        const hp = new URLSearchParams(hash.substring(1))
+        const accessToken = hp.get('access_token')
+        const refreshToken = hp.get('refresh_token')
+        const hashType = hp.get('type')
+        if (hashType) setAuthFlow(hashType)
         if (accessToken && refreshToken) {
           const { error: sessErr } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
+            access_token: accessToken, refresh_token: refreshToken,
           })
           if (sessErr) {
-            setError('El enlace expiró o es inválido. Volvé a /login.')
-            setLoading(false)
-            return
+            setError('El enlace expiró o ya fue usado. Pedí uno nuevo desde Ingresar.')
+            setLoading(false); return
           }
           window.history.replaceState(null, '', window.location.pathname)
-          if (await finishAuth()) return
-          setSessionReady(true)
-          setLoading(false)
-          return
+          if (hashType !== 'recovery' && await finishAuth()) return
+          setSessionReady(true); setLoading(false); return
         }
       }
 
-      // 3) Token hash flow (email OTP / invitation)
-      const tokenHash = url.searchParams.get('token_hash')
-      const type = url.searchParams.get('type')
+      const tokenHash = params.get('token_hash')
+      const type = params.get('type')
       if (tokenHash && type) {
-        const { error: otpErr } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: type,
-        })
+        setAuthFlow(type)
+        const { error: otpErr } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
         if (otpErr) {
-          setError('El enlace expiró o es inválido. Solicitá uno nuevo.')
-          setLoading(false)
-          return
+          const m = String(otpErr.message || '').toLowerCase()
+          setError(
+            m.includes('expired') ? 'Este enlace expiró. Pedí uno nuevo.'
+            : m.includes('invalid') || m.includes('used') ? 'Este enlace ya fue usado. Pedí uno nuevo desde Ingresar.'
+            : 'El enlace es inválido. Pedí uno nuevo desde Ingresar.'
+          )
+          setLoading(false); return
         }
         window.history.replaceState(null, '', window.location.pathname)
-        setSessionReady(true)
-        setLoading(false)
-        return
+        setSessionReady(true); setLoading(false); return
       }
 
-      // 4) Sesión ya activa
+      const legacyToken = params.get('token')
+      if (legacyToken && type) {
+        setAuthFlow(type)
+        const { error: legacyErr } = await supabase.auth.verifyOtp({ token_hash: legacyToken, type })
+        if (legacyErr) {
+          setError('El enlace expiró o ya fue usado. Pedí uno nuevo desde Ingresar.')
+          setLoading(false); return
+        }
+        window.history.replaceState(null, '', window.location.pathname)
+        setSessionReady(true); setLoading(false); return
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        if (isOAuthSession(session)) {
-          navigate('/', { replace: true })
-          return
-        }
-        setSessionReady(true)
-        setLoading(false)
-        return
+        if (isOAuthSession(session)) { navigate('/', { replace: true }); return }
+        setSessionReady(true); setLoading(false); return
       }
 
-      // 5) Let Supabase auto-detect from URL (fallback)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
-          setSessionReady(true)
-          setLoading(false)
+          setSessionReady(true); setLoading(false)
           subscription.unsubscribe()
         }
       })
 
-      // Timeout: if nothing detected in 3s, show error
       setTimeout(() => {
         setLoading((prev) => {
           if (prev) {
-            setError('No se detecto una invitacion valida. Solicita un nuevo enlace al administrador.')
+            setError('No detectamos una sesión válida. Pedí un enlace nuevo desde Ingresar.')
             subscription.unsubscribe()
             return false
           }
           return prev
         })
-      }, 3000)
+      }, 6000)
     }
 
     detectSession()
@@ -190,8 +220,23 @@ export default function Bienvenida() {
       <div style={styles.container}>
         <div style={styles.card} className="bv-card">
           <div style={styles.logo}>AN</div>
-          <h1 style={styles.title} className="bv-title">Enlace Invalido</h1>
+          <h1 style={styles.title} className="bv-title">Enlace no válido</h1>
           <p style={styles.subtitle}>{error}</p>
+          <button
+            onClick={() => window.location.replace('/login')}
+            style={{
+              marginTop: 16, width: '100%', padding: '12px 18px',
+              background: 'linear-gradient(135deg,#EC4899,#A855F7)',
+              color: '#fff', border: 'none', borderRadius: 10,
+              fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(236,72,153,.35)',
+            }}>
+            <i className="fa fa-arrow-right-to-bracket" style={{ marginRight: 8 }} />
+            Volver a Ingresar
+          </button>
+          <p style={{ marginTop: 14, fontSize: 11, color: 'rgba(255,255,255,.4)', textAlign: 'center', lineHeight: 1.5 }}>
+            Si seguís sin poder entrar, escribinos por WhatsApp y te ayudamos.
+          </p>
         </div>
       </div>
     )
@@ -208,8 +253,14 @@ export default function Bienvenida() {
       `}</style>
       <div style={styles.card} className="bv-card">
         <div style={styles.logo}>AN</div>
-        <h1 style={styles.title} className="bv-title">Bienvenido a ANMA</h1>
-        <p style={styles.subtitle}>Elige tu contraseña para comenzar</p>
+        <h1 style={styles.title} className="bv-title">
+          {authFlow === 'recovery' ? 'Elegí tu nueva contraseña' : 'Bienvenido a ANMA Regalos'}
+        </h1>
+        <p style={styles.subtitle}>
+          {authFlow === 'recovery'
+            ? 'Tu cuenta ya está activa — solo definí una nueva contraseña.'
+            : 'Elige tu contraseña para comenzar'}
+        </p>
 
         {error && (
           <div style={styles.error}>

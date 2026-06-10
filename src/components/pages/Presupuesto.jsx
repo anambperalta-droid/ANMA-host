@@ -972,9 +972,27 @@ export default function Presupuesto() {
     setCurrentStep(id)
   }
 
+  /**
+   * Mensaje WhatsApp para el CLIENTE.
+   *
+   * Filosofía (cambio importante — pedido por Belu):
+   *   - El cliente ve QUÉ INCLUYE el regalo (desglose visible: tarjeta, packaging,
+   *     productos, personalización, envío) pero NO ve los costos por item.
+   *   - Ve el VALOR por kit (precio final que paga, con IVA si aplica).
+   *   - Ve el TOTAL al final.
+   *
+   * Lo que NO va al cliente:
+   *   - Costo por unidad de cada insumo/producto
+   *   - Subtotales por componente
+   *   - Margen / ganancia / costos internos
+   *
+   * Para Belu (vista interna con costos), está el "Resumen desglosado" en el
+   * Paso 4 y el panel lateral con Costo Real / Ganancia / Margen.
+   */
   const waText = useMemo(() => {
-    const bName = c.businessName || 'ANMA'
+    const bName = c.businessName || 'ANMA Regalos'
     const discPct = Math.min(Math.max(num(form.discount), 0), 100)
+    const ivaPct = Math.max(0, num(c.ivaPct ?? c.iva ?? 0))   // si el negocio cobra IVA
     const multiAlt = alternatives.length > 1
 
     const altBlocks = alternatives.map((alt, ai) => {
@@ -988,37 +1006,55 @@ export default function Presupuesto() {
       validKits.forEach(kit => {
         const kQty = num(kit.qty)
         const pEff = effectiveKitPrice(kit)
-        altRev += kQty * pEff
-        lines.push(`\n*🎁 ${kit.name || 'Kit sin nombre'}* ×${kQty}  →  ${fmt(kQty * pEff)}`)
+        const kitTotal = kQty * pEff
+        altRev += kitTotal
 
-        const packItems = (kit.packaging || []).filter(c => c.name)
-        if (packItems.length) {
-          lines.push('  📦 *Packaging / Insumos:*')
-          packItems.forEach(c => {
-            const totalU = num(c.qty || 1) * kQty
-            lines.push(`    • ${totalU}x ${c.name}${num(c.costUnit) > 0 ? ` — ${fmt(num(c.costUnit))} u. — ${fmt(num(c.costUnit) * totalU)}` : ''}`)
-          })
-        }
+        // ── Header del kit con nombre + cantidad + valor TOTAL del kit ─────
+        lines.push(`\n🎁 *${kit.name || 'Kit sin nombre'}*${kQty > 1 ? `  ×${kQty}` : ''}`)
+
+        // ── Lo que INCLUYE el kit (sólo nombres, sin costos) ────────────────
+        // Combinamos packaging + productos + personalización en un solo bloque
+        // visual "Incluye:" para que el cliente vea el regalo armado, no piezas
+        // sueltas con precios.
+        const includes = []
 
         const prodItems = (kit.products || []).filter(c => c.name)
-        if (prodItems.length) {
-          lines.push('  ✨ *Contenido del Kit:*')
-          prodItems.forEach(c => {
-            const totalU = num(c.qty || 1) * kQty
-            lines.push(`    • ${totalU}x ${c.name}${num(c.costUnit) > 0 ? ` — ${fmt(num(c.costUnit))} u. — ${fmt(num(c.costUnit) * totalU)}` : ''}`)
-          })
-        }
+        prodItems.forEach(item => {
+          const qty = num(item.qty || 1)
+          const label = qty > 1 ? `${qty}× ${item.name}` : item.name
+          includes.push(`  ✨ ${label}`)
+        })
 
-        // ── Personalización (kit): solo título y total al cliente, sin desglose ──
+        const packItems = (kit.packaging || []).filter(c => c.name)
+        packItems.forEach(item => {
+          const qty = num(item.qty || 1)
+          const label = qty > 1 ? `${qty}× ${item.name}` : item.name
+          includes.push(`  📦 ${label}`)
+        })
+
+        // Personalización: si tiene nombre/descripción, mostrarla como un item más
         const persPerKit = num(kit.personalizacion?.costUnit) * kQty
         const persFixed  = num(kit.personalizacion?.designCost) + num(kit.personalizacion?.laborCost) + num(kit.personalizacion?.printCost)
         const persTotal  = persPerKit + persFixed
         if (persTotal > 0) {
-          lines.push(`  🎨 *Personalización:* ${fmt(persTotal)}`)
+          const persLabel = kit.personalizacion?.label || kit.personalizacion?.name || 'Personalización con logo'
+          includes.push(`  🎨 ${persLabel}`)
+        }
+
+        if (includes.length) {
+          lines.push('_Incluye:_')
+          lines.push(...includes)
+        }
+
+        // ── Valor del kit (precio final unitario × cantidad) ────────────────
+        if (kQty > 1) {
+          lines.push(`\n💰 ${kQty} unidades × ${fmt(pEff)}  =  *${fmt(kitTotal)}*`)
+        } else {
+          lines.push(`\n💰 *Valor: ${fmt(kitTotal)}*`)
         }
       })
 
-      // ── MODO SIMPLE: Personalización GLOBAL consolidada al pie de la lista ──
+      // ── MODO SIMPLE: Personalización GLOBAL consolidada (sólo si hay) ────
       if (!kitMode) {
         const totalQty = validKits.reduce((s, it) => s + Math.max(0, num(it.qty)), 0)
         const persFromUnit = Math.max(0, num(simplePers.costUnit)) * totalQty
@@ -1028,28 +1064,60 @@ export default function Presupuesto() {
         const packTotal = simplePack.reduce((s, p) => s + Math.max(0, num(p.costUnit)) * Math.max(0, num(p.qty)), 0)
         const persGlobalTotal = persFromUnit + persFixed + packTotal
         if (persGlobalTotal > 0) {
-          lines.push(`\n🎨 *Personalización:* ${fmt(persGlobalTotal)}`)
+          // Para el cliente no mostramos el monto interno de personalización,
+          // está embebido en el valor del kit. Sólo dejamos una nota si hay algo
+          // global no asociado a un kit específico.
+          const hasGlobalLabel = simplePers.label || simplePers.name
+          if (hasGlobalLabel) {
+            lines.push(`\n🎨 _Personalización:_ ${simplePers.label || simplePers.name}`)
+          }
         }
       }
 
+      // ── Totales con/sin descuento, con/sin IVA ───────────────────────────
       const discAmt = Math.round(altRev * discPct / 100)
-      const altTotal = altRev - discAmt
+      const subtotalAfterDisc = altRev - discAmt
+      const ivaAmt = ivaPct > 0 ? Math.round(subtotalAfterDisc * ivaPct / 100) : 0
+      const altTotal = subtotalAfterDisc + ivaAmt
       const isApproved = multiAlt && alt.approved
+
+      // Bloque de totales (al final del alt block)
+      const totalsBlock = []
+      if (discAmt > 0 || ivaAmt > 0) {
+        if (discAmt > 0) totalsBlock.push(`_Subtotal:_  ${fmt(altRev)}`)
+        if (discAmt > 0) totalsBlock.push(`_Descuento ${discPct}%:_  −${fmt(discAmt)}`)
+        if (ivaAmt > 0) totalsBlock.push(`_IVA ${ivaPct}%:_  ${fmt(ivaAmt)}`)
+        totalsBlock.push('')
+      }
+      totalsBlock.push(`💰 *Total: ${fmt(altTotal)}*`)
+
       return [
-        `*${multiAlt ? `${ai + 1}. ` : ''}${altLabel}*${isApproved ? ' ✅' : ''}`,
+        `*${multiAlt ? `${ai + 1}. ` : ''}${altLabel}*${isApproved ? '  ✅' : ''}`,
         ...lines,
         ``,
-        `💰 *Total: ${fmt(altTotal)}*${discAmt > 0 ? ` _(descuento ${discPct}%)_` : ''}`,
+        ...totalsBlock,
       ].join('\n')
     }).filter(Boolean)
 
-    const intro = `Hola ${form.contact || '[NOMBRE]'}! Te envío el presupuesto de *${bName}* para ${form.company || '[EMPRESA]'}.`
+    // ── Saludo personal y cierre ──────────────────────────────────────────
+    const greeting = form.contact
+      ? `¡Hola ${form.contact}!`
+      : '¡Hola!'
+    const forWho = form.company ? ` para *${form.company}*` : ''
+    const intro = `${greeting} Te envío el presupuesto de *${bName}*${forWho}.`
+
     const body = multiAlt
-      ? `\n\nTe mando *${altBlocks.length} opciones* para que elijas la que mejor te quede:\n\n${altBlocks.join('\n\n────────────────────\n\n')}`
+      ? `\n\nTe armo *${altBlocks.length} opciones* para que elijas la que mejor te quede:\n\n${altBlocks.join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`
       : `\n\n${altBlocks[0] || ''}`
-    const footer = `\n\n*Entrega estimada:* ${form.deliveryDate ? fmtDate(form.deliveryDate) : 'A coordinar'}${form.noteCli ? '\n*Nota:* ' + form.noteCli : ''}\n\n¿Te quedó alguna duda? ¡Quedamos a disposición!`
-    return intro + body + footer
-  }, [form, alternatives, c.businessName])
+
+    const deliveryLine = form.deliveryDate
+      ? `\n\n📅 *Entrega estimada:* ${fmtDate(form.deliveryDate)}`
+      : ''
+    const noteLine = form.noteCli ? `\n📝 _${form.noteCli}_` : ''
+    const closing = `\n\n¿Te quedó alguna duda? ¡Quedamos a disposición! 💜`
+
+    return intro + body + deliveryLine + noteLine + closing
+  }, [form, alternatives, c.businessName, c.ivaPct, c.iva, kitMode, simplePers, simplePack])
 
   const mpCfg = getMPConfig()
   const bankCfg = getBankConfig()

@@ -124,7 +124,13 @@ export function AuthProvider({ children }) {
   }, [])
 
   const resetPassword = useCallback(async (email) => {
-    const redirectTo = `${window.location.origin}/bienvenida?reset=true`
+    const host = window.location.hostname
+    const base = (host === 'localhost' || host === '127.0.0.1')
+      ? window.location.origin
+      : host.includes('anma-hub')
+        ? 'https://anma-hub.vercel.app'
+        : 'https://anma-host.vercel.app'
+    const redirectTo = `${base}/bienvenida?reset=true`
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
     if (error) throw new Error(error.message)
   }, [])
