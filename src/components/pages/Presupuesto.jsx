@@ -1018,7 +1018,8 @@ export default function Presupuesto() {
   const waText = useMemo(() => {
     const bName = c.businessName || 'ANMA Regalos'
     const discPct = Math.min(Math.max(num(form.discount), 0), 100)
-    const ivaPct = Math.max(0, num(c.ivaPct ?? c.iva ?? 0))   // si el negocio cobra IVA
+    // IVA: usa la config real (ivaEnabled + ivaRate, igual que el PDF)
+    const ivaPct = c.ivaEnabled ? Math.max(0, num(c.ivaRate) || 21) : 0
     const multiAlt = alternatives.length > 1
 
     const altBlocks = alternatives.map((alt, ai) => {
@@ -1375,14 +1376,23 @@ export default function Presupuesto() {
     const pdfTotal   = isMultiAlt ? mainTotals.total      : calc.total
     const pdfDiscAmt = isMultiAlt ? mainTotals.discAmt    : calc.discountAmt
     const pdfDiscPct = isMultiAlt ? mainTotals.discPct    : calc.discountPct
-    const pdfDeposit = isMultiAlt ? mainTotals.depositAmt : calc.depositAmt
+    // ── IVA SUMADO sobre el total (pedido por Belu) ──────────────────────
+    // Antes el PDF mostraba "IVA Contenido" (informativo, dentro del precio).
+    // Ahora, si ivaEnabled, el 21% se AGREGA al total y queda detallado:
+    //   Subtotal → IVA (21%) +$X → Total final → Seña sobre el final.
+    const pdfIvaRate  = c.ivaEnabled ? (Number(c.ivaRate) || 21) / 100 : 0
+    const pdfIvaAmt   = Math.round(pdfTotal * pdfIvaRate)
+    const pdfTotalFinal = pdfTotal + pdfIvaAmt
+    const pdfDeposit = pdfIvaRate > 0
+      ? Math.round(pdfTotalFinal * (num(form.deposit) || 0) / 100)
+      : (isMultiAlt ? mainTotals.depositAmt : calc.depositAmt)
     const validDays = num(c.budgetValidityDays) || 7
     const validUntil = new Date(); validUntil.setDate(validUntil.getDate() + validDays)
     const vigenciaISO = validUntil.toISOString().slice(0, 10)
     const ownerWA = (c.ownerWA || c.businessWA || '').replace(/[^\d+]/g, '')
-    const acceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(calc.total)}.`)
+    const acceptMsg = encodeURIComponent(`Hola! Acepto el presupuesto ${budgetNum} de ${bName}. Cliente: ${form.contact || form.company || ''}. Total: ${fmt(pdfTotalFinal)}.`)
     const waLink = ownerWA ? `https://wa.me/${ownerWA.replace('+','')}?text=${acceptMsg}` : ''
-    const showEnvioLeyenda = form.envioACotizar !== false
+    // Leyenda "envío a cotizar" eliminada del flujo (entorpecía la carga).
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${budgetNum}</title>
     <style>
       /* ═══════════════════════════════════════════════════════════════════════════
@@ -1499,24 +1509,16 @@ export default function Presupuesto() {
       ${isMultiAlt && approvedAltPdf ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:9.5px;color:#059669;font-style:italic;margin-bottom:3px"><tr><td>✓ Aprobada: ${approvedAltPdf.label}</td><td class="tv"></td></tr></table>` : ''}
       <table class="totals-row" width="100%" cellpadding="0" cellspacing="0"><tr><td>Subtotal productos</td><td class="tv">${fmt(pdfRevenue)}</td></tr></table>
       ${pdfDiscAmt > 0 ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#DC2626"><tr><td>Descuento (${pdfDiscPct}%)</td><td class="tv">−${fmt(pdfDiscAmt)}</td></tr></table>` : ''}
-      ${showEnvioLeyenda ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="font-size:10px;color:#92400E;font-style:italic"><tr><td>🚚 Costo de envío sujeto a pesaje y despacho</td><td class="tv">A cotizar</td></tr></table>` : ''}
-      <table class="totals-row tr-big" width="100%" cellpadding="0" cellspacing="0"><tr><td>Total</td><td class="tv">${fmt(pdfTotal)}</td></tr></table>
+      ${pdfIvaAmt > 0 ? `<table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#92400E;font-weight:700"><tr><td>IVA (${(pdfIvaRate*100).toFixed(0)}%)</td><td class="tv">+${fmt(pdfIvaAmt)}</td></tr></table>` : ''}
+      <table class="totals-row tr-big" width="100%" cellpadding="0" cellspacing="0"><tr><td>Total${pdfIvaAmt > 0 ? ' (IVA incluido)' : ''}</td><td class="tv">${fmt(pdfTotalFinal)}</td></tr></table>
       <table class="totals-row tr-senia" width="100%" cellpadding="0" cellspacing="0"><tr><td>Seña (${form.deposit}%)</td><td class="tv">${fmt(pdfDeposit)}</td></tr></table>
-      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#059669;font-weight:700"><tr><td>Saldo contra entrega</td><td class="tv">${fmt(pdfTotal - pdfDeposit)}</td></tr></table>
+      <table class="totals-row" width="100%" cellpadding="0" cellspacing="0" style="color:#059669;font-weight:700"><tr><td>Saldo contra entrega</td><td class="tv">${fmt(pdfTotalFinal - pdfDeposit)}</td></tr></table>
     </div></div>
     ` : ''}
-    ${c.ivaEnabled && showPayPdf ? (() => {
-      const total = pdfTotal
-      const ivaR = (Number(c.ivaRate) || 21) / 100
-      const otrosR = (Number(c.otrosImpuestosRate) || 0) / 100
-      const ivaContenido = total - (total / (1 + ivaR))
-      const otrosImpAmt = total * otrosR
-      return `<div class="iva-box">
+    ${pdfIvaAmt > 0 && showPayPdf ? `<div class="iva-box">
         <div class="iva-title">Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)</div>
-        <table class="iva-tbl" width="100%" cellpadding="0" cellspacing="0"><tr><td>IVA Contenido (${(ivaR*100).toFixed(0)}%)</td><td class="iv">${fmt(ivaContenido)}</td></tr></table>
-        ${otrosR > 0 ? `<table class="iva-tbl" width="100%" cellpadding="0" cellspacing="0"><tr><td>Otros Impuestos Nacionales Indirectos</td><td class="iv">${fmt(otrosImpAmt)}</td></tr></table>` : ''}
-      </div>`
-    })() : ''}
+        <table class="iva-tbl" width="100%" cellpadding="0" cellspacing="0"><tr><td>IVA (${(pdfIvaRate*100).toFixed(0)}%) — discriminado sobre el subtotal</td><td class="iv">${fmt(pdfIvaAmt)}</td></tr></table>
+      </div>` : ''}
     ${form.noteCli ? `<div class="note">${form.noteCli}</div>` : ''}
     ${(() => {
       const bank = getBankConfig ? getBankConfig() : null
@@ -2688,15 +2690,7 @@ export default function Presupuesto() {
                   </div>
                 </div>
 
-                {/* Fila 3: checkbox envío a cotizar — compacto */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#FAFAFB', borderRadius: 8, border: '1px solid #ECECF1', marginBottom: 14, marginTop: 2 }}>
-                  <input type="checkbox" id="envCotizarR" checked={form.envioACotizar !== false} onChange={e => setF('envioACotizar', e.target.checked)} style={{ width: 'auto', cursor: 'pointer' }} />
-                  <label htmlFor="envCotizarR" style={{ fontSize: 12, color: 'var(--txt2)', cursor: 'pointer', margin: 0, textTransform: 'none', letterSpacing: 0, fontWeight: 500 }}>
-                    Envío a cotizar — mostrar leyenda en PDF
-                  </label>
-                </div>
-
-                {/* Fila 4: Parámetros financieros — todos en una línea */}
+                {/* Fila 3: Parámetros financieros — todos en una línea */}
                 <div className={feats.descuentoCliente ? 'grid3' : 'grid2'} style={{ marginTop: 4 }}>
                   <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" /></div>
                   <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
@@ -3232,21 +3226,47 @@ export default function Presupuesto() {
               </div>
             )}
             <div className="cp-total-row">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)' }}>Total</span>
-                <div style={{ textAlign: 'right' }}>
-                  <div className="cp-total-val">{fmt(calc.total)}</div>
-                  {showPaymentDetails && (
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>Seña: {fmt(calc.depositAmt)}</div>
-                  )}
-                </div>
-              </div>
-              {showPaymentDetails && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,.08)' }}>
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>Saldo contra entrega</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#6EE7B7', fontVariantNumeric: 'tabular-nums' }}>{fmt(calc.total - calc.depositAmt)}</span>
-                </div>
-              )}
+              {(() => {
+                // IVA SUMADO sobre el total: el cliente debe ver clarito cuánto
+                // es el 21% que se agrega. La seña se calcula sobre el final.
+                const ivaR = c.ivaEnabled ? (num(c.ivaRate) || 21) / 100 : 0
+                const ivaAmt = Math.round(calc.total * ivaR)
+                const totalFinal = calc.total + ivaAmt
+                const depositFinal = ivaR > 0
+                  ? Math.round(totalFinal * (num(form.deposit) || 0) / 100)
+                  : calc.depositAmt
+                return (
+                  <>
+                    {ivaAmt > 0 && (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,.45)' }}>Subtotal</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,.75)', fontVariantNumeric: 'tabular-nums' }}>{fmt(calc.total)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+                          <span style={{ fontSize: 10, color: '#FCD34D', fontWeight: 600 }}>IVA ({(ivaR * 100).toFixed(0)}%)</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#FCD34D', fontVariantNumeric: 'tabular-nums' }}>+{fmt(ivaAmt)}</span>
+                        </div>
+                      </>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,.5)' }}>Total{ivaAmt > 0 ? ' (IVA incl.)' : ''}</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <div className="cp-total-val">{fmt(totalFinal)}</div>
+                        {showPaymentDetails && (
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>Seña: {fmt(depositFinal)}</div>
+                        )}
+                      </div>
+                    </div>
+                    {showPaymentDetails && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,.08)' }}>
+                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>Saldo contra entrega</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#6EE7B7', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalFinal - depositFinal)}</span>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </div>
             <div className="cp-actions">
 
