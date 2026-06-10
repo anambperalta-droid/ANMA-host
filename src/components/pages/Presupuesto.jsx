@@ -568,7 +568,24 @@ export default function Presupuesto() {
      (removeKit ya está definida arriba junto con removeItem para mantener
      comportamiento simétrico: si es el único, resetea en vez de no hacer nada) */
   const addKit = () => setItems(prev => [...prev, emptyKit()])
-  const updateKit = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => i !== kitIdx ? k : { ...k, [key]: val }))
+  const updateKit = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => {
+    if (i !== kitIdx) return k
+    // Si cambia la cantidad de kits del lote, re-escalar automáticamente todos los items
+    // que estaban en sync (qty === qty anterior del kit). Items con qty distinta los respeta
+    // (significa que el user los ajustó manualmente).
+    if (key === 'qty') {
+      const oldQty = Math.max(1, num(k.qty) || 1)
+      const newQty = Math.max(1, num(val) || 1)
+      if (oldQty !== newQty) {
+        const rescale = (items) => (items || []).map(it => {
+          // Solo reescalar si el item estaba sincronizado (qty === oldQty del kit)
+          return num(it.qty) === oldQty ? { ...it, qty: newQty } : it
+        })
+        return { ...k, qty: val, packaging: rescale(k.packaging), products: rescale(k.products) }
+      }
+    }
+    return { ...k, [key]: val }
+  }))
 
   // Helper local: aplica el patch al kit y luego re-precia con el margen actual.
   // Cualquier cambio en packaging/products/personalización dispara reprice → priceUnit
@@ -583,12 +600,21 @@ export default function Presupuesto() {
   }))
 
   // Componente A — Packaging / Insumos
-  const addPackComp = (kitIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, packaging: [...(k.packaging || []), emptyPackComp()] }))
+  // Nuevo item arranca con qty = cantidad de kits del lote (1 por kit × N kits).
+  // Belu lo pidió: si ya ingresó 20 kits, NO tiene sentido que el primer item arranque en 1
+  // — eso fuerza re-tipear cada vez. Default sensato: "1 por kit" → qty total = N kits.
+  const addPackComp = (kitIdx) => _patchKitAndReprice(kitIdx, k => ({
+    ...k,
+    packaging: [...(k.packaging || []), { ...emptyPackComp(), qty: Math.max(1, num(k.qty) || 1) }],
+  }))
   const removePackComp = (kitIdx, cIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, packaging: (k.packaging || []).filter((_, j) => j !== cIdx) }))
   const updatePackComp = (kitIdx, cIdx, key, val) => _patchKitAndReprice(kitIdx, k => ({ ...k, packaging: (k.packaging || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }))
 
   // Componente B — Productos del kit
-  const addProdComp = (kitIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, products: [...(k.products || []), emptyProdComp()] }))
+  const addProdComp = (kitIdx) => _patchKitAndReprice(kitIdx, k => ({
+    ...k,
+    products: [...(k.products || []), { ...emptyProdComp(), qty: Math.max(1, num(k.qty) || 1) }],
+  }))
   const removeProdComp = (kitIdx, cIdx) => _patchKitAndReprice(kitIdx, k => ({ ...k, products: (k.products || []).filter((_, j) => j !== cIdx) }))
   const updateProdComp = (kitIdx, cIdx, key, val) => _patchKitAndReprice(kitIdx, k => ({ ...k, products: (k.products || []).map((c, j) => j !== cIdx ? c : { ...c, [key]: val }) }))
 
@@ -2340,7 +2366,7 @@ export default function Presupuesto() {
                             <div className="kit-tbl-hdr">
                               <span></span>
                               <span></span>
-                              <span style={{ textAlign: 'center' }}>Cant.</span>
+                              <span style={{ textAlign: 'center' }} title="Cantidad total para todo el lote (no por kit)">Cant. total</span>
                               <span style={{ textAlign: 'right' }}>Costo u.</span>
                               <span style={{ textAlign: 'right' }}>Subtotal</span>
                               <span></span>
@@ -2419,7 +2445,7 @@ export default function Presupuesto() {
                             <div className="kit-tbl-hdr">
                               <span></span>
                               <span></span>
-                              <span style={{ textAlign: 'center' }}>Cant.</span>
+                              <span style={{ textAlign: 'center' }} title="Cantidad total para todo el lote (no por kit)">Cant. total</span>
                               <span style={{ textAlign: 'right' }}>Costo u.</span>
                               <span style={{ textAlign: 'right' }}>Subtotal</span>
                               <span></span>
