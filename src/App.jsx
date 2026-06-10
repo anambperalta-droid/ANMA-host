@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Login from './components/layout/Login'
 import AppShell from './components/layout/AppShell'
@@ -9,15 +9,12 @@ import Activar from './components/pages/Activar'
 import PagoResultado from './components/pages/PagoResultado'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 
-function AuthRedirect() {
-  const loc = useLocation()
-  const hash = loc.hash || ''
-  const search = loc.search || ''
-  const hasToken = hash.includes('access_token') || search.includes('code=') || search.includes('token_hash=')
-  if (hasToken) {
-    return <Navigate to={'/bienvenida' + search + hash} replace />
-  }
-  return null
+// Respeta ?next=/algo después de login. Whitelist: solo paths internos.
+function NavigateToNext({ fallback = '/' }) {
+  const [params] = useSearchParams()
+  const next = params.get('next')
+  const safe = next && next.startsWith('/') && !next.startsWith('//') ? next : fallback
+  return <Navigate to={safe} replace />
 }
 
 export default function App() {
@@ -37,7 +34,7 @@ export default function App() {
         <Route path="/bienvenida" element={<Bienvenida />} />
         <Route path="/login" element={
           hasAuthParams ? <Navigate to={'/bienvenida' + search + hash} replace /> :
-          authed ? <Navigate to="/" /> : <Login />
+          authed ? <NavigateToNext /> : <Login />
         } />
         {/* Activación + páginas de retorno post-checkout MP */}
         <Route path="/activar" element={!authed ? <Navigate to="/login?next=/activar" replace /> : <Activar />} />
