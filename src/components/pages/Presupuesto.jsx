@@ -1213,19 +1213,19 @@ export default function Presupuesto() {
 
     /* ── Helper: sub-fila — qty y precio por kit individual
        Detalles a 12px regular (profesional, no cartel). */
-    const subRow = (label, qtyPerKit, unitCost, isLast = false) => {
-      const qty       = num(qtyPerKit || 1)
-      const lineTotal = num(unitCost) * qty
-      const botBdr    = isLast ? `2px solid ${bdr}` : `1px solid #E8EAF2`
+    // PDF cliente: sub-fila de Packaging / Producto.
+    // CAMBIO IMPORTANTE (pedido por Belu): el cliente NO debe ver ni el costo unitario
+    // ni el subtotal de cada insumo/producto interno. Sólo el nombre — esos datos quedan
+    // en la vista interna (Step 4 y panel del kit).
+    // Mantenemos firma para no romper callers, pero ignoramos unitCost.
+    const subRow = (label, _qtyIgnored, _unitCostIgnored, isLast = false) => {
+      const botBdr = isLast ? `2px solid ${bdr}` : `1px solid #E8EAF2`
       return `
         <tr>
-          <td style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:6px 12px 6px 30px">
+          <td colspan="4" style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:5px 12px 5px 30px">
             <span style="color:${bc};opacity:.45;font-size:11px;margin-right:5px">↳</span>
             <span style="color:#1F1B45;font-size:12px;font-weight:400;line-height:1.45">${label}</span>
           </td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:center;font-size:12px;color:#0F0C2E;font-weight:500;padding:6px 10px">${qty}</td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:12px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:500;padding:6px 10px">${unitCost > 0 ? fmt(unitCost) : ''}</td>
-          <td style="background:${bg2};border-bottom:${botBdr};text-align:right;font-size:12px;color:#0F0C2E;font-variant-numeric:tabular-nums;font-weight:${lineTotal > 0 ? 700 : 400};padding:6px 12px">${lineTotal > 0 ? fmt(lineTotal) : ''}</td>
         </tr>`
     }
 
