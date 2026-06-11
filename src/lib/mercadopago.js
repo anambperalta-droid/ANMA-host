@@ -40,31 +40,41 @@ export function buildBankInfoText(bank, businessName = '') {
   return lines.join('\n')
 }
 
-export async function testMPConnection(token) {
-  // Nunca dejar la promesa colgada: timeout de 12s + catch de errores de red/CSP.
+/**
+ * Llamadas a MP vía /api/mp-proxy (serverless de Vercel).
+ * La API de MP responde 401 al preflight CORS, así que el browser bloquea
+ * SIEMPRE las llamadas directas con Bearer — hay que pasar por el server.
+ * Timeout de 15s para nunca dejar la UI colgada.
+ */
+async function mpProxy(payload) {
   const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), 12000)
+  const timer = setTimeout(() => ctrl.abort(), 15000)
   try {
-    const resp = await fetch('https://api.mercadopago.com/v1/payment_methods', {
-      headers: { Authorization: 'Bearer ' + token },
+    const resp = await fetch('/api/mp-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
       signal: ctrl.signal,
     })
-    if (resp.ok) {
-      const data = await resp.json()
-      return { ok: true, count: data.length }
-    }
-    const err = await resp.json().catch(() => ({}))
-    return { ok: false, status: resp.status, message: err.message || 'Token inválido' }
-  } catch (e) {
-    const aborted = e?.name === 'AbortError'
-    return {
-      ok: false,
-      message: aborted
-        ? 'Mercado Pago no respondió (timeout). Probá de nuevo en un momento.'
-        : 'No se pudo conectar con Mercado Pago. Recargá la app (Ctrl+Shift+R) para actualizar a la última versión y reintentá.',
-    }
+    const data = await resp.json().catch(() => ({}))
+    return { status: resp.status, data }
   } finally {
     clearTimeout(timer)
+  }
+}
+
+export async function testMPConnection(token) {
+  try {
+    const { status, data } = await mpProxy({ action: 'test', token })
+    if (status === 200 && data.ok) return { ok: true, count: data.count }
+    return { ok: false, message: data.message || 'Token inválido' }
+  } catch (e) {
+    return {
+      ok: false,
+      message: e?.name === 'AbortError'
+        ? 'Mercado Pago no respondió (timeout). Probá de nuevo en un momento.'
+        : 'No se pudo conectar. Verificá tu internet y reintentá.',
+    }
   }
 }
 
@@ -105,21 +115,18 @@ export async function createPaymentLink({ budget, mp, depositPct }) {
     expiration_date_to: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
   }
 
-  const resp = await fetch('https://api.mercadopago.com/checkout/preferences', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + mp.token,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(preference),
-  })
-
-  if (resp.ok) {
-    const data = await resp.json()
-    const link = data.init_point || data.sandbox_init_point || ''
-    return { ok: true, link, amount, amountLabel }
+  try {
+    const { status, data } = await mpProxy({ action: 'preference', token: mp.token, preference })
+    if (status === 200 && data.ok && data.link) {
+      return { ok: true, link: data.link, amount, amountLabel }
+    }
+    return { ok: false, message: data.message || 'Error al crear link' }
+  } catch (e) {
+    return {
+      ok: false,
+      message: e?.name === 'AbortError'
+        ? 'Mercado Pago no respondió (timeout). Probá de nuevo en un momento.'
+        : 'No se pudo conectar. Verificá tu internet y reintentá.',
+    }
   }
-
-  const err = await resp.json().catch(() => ({}))
-  return { ok: false, status: resp.status, message: err.message || 'Error al crear link' }
 }
