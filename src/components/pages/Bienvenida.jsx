@@ -53,8 +53,10 @@ export default function Bienvenida() {
       const hash = window.location.hash || ''
       logAuth('start', { href: window.location.href })
 
-      const errorParam = params.get('error') || params.get('error_code')
-      const errorDesc = params.get('error_description')
+      // Errores de Supabase: pueden venir en query (?error=) o en hash (#error=)
+      const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.substring(1) : hash)
+      const errorParam = params.get('error') || params.get('error_code') || hashParams.get('error') || hashParams.get('error_code')
+      const errorDesc = params.get('error_description') || hashParams.get('error_description')
       if (errorParam) {
         const desc = (errorDesc || '').toLowerCase()
         setError(
@@ -127,6 +129,13 @@ export default function Bienvenida() {
         setAuthFlow(type)
         const { error: otpErr } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
         if (otpErr) {
+          // Doble click en el email: el primer click ya canjeó el token y la
+          // sesión existe → seguir normal en vez de mostrar un error falso.
+          const { data: { session: dupSession } } = await supabase.auth.getSession()
+          if (dupSession) {
+            window.history.replaceState(null, '', window.location.pathname)
+            setSessionReady(true); setLoading(false); return
+          }
           const m = String(otpErr.message || '').toLowerCase()
           setError(
             m.includes('expired') ? 'Este enlace expiró. Pedí uno nuevo.'

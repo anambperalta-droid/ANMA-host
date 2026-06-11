@@ -16,7 +16,6 @@ import TrialBanner from './TrialBanner'
 import PaymentDueBanner from './PaymentDueBanner'
 import WelcomeTour from './WelcomeTour'
 import FirstBudgetCelebration from './FirstBudgetCelebration'
-import TrialReminderModal from './TrialReminderModal'
 import RouteFallback from './RouteFallback'
 
 // Code splitting + prefetch caching centralizados en lib/routes.js
@@ -362,7 +361,8 @@ function AppShellInner() {
       <PWAInstall />
       <WelcomeTour />
       <FirstBudgetCelebration />
-      <TrialReminderModal />
+      {/* TrialReminderModal removido: Regalos es invite-only sin self-service de pago.
+          Si algún día se vende como producto, restaurar desde el espejo de Pro. */}
     </div>
   )
 }
