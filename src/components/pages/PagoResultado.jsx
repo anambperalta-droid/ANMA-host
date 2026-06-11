@@ -58,9 +58,46 @@ const VARIANTS = {
   },
 }
 
+/* Pago de un PRESUPUESTO (cliente final del negocio, llega con ?ctx=presupuesto).
+   Sin referencias al SaaS ni botón "Ir al panel" — el que paga no tiene cuenta. */
+const CLIENT_OVERRIDES = {
+  exitoso: {
+    title: '¡Pago recibido!',
+    subtitle: 'Tu pago fue acreditado correctamente. El vendedor ya fue notificado y se va a contactar por WhatsApp para coordinar los próximos pasos.',
+    next: [
+      { icon: 'fa-message', text: 'El vendedor te va a confirmar el pedido por WhatsApp' },
+      { icon: 'fa-envelope', text: 'Mercado Pago te envió el comprobante por email' },
+      { icon: 'fa-circle-check', text: 'Ya podés cerrar esta ventana' },
+    ],
+    primary: null,
+    secondary: null,
+  },
+  pendiente: {
+    subtitle: 'Mercado Pago todavía está confirmando el pago. Las tarjetas tardan minutos; transferencias o efectivo pueden demorar hasta 48 hs.',
+    next: [
+      { icon: 'fa-rotate', text: 'Refrescá esta página en unos minutos para ver el estado' },
+      { icon: 'fa-message', text: 'Cuando se acredite, el vendedor te confirma por WhatsApp' },
+    ],
+    primary: null,
+  },
+  error: {
+    title: 'No pudimos procesar tu pago',
+    subtitle: 'Si la tarjeta fue rechazada, no se cobró nada. Podés volver a intentar desde el mismo link de pago o avisarle al vendedor para coordinar otro medio.',
+    next: [
+      { icon: 'fa-credit-card', text: 'Verificá los datos de tu tarjeta y volvé a intentar' },
+      { icon: 'fa-bank', text: 'Probá con otra tarjeta o usá dinero en cuenta MP' },
+      { icon: 'fa-message', text: 'O avisale al vendedor por WhatsApp y lo resuelven juntos' },
+    ],
+    primary: null,
+    secondary: null,
+  },
+}
+
 export default function PagoResultado({ variant = 'exitoso' }) {
   const [searchParams] = useSearchParams()
-  const v = VARIANTS[variant] || VARIANTS.exitoso
+  const isBudgetPay = searchParams.get('ctx') === 'presupuesto'
+  const base = VARIANTS[variant] || VARIANTS.exitoso
+  const v = isBudgetPay ? { ...base, ...(CLIENT_OVERRIDES[variant] || {}) } : base
 
   const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id')
   const status = searchParams.get('status') || searchParams.get('collection_status')
@@ -140,7 +177,7 @@ export default function PagoResultado({ variant = 'exitoso' }) {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to={v.primary.to} style={{
+          {v.primary && <Link to={v.primary.to} style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '13px 28px', borderRadius: 11, border: 'none',
             background: `linear-gradient(135deg, ${v.color}, ${v.color}dd)`,
@@ -150,7 +187,7 @@ export default function PagoResultado({ variant = 'exitoso' }) {
           }}>
             <i className="fa fa-arrow-right" />
             {v.primary.label}
-          </Link>
+          </Link>}
           {v.secondary && (
             v.secondary.href ? (
               <a href={v.secondary.href} target="_blank" rel="noopener noreferrer" style={{

@@ -76,6 +76,14 @@ export async function createPaymentLink({ budget, mp, depositPct }) {
     payer: { name: budget.contact || '', surname: budget.company || '' },
     external_reference: budget.num,
     statement_descriptor: mp.name.slice(0, 22),
+    // back_urls es OBLIGATORIO cuando se usa auto_return — sin esto la API
+    // devuelve 400 "auto_return invalid" y el link nunca se crea.
+    // ctx=presupuesto → PagoResultado muestra la variante para el cliente final
+    back_urls: {
+      success: window.location.origin + '/pago-exitoso?ctx=presupuesto',
+      pending: window.location.origin + '/pago-pendiente?ctx=presupuesto',
+      failure: window.location.origin + '/pago-error?ctx=presupuesto',
+    },
     auto_return: 'approved',
     expires: true,
     expiration_date_to: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
