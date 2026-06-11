@@ -368,10 +368,16 @@ export default function Config() {
   const testMP = async () => {
     if (!mpToken) { toast('Ingresá un Access Token.', 'er'); return }
     setMpTesting(true)
-    const r = await testMPConnection(mpToken)
-    if (r.ok) setMpTestResult({ ok: true, count: r.count })
-    else setMpTestResult({ ok: false, message: r.message })
-    setMpTesting(false)
+    try {
+      const r = await testMPConnection(mpToken)
+      if (r.ok) setMpTestResult({ ok: true, count: r.count })
+      else setMpTestResult({ ok: false, message: r.message })
+    } catch (e) {
+      // Doble red de seguridad: el spinner JAMÁS debe quedar colgado.
+      setMpTestResult({ ok: false, message: e?.message || 'Error de conexión. Reintentá.' })
+    } finally {
+      setMpTesting(false)
+    }
   }
 
   const handleChangePass = async () => {

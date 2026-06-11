@@ -41,15 +41,31 @@ export function buildBankInfoText(bank, businessName = '') {
 }
 
 export async function testMPConnection(token) {
-  const resp = await fetch('https://api.mercadopago.com/v1/payment_methods', {
-    headers: { Authorization: 'Bearer ' + token },
-  })
-  if (resp.ok) {
-    const data = await resp.json()
-    return { ok: true, count: data.length }
+  // Nunca dejar la promesa colgada: timeout de 12s + catch de errores de red/CSP.
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 12000)
+  try {
+    const resp = await fetch('https://api.mercadopago.com/v1/payment_methods', {
+      headers: { Authorization: 'Bearer ' + token },
+      signal: ctrl.signal,
+    })
+    if (resp.ok) {
+      const data = await resp.json()
+      return { ok: true, count: data.length }
+    }
+    const err = await resp.json().catch(() => ({}))
+    return { ok: false, status: resp.status, message: err.message || 'Token inválido' }
+  } catch (e) {
+    const aborted = e?.name === 'AbortError'
+    return {
+      ok: false,
+      message: aborted
+        ? 'Mercado Pago no respondió (timeout). Probá de nuevo en un momento.'
+        : 'No se pudo conectar con Mercado Pago. Recargá la app (Ctrl+Shift+R) para actualizar a la última versión y reintentá.',
+    }
+  } finally {
+    clearTimeout(timer)
   }
-  const err = await resp.json().catch(() => ({}))
-  return { ok: false, status: resp.status, message: err.message || 'Token inválido' }
 }
 
 export async function createPaymentLink({ budget, mp, depositPct }) {
