@@ -1,13 +1,17 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Login from './components/layout/Login'
 import AppShell from './components/layout/AppShell'
-import Bienvenida from './components/pages/Bienvenida'
-import PortalProveedor from './components/pages/PortalProveedor'
-import Alta from './components/pages/Alta'
-import Activar from './components/pages/Activar'
-import PagoResultado from './components/pages/PagoResultado'
 import ErrorBoundary from './components/layout/ErrorBoundary'
+
+// Páginas secundarias lazy: no forman parte del flujo principal post-login,
+// así el bundle inicial solo carga Login + AppShell.
+const Bienvenida      = lazy(() => import('./components/pages/Bienvenida'))
+const PortalProveedor = lazy(() => import('./components/pages/PortalProveedor'))
+const Alta            = lazy(() => import('./components/pages/Alta'))
+const Activar         = lazy(() => import('./components/pages/Activar'))
+const PagoResultado   = lazy(() => import('./components/pages/PagoResultado'))
 
 // Respeta ?next=/algo después de login. Whitelist: solo paths internos.
 function NavigateToNext({ fallback = '/' }) {
@@ -28,6 +32,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <Suspense fallback={<div className="sk sk-kpi" style={{ height: '100vh' }} />}>
       <Routes>
         <Route path="/portal-proveedor" element={<PortalProveedor />} />
         <Route path="/alta" element={<Alta appName="ANMA Regalos" />} />
@@ -46,6 +51,7 @@ export default function App() {
           authed ? <AppShell /> : <Navigate to="/login" />
         } />
       </Routes>
+      </Suspense>
     </ErrorBoundary>
   )
 }

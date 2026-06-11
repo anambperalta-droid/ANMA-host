@@ -1643,31 +1643,8 @@ export default function Presupuesto() {
         border-bottom:1px solid #F3F4F6!important;background:transparent!important;border-radius:0!important;
       }
       .logi-parada-row:last-child{border-bottom:none!important}
-      @media(max-width:640px){
-        /* Parada: descripción full arriba; tipo + costo lado a lado abajo.
-           Inputs con caja visible y altura uniforme — sin números flotando. */
-        .logi-parada-row{
-          display:flex!important;flex-wrap:wrap!important;
-          gap:8px!important;padding:10px 4px!important;align-items:center!important;
-        }
-        .logi-parada-row > input[type=text]{
-          flex:1 1 100%!important;order:1!important;
-          min-height:42px!important;padding:0 12px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
-        }
-        .logi-parada-row > select{
-          flex:1 1 52%!important;order:2!important;min-width:0!important;
-          min-height:42px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
-        }
-        .logi-parada-row > input[type=number]{
-          flex:1 1 32%!important;order:3!important;min-width:0!important;
-          min-height:42px!important;text-align:right!important;font-weight:700!important;
-          padding:0 10px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
-        }
-        .logi-parada-row > button{order:4!important;opacity:1!important}
-      }
+      /* Mobile de paradas: ver override .kit-tbl-row.logi-parada-row más abajo
+         (la regla flex que vivía acá quedó muerta por especificidad y se eliminó). */
       /* Botón Agregar minimalista — más sutil */
       .tbl-add-btn{
         display:inline-flex;align-items:center;gap:6px;
@@ -1730,14 +1707,16 @@ export default function Presupuesto() {
              └──────────────────────┘
            ══════════════════════════════════════════════════════════════ */
         .kit-tbl{display:flex!important;flex-direction:column!important;gap:8px!important;padding:6px 0!important}
+        /* 3 columnas: el nombre ocupa todo el ancho menos el botón eliminar (38px),
+           así los nombres largos no quedan cortados a la mitad. */
         .kit-tbl-row{
           display:grid!important;
           grid-template-areas:
-            "name del"
-            "qty  cost"
-            "sub  sub"!important;
-          grid-template-columns:1fr 1fr!important;
-          gap:8px 10px!important;padding:10px 12px!important;
+            "name name del"
+            "qty  cost cost"
+            "sub  sub  sub"!important;
+          grid-template-columns:minmax(0,1fr) minmax(0,1fr) 38px!important;
+          gap:8px!important;padding:9px 10px!important;
           background:#fff!important;border:1px solid #E8EAF2!important;
           border-radius:10px!important;align-items:center!important;
           margin:0!important;
@@ -1757,14 +1736,15 @@ export default function Presupuesto() {
           grid-area:name!important;min-width:0!important;width:100%!important;
         }
         .kit-tbl-row > :nth-child(2) input{
-          font-size:14px!important;font-weight:700!important;
-          padding:9px 10px!important;min-height:42px!important;
+          font-size:13px!important;font-weight:700!important;
+          padding:8px 10px!important;min-height:38px!important;
           background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
+          text-overflow:ellipsis!important;
         }
         /* 3: cant (input number) */
         .kit-tbl-row > :nth-child(3){
           grid-area:qty!important;width:100%!important;
-          min-height:42px!important;height:42px!important;font-size:14px!important;
+          min-height:38px!important;height:38px!important;font-size:13px!important;
           text-align:center!important;font-weight:700!important;
           padding:0 8px!important;border-radius:8px!important;
           background:#FAFAFB!important;border:1px solid #E8EAF2!important;
@@ -1772,7 +1752,7 @@ export default function Presupuesto() {
         /* 4: costo unitario (input text) */
         .kit-tbl-row > :nth-child(4){
           grid-area:cost!important;width:100%!important;
-          min-height:42px!important;height:42px!important;font-size:14px!important;
+          min-height:38px!important;height:38px!important;font-size:13px!important;
           text-align:right!important;font-weight:600!important;
           padding:0 10px!important;border-radius:8px!important;
           background:#FAFAFB!important;border:1px solid #E8EAF2!important;
@@ -1789,14 +1769,14 @@ export default function Presupuesto() {
           content:'Subtotal';font-size:10px;font-weight:600;color:#9CA3AF;
           text-transform:uppercase;letter-spacing:.4px;
         }
-        /* 6: botón eliminar */
+        /* 6: botón eliminar — mismo alto que el input de nombre, alineado a su fila */
         .kit-tbl-row > :nth-child(6){
           grid-area:del!important;
-          width:42px!important;height:42px!important;border-radius:10px!important;
+          width:38px!important;height:38px!important;border-radius:9px!important;
           background:#FEF2F2!important;color:#DC2626!important;
-          border:1.5px solid #FECACA!important;
+          border:1.5px solid #FECACA!important;opacity:1!important;
           display:flex!important;align-items:center!important;justify-content:center!important;
-          font-size:14px!important;justify-self:end!important;
+          font-size:13px!important;justify-self:end!important;align-self:start!important;
         }
         /* Headers de cols ocultos en mobile */
         .kit-tbl-hdr,.simple-tbl-hdr{display:none!important}
@@ -1806,19 +1786,20 @@ export default function Presupuesto() {
         .simple-tbl-row{
           display:grid!important;
           grid-template-areas:
-            "name del"
-            "qty  cost"
-            "sub  sub"!important;
-          grid-template-columns:1fr 1fr!important;
-          gap:8px 10px!important;padding:10px 12px!important;
+            "name name del"
+            "qty  cost cost"
+            "sub  sub  sub"!important;
+          grid-template-columns:minmax(0,1fr) minmax(0,1fr) 38px!important;
+          gap:8px!important;padding:9px 10px!important;
           background:#fff!important;border:1px solid #E8EAF2!important;
           border-radius:10px!important;align-items:center!important;margin-bottom:8px!important;
         }
         .simple-tbl-row > :nth-child(1){grid-area:name!important;min-width:0!important;width:100%!important}
-        .simple-tbl-row > :nth-child(2){grid-area:qty!important;width:100%!important;min-height:42px!important;text-align:center!important}
-        .simple-tbl-row > :nth-child(3){grid-area:cost!important;width:100%!important;min-height:42px!important;text-align:right!important}
+        .simple-tbl-row > :nth-child(1) input{font-size:13px!important;font-weight:700!important;min-height:38px!important;padding:8px 10px!important;text-overflow:ellipsis!important}
+        .simple-tbl-row > :nth-child(2){grid-area:qty!important;width:100%!important;min-height:38px!important;height:38px!important;font-size:13px!important;text-align:center!important}
+        .simple-tbl-row > :nth-child(3){grid-area:cost!important;width:100%!important;min-height:38px!important;height:38px!important;font-size:13px!important;text-align:right!important}
         .simple-tbl-row > :nth-child(4){grid-area:sub!important;border-top:1px solid #F3F4F6!important;padding-top:8px!important;font-weight:800!important;color:var(--money)!important;text-align:right!important}
-        .simple-tbl-row > :nth-child(5){grid-area:del!important;width:42px!important;height:42px!important;justify-self:end!important;background:#FEF2F2!important;color:#DC2626!important;border-radius:10px!important;border:1.5px solid #FECACA!important}
+        .simple-tbl-row > :nth-child(5){grid-area:del!important;width:38px!important;height:38px!important;justify-self:end!important;align-self:start!important;opacity:1!important;background:#FEF2F2!important;color:#DC2626!important;border-radius:9px!important;border:1.5px solid #FECACA!important}
 
         /* ══════════════════════════════════════════════════════════════
            PARADAS DE LOGÍSTICA (.kit-tbl-row.logi-parada-row)
