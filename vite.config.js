@@ -26,14 +26,4 @@ export default defineConfig({
       },
     },
   },
-  server: {
-    proxy: {
-      // Proxy para Resend API — evita CORS en desarrollo
-      '/resend-api': {
-        target: 'https://api.resend.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/resend-api/, ''),
-      },
-    },
-  },
 })
