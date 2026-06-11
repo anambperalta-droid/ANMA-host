@@ -1820,6 +1820,60 @@ export default function Presupuesto() {
         .simple-tbl-row > :nth-child(4){grid-area:sub!important;border-top:1px solid #F3F4F6!important;padding-top:8px!important;font-weight:800!important;color:var(--money)!important;text-align:right!important}
         .simple-tbl-row > :nth-child(5){grid-area:del!important;width:42px!important;height:42px!important;justify-self:end!important;background:#FEF2F2!important;color:#DC2626!important;border-radius:10px!important;border:1.5px solid #FECACA!important}
 
+        /* ══════════════════════════════════════════════════════════════
+           PARADAS DE LOGÍSTICA (.kit-tbl-row.logi-parada-row)
+           Estructura distinta a items de kit: select | desc | costo | trash.
+           Sin este override, el grid de kit-tbl-row OCULTABA el select
+           (lo trataba como drag icon) y ponía el TRASH gigante en la celda
+           del costo — el desfasaje reportado. Especificidad doble gana.
+           Layout:
+             ┌──────────────────┬──────┐
+             │ [tipo de parada] │ [✕]  │
+             │ [descripción          ] │
+             │ [costo $              ] │
+             └─────────────────────────┘
+           ══════════════════════════════════════════════════════════════ */
+        .kit-tbl-row.logi-parada-row{
+          display:grid!important;
+          grid-template-areas:
+            "cat  del"
+            "desc desc"
+            "cost cost"!important;
+          grid-template-columns:1fr 42px!important;
+        }
+        .kit-tbl-row.logi-parada-row > :nth-child(1){
+          display:block!important;grid-area:cat!important;
+          width:100%!important;min-width:0!important;
+          min-height:42px!important;font-size:13px!important;font-weight:700!important;
+          padding:0 10px!important;border-radius:8px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+        }
+        .kit-tbl-row.logi-parada-row > :nth-child(2){
+          grid-area:desc!important;width:100%!important;min-width:0!important;
+          min-height:42px!important;font-size:13px!important;font-weight:500!important;
+          padding:0 12px!important;text-align:left!important;border-radius:8px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+        }
+        .kit-tbl-row.logi-parada-row > :nth-child(3){
+          grid-area:cost!important;width:100%!important;
+          min-height:42px!important;height:42px!important;font-size:14px!important;
+          text-align:right!important;font-weight:700!important;
+          padding:0 12px!important;border-radius:8px!important;
+          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+        }
+        .kit-tbl-row.logi-parada-row > :nth-child(4){
+          grid-area:del!important;
+          width:42px!important;height:42px!important;border-radius:10px!important;
+          background:#FEF2F2!important;color:#DC2626!important;
+          border:1.5px solid #FECACA!important;opacity:1!important;
+          display:flex!important;align-items:center!important;justify-content:center!important;
+          font-size:13px!important;justify-self:end!important;
+        }
+        /* Sin pseudo "Subtotal" en paradas (no aplica) */
+        .kit-tbl-row.logi-parada-row > :nth-child(5)::before{content:none!important}
+        /* Botones rápidos de parada: fila pareja sin desbordes */
+        .tbl-add-btn{min-height:40px!important}
+
         /* Legacy compat */
         .kit-comp-row{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
         .kit-comp-name-group{min-width:0;width:100%}
