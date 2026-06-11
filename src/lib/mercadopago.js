@@ -56,7 +56,10 @@ export async function createPaymentLink({ budget, mp, depositPct }) {
   const items = budget.items || []
   let totalRev = 0
   items.forEach((i) => { totalRev += i.qty * i.priceUnit })
-  const totalFinal = totalRev + (budget.shipCost || 0)
+  // Total final: si el caller pasa budget.total (calculado con descuento e IVA),
+  // se usa ese — el link de MP debe cobrar EXACTAMENTE lo que dice el presupuesto.
+  // Fallback legacy: qty × precio + envío (sin descuento ni IVA).
+  const totalFinal = Number(budget.total) > 0 ? Math.round(Number(budget.total)) : totalRev + (budget.shipCost || 0)
   const amount = mp.useSena ? Math.round(totalFinal * depositPct / 100) : totalFinal
   const amountLabel = mp.useSena
     ? `Seña (${depositPct}%) — ${budget.num}`

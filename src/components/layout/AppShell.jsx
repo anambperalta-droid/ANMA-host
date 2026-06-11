@@ -277,6 +277,30 @@ function AppShellInner() {
     return () => document.removeEventListener('focus', numFocus, true)
   }, [])
 
+  // Mobile: cerrar el teclado virtual al scrollear con el dedo.
+  // Sin esto el teclado queda abierto tapando media pantalla y hay que
+  // tocar "atrás" o un área vacía para cerrarlo. Umbral de 24px para no
+  // cerrar por micro-movimientos al tipear ni al seleccionar texto.
+  useEffect(() => {
+    let startY = null
+    const onTouchStart = (e) => { startY = e.touches[0].clientY }
+    const onTouchMove = (e) => {
+      if (startY === null) return
+      if (Math.abs(e.touches[0].clientY - startY) < 24) return
+      const ae = document.activeElement
+      if (ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && !ae.contains(e.target) && e.target !== ae) {
+        ae.blur()
+      }
+      startY = null
+    }
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove', onTouchMove)
+    }
+  }, [])
+
   const goSheet = (path) => { setMoreSheet(false); nav(path) }
 
   return (
