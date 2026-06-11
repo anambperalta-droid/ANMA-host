@@ -11,7 +11,7 @@ import { supabase } from './supabase'
 const ALL_SITES = {
   hub: {
     key: 'hub',
-    label: 'ANMA Pro',
+    label: 'ANMA Hub',
     description: 'Gestión de stock y ventas',
     url: 'https://anma-hub.vercel.app',
     redirectTo: 'https://anma-hub.vercel.app/bienvenida',
