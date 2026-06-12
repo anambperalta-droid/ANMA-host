@@ -88,9 +88,14 @@ export default function Bienvenida() {
         const { error: codeErr } = await supabase.auth.exchangeCodeForSession(code)
         if (codeErr) {
           logAuth('pkce-error', codeErr)
-          await new Promise(r => setTimeout(r, 600))
-          const { data: { session: postSession } } = await supabase.auth.getSession()
-          if (postSession) {
+          // Poll hasta 3.5s: el auto-detect puede estar canjeando en paralelo.
+          let recovered = null
+          for (let i = 0; i < 7 && !recovered; i++) {
+            await new Promise(r => setTimeout(r, 500))
+            const { data: { session: postSession } } = await supabase.auth.getSession()
+            if (postSession) recovered = postSession
+          }
+          if (recovered) {
             window.history.replaceState(null, '', window.location.pathname)
             if (await finishAuth()) return
             setSessionReady(true); setLoading(false); return
