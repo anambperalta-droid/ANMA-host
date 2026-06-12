@@ -127,8 +127,8 @@ export function AuthProvider({ children }) {
     const host = window.location.hostname
     const base = (host === 'localhost' || host === '127.0.0.1')
       ? window.location.origin
-      : host.includes('anma-hub')
-        ? 'https://anma-hub.vercel.app'
+      : (host.includes('anmahub') || host.includes('anma-hub'))
+        ? 'https://anmahub.com'
         : 'https://anma-host.vercel.app'
     // Sin query extra: el template de email agrega ?token_hash=...&type=recovery
     // sobre esta URL (link directo a la app, inmune al prefetch de Gmail/Chrome).
