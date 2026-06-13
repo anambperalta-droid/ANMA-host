@@ -222,8 +222,9 @@ input,select,textarea{font-family:inherit}
 .content{padding:14px 16px;flex:1;overflow-y:auto;overflow-x:hidden}
 
 /* ─── COMMON COMPONENTS ─── */
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px}
-.ph-left h2{font-size:18px;font-weight:800;color:var(--txt);letter-spacing:-.4px}
+/* Page header — manda visualmente en toda la app */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:14px}
+.ph-left h2{font-size:22px;font-weight:800;color:var(--txt);letter-spacing:-.6px;line-height:1.15;margin:0}
 .ph-left p{font-size:12px;color:var(--txt3);margin-top:2px}
 .ph-right{display:flex;gap:6px;flex-shrink:0;align-items:center;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9999px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all var(--tr);white-space:nowrap}
@@ -291,7 +292,8 @@ input,select,textarea{font-family:inherit}
 .card-sm{padding:14px}
 
 /* ─── TABLES ─── */
-.tbl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh)}
+.tbl-card{background:var(--surface);border:1px solid rgba(15,23,42,.06);border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -8px rgba(15,23,42,.06);transition:box-shadow .25s ease}
+.tbl-card:hover{box-shadow:0 2px 6px rgba(15,23,42,.06),0 12px 32px -10px rgba(15,23,42,.12)}
 table{width:100%;border-collapse:collapse}
 thead th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)}
 tbody td{padding:9px 12px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--border);transition:background var(--tr);font-variant-numeric:tabular-nums}
@@ -387,7 +389,7 @@ td b{color:var(--txt);font-weight:600}
 
 /* ─── TABS & PILLS ─── */
 .tab-bar{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:16px;width:fit-content}
-.tab-btn{padding:0 14px;min-height:36px;display:inline-flex;align-items:center;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt3);transition:all var(--tr);white-space:nowrap;background:none;border:1px solid transparent}
+.tab-btn{padding:0 16px;min-height:38px;display:inline-flex;align-items:center;gap:6px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--txt3);transition:all var(--tr);white-space:nowrap;background:none;border:1px solid transparent;letter-spacing:-.1px}
 .tab-btn:active{transform:scale(.95)}
 .tab-btn.active{background:var(--brand-xlt);color:var(--brand);border-color:var(--brand-dim);box-shadow:none;font-weight:700}
 .tab-btn:hover:not(.active){color:var(--brand);background:var(--brand-xlt)}
