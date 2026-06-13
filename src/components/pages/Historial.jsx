@@ -28,19 +28,26 @@ function Sparkline({ data, color = 'var(--brand)', height = 22 }) {
 
 function KpiCard({ label, value, delta, isKey, sparkData, sparkColor }) {
   const hasDelta = delta !== null && delta !== undefined
-  const base = { position: 'relative', padding: '12px 14px 10px' }
+  const accentColor = sparkColor || 'var(--brand)'
   return (
-    <div className="bento-kpi" style={isKey ? { ...base, borderLeft: '3px solid var(--green)', paddingLeft: 14 } : base}>
-      <div style={{ fontSize: 9.5, fontWeight: 700, color: '#B0B8C9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-0.03em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+    <div className={`bento-kpi ${isKey ? 'bento-kpi-key' : ''}`} style={{ position: 'relative' }}>
+      <span aria-hidden="true" style={{
+        position: 'absolute', top: 18, right: 18, width: 6, height: 6, borderRadius: '50%',
+        background: accentColor, opacity: 0.7,
+      }} />
+      <div className="kpi-label-elegant">{label}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginTop: 4 }}>
+        <div className="kpi-val-elegant" style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</div>
         {hasDelta && (
-          <span style={{ fontSize: 11, fontWeight: 700, color: delta >= 0 ? '#16A34A' : '#DC2626', background: delta >= 0 ? 'rgba(22,163,74,.10)' : 'rgba(220,38,38,.10)', padding: '2px 7px', borderRadius: 6, lineHeight: 1.2, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <span className="kpi-delta-elegant" style={{
+            color: delta >= 0 ? '#15803D' : '#B91C1C',
+            background: delta >= 0 ? 'rgba(34,197,94,.10)' : 'rgba(239,68,68,.10)',
+          }}>
             {delta >= 0 ? '↑' : '↓'}{Math.abs(delta)}%
           </span>
         )}
       </div>
-      {sparkData && <Sparkline data={sparkData} color={sparkColor || 'var(--brand)'} />}
+      {sparkData && <Sparkline data={sparkData} color={accentColor} />}
     </div>
   )
 }
@@ -118,10 +125,12 @@ function BarChart({ data, prevData = [], type = 'income' }) {
   const hasData = data.some(m => m.val > 0)
   const hasPrev = prevData.some(m => m.val > 0)
   if (!hasData) return (
-    <div style={{ textAlign: 'center', padding: '22px 0 6px', color: 'var(--txt4)', fontSize: 12 }}>
-      <i className="fa fa-chart-bar" style={{ fontSize: 26, opacity: .2, display: 'block', marginBottom: 6 }} />
-      <div style={{ fontWeight: 600, color: 'var(--txt3)' }}>Sin datos aún</div>
-      <div style={{ fontSize: 11, marginTop: 3 }}>Los ingresos cobrados aparecerán acá mes a mes</div>
+    <div style={{ textAlign: 'center', padding: '34px 14px 18px', color: 'var(--txt4)', fontSize: 13 }}>
+      <div style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:46, height:46, borderRadius:14, background:'rgba(124,58,237,.06)', color:'var(--brand)', marginBottom:14 }}>
+        <i className="fa fa-chart-column" style={{ fontSize: 18 }} />
+      </div>
+      <div style={{ fontWeight: 700, color: 'var(--txt2)', fontSize:14, letterSpacing:'-.2px' }}>Acá va a vivir tu mes</div>
+      <div style={{ fontSize: 12, marginTop: 6, color:'var(--txt3)', lineHeight:1.55, maxWidth:300, margin:'6px auto 0' }}>En cuanto entre el primer cobro vas a ver la curva. Por ahora, todo en calma.</div>
     </div>
   )
   const shown = data.map((m, i) => ({ ...m, prev: prevData[i]?.val || 0 }))
@@ -986,11 +995,11 @@ export default function Historial() {
         <>
           {/* ── MODO HOY: 3 acciones inmediatas ── */}
           {!loading && !filterLoading && (cobrosVencidos.length + entregasHoy.length + aConfirmar.length) > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <i className="fa fa-bolt" style={{ color: '#F59E0B', fontSize: 13 }} />
-                <h3 style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px', textTransform: 'uppercase', letterSpacing: '.06em' }}>Hoy importa</h3>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 10 }}>
+            <div style={{ marginBottom: 22 }}>
+              <div className="hoy-importa-header">
+                <span className="hoy-importa-bolt"><i className="fa fa-bolt" /></span>
+                <h3 className="hoy-importa-title">Hoy importa</h3>
+                <span className="hoy-importa-count">
                   {cobrosVencidos.length + entregasHoy.length + aConfirmar.length}
                 </span>
                 <button onClick={toggleTodayCollapsed}

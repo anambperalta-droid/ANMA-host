@@ -245,26 +245,37 @@ input,select,textarea{font-family:inherit}
 /* ─── CARDS ─── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--sh);transition:box-shadow var(--tr)}
 .card:hover{box-shadow:var(--sh-md)}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.card-title{font-size:13px;font-weight:700;color:var(--txt);letter-spacing:-.2px}
-.card-link{font-size:11px;color:var(--acento);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px}
+.card-title{font-size:14.5px;font-weight:800;color:var(--txt);letter-spacing:-.3px;line-height:1.25;display:inline-flex;align-items:center}
+.card-link{font-size:11.5px;color:var(--acento);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;letter-spacing:.1px;padding:4px 8px;border-radius:7px;transition:background .15s}
+.card-link:hover{background:rgba(124,58,237,.08)}
 
-/* ─── BENTO GRID ─── */
-.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(0,auto);gap:14px;margin-bottom:20px}
-.bento-kpi{background:var(--surface);border:none;border-radius:16px;padding:24px 24px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);position:relative;overflow:hidden;cursor:default;transition:box-shadow .2s}
-.bento-kpi:hover{box-shadow:0 4px 20px rgba(0,0,0,.10)}
+/* ─── BENTO GRID — premium feel, breathing room ─── */
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(0,auto);gap:18px;margin-bottom:24px}
+.bento-kpi{background:var(--surface);border:1px solid rgba(15,23,42,.06);border-radius:18px;padding:22px 22px 18px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -8px rgba(15,23,42,.06);position:relative;overflow:hidden;cursor:default;transition:box-shadow .25s ease,transform .15s ease,border-color .2s}
+.bento-kpi:hover{box-shadow:0 2px 6px rgba(15,23,42,.06),0 12px 32px -10px rgba(15,23,42,.12);transform:translateY(-1px);border-color:rgba(124,58,237,.18)}
+.bento-kpi-key{background:linear-gradient(180deg,rgba(34,197,94,.04) 0%,var(--surface) 35%);border-color:rgba(34,197,94,.22)}
+.bento-kpi-key::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#16A34A,#22C55E,#16A34A)}
+.kpi-label-elegant{font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.085em;text-transform:uppercase;line-height:1.2}
+.kpi-val-elegant{font-size:28px;font-weight:800;color:var(--txt);letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi-delta-elegant{font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;line-height:1.2;white-space:nowrap;flex-shrink:0;letter-spacing:.1px}
 .kpi-glow{position:absolute;top:-16px;right:-16px;width:70px;height:70px;border-radius:50%;opacity:.08}
 .kpi-icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px}
-.kpi-label{font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
-.kpi-val{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;line-height:1;color:var(--money)!important}
+.kpi-label{font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.085em;text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-size:28px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px;line-height:1.05;color:var(--money)!important}
 .kpi-foot{font-size:11px;color:var(--txt3)}
 .bento-wide{grid-column:span 2}
-.bento-chart{background:var(--surface);border:none;border-radius:16px;padding:28px 24px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);transition:box-shadow .2s}
-.bento-chart:hover{box-shadow:0 4px 20px rgba(0,0,0,.10)}
-.bento-seg{background:var(--panel-grad);border-radius:var(--r-lg);padding:16px;box-shadow:0 8px 32px rgba(30,27,75,.2);color:#fff;overflow-y:auto;max-height:260px}
+.bento-chart{background:var(--surface);border:1px solid rgba(15,23,42,.06);border-radius:18px;padding:24px 26px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -8px rgba(15,23,42,.06);transition:box-shadow .25s ease}
+.bento-chart:hover{box-shadow:0 2px 6px rgba(15,23,42,.06),0 12px 32px -10px rgba(15,23,42,.12)}
+.bento-seg{background:var(--panel-grad);border-radius:18px;padding:18px;box-shadow:0 8px 32px rgba(30,27,75,.2);color:#fff;overflow-y:auto;max-height:280px}
 .bento-seg::-webkit-scrollbar{width:4px}
 .bento-seg::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:10px}
-.bento-seg-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.bento-seg-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px;letter-spacing:-.2px}
+
+.hoy-importa-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.hoy-importa-bolt{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#FBBF24,#F59E0B);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;box-shadow:0 4px 12px rgba(245,158,11,.3)}
+.hoy-importa-title{font-size:15.5px;font-weight:800;color:var(--txt);letter-spacing:-.3px;margin:0;line-height:1.2}
+.hoy-importa-count{font-size:11px;font-weight:800;color:#92400E;background:#FEF3C7;padding:3px 9px;border-radius:99px;letter-spacing:.05em}
 
 /* ─── BADGES ─── */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
@@ -1211,15 +1222,19 @@ td b{color:var(--txt);font-weight:600}
   .ph-right{width:100%;flex-wrap:wrap;gap:6px!important;justify-content:flex-start}
   .ph-right .btn{font-size:11px!important;padding:6px 10px!important;min-height:0!important}
 
-  /* KPI bento grid — 2 col, ultra-compact */
-  .bento{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:10px}
-  .bento-kpi{padding:10px 12px 8px!important;border-radius:12px!important}
-  .bento-kpi .kpi-label,.bento-kpi > div:first-child{font-size:9px!important;margin-bottom:2px!important}
-  .bento-kpi .kpi-val,
-  .bento-kpi > div:nth-child(2) > div:first-child{font-size:18px!important;letter-spacing:-.03em}
+  /* KPI bento grid — 2 col mobile, sofisticado pero compacto */
+  .bento{grid-template-columns:1fr 1fr!important;gap:12px!important;margin-bottom:16px}
+  .bento-kpi{padding:16px 16px 14px!important;border-radius:14px!important}
+  .bento-kpi .kpi-label,.bento-kpi .kpi-label-elegant{font-size:10px!important;margin-bottom:6px!important;letter-spacing:.08em!important}
+  .bento-kpi .kpi-val,.bento-kpi .kpi-val-elegant{font-size:22px!important;letter-spacing:-.03em!important}
+  .bento-kpi .kpi-delta-elegant{font-size:10px!important;padding:2px 7px!important}
   .bento-kpi svg{display:none!important}
   .kpi-glow{display:none!important}
   .bento-kpi [style*="borderLeft"]{border-left-width:2px!important}
+  .hoy-importa-bolt{width:28px!important;height:28px!important;font-size:12px!important}
+  .hoy-importa-title{font-size:14px!important}
+  .hoy-importa-count{font-size:10.5px!important;padding:2px 8px!important}
+  .card-title{font-size:13.5px!important}
 
   /* Inner two-column → single stack */
   .bento-wide{grid-column:1/-1!important}
