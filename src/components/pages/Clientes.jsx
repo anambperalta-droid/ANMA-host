@@ -1164,7 +1164,7 @@ export default function Clientes() {
       {/* FICHA DETALLE */}
       {detailClient && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailClient(null) }}>
-          <div className="modal-form-card" style={{ maxWidth: 860 }} onClick={e => e.stopPropagation()}>
+          <div className="modal-form-card cli-detail-card" style={{ maxWidth: 860, height: 'min(880px, 92dvh)' }} onClick={e => e.stopPropagation()}>
 
             {/* Header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>

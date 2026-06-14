@@ -1710,10 +1710,17 @@ td b{color:var(--txt);font-weight:600}
   max-height:none;
   min-height:240px;
 }
+/* Excepción: card con altura explícita → body sí scrollea internamente */
+.cli-detail-card > div[style*="overflow-y"],
+.cli-detail-card > div[style*="overflow:auto"]{
+  overflow-y:auto!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+}
 /* Body internos NO scrollean ni se estiran (flex:1 que clipeaba) */
-.modal-form-card > div[style*="overflow-y"],
-.modal-form-card > div[style*="overflow:auto"],
-.modal-form-card > div[style*="overflow: auto"]{
+.modal-form-card:not(.cli-detail-card) > div[style*="overflow-y"],
+.modal-form-card:not(.cli-detail-card) > div[style*="overflow:auto"],
+.modal-form-card:not(.cli-detail-card) > div[style*="overflow: auto"]{
   overflow:visible!important;
   max-height:none!important;
   min-height:0!important;
