@@ -887,10 +887,13 @@ export default function Presupuesto() {
       ? marginBudgetedSaved
       : (calc.costPending ? null : Number(calc.marginReal))
 
-    // Descuento de stock: solo al pasar a "En preparación" y solo una vez
+    // Descuento de stock: al pasar a un estado calificador y solo una vez.
+    // BUG ANTERIOR: solo disparaba con 'inprogress' — si el usuario pasaba directo
+    // a 'delivered' (saltando inprogress), el stock NUNCA se descontaba.
+    const QUALIFYING_REGALOS = new Set(['inprogress', 'delivered', 'En preparación', 'En producción', 'Entregado'])
     const prevBudget = editId ? get('budgets').find(b => b.id === editId) : null
     const wasStockDeducted = prevBudget?.stockDeducted === true
-    const willDeductStock = form.status === 'inprogress' && !wasStockDeducted
+    const willDeductStock = QUALIFYING_REGALOS.has(form.status) && !wasStockDeducted
 
     // ── Cost freeze ──────────────────────────────────────────────────────────────
     // Kit component costs are stored frozen in the alternatives structure.
