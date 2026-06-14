@@ -491,8 +491,7 @@ export default function Config() {
   ]
 
   const allTabs = [
-    { id: 'identidad', icon: 'fa-building', label: 'Identidad' },
-    { id: 'contacto', icon: 'fa-phone', label: 'Contacto' },
+    { id: 'identidad', icon: 'fa-building', label: 'Identidad y contacto' },
     { id: 'comercial', icon: 'fa-dollar-sign', label: 'Comercial' },
     { id: 'listas', icon: 'fa-list', label: 'Listas' },
     { id: 'modulos', icon: 'fa-sliders', label: 'Módulos' },
@@ -505,6 +504,7 @@ export default function Config() {
 
   useEffect(() => {
     if (!canManageTeam && tab === 'equipo') setTab('identidad')
+    if (tab === 'contacto') setTab('identidad')
   }, [canManageTeam, tab])
 
   return (
@@ -626,12 +626,9 @@ export default function Config() {
               </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {tab === 'contacto' && (
-        <div style={{ maxWidth: 700 }}>
-          <div className="card">
+          {/* ── Datos de contacto (mergeados a Identidad para flujo más rápido) ── */}
+          <div className="card" style={{ marginTop: 16 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 7 }}>
               <i className="fa fa-phone" style={{ color: 'var(--brand)', fontSize: 14 }} />Datos de contacto
             </div>
