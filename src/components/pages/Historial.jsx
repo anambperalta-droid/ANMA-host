@@ -485,6 +485,20 @@ const cobrado = (b) => {
   if (b.payStatus === 'partial') return b.depositAmt || Math.round(totalCobrado * (b.deposit || 50) / 100)
   return 0
 }
+/** Cuánto cobrado el día/fecha. Suma payments[] de ese día o fallback legacy a b.date */
+const cobradoEnFecha = (b, fechaISO) => {
+  if (Array.isArray(b.payments) && b.payments.length > 0) {
+    return b.payments.filter(p => p.date === fechaISO).reduce((s, p) => s + (Number(p.amount) || 0), 0)
+  }
+  return b.date === fechaISO ? cobrado(b) : 0
+}
+/** Cuánto cobrado en rango [from, to] inclusive. */
+const cobradoEnRango = (b, fromISO, toISO) => {
+  if (Array.isArray(b.payments) && b.payments.length > 0) {
+    return b.payments.filter(p => p.date >= fromISO && p.date <= toISO).reduce((s, p) => s + (Number(p.amount) || 0), 0)
+  }
+  return (b.date >= fromISO && b.date <= toISO) ? cobrado(b) : 0
+}
 const ganCobrada = (b) => {
   if (b.payStatus === 'paid') return b.totalGain || 0
   if (b.payStatus === 'partial') {
@@ -632,7 +646,8 @@ export default function Historial() {
       if (!b.deliveryDate) return false
       return new Date(b.deliveryDate + 'T00:00') <= today
     })
-    const cobrosVencidosMonto = cobrosVencidos.reduce((s, b) => s + ((b.total || 0) - cobrado(b)), 0)
+    // Usa totalFinal (con IVA) si está disponible — refleja el monto real adeudado
+    const cobrosVencidosMonto = cobrosVencidos.reduce((s, b) => s + ((b.totalFinal || b.total || 0) - cobrado(b)), 0)
     const entregasHoy = budgets.filter(b => b.deliveryDate === todayStr && !['lost'].includes(b.status))
     const aConfirmar = budgets.filter(b => {
       if (!['sent', 'negotiating'].includes(b.status)) return false
@@ -672,21 +687,25 @@ export default function Historial() {
       const pymStr = `${py}-${String(pmo + 1).padStart(2, '0')}`
       const daysInMonth = new Date(cy, cmo + 1, 0).getDate()
       const daysInPrev = new Date(py, pmo + 1, 0).getDate()
-      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${cymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
-      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
+      // Cash flow REAL: sumamos payments[] del día, no la fecha de creación
+      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${cymStr}-${ds}`; chartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
+      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr}-${ds}`; prevChartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
     } else if (period === 'prevmonth') {
       const pmd = new Date(n.getFullYear(), n.getMonth() - 1, 1); const pymStr1 = `${pmd.getFullYear()}-${String(pmd.getMonth() + 1).padStart(2, '0')}`
       const pmd2 = new Date(n.getFullYear(), n.getMonth() - 2, 1); const pymStr2 = `${pmd2.getFullYear()}-${String(pmd2.getMonth() + 1).padStart(2, '0')}`
       const daysInMonth = new Date(pmd.getFullYear(), pmd.getMonth() + 1, 0).getDate()
       const daysInPrev = new Date(pmd2.getFullYear(), pmd2.getMonth() + 1, 0).getDate()
-      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); chartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr1}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
-      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); prevChartData.push({ lbl: String(d), val: budgets.filter(b => b.date === `${pymStr2}-${ds}`).reduce((s, b) => s + cobrado(b), 0) }) }
+      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr1}-${ds}`; chartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
+      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr2}-${ds}`; prevChartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
     } else {
+      // Vista mensual: cobrado del mes = suma de payments en ese mes
       for (let i = bm - 1; i >= 0; i--) {
         const d = new Date(n.getFullYear(), n.getMonth() - i, 1); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-        chartData.push({ lbl: MONTHS[d.getMonth()], val: budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + cobrado(b), 0) })
+        const from = `${key}-01`; const to = `${key}-31`
+        chartData.push({ lbl: MONTHS[d.getMonth()], val: budgets.reduce((s, b) => s + cobradoEnRango(b, from, to), 0) })
         const pd = new Date(n.getFullYear(), n.getMonth() - i - bm, 1); const pkey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`
-        prevChartData.push({ lbl: MONTHS[pd.getMonth()], val: budgets.filter(b => b.date?.startsWith(pkey)).reduce((s, b) => s + cobrado(b), 0) })
+        const pfrom = `${pkey}-01`; const pto = `${pkey}-31`
+        prevChartData.push({ lbl: MONTHS[pd.getMonth()], val: budgets.reduce((s, b) => s + cobradoEnRango(b, pfrom, pto), 0) })
       }
     }
     for (let i = bm - 1; i >= 0; i--) {
