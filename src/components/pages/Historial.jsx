@@ -1579,8 +1579,20 @@ export default function Historial() {
                       <td style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontSize: 12, color: 'var(--txt3)', fontWeight: 600 }}>{b.num || '—'}</td>
                       <td className="col-hide-mobile">{fmtDate(b.date)}</td>
                       <td style={{ maxWidth: 200 }}>
-                        <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.company || b.contact || '—'}</div>
-                        {b.company && b.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.contact}</div>}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setPreviewBudget(b) }}
+                          title="Ver detalle del pedido"
+                          style={{
+                            background: 'none', border: 'none', padding: 0, textAlign: 'left',
+                            cursor: 'pointer', fontFamily: 'inherit', width: '100%', display: 'block',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.querySelector('[data-cli]').style.color = 'var(--brand)' }}
+                          onMouseLeave={(e) => { e.currentTarget.querySelector('[data-cli]').style.color = 'var(--txt)' }}
+                        >
+                          <div data-cli style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--border2, #cbd5e1)', textUnderlineOffset: 3, transition: 'color .12s' }}>{b.company || b.contact || '—'}</div>
+                          {b.company && b.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.contact}</div>}
+                        </button>
                       </td>
                       <td className="col-hide-mobile">
                         <div style={{ fontSize: 11 }}>{fmtDate(b.deliveryDate) || '—'}</div>

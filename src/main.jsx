@@ -12,6 +12,26 @@ import { bootstrapSafeBackup } from './lib/safeBackup'
 // Auto-snapshot a IndexedDB (anti-pérdida de localStorage)
 bootstrapSafeBackup()
 
+// Auto-recovery cuando index.html viejo cacheado + chunks nuevos no existen
+const CHUNK_RELOAD_KEY = 'anma_chunk_reloaded_at'
+function isChunkLoadError(err) {
+  const msg = String(err?.message || err || '').toLowerCase()
+  return msg.includes('failed to fetch dynamically imported module')
+      || msg.includes('failed to load module script')
+      || msg.includes('importing a module script failed')
+      || msg.includes('error loading dynamically imported module')
+}
+function maybeReloadOnChunkError(err) {
+  if (!isChunkLoadError(err)) return false
+  const last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || 0)
+  if (Date.now() - last < 30_000) return false
+  sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()))
+  window.location.reload()
+  return true
+}
+window.addEventListener('error', (e) => { if (e.error) maybeReloadOnChunkError(e.error) })
+window.addEventListener('unhandledrejection', (e) => { if (e.reason) maybeReloadOnChunkError(e.reason) })
+
 // Registrar Service Worker para PWA + auto-update sin pedirle al user que limpie cache.
 // Flow:
 //   1. Browser carga la app con el SW viejo (v3 cache-first → bug histórico).

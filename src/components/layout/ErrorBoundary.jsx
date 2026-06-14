@@ -39,82 +39,100 @@ export default class ErrorBoundary extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'var(--bg, #f8f7ff)',
-        padding: '1.5rem',
-        fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+        background: 'linear-gradient(180deg, #FAFAFB 0%, #F5F3FF 100%)',
+        padding: '24px',
+        fontFamily: 'var(--font-sans, Inter, system-ui, sans-serif)',
       }}>
         <div style={{
-          maxWidth: 480,
+          maxWidth: 520,
           width: '100%',
-          background: 'var(--surface, #fff)',
-          borderRadius: 16,
-          boxShadow: '0 4px 32px rgba(124,58,237,.10)',
-          padding: '2.5rem 2rem',
+          background: '#fff',
+          borderRadius: 20,
+          border: '1px solid rgba(15,23,42,.06)',
+          boxShadow: '0 1px 2px rgba(15,23,42,.04), 0 12px 36px -10px rgba(124,58,237,.12)',
+          padding: '40px 36px 32px',
           textAlign: 'center',
         }}>
-          {/* Icon */}
+          {/* Icon line-only sofisticado */}
           <div style={{
-            width: 64, height: 64,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg,#7c3aed22,#a78bfa33)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 1.25rem',
-            fontSize: 28,
+            width: 56, height: 56,
+            borderRadius: 16,
+            border: '1.5px solid #DDD6FE',
+            background: 'rgba(124,58,237,.04)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 18px',
+            color: '#7C3AED',
           }}>
-            ⚠️
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
           </div>
 
           {/* Title */}
           <h2 style={{
-            margin: '0 0 .5rem',
-            fontSize: '1.25rem',
-            fontWeight: 700,
-            color: 'var(--text, #1e1b4b)',
+            margin: '0 0 8px',
+            fontSize: '20px',
+            fontWeight: 800,
+            color: '#1E1B4B',
+            letterSpacing: '-.4px',
           }}>
             Algo salió mal
           </h2>
 
           {/* Subtitle */}
           <p style={{
-            margin: '0 0 1.75rem',
-            fontSize: '.9rem',
-            color: 'var(--text-muted, #6b7280)',
-            lineHeight: 1.5,
+            margin: '0 0 24px',
+            fontSize: '13.5px',
+            color: '#64748B',
+            lineHeight: 1.6,
+            maxWidth: 360,
+            marginLeft: 'auto',
+            marginRight: 'auto',
           }}>
-            Ocurrió un error inesperado en esta sección.<br />
-            Podés recargar la página o intentar de nuevo.
+            Recargá la página — suele ser una versión vieja en caché. Si vuelve a pasar, copiá el detalle y mandalo.
           </p>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               onClick={this.handleReload}
               style={{
-                padding: '.6rem 1.4rem',
-                borderRadius: 8,
+                padding: '12px 22px',
+                borderRadius: 11,
                 border: 'none',
-                background: 'linear-gradient(135deg,#7c3aed,#a78bfa)',
+                background: '#7C3AED',
                 color: '#fff',
-                fontWeight: 600,
-                fontSize: '.875rem',
+                fontWeight: 700,
+                fontSize: 13.5,
+                letterSpacing: '-.1px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(124,58,237,.25)',
+                fontFamily: 'inherit',
+                boxShadow: '0 4px 14px rgba(124,58,237,.28)',
+                transition: 'transform .15s, box-shadow .2s',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,.4)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,58,237,.28)' }}
             >
               Recargar página
             </button>
             <button
               onClick={this.handleReset}
               style={{
-                padding: '.6rem 1.4rem',
-                borderRadius: 8,
-                border: '1.5px solid var(--border, #e5e7eb)',
-                background: 'transparent',
-                color: 'var(--text, #374151)',
+                padding: '12px 22px',
+                borderRadius: 11,
+                border: '1.5px solid #E5E7EB',
+                background: '#fff',
+                color: '#374151',
                 fontWeight: 600,
-                fontSize: '.875rem',
+                fontSize: 13.5,
                 cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'border-color .15s, background .15s',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#7C3AED'; e.currentTarget.style.background = '#FAFAFB' }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#fff' }}
             >
               Intentar de nuevo
             </button>
