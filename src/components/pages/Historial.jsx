@@ -53,6 +53,116 @@ function KpiCard({ label, value, delta, isKey, sparkData, sparkColor }) {
 }
 
 /* ── Modal motivo de pérdida ── */
+/* ── Modal de registro de pagos individuales ────────────────────── */
+const PAY_METHODS = [
+  { val: 'efectivo',      lbl: '💵 Efectivo' },
+  { val: 'transferencia', lbl: '🏦 Transferencia' },
+  { val: 'mp',            lbl: '🟦 Mercado Pago' },
+  { val: 'tarjeta',       lbl: '💳 Tarjeta' },
+  { val: 'cheque',        lbl: '🧾 Cheque' },
+  { val: 'otro',          lbl: '📌 Otro' },
+]
+function PaymentsModal({ budget, onSave, onClose }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const [payments, setPayments] = useState(Array.isArray(budget.payments) ? [...budget.payments] : [])
+  const [draft, setDraft] = useState({ date: today, amount: '', method: 'transferencia', notes: '' })
+  const fmtMoney = (v) => '$' + Number(v || 0).toLocaleString('es-AR')
+  const totalDue   = budget.totalFinal || budget.total || 0
+  const totalPaid  = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+  const remaining  = totalDue - totalPaid
+  const newStatus  = totalPaid <= 0 ? 'pending' : (totalDue > 0 && totalPaid >= totalDue ? 'paid' : 'partial')
+  const statusInfo = { pending:{bg:'#FEF2F2',c:'#DC2626',l:'Pendiente'}, partial:{bg:'#FFFBEB',c:'#D97706',l:'Parcial'}, paid:{bg:'#F0FDF4',c:'#15803D',l:'Pagado'} }[newStatus]
+
+  const addPayment = () => {
+    const amt = Number(draft.amount)
+    if (!amt || amt <= 0) return
+    setPayments([...payments, { id: Date.now(), date: draft.date, amount: amt, method: draft.method, notes: draft.notes.trim() }])
+    setDraft({ date: today, amount: '', method: draft.method, notes: '' })
+  }
+  const delPayment = (id) => setPayments(payments.filter(p => p.id !== id))
+  const methodLbl = (val) => PAY_METHODS.find(m => m.val === val)?.lbl || val
+
+  return (
+    <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+        <div className="mh">
+          <h3><i className="fa fa-hand-holding-dollar" style={{ color: '#15803D', marginRight: 8 }} />Pagos · {budget.num || '—'}</h3>
+          <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
+        </div>
+        <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: 14, marginBottom: 14, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{budget.ivaAmt > 0 ? ' c/IVA' : ''}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', marginTop: 2 }}>{fmtMoney(totalDue)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Cobrado</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#15803D', marginTop: 2 }}>{fmtMoney(totalPaid)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Falta</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: remaining > 0 ? '#DC2626' : 'var(--txt3)', marginTop: 2 }}>{fmtMoney(Math.max(0, remaining))}</div>
+          </div>
+          <div style={{ gridColumn: '1 / -1', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 11, color: 'var(--txt3)' }}>Estado al guardar:</span>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: statusInfo.c, background: statusInfo.bg, padding: '3px 10px', borderRadius: 99 }}>{statusInfo.l}</span>
+          </div>
+        </div>
+        {payments.length > 0 && (
+          <div style={{ marginBottom: 14, maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10 }}>
+            {payments.map((p, idx) => (
+              <div key={p.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: idx < payments.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12.5 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, color: 'var(--txt)' }}>{fmtMoney(p.amount)} · <span style={{ fontWeight: 500, color: 'var(--txt2)' }}>{methodLbl(p.method)}</span></div>
+                  <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2 }}>{p.date}{p.notes ? ` · ${p.notes}` : ''}</div>
+                </div>
+                <button onClick={() => delPayment(p.id)} title="Eliminar" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: 6, borderRadius: 6 }}>
+                  <i className="fa fa-trash" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ background: 'rgba(124,58,237,.04)', border: '1px solid rgba(124,58,237,.15)', borderRadius: 12, padding: 14 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
+            <i className="fa fa-plus-circle" style={{ marginRight: 5 }} />Nuevo pago
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+            <div className="fg" style={{ marginBottom: 0 }}>
+              <label>Fecha</label>
+              <input type="date" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value })} />
+            </div>
+            <div className="fg" style={{ marginBottom: 0 }}>
+              <label>Monto $</label>
+              <input type="number" value={draft.amount} onChange={e => setDraft({ ...draft, amount: e.target.value })} placeholder={Math.max(0, remaining).toString()} min="0" />
+            </div>
+          </div>
+          <div className="fg" style={{ marginBottom: 10 }}>
+            <label>Método</label>
+            <select value={draft.method} onChange={e => setDraft({ ...draft, method: e.target.value })}>
+              {PAY_METHODS.map(m => <option key={m.val} value={m.val}>{m.lbl}</option>)}
+            </select>
+          </div>
+          <div className="fg" style={{ marginBottom: 10 }}>
+            <label>Notas (opcional)</label>
+            <input type="text" value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} placeholder="Ej: seña, comprobante #1234..." />
+          </div>
+          <button type="button" onClick={addPayment} disabled={!Number(draft.amount)} className="btn btn-primary btn-sm" style={{ width: '100%' }}>
+            <i className="fa fa-plus" /> Agregar pago
+          </button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 18 }}>
+          <button className="btn btn-secondary" onClick={onClose} style={{ flex: 1 }}>
+            <i className="fa fa-xmark" /> Cancelar
+          </button>
+          <button className="btn btn-primary" onClick={() => onSave(payments)} style={{ flex: 1 }}>
+            <i className="fa fa-floppy-disk" /> Guardar pagos
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LossReasonModal({ onSave, onClose }) {
   const [reason, setReason] = useState('')
   const [other, setOther] = useState('')
@@ -409,6 +519,7 @@ export default function Historial() {
   const [selectedCliente, setSelectedCliente] = useState(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewBudget, setPreviewBudget] = useState(null)
+  const [paymentsBudget, setPaymentsBudget] = useState(null)
   const [todayCollapsed, setTodayCollapsed] = useState(() => db('todayCollapsed', false))
   const toggleTodayCollapsed = () => {
     setTodayCollapsed(c => {
@@ -1799,11 +1910,16 @@ export default function Historial() {
                 <button className="mclose" onClick={() => setPreviewBudget(null)}><i className="fa fa-xmark" /></button>
               </div>
               <iframe srcDoc={html} style={{ flex: 1, border: 'none', minHeight: 420, borderRadius: 8 }} title="Vista previa" />
-              <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid var(--border)', justifyContent: 'flex-end' }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => setPreviewBudget(null)}>Cerrar</button>
-                <button className="btn btn-primary btn-sm" onClick={() => { setPreviewBudget(null); nav(`/presupuesto/${b.id}`) }}>
-                  <i className="fa fa-pen" /> Editar
+              <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid var(--border)', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                <button className="btn btn-sm" onClick={() => { setPreviewBudget(null); setPaymentsBudget(b) }} style={{ background: '#F0FDF4', color: '#15803D', border: '1px solid #86EFAC' }}>
+                  <i className="fa fa-hand-holding-dollar" /> Registrar pago
                 </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setPreviewBudget(null)}>Cerrar</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => { setPreviewBudget(null); nav(`/presupuesto/${b.id}`) }}>
+                    <i className="fa fa-pen" /> Editar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1815,6 +1931,24 @@ export default function Historial() {
         <LossReasonModal
           onSave={confirmLoss}
           onClose={() => setPendingLossId(null)}
+        />
+      )}
+
+      {/* ═══ Registro de pagos individuales ═══ */}
+      {paymentsBudget && (
+        <PaymentsModal
+          budget={paymentsBudget}
+          onClose={() => setPaymentsBudget(null)}
+          onSave={(payments) => {
+            const totalPaid = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+            const totalDue  = paymentsBudget.totalFinal || paymentsBudget.total || 0
+            const newPayStatus = totalPaid <= 0 ? 'pending'
+                              : totalDue > 0 && totalPaid >= totalDue ? 'paid'
+                              : 'partial'
+            saveBudget({ ...paymentsBudget, payments, payStatus: newPayStatus })
+            setPaymentsBudget(null)
+            toast(`Pagos actualizados — ${fmt(totalPaid)} de ${fmt(totalDue)}`, 'ok')
+          }}
         />
       )}
 
