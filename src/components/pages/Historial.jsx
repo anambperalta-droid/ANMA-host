@@ -1910,6 +1910,44 @@ export default function Historial() {
                 <button className="mclose" onClick={() => setPreviewBudget(null)}><i className="fa fa-xmark" /></button>
               </div>
               <iframe srcDoc={html} style={{ flex: 1, border: 'none', minHeight: 420, borderRadius: 8 }} title="Vista previa" />
+              {(() => {
+                const totalDue   = b.totalFinal || b.total || 0
+                const totalPaid  = cobrado(b)
+                const remaining  = Math.max(0, totalDue - totalPaid)
+                const pays       = Array.isArray(b.payments) ? b.payments : []
+                const pcMethod = (val) => ({ efectivo:'💵 Efectivo', transferencia:'🏦 Transferencia', mp:'🟦 Mercado Pago', tarjeta:'💳 Tarjeta', cheque:'🧾 Cheque', otro:'📌 Otro' }[val] || val)
+                if (totalDue === 0 && totalPaid === 0) return null
+                return (
+                  <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface2)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: pays.length > 0 ? 12 : 0 }}>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{b.ivaAmt > 0 ? ' c/IVA' : ''}</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', marginTop: 2 }}>{fmt(totalDue)}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Cobrado</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#15803D', marginTop: 2 }}>{fmt(totalPaid)}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Falta</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: remaining > 0 ? '#DC2626' : 'var(--txt3)', marginTop: 2 }}>{fmt(remaining)}</div>
+                      </div>
+                    </div>
+                    {pays.length > 0 && (
+                      <div style={{ maxHeight: 110, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)' }}>
+                        {pays.map((p, idx) => (
+                          <div key={p.id || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '7px 11px', borderBottom: idx < pays.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12 }}>
+                            <span style={{ fontSize: 11, color: 'var(--txt3)' }}>{p.date}</span>
+                            <span style={{ color: 'var(--txt2)' }}>{pcMethod(p.method)}</span>
+                            {p.notes && <span style={{ fontSize: 10.5, color: 'var(--txt4)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.notes}</span>}
+                            <span style={{ fontWeight: 700, color: 'var(--txt)' }}>{fmt(p.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
               <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid var(--border)', justifyContent: 'space-between', flexWrap: 'wrap' }}>
                 <button className="btn btn-sm" onClick={() => { setPreviewBudget(null); setPaymentsBudget(b) }} style={{ background: '#F0FDF4', color: '#15803D', border: '1px solid #86EFAC' }}>
                   <i className="fa fa-hand-holding-dollar" /> Registrar pago
