@@ -1608,14 +1608,52 @@ export default function Historial() {
                           </div>
                         </div>
                       </td>
-                      <td className="col-hide-mobile" style={{ whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_PAY[b.payStatus] || '#DC2626', flexShrink: 0, display: 'inline-block' }} />
-                          <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: 'var(--txt2)', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
-                            value={b.payStatus || 'pending'} onChange={e => handlePayStatusChange(b.id, e.target.value)}>
-                            {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                          </select>
-                        </div>
+                      <td className="col-hide-mobile" style={{ whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                        {(() => {
+                          const totalDue   = b.totalFinal || b.total || 0
+                          const paid       = cobrado(b)
+                          const pays       = Array.isArray(b.payments) ? b.payments : []
+                          const hasPayments = pays.length > 0
+                          const seña       = Number(b.depositAmt) || 0
+                          const statusColor = DOT_PAY[b.payStatus] || '#DC2626'
+                          const statusBg = b.payStatus === 'paid' ? '#F0FDF4'
+                                         : b.payStatus === 'partial' ? '#FFFBEB'
+                                         : '#FEF2F2'
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 130 }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: statusBg, padding: '2px 8px', borderRadius: 99, alignSelf: 'flex-start', maxWidth: 'fit-content' }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0, display: 'inline-block' }} />
+                                <select
+                                  style={{ fontSize: 11, fontWeight: 700, padding: 0, border: 'none', background: 'transparent', color: statusColor, cursor: 'pointer', outline: 'none', fontFamily: 'inherit' }}
+                                  value={b.payStatus || 'pending'}
+                                  onClick={e => e.stopPropagation()}
+                                  onChange={e => handlePayStatusChange(b.id, e.target.value)}
+                                >
+                                  {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                                </select>
+                              </span>
+                              {totalDue > 0 && (
+                                <span style={{ fontSize: 10.5, color: 'var(--txt3)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.3 }}>
+                                  <b style={{ color: paid > 0 ? '#15803D' : 'var(--txt3)' }}>{fmt(paid)}</b>
+                                  <span style={{ color: 'var(--txt4)', margin: '0 3px' }}>/</span>
+                                  <span>{fmt(totalDue)}</span>
+                                </span>
+                              )}
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--txt4)' }}>
+                                {hasPayments
+                                  ? <span><i className="fa fa-check-circle" style={{ color: '#16A34A', marginRight: 3 }} />{pays.length} pago{pays.length > 1 ? 's' : ''}</span>
+                                  : seña > 0 ? <span style={{ color: '#D97706', fontWeight: 600 }}>Seña: {fmt(seña)}</span>
+                                  : <span>Sin pagos registrados</span>
+                                }
+                                <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
+                                  title={hasPayments ? 'Ver / agregar pagos' : 'Registrar pago'}
+                                  style={{ background: 'none', border: 'none', color: 'var(--brand)', cursor: 'pointer', padding: '1px 4px', fontSize: 10.5, fontWeight: 700, marginLeft: 'auto' }}>
+                                  <i className="fa fa-hand-holding-dollar" style={{ marginRight: 3 }} />Pagos
+                                </button>
+                              </span>
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td>
                         <div className="acts" style={{ gap: 2 }}>
