@@ -328,6 +328,9 @@ export default function Presupuesto() {
     logisticaParadas: [],
     comisionista: '',
     viajeFecha: '',
+    // Toggles de logística cobrada al cliente
+    logisticaCharged: false,
+    logisticaShowDetail: false,
   })
   const [alternatives, setAlternatives] = useState([emptyAlt()])
   const [activeAltIdx, setActiveAltIdx] = useState(0)
@@ -437,6 +440,8 @@ export default function Presupuesto() {
           logisticaParadas: b.logisticaParadas || [],
           comisionista: b.comisionista || '',
           viajeFecha: b.viajeFecha || '',
+          logisticaCharged: b.logisticaCharged === true,
+          logisticaShowDetail: b.logisticaShowDetail === true,
         })
         // Backward compat: si ya tiene alternatives las carga; si no, envuelve items en Alternativa 1
         if (b.alternatives?.length) {
@@ -810,12 +815,14 @@ export default function Presupuesto() {
     const logTotal = 0
     const ship = Math.max(0, num(form.shipCost))
     const shipCharged = form.shipCharged !== false
-    // Logística / Comisionista — suma de paradas atribuidas a este presupuesto
-    const viajesCost = Math.round((form.logisticaParadas || []).reduce((s, p) => s + Math.max(0, num(p.cost)), 0))
+    // Logística / Comisionista — suma de paradas atribuidas a este presupuesto.
+    // logisticaCharged: true → se cobra al cliente (suma al total). false → costo interno.
+    const viajesCost  = Math.round((form.logisticaParadas || []).reduce((s, p) => s + Math.max(0, num(p.cost)), 0))
+    const logiCharged = form.logisticaCharged === true
     const baseCost = totalCost + logTotal + ship + viajesCost
     const discountPct = Math.min(Math.max(num(form.discount), 0), 100)
     const discountAmt = Math.round(totalRevenue * discountPct / 100)
-    const total = totalRevenue - discountAmt + (shipCharged ? ship : 0)
+    const total = totalRevenue - discountAmt + (shipCharged ? ship : 0) + (logiCharged ? viajesCost : 0)
     const gain = hasFullCostData ? (total - baseCost) : 0
     const marginReal = (hasFullCostData && total > 0)
       ? (((total - baseCost) / total) * 100).toFixed(1)
@@ -830,8 +837,8 @@ export default function Presupuesto() {
     const ivaAmt = Math.round(total * ivaRate)
     const totalFinal = total + ivaAmt
     const depositFinal = ivaRate > 0 ? Math.round(totalFinal * num(form.deposit) / 100) : depositAmt
-    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct, viajesCost, costPending, hasFullCostData, persFixedTotal, ivaRate, ivaAmt, totalFinal, depositFinal }
-  }, [items, form.shipCost, form.shipCharged, form.deposit, form.discount, form.logisticaParadas, c.marginLowThreshold, c.ivaEnabled, c.ivaRate, kitMode, simplePack, simplePers])
+    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct, viajesCost, logiCharged, costPending, hasFullCostData, persFixedTotal, ivaRate, ivaAmt, totalFinal, depositFinal }
+  }, [items, form.shipCost, form.shipCharged, form.deposit, form.discount, form.logisticaParadas, form.logisticaCharged, c.marginLowThreshold, c.ivaEnabled, c.ivaRate, kitMode, simplePack, simplePers])
 
   /* ── Lógica de flujo: venta directa vs. cotización ──
      showPaymentDetails = true  → 1 sola opción  O  hay una opción aprobada
@@ -874,7 +881,7 @@ export default function Presupuesto() {
       if (it.qty < 0) { toast(`Cantidad inválida en "${it.name || 'item'}".`, 'er'); return }
       if (it.priceUnit < 0) { toast(`Precio inválido en "${it.name || 'item'}".`, 'er'); return }
     }
-    const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending' }
+    const saveForm = { ...form, shipCost: 0, shipCharged: false, envioACotizar: form.envioACotizar !== false, logoCost: num(form.logoCost), margin: num(form.margin), deposit: num(form.deposit), payStatus: form.payStatus || 'pending', logisticaCharged: form.logisticaCharged === true, logisticaShowDetail: form.logisticaShowDetail === true }
     // Si los costos están pendientes (algún ítem sin costo) NO congelamos un margen 0 engañoso.
     const marginBudgeted = marginBudgetedSaved !== null
       ? marginBudgetedSaved
@@ -900,6 +907,11 @@ export default function Presupuesto() {
       totalCost: frozenTotalCost,
       totalGain,
       total: calc.total,
+      // IVA discriminado — para libro IVA Ventas y reportes (registros con/sin IVA)
+      ivaRate: calc.ivaRate,
+      ivaAmt: calc.ivaAmt,
+      totalFinal: calc.totalFinal,
+      depositFinal: calc.depositFinal,
       depositAmt: calc.depositAmt,
       marginBudgeted,
       ...(willDeductStock ? { costSnapshot: { date: new Date().toISOString().slice(0, 10), baseCost: calc.baseCost, viajesCost: calc.viajesCost } } : {}),
@@ -2839,12 +2851,41 @@ export default function Presupuesto() {
                   </div>
 
                   {calc.viajesCost > 0 && (
-                    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11.5, color: '#9CA3AF' }}>
-                        Total logística ({(form.logisticaParadas || []).length} parada{(form.logisticaParadas || []).length !== 1 ? 's' : ''})
-                      </span>
-                      <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--money)' }}>{fmt(calc.viajesCost)}</span>
-                    </div>
+                    <>
+                      <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px dashed #E5E7EB', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 9, cursor: 'pointer', fontSize: 12.5 }}>
+                          <input type="checkbox" checked={form.logisticaCharged === true}
+                            onChange={e => setF('logisticaCharged', e.target.checked)}
+                            style={{ marginTop: 2, accentColor: 'var(--brand)' }} />
+                          <span>
+                            <span style={{ fontWeight: 700, color: 'var(--txt)' }}>Cobrar al cliente</span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--txt3)', marginTop: 2, lineHeight: 1.5 }}>
+                              Si está activado, los <b>{fmt(calc.viajesCost)}</b> se suman al total facturado. Si no, ANMA absorbe el costo.
+                            </span>
+                          </span>
+                        </label>
+                        {form.logisticaCharged === true && (
+                          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 9, cursor: 'pointer', fontSize: 12.5, paddingLeft: 14, borderLeft: '2px solid rgba(124,58,237,.2)' }}>
+                            <input type="checkbox" checked={form.logisticaShowDetail === true}
+                              onChange={e => setF('logisticaShowDetail', e.target.checked)}
+                              style={{ marginTop: 2, accentColor: 'var(--brand)' }} />
+                            <span>
+                              <span style={{ fontWeight: 700, color: 'var(--txt)' }}>Mostrar detalle en presupuesto / WhatsApp</span>
+                              <span style={{ display: 'block', fontSize: 11, color: 'var(--txt3)', marginTop: 2, lineHeight: 1.5 }}>
+                                Si está apagado, el cliente ve un total más alto pero no figura "logística" como concepto.
+                              </span>
+                            </span>
+                          </label>
+                        )}
+                      </div>
+                      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11.5, color: '#9CA3AF' }}>
+                          Total logística ({(form.logisticaParadas || []).length} parada{(form.logisticaParadas || []).length !== 1 ? 's' : ''})
+                          {form.logisticaCharged === true && <span style={{ color: 'var(--brand)', fontWeight: 700, marginLeft: 6 }}>· cobrada al cliente</span>}
+                        </span>
+                        <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--money)' }}>{fmt(calc.viajesCost)}</span>
+                      </div>
+                    </>
                   )}
                 </div>
               </>

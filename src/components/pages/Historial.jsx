@@ -362,9 +362,17 @@ function StatusDonut({ statuses, budgets, onSegmentClick }) {
 }
 
 // ── Pure helpers (module-level — no state deps) ──────────────────
+/**
+ * Cuánto efectivamente entró por este presupuesto.
+ * Prioridad: payments[] real > totalFinal (con IVA) > total (sin IVA).
+ */
 const cobrado = (b) => {
-  if (b.payStatus === 'paid') return b.total || 0
-  if (b.payStatus === 'partial') return b.depositAmt || Math.round((b.total || 0) * (b.deposit || 50) / 100)
+  if (Array.isArray(b.payments) && b.payments.length > 0) {
+    return b.payments.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+  }
+  const totalCobrado = b.totalFinal || b.total || 0
+  if (b.payStatus === 'paid')    return totalCobrado
+  if (b.payStatus === 'partial') return b.depositAmt || Math.round(totalCobrado * (b.deposit || 50) / 100)
   return 0
 }
 const ganCobrada = (b) => {
