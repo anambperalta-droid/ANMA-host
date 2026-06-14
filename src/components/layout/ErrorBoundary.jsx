@@ -3,7 +3,9 @@ import { Component } from 'react'
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
-    this.state = { hasError: false, error: null, showDetails: false }
+    // Auto-expandimos detalles para que el user vea EL ERROR REAL al instante.
+    // Antes el detalle quedaba colapsado y eso no nos servía para diagnosticar.
+    this.state = { hasError: false, error: null, showDetails: true, copied: false }
   }
 
   static getDerivedStateFromError(error) {
@@ -140,23 +142,52 @@ export default class ErrorBoundary extends Component {
                 {showDetails ? 'Ocultar detalles técnicos' : 'Ver detalles técnicos'}
               </button>
               {showDetails && (
-                <pre style={{
-                  marginTop: '.75rem',
-                  padding: '.875rem',
-                  background: 'var(--bg, #f3f4f6)',
-                  borderRadius: 8,
-                  fontSize: '.72rem',
-                  color: '#dc2626',
-                  overflowX: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  maxHeight: 200,
-                  overflowY: 'auto',
-                  lineHeight: 1.5,
-                }}>
-                  {error.message}
-                  {error.stack ? '\n\n' + error.stack : ''}
-                </pre>
+                <>
+                  <pre style={{
+                    marginTop: '.75rem',
+                    padding: '.875rem',
+                    background: 'var(--bg, #f3f4f6)',
+                    borderRadius: 8,
+                    fontSize: '.72rem',
+                    color: '#dc2626',
+                    overflowX: 'auto',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                    lineHeight: 1.5,
+                    textAlign: 'left',
+                  }}>
+                    {error?.message || 'Sin mensaje'}
+                    {error?.stack ? '\n\n' + error.stack : ''}
+                    {'\n\nURL: ' + (typeof window !== 'undefined' ? window.location.href : '?')}
+                    {'\nUA: ' + (typeof navigator !== 'undefined' ? navigator.userAgent : '?')}
+                  </pre>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const txt = (error?.message || '') + '\n\n' + (error?.stack || '') + '\n\nURL: ' + window.location.href + '\nUA: ' + navigator.userAgent
+                        await navigator.clipboard.writeText(txt)
+                        this.setState({ copied: true })
+                        setTimeout(() => this.setState({ copied: false }), 2500)
+                      } catch { /* noop */ }
+                    }}
+                    style={{
+                      marginTop: '.6rem',
+                      background: this.state.copied ? '#16A34A' : '#7C3AED',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '8px 14px',
+                      borderRadius: 8,
+                      fontSize: '.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}>
+                    <i className="fa fa-copy" style={{ marginRight: 6 }} />
+                    {this.state.copied ? 'Copiado ✓ Pegale a Anma por WhatsApp' : 'Copiar error completo (para diagnóstico)'}
+                  </button>
+                </>
               )}
             </div>
           )}

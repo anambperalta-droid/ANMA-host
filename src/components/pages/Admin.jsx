@@ -370,6 +370,40 @@ export default function Admin() {
     await load()
   }
 
+  /** Eliminación TOTAL — auth.users + workspace + memberships + data. IRREVERSIBLE. */
+  const deleteUserHard = async (wsId, displayName) => {
+    const c1 = confirm(`⚠️ ELIMINAR COMPLETAMENTE a "${displayName}"\n\nEsto borra:\n• La cuenta de auth (Supabase)\n• El workspace + todos sus datos\n• Sus memberships\n• Su histórico\n\n❗ Es IRREVERSIBLE.\n\n¿Continuar?`)
+    if (!c1) return
+    const c2 = prompt(`Para confirmar, escribí el nombre exacto del workspace:\n\n"${displayName}"`)
+    if (c2 !== displayName) {
+      if (c2 !== null) alert('El nombre no coincide. Cancelado por seguridad.')
+      return
+    }
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: wsId },
+      })
+      if (fnErr) {
+        let msg = fnErr.message || 'Error en la función'
+        const ctx = fnErr.context
+        if (ctx && typeof ctx === 'object') {
+          try {
+            const res = typeof ctx.clone === 'function' ? ctx.clone() : ctx
+            const raw = await res.text()
+            try { const b = JSON.parse(raw); if (b?.error) msg = b.error } catch { /* noop */ }
+          } catch { /* noop */ }
+        }
+        alert('No se pudo eliminar: ' + msg)
+        return
+      }
+      if (data?.error) { alert(data.error); return }
+      alert(`✓ ${displayName} eliminado completamente.\n\nYa puede volver a registrarse con el mismo email.`)
+      await load()
+    } catch (e) {
+      alert('Error inesperado: ' + (e.message || e))
+    }
+  }
+
   const revokeMember = async (mId) => {
     if (!confirm('¿Revocar este miembro? No podrá seguir accediendo.')) return
     const { error } = await supabase.from('memberships')
@@ -1012,6 +1046,10 @@ export default function Admin() {
                               </button>
                               <button onClick={() => toggleStatus(w.id, w.status)} title={w.status === 'active' ? 'Pausar' : 'Activar'}>
                                 <i className={`fa fa-${w.status === 'active' ? 'pause' : 'play'}`} />
+                              </button>
+                              <button onClick={() => deleteUserHard(w.id, w.name || 'usuario')} title="Eliminar usuario COMPLETAMENTE (auth.users + workspace + data)"
+                                style={{ color: '#DC2626' }}>
+                                <i className="fa fa-trash" />
                               </button>
                             </>
                           )}
