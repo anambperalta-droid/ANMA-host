@@ -96,6 +96,43 @@ export default function Admin() {
   const [tab, setTab] = useState('trials')        // 'trials' | 'paid' | 'all'
   const [expanded, setExpanded] = useState(null)
   const [members, setMembers] = useState({})
+  const [showCreateUser, setShowCreateUser] = useState(false)
+  const [newUserForm, setNewUserForm] = useState({ email: '', password: '', business_name: '', full_name: '' })
+  const [creatingUser, setCreatingUser] = useState(false)
+
+  const handleCreateUser = async () => {
+    const { email, password, business_name, full_name } = newUserForm
+    if (!email || !password) { alert('Email y contraseña son obligatorios'); return }
+    if (password.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return }
+    setCreatingUser(true)
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('create-user', {
+        body: { email: email.trim().toLowerCase(), password, business_name: business_name.trim(), full_name: full_name.trim() },
+      })
+      if (fnErr) {
+        let msg = fnErr.message || 'Error en la función'
+        const ctx = fnErr.context
+        if (ctx && typeof ctx === 'object') {
+          try {
+            const res = typeof ctx.clone === 'function' ? ctx.clone() : ctx
+            const raw = await res.text()
+            try { const b = JSON.parse(raw); if (b?.error) msg = b.error } catch { /* noop */ }
+          } catch { /* noop */ }
+        }
+        alert('No se pudo crear: ' + msg)
+        return
+      }
+      if (data?.error) { alert(data.error); return }
+      alert(`✓ Usuario creado.\n\nEmail: ${email}\nContraseña: ${password}\n\nPasale estas credenciales al cliente — ya puede ingresar.`)
+      setShowCreateUser(false)
+      setNewUserForm({ email: '', password: '', business_name: '', full_name: '' })
+      await load()
+    } catch (e) {
+      alert('Error inesperado: ' + (e.message || e))
+    } finally {
+      setCreatingUser(false)
+    }
+  }
   const [notifPerm, setNotifPerm] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'denied')
   const [recentSignups, setRecentSignups] = useState([])  // últimos signups detectados en vivo
   const toast = useToast()
@@ -605,6 +642,10 @@ export default function Admin() {
           <button className="btn btn-secondary" onClick={load} disabled={loading}>
             <i className={`fa ${loading ? 'fa-spinner fa-spin' : 'fa-rotate-right'}`} style={{ marginRight: 6 }} />
             Refrescar
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowCreateUser(true)}>
+            <i className="fa fa-user-plus" style={{ marginRight: 6 }} />
+            Crear usuario
           </button>
         </div>
       </div>
@@ -1211,6 +1252,55 @@ export default function Admin() {
                   </tbody>
                 </table>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Modal: Crear usuario manual ═══ */}
+      {showCreateUser && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setShowCreateUser(false) }}>
+          <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+            <div className="mh">
+              <h3><i className="fa fa-user-plus" style={{ color: 'var(--brand)', marginRight: 8 }} />Crear usuario manual</h3>
+              <button className="mclose" onClick={() => setShowCreateUser(false)}><i className="fa fa-xmark" /></button>
+            </div>
+            <p style={{ fontSize: 12.5, color: 'var(--txt3)', marginTop: 0, marginBottom: 14, lineHeight: 1.5 }}>
+              Creás directamente la cuenta con email + contraseña. El usuario se loguea YA con esas credenciales (sin necesidad de Google).
+            </p>
+            <div className="fg" style={{ marginBottom: 12 }}>
+              <label>Email del cliente *</label>
+              <input type="email" value={newUserForm.email}
+                onChange={e => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                placeholder="cliente@email.com" />
+            </div>
+            <div className="fg" style={{ marginBottom: 12 }}>
+              <label>Contraseña inicial * (mín. 6 caracteres)</label>
+              <input type="text" value={newUserForm.password}
+                onChange={e => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                placeholder="Una contraseña que le vas a pasar al cliente" />
+            </div>
+            <div className="fg" style={{ marginBottom: 12 }}>
+              <label>Nombre de la empresa (opcional)</label>
+              <input type="text" value={newUserForm.business_name}
+                onChange={e => setNewUserForm({ ...newUserForm, business_name: e.target.value })}
+                placeholder="Distribuidora del Sur" />
+            </div>
+            <div className="fg" style={{ marginBottom: 16 }}>
+              <label>Nombre del contacto (opcional)</label>
+              <input type="text" value={newUserForm.full_name}
+                onChange={e => setNewUserForm({ ...newUserForm, full_name: e.target.value })}
+                placeholder="María Pérez" />
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'space-between' }}>
+              <button className="btn btn-secondary" onClick={() => setShowCreateUser(false)} style={{ flex: 1 }} disabled={creatingUser}>
+                <i className="fa fa-xmark" /> Cancelar
+              </button>
+              <button className="btn btn-primary" onClick={handleCreateUser} style={{ flex: 1 }} disabled={creatingUser}>
+                {creatingUser
+                  ? <><i className="fa fa-spinner fa-spin" /> Creando...</>
+                  : <><i className="fa fa-check" /> Crear y activar</>}
+              </button>
             </div>
           </div>
         </div>
