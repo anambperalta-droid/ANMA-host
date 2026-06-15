@@ -1,81 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <!-- Cara frontal — violeta brillante (luz que viene de la izquierda-arriba) -->
-    <linearGradient id="vFront" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#A78BFA"/>
-      <stop offset="0.5" stop-color="#8B5CF6"/>
-      <stop offset="1" stop-color="#7C3AED"/>
-    </linearGradient>
-    <!-- Cara lateral / pliegue — violeta oscuro (sombra) -->
-    <linearGradient id="vSide" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#5B21B6"/>
-      <stop offset="1" stop-color="#3B0764"/>
-    </linearGradient>
-    <!-- Tono medio para crossbar y diagonales internas -->
-    <linearGradient id="vMid" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#8B5CF6"/>
-      <stop offset="1" stop-color="#6D28D9"/>
-    </linearGradient>
-    <!-- Ribbon "hub" magenta — curl externo que envuelve la pierna derecha -->
-    <linearGradient id="hubRibbon" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#F472B6"/>
-      <stop offset="0.6" stop-color="#EC4899"/>
-      <stop offset="1" stop-color="#9D174D"/>
+    <!-- Violeta sólido — sobrio, una sola dirección de luz -->
+    <linearGradient id="vMain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#5B21B6"/>
     </linearGradient>
   </defs>
 
-  <!-- Container blanco rounded -->
+  <!-- Container blanco rounded — consistente con el resto del producto -->
   <rect width="100" height="100" rx="22" fill="#ffffff"/>
 
-  <!-- ══════════════════════════════════════════════════════════════
-       "A" 3D-ribbon — construida como prisma triangular plegado.
-       Cada cara de la A es un polígono separado para dar el efecto
-       de pliegue origami.
-       ══════════════════════════════════════════════════════════════ -->
-
-  <!-- ── PIERNA IZQUIERDA ── -->
-  <!-- Cara frontal (luz) — ribbon principal -->
-  <polygon points="46,18 56,18 35,90 22,90" fill="url(#vFront)"/>
-  <!-- Cara lateral (sombra) — pliegue interior -->
-  <polygon points="56,18 60,22 41,90 35,90" fill="url(#vSide)"/>
-
-  <!-- ── PIERNA DERECHA ── -->
-  <!-- Cara frontal (luz) -->
-  <polygon points="44,18 54,18 78,90 65,90" fill="url(#vFront)"/>
-  <!-- Cara lateral (sombra) detrás -->
-  <polygon points="44,18 40,22 59,90 65,90" fill="url(#vSide)"/>
-
-  <!-- ── ÁPICE — punta plegada arriba ── -->
-  <polygon points="50,8 60,22 56,18" fill="url(#vSide)"/>
-  <polygon points="50,8 40,22 44,18" fill="url(#vFront)"/>
-  <polygon points="40,22 60,22 50,8" fill="url(#vMid)" opacity="0.7"/>
-
-  <!-- ── CROSSBAR — barra horizontal de la A ── -->
-  <!-- Cara frontal -->
-  <polygon points="33,58 67,58 65,68 35,68" fill="url(#vMid)"/>
-  <!-- Sombra inferior del crossbar -->
-  <polygon points="35,68 65,68 63,70 37,70" fill="url(#vSide)" opacity="0.8"/>
-
-  <!-- ══════════════════════════════════════════════════════════════
-       LOOP "HUB" — ribbon magenta que se desprende de la pierna
-       derecha y forma un curl externo. Esto es la marca "Hub".
-       ══════════════════════════════════════════════════════════════ -->
-
-  <!-- Ribbon magenta envolviendo la pierna derecha al bajar -->
-  <path d="M 65 60
-           Q 76 64 80 75
-           Q 82 86 72 92
-           Q 60 96 56 86
-           Q 54 78 62 76"
-        fill="none"
-        stroke="url(#hubRibbon)"
-        stroke-width="5.5"
+  <!-- "A" monograma de trazo continuo limpio.
+       Diseño sobrio tipo Linear / Vercel / Stripe — sin efectos 3D, sin gradientes complejos.
+       Una sola figura: las dos piernas de la A + crossbar dibujadas como un único path. -->
+  <path d="M 22 84 L 50 16 L 78 84"
+        stroke="url(#vMain)"
+        stroke-width="9"
         stroke-linecap="round"
-        stroke-linejoin="round"/>
+        stroke-linejoin="round"
+        fill="none"/>
 
-  <!-- Highlight sutil sobre la cara frontal izquierda — refuerza el 3D -->
-  <polygon points="46,18 50,18 28,90 24,90" fill="#ffffff" opacity="0.12"/>
-
-  <!-- Highlight sutil sobre la cara frontal derecha -->
-  <polygon points="50,18 53,18 74,90 70,90" fill="#ffffff" opacity="0.1"/>
+  <!-- Crossbar — ligeramente más fino, mismo color -->
+  <path d="M 33 64 L 67 64"
+        stroke="url(#vMain)"
+        stroke-width="8"
+        stroke-linecap="round"
+        fill="none"/>
 </svg>

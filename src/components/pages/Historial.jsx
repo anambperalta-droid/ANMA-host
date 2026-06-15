@@ -64,8 +64,17 @@ const PAY_METHODS = [
 ]
 function PaymentsModal({ budget, onSave, onClose }) {
   const today = new Date().toISOString().slice(0, 10)
-  const [payments, setPayments] = useState(Array.isArray(budget.payments) ? [...budget.payments] : [])
-  const [draft, setDraft] = useState({ date: today, amount: '', method: 'transferencia', notes: '' })
+  const initialPayments = Array.isArray(budget.payments) ? [...budget.payments] : []
+  const initialTotalPaid = initialPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+  const initialDue = budget.totalFinal || budget.total || 0
+  const initialRemaining = Math.max(0, initialDue - initialTotalPaid)
+  const [payments, setPayments] = useState(initialPayments)
+  const [draft, setDraft] = useState({
+    date: today,
+    amount: initialRemaining > 0 ? String(initialRemaining) : '',
+    method: 'transferencia',
+    notes: '',
+  })
   const fmtMoney = (v) => '$' + Number(v || 0).toLocaleString('es-AR')
   const totalDue   = budget.totalFinal || budget.total || 0
   const totalPaid  = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0)
@@ -77,7 +86,13 @@ function PaymentsModal({ budget, onSave, onClose }) {
     const amt = Number(draft.amount)
     if (!amt || amt <= 0) return
     setPayments([...payments, { id: Date.now(), date: draft.date, amount: amt, method: draft.method, notes: draft.notes.trim() }])
-    setDraft({ date: today, amount: '', method: draft.method, notes: '' })
+    const newRemaining = Math.max(0, totalDue - (totalPaid + amt))
+    setDraft({
+      date: today,
+      amount: newRemaining > 0 ? String(newRemaining) : '',
+      method: draft.method,
+      notes: '',
+    })
   }
   const delPayment = (id) => setPayments(payments.filter(p => p.id !== id))
   const methodLbl = (val) => PAY_METHODS.find(m => m.val === val)?.lbl || val
@@ -132,8 +147,32 @@ function PaymentsModal({ budget, onSave, onClose }) {
               <input type="date" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value })} />
             </div>
             <div className="fg" style={{ marginBottom: 0 }}>
-              <label>Monto $</label>
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Monto $</span>
+                {remaining > 0 && Number(draft.amount) !== remaining && (
+                  <button type="button"
+                    onClick={() => setDraft({ ...draft, amount: String(remaining) })}
+                    style={{ background:'none', border:'none', color:'var(--brand)', fontSize:10, fontWeight:700, cursor:'pointer', padding:0, textTransform:'none' }}>
+                    Saldo {fmtMoney(remaining)} →
+                  </button>
+                )}
+              </label>
               <input type="number" value={draft.amount} onChange={e => setDraft({ ...draft, amount: e.target.value })} placeholder={Math.max(0, remaining).toString()} min="0" />
+              {Number(draft.amount) > 0 && Number(draft.amount) === remaining && (
+                <div style={{ fontSize: 10.5, color: '#15803D', marginTop: 4, fontWeight: 600 }}>
+                  <i className="fa fa-check-circle" style={{ marginRight: 3 }} />Pago completo — cubre todo el saldo
+                </div>
+              )}
+              {Number(draft.amount) > 0 && Number(draft.amount) < remaining && (
+                <div style={{ fontSize: 10.5, color: '#D97706', marginTop: 4 }}>
+                  Parcial — quedan {fmtMoney(remaining - Number(draft.amount))} por cobrar
+                </div>
+              )}
+              {Number(draft.amount) > remaining && (
+                <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 4 }}>
+                  <i className="fa fa-triangle-exclamation" style={{ marginRight: 3 }} />Excede el saldo en {fmtMoney(Number(draft.amount) - remaining)}
+                </div>
+              )}
             </div>
           </div>
           <div className="fg" style={{ marginBottom: 10 }}>
