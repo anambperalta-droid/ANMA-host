@@ -101,113 +101,102 @@ function PaymentsModal({ budget, onSave, onClose }) {
 
   return (
     <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal pay-modal-card" style={{ maxWidth: 600, height: 'min(90dvh, 760px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
-        <div className="mh" style={{ flexShrink: 0 }}>
-          <h3><i className="fa fa-hand-holding-dollar" style={{ color: '#15803D', marginRight: 8 }} />Pagos · {budget.num || '—'}</h3>
-          <button className="mclose" onClick={onClose}><i className="fa fa-xmark" /></button>
+      <div className="modal" style={{ maxWidth: 560, padding: '18px 22px 18px', maxHeight: '94dvh' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <i className="fa fa-hand-holding-dollar" style={{ color: '#15803D', fontSize: 15 }} />
+            <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--txt)' }}>Pagos · {budget.num || '—'}</span>
+            <span style={{ fontSize: 10, color: 'var(--txt4)', fontWeight: 500 }}><i className="fa fa-lock" style={{ marginRight: 3 }} />Interno</span>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 16, padding: 4 }}>
+            <i className="fa fa-xmark" />
+          </button>
         </div>
-        <div style={{ flexShrink: 0, fontSize: 10.5, color: 'var(--txt3)', background: 'var(--surface2)', padding: '6px 12px', borderRadius: 8, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <i className="fa fa-lock" style={{ color: 'var(--txt4)' }} />
-          <span>Información interna — el cliente NO ve estos registros en el presupuesto / WhatsApp / PDF</span>
-        </div>
-        <div className="pay-modal-body" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: 4 }}>
         {inconsistentPaid && (
-          <div style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 10, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#92400E', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            <i className="fa fa-triangle-exclamation" style={{ marginTop: 2, flexShrink: 0 }} />
-            <span>Este pedido figura como <b>Pagado</b> en la lista pero sin comprobantes acá. Cargá ahora el detalle real del cobro — quedará trazado.</span>
+          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '7px 11px', marginBottom: 10, fontSize: 11.5, color: '#92400E', display: 'flex', alignItems: 'center', gap: 7 }}>
+            <i className="fa fa-triangle-exclamation" style={{ flexShrink: 0 }} />
+            <span>Está marcado <b>Pagado</b> en la lista pero sin comprobantes — cargá el cobro real abajo.</span>
           </div>
         )}
-        <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: 14, marginBottom: 14, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{budget.ivaAmt > 0 ? ' c/IVA' : ''}</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', marginTop: 2 }}>{fmtMoney(totalDue)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Cobrado</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#15803D', marginTop: 2 }}>{fmtMoney(totalPaid)}</div>
+            <div style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{budget.ivaAmt > 0 ? ' c/IVA' : ''}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)' }}>{fmtMoney(totalDue)}</div>
           </div>
           <div>
-            <div style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Falta</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: remaining > 0 ? '#DC2626' : 'var(--txt3)', marginTop: 2 }}>{fmtMoney(Math.max(0, remaining))}</div>
+            <div style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Cobrado</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#15803D' }}>{fmtMoney(totalPaid)}</div>
           </div>
-          <div style={{ gridColumn: '1 / -1', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, color: 'var(--txt3)' }}>Estado al guardar:</span>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: statusInfo.c, background: statusInfo.bg, padding: '3px 10px', borderRadius: 99 }}>{statusInfo.l}</span>
+          <div>
+            <div style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Falta</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: remaining > 0 ? '#DC2626' : 'var(--txt3)' }}>{fmtMoney(Math.max(0, remaining))}</div>
           </div>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: statusInfo.c, background: statusInfo.bg, padding: '3px 10px', borderRadius: 99, whiteSpace: 'nowrap' }}>{statusInfo.l}</span>
         </div>
         {payments.length > 0 && (
-          <div style={{ marginBottom: 14, maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10 }}>
+          <div style={{ marginBottom: 10, maxHeight: 110, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 9 }}>
             {payments.map((p, idx) => (
-              <div key={p.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: idx < payments.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12.5 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: 'var(--txt)' }}>{fmtMoney(p.amount)} · <span style={{ fontWeight: 500, color: 'var(--txt2)' }}>{methodLbl(p.method)}</span></div>
-                  <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2 }}>{p.date}{p.notes ? ` · ${p.notes}` : ''}</div>
+              <div key={p.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 11px', borderBottom: idx < payments.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 11.5 }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--txt)' }}>{fmtMoney(p.amount)}</span>
+                  <span style={{ color: 'var(--txt2)' }}>{methodLbl(p.method)}</span>
+                  <span style={{ fontSize: 10.5, color: 'var(--txt3)' }}>{p.date}{p.notes ? ` · ${p.notes}` : ''}</span>
                 </div>
-                <button onClick={() => delPayment(p.id)} title="Eliminar" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: 6, borderRadius: 6 }}>
+                <button onClick={() => delPayment(p.id)} title="Eliminar" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: 4, borderRadius: 5, fontSize: 11 }}>
                   <i className="fa fa-trash" />
                 </button>
               </div>
             ))}
           </div>
         )}
-        <div style={{ background: 'rgba(124,58,237,.04)', border: '1px solid rgba(124,58,237,.15)', borderRadius: 12, padding: 14 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
-            <i className="fa fa-plus-circle" style={{ marginRight: 5 }} />Nuevo pago
+        <div style={{ background: 'rgba(124,58,237,.04)', border: '1px solid rgba(124,58,237,.15)', borderRadius: 10, padding: '11px 13px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+              <i className="fa fa-plus-circle" style={{ marginRight: 4 }} />Nuevo pago
+            </span>
+            {remaining > 0 && Number(draft.amount) !== remaining && (
+              <button type="button" onClick={() => setDraft({ ...draft, amount: String(remaining) })}
+                style={{ background:'none', border:'none', color:'var(--brand)', fontSize:10, fontWeight:700, cursor:'pointer', padding:0 }}>
+                Saldo {fmtMoney(remaining)} →
+              </button>
+            )}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-            <div className="fg" style={{ marginBottom: 0 }}>
-              <label>Fecha</label>
-              <input type="date" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value })} />
-            </div>
-            <div className="fg" style={{ marginBottom: 0 }}>
-              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Monto $</span>
-                {remaining > 0 && Number(draft.amount) !== remaining && (
-                  <button type="button"
-                    onClick={() => setDraft({ ...draft, amount: String(remaining) })}
-                    style={{ background:'none', border:'none', color:'var(--brand)', fontSize:10, fontWeight:700, cursor:'pointer', padding:0, textTransform:'none' }}>
-                    Saldo {fmtMoney(remaining)} →
-                  </button>
-                )}
-              </label>
-              <input type="number" value={draft.amount} onChange={e => setDraft({ ...draft, amount: e.target.value })} placeholder={Math.max(0, remaining).toString()} min="0" />
-              {Number(draft.amount) > 0 && Number(draft.amount) === remaining && (
-                <div style={{ fontSize: 10.5, color: '#15803D', marginTop: 4, fontWeight: 600 }}>
-                  <i className="fa fa-check-circle" style={{ marginRight: 3 }} />Pago completo — cubre todo el saldo
-                </div>
-              )}
-              {Number(draft.amount) > 0 && Number(draft.amount) < remaining && (
-                <div style={{ fontSize: 10.5, color: '#D97706', marginTop: 4 }}>
-                  Parcial — quedan {fmtMoney(remaining - Number(draft.amount))} por cobrar
-                </div>
-              )}
-              {Number(draft.amount) > remaining && (
-                <div style={{ fontSize: 10.5, color: '#DC2626', marginTop: 4 }}>
-                  <i className="fa fa-triangle-exclamation" style={{ marginRight: 3 }} />Excede el saldo en {fmtMoney(Number(draft.amount) - remaining)}
-                </div>
-              )}
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 8, marginBottom: 7 }}>
+            <input type="date" value={draft.date} onChange={e => setDraft({ ...draft, date: e.target.value })}
+              style={{ padding: '8px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
+            <input type="number" value={draft.amount} onChange={e => setDraft({ ...draft, amount: e.target.value })}
+              placeholder="Monto $"
+              style={{ padding: '8px 12px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', fontWeight: 700 }} />
           </div>
-          <div className="fg" style={{ marginBottom: 10 }}>
-            <label>Método</label>
-            <select value={draft.method} onChange={e => setDraft({ ...draft, method: e.target.value })}>
+          {Number(draft.amount) > 0 && (
+            <div style={{ fontSize: 10.5, marginBottom: 7, fontWeight: 600,
+              color: Number(draft.amount) === remaining ? '#15803D'
+                  : Number(draft.amount) > remaining ? '#DC2626'
+                  : '#D97706' }}>
+              {Number(draft.amount) === remaining && <><i className="fa fa-check-circle" style={{ marginRight: 4 }} />Cubre todo el saldo</>}
+              {Number(draft.amount) < remaining && <>Parcial · quedan {fmtMoney(remaining - Number(draft.amount))}</>}
+              {Number(draft.amount) > remaining && <><i className="fa fa-triangle-exclamation" style={{ marginRight: 4 }} />Excede en {fmtMoney(Number(draft.amount) - remaining)}</>}
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 8, marginBottom: 8 }}>
+            <select value={draft.method} onChange={e => setDraft({ ...draft, method: e.target.value })}
+              style={{ padding: '8px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit', background: '#fff' }}>
               {PAY_METHODS.map(m => <option key={m.val} value={m.val}>{m.lbl}</option>)}
             </select>
+            <input type="text" value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })}
+              placeholder="Notas (opcional)"
+              style={{ padding: '8px 12px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
           </div>
-          <div className="fg" style={{ marginBottom: 10 }}>
-            <label>Notas (opcional)</label>
-            <input type="text" value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} placeholder="Ej: seña, comprobante #1234..." />
-          </div>
-          <button type="button" onClick={addPayment} disabled={!Number(draft.amount)} className="btn btn-primary btn-sm" style={{ width: '100%' }}>
+          <button type="button" onClick={addPayment} disabled={!Number(draft.amount)}
+            style={{ width: '100%', padding: '8px 14px', background: Number(draft.amount) ? 'var(--brand)' : 'var(--border)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: Number(draft.amount) ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
             <i className="fa fa-plus" /> Agregar pago
           </button>
         </div>
-        </div>{/* /pay-modal-body */}
-        <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-          <button className="btn btn-secondary" onClick={onClose} style={{ flex: 1 }}>
-            <i className="fa fa-xmark" /> Cancelar
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '9px 14px', background: 'var(--surface2)', color: 'var(--txt2)', border: '1.5px solid var(--border)', borderRadius: 9, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Cancelar
           </button>
-          <button className="btn btn-primary" onClick={() => onSave(payments)} style={{ flex: 1 }}>
+          <button onClick={() => onSave(payments)} style={{ flex: 1.4, padding: '9px 14px', background: '#15803D', color: '#fff', border: 'none', borderRadius: 9, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
             <i className="fa fa-floppy-disk" /> Guardar pagos
           </button>
         </div>
