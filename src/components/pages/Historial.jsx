@@ -108,7 +108,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
 
   return (
     <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal" style={{ maxWidth: 560, padding: '18px 22px 18px', maxHeight: '94dvh' }} onClick={e => e.stopPropagation()}>
+      <div className="modal" style={{ maxWidth: 560, padding: '18px 22px 18px', maxHeight: 'none', height: 'auto', overflow: 'visible' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <i className="fa fa-hand-holding-dollar" style={{ color: '#15803D', fontSize: 15 }} />
