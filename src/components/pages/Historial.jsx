@@ -1743,13 +1743,16 @@ export default function Historial() {
                               <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--txt4)' }}>
                                 {hasPayments
                                   ? <span><i className="fa fa-check-circle" style={{ color: '#16A34A', marginRight: 3 }} />{pays.length} pago{pays.length > 1 ? 's' : ''}</span>
-                                  : seña > 0 ? <span style={{ color: '#D97706', fontWeight: 600 }}>Seña: {fmt(seña)}</span>
+                                  : b.payStatus === 'paid'
+                                    ? <span style={{ color: '#D97706', fontWeight: 600 }}><i className="fa fa-triangle-exclamation" style={{ marginRight: 3 }} />Sin comprobante</span>
+                                  : seña > 0
+                                    ? <span style={{ color: '#D97706', fontWeight: 600 }}>Seña: {fmt(seña)}</span>
                                   : <span>Sin pagos registrados</span>
                                 }
                                 <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
                                   title={hasPayments ? 'Ver / agregar pagos' : 'Registrar pago'}
                                   style={{ background: 'none', border: 'none', color: 'var(--brand)', cursor: 'pointer', padding: '1px 4px', fontSize: 10.5, fontWeight: 700, marginLeft: 'auto' }}>
-                                  <i className="fa fa-hand-holding-dollar" style={{ marginRight: 3 }} />Pagos
+                                  <i className="fa fa-hand-holding-dollar" style={{ marginRight: 3 }} />{hasPayments ? 'Pagos' : 'Registrar'}
                                 </button>
                               </span>
                             </div>

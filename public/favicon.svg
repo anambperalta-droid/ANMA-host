@@ -1,45 +1,81 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 48 48">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="box" x1="4" y1="20" x2="44" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff6eb4"/>
-      <stop offset="100%" stop-color="#d4006e"/>
+    <!-- Cara frontal — violeta brillante (luz que viene de la izquierda-arriba) -->
+    <linearGradient id="vFront" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A78BFA"/>
+      <stop offset="0.5" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#7C3AED"/>
     </linearGradient>
-    <linearGradient id="lid" x1="4" y1="14" x2="44" y2="22" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff91c8"/>
-      <stop offset="100%" stop-color="#e8006e"/>
+    <!-- Cara lateral / pliegue — violeta oscuro (sombra) -->
+    <linearGradient id="vSide" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B21B6"/>
+      <stop offset="1" stop-color="#3B0764"/>
     </linearGradient>
-    <linearGradient id="ribbon" x1="24" y1="0" x2="24" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#fff0f8"/>
-      <stop offset="100%" stop-color="#ffc0e0"/>
+    <!-- Tono medio para crossbar y diagonales internas -->
+    <linearGradient id="vMid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6D28D9"/>
     </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#c0006080"/>
-    </filter>
+    <!-- Ribbon "hub" magenta — curl externo que envuelve la pierna derecha -->
+    <linearGradient id="hubRibbon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F472B6"/>
+      <stop offset="0.6" stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#9D174D"/>
+    </linearGradient>
   </defs>
 
-  <!-- Box body -->
-  <rect x="4" y="22" width="40" height="22" rx="3" fill="url(#box)" filter="url(#shadow)"/>
+  <!-- Container blanco rounded -->
+  <rect width="100" height="100" rx="22" fill="#ffffff"/>
 
-  <!-- Box lid -->
-  <rect x="2" y="14" width="44" height="10" rx="3" fill="url(#lid)"/>
+  <!-- ══════════════════════════════════════════════════════════════
+       "A" 3D-ribbon — construida como prisma triangular plegado.
+       Cada cara de la A es un polígono separado para dar el efecto
+       de pliegue origami.
+       ══════════════════════════════════════════════════════════════ -->
 
-  <!-- Vertical ribbon on box body -->
-  <rect x="21" y="22" width="6" height="22" rx="1" fill="url(#ribbon)" opacity="0.85"/>
+  <!-- ── PIERNA IZQUIERDA ── -->
+  <!-- Cara frontal (luz) — ribbon principal -->
+  <polygon points="46,18 56,18 35,90 22,90" fill="url(#vFront)"/>
+  <!-- Cara lateral (sombra) — pliegue interior -->
+  <polygon points="56,18 60,22 41,90 35,90" fill="url(#vSide)"/>
 
-  <!-- Horizontal ribbon on box lid -->
-  <rect x="2" y="17" width="44" height="4" rx="1" fill="url(#ribbon)" opacity="0.85"/>
+  <!-- ── PIERNA DERECHA ── -->
+  <!-- Cara frontal (luz) -->
+  <polygon points="44,18 54,18 78,90 65,90" fill="url(#vFront)"/>
+  <!-- Cara lateral (sombra) detrás -->
+  <polygon points="44,18 40,22 59,90 65,90" fill="url(#vSide)"/>
 
-  <!-- Bow left loop -->
-  <ellipse cx="17" cy="11" rx="7" ry="5" fill="#ffd6ec" opacity="0.9" transform="rotate(-30 17 11)"/>
-  <!-- Bow right loop -->
-  <ellipse cx="31" cy="11" rx="7" ry="5" fill="#ffd6ec" opacity="0.9" transform="rotate(30 31 11)"/>
+  <!-- ── ÁPICE — punta plegada arriba ── -->
+  <polygon points="50,8 60,22 56,18" fill="url(#vSide)"/>
+  <polygon points="50,8 40,22 44,18" fill="url(#vFront)"/>
+  <polygon points="40,22 60,22 50,8" fill="url(#vMid)" opacity="0.7"/>
 
-  <!-- Bow left loop inner -->
-  <ellipse cx="17.5" cy="11.5" rx="4" ry="2.8" fill="#ff7ec0" opacity="0.6" transform="rotate(-30 17.5 11.5)"/>
-  <!-- Bow right loop inner -->
-  <ellipse cx="30.5" cy="11.5" rx="4" ry="2.8" fill="#ff7ec0" opacity="0.6" transform="rotate(30 30.5 11.5)"/>
+  <!-- ── CROSSBAR — barra horizontal de la A ── -->
+  <!-- Cara frontal -->
+  <polygon points="33,58 67,58 65,68 35,68" fill="url(#vMid)"/>
+  <!-- Sombra inferior del crossbar -->
+  <polygon points="35,68 65,68 63,70 37,70" fill="url(#vSide)" opacity="0.8"/>
 
-  <!-- Bow center knot -->
-  <ellipse cx="24" cy="14" rx="4" ry="3.5" fill="#e8006e"/>
-  <ellipse cx="24" cy="14" rx="2.2" ry="2" fill="#ff91c8"/>
+  <!-- ══════════════════════════════════════════════════════════════
+       LOOP "HUB" — ribbon magenta que se desprende de la pierna
+       derecha y forma un curl externo. Esto es la marca "Hub".
+       ══════════════════════════════════════════════════════════════ -->
+
+  <!-- Ribbon magenta envolviendo la pierna derecha al bajar -->
+  <path d="M 65 60
+           Q 76 64 80 75
+           Q 82 86 72 92
+           Q 60 96 56 86
+           Q 54 78 62 76"
+        fill="none"
+        stroke="url(#hubRibbon)"
+        stroke-width="5.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- Highlight sutil sobre la cara frontal izquierda — refuerza el 3D -->
+  <polygon points="46,18 50,18 28,90 24,90" fill="#ffffff" opacity="0.12"/>
+
+  <!-- Highlight sutil sobre la cara frontal derecha -->
+  <polygon points="50,18 53,18 74,90 70,90" fill="#ffffff" opacity="0.1"/>
 </svg>
