@@ -367,12 +367,11 @@ td b{color:var(--txt);font-weight:600}
 /* Overlay backdrop — único scrolleable. Block para que el modal pueda crecer
    naturalmente y el overlay scrollee la página entera (no más flex). */
 .modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000;background:rgba(15,12,60,.5);backdrop-filter:blur(6px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:24px 16px}
-.modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
-/* Modal centrado: margin auto en flex container con align-items:flex-start
-   = vertical center cuando hay espacio, top-align cuando contenido > viewport.
-   Esto evita el clipping del 'align-items:center' tradicional. */
+.modal-bg.open{display:flex;align-items:safe center;justify-content:center}
+/* Modal centrado vertical. 'safe center' = centro cuando cabe, top-align cuando
+   contenido excede viewport (asi se puede scrollear modal-bg sin clipping). */
 .modal-bg.open > .modal,
-.modal-bg.open > .modal-form-card{margin:auto}
+.modal-bg.open > .modal-form-card{margin:auto 0}
 /* ── Modal base (ARQUITECTURA GLOBAL) ────────────────────────────────────
    SIN scroll interno. El modal crece TODO lo que necesite y, si excede
    el viewport, el .modal-bg (overlay) scrollea la página entera para
@@ -1730,13 +1729,13 @@ td b{color:var(--txt);font-weight:600}
   max-height:none;
   min-height:240px;
 }
-/* Modales DETALLE con tabs (ficha cliente, producto, pagos): el cap de altura
-   permite scroll interno si el contenido excede. Height auto = se ajusta al
-   contenido y queda centrado por el margin:auto del modal-bg flex. */
+/* Modales DETALLE (con body interno scrolleable): max-height:95vh maximiza el
+   aprovechamiento vertical. El body con flex:1 + overflow-y:auto scrollea
+   internamente cuando hace falta. Mejor presencia visual. */
 .cli-detail-card,
 .prod-modal-card,
 .pay-modal-card{
-  max-height:90vh;
+  max-height:95vh;
 }
 /* Excepción: card con altura explícita → body sí scrollea internamente */
 .cli-detail-card > div[style*="overflow-y"],

@@ -863,7 +863,7 @@ export default function Proveedores() {
       {/* FICHA DETALLE CON PESTAÑAS */}
       {detailSupplier && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailSupplier(null) }}>
-          <div className="modal-form-card cli-detail-card" style={{ width: '100%', maxWidth: 860, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+          <div className="modal-form-card cli-detail-card" style={{ width: '100%', maxWidth: 860, maxHeight: '95vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
