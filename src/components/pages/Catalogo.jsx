@@ -984,7 +984,7 @@ export default function Catalogo() {
       ══════════════════════════════════════════════════ */}
       {modal && (
         <div className="modal-bg open" style={{ padding: '6px 10px', alignItems: 'flex-start' }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          <div className="modal-form-card prod-modal-card" style={{ width: '100%', maxWidth: productMode === 'kit' ? 1040 : 700, height: '90vh', maxHeight: 880, display: 'flex', flexDirection: 'column' }}>
+          <div className="modal-form-card prod-modal-card" style={{ width: '100%', maxWidth: productMode === 'kit' ? 1040 : 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
             {/* ── HEADER FIJO ── */}
             <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

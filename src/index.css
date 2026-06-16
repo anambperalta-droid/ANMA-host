@@ -1353,15 +1353,12 @@ td b{color:var(--txt);font-weight:600}
     overflow:visible!important;
     padding:0 0 calc(40px + env(safe-area-inset-bottom))!important;
   }
-  /* Modales detalle en mobile: full-screen bottom sheet (92vh) — sin huecos */
+  /* Modales detalle en mobile: max-height para que el body scrollee internamente
+     si el contenido excede. Centrado natural por flex+margin:auto del modal-bg. */
   .cli-detail-card,
   .prod-modal-card,
   .pay-modal-card{
-    height:92vh!important;
-    min-height:92vh!important;
     max-height:92vh!important;
-    border-radius:20px 20px 0 0!important;
-    overflow:hidden!important;
   }
   .modal-lg,.modal-xl{max-width:100vw!important;width:100vw!important}
   .modal::before{content:'';display:block;width:36px;height:4px;border-radius:4px;background:var(--border2);margin:0 auto 14px;flex-shrink:0}
@@ -1733,14 +1730,13 @@ td b{color:var(--txt);font-weight:600}
   max-height:none;
   min-height:240px;
 }
-/* Modales DETALLE con tabs (ficha cliente, producto, pagos): aprovechan el viewport
-   vertical en lugar de cortarse a la mitad. Min-height garantiza presencia visual. */
+/* Modales DETALLE con tabs (ficha cliente, producto, pagos): el cap de altura
+   permite scroll interno si el contenido excede. Height auto = se ajusta al
+   contenido y queda centrado por el margin:auto del modal-bg flex. */
 .cli-detail-card,
 .prod-modal-card,
 .pay-modal-card{
-  height:min(880px, 90vh)!important;
-  min-height:min(620px, 88vh)!important;
-  max-height:90vh!important;
+  max-height:90vh;
 }
 /* Excepción: card con altura explícita → body sí scrollea internamente */
 .cli-detail-card > div[style*="overflow-y"],
