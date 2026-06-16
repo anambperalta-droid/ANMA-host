@@ -140,8 +140,9 @@ export default function Admin() {
   const load = useCallback(async () => {
     setLoading(true); setErr('')
     try {
-      // 1. Scope: usuarios con datos en este sitio + traemos updated_at + el blob data
-      //    para derivar 'temperature' (cuántos datos cargó).
+      // 1. Actividad por usuario en ESTE sitio (anma-regalos). Es info enriquecedora,
+      //    NO un filtro — necesitamos ver tambien a quienes se registraron pero
+      //    aun no abrieron la app (sin row en anma_user_data todavia).
       const { data: siteUsers, error: e0 } = await supabase
         .from('anma_user_data')
         .select('user_id, updated_at, data')
@@ -149,15 +150,25 @@ export default function Admin() {
       if (e0) throw e0
       const userActivity = new Map()
       ;(siteUsers || []).forEach(r => userActivity.set(r.user_id, { updated_at: r.updated_at, data: r.data }))
-      const allowedWsIds = new Set(userActivity.keys())
+      // Set de workspaces con actividad SOLO en otra app: para excluirlos.
+      const { data: otherSiteUsers } = await supabase
+        .from('anma_user_data')
+        .select('user_id')
+        .neq('site_key', SITE_KEY)
+      const otherSiteSet = new Set((otherSiteUsers || []).map(r => r.user_id))
 
-      // 2. Workspaces (con columnas de billing — requiere SUPABASE_MP_MIGRATION.sql aplicado)
+      // 2. Workspaces — TODOS los registrados. Excluimos solo los que tienen
+      //    actividad EXCLUSIVA en otra app.
       const { data: wss, error: e1 } = await supabase
         .from('workspaces')
         .select('id, name, plan, seats_allowed, status, created_at, subscription_status, activated_at, next_payment_due_at, last_payment_at, lifetime_revenue, contact_email, contact_phone')
         .order('created_at', { ascending: false })
       if (e1) throw e1
-      const scopedWss = (wss || []).filter(w => allowedWsIds.has(w.id))
+      const scopedWss = (wss || []).filter(w => {
+        if (userActivity.has(w.id)) return true
+        if (otherSiteSet.has(w.id))   return false
+        return true
+      })
 
       // 3. Memberships
       const { data: mems, error: e2 } = await supabase
@@ -165,10 +176,11 @@ export default function Admin() {
         .select('id, workspace_id, role, status, user_id, created_at')
       if (e2) throw e2
 
+      const scopedWsSet = new Set(scopedWss.map(w => w.id))
       const used = {}
       const byWs = {}
       ;(mems || []).forEach(m => {
-        if (!allowedWsIds.has(m.workspace_id)) return
+        if (!scopedWsSet.has(m.workspace_id)) return
         if (m.role !== 'owner' && (m.status === 'active' || m.status === 'invited')) {
           used[m.workspace_id] = (used[m.workspace_id] || 0) + 1
         }
