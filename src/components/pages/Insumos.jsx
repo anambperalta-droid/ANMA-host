@@ -222,7 +222,7 @@ export default function Insumos() {
       </div>
 
       {/* ── KPIs ── */}
-      <div className="bento" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginBottom: 14 }}>
+      <div className="bento bento-kpis-4" style={{ marginBottom: 14 }}>
         <div className="bento-kpi" style={{ borderLeft: '3px solid var(--brand)', padding: '12px 14px 10px' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Total materiales</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.03em', lineHeight: 1.1 }}>{insumos.length}</div>
