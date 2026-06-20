@@ -3,7 +3,7 @@ import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
-import { fmt, db, dbW } from '../../lib/storage'
+import { fmt, db, dbW, dbDel } from '../../lib/storage'
 
 const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
   const reader = new FileReader()
@@ -99,7 +99,7 @@ export default function Catalogo() {
   const bodyRef = useRef(null)
   const packCostRef = useRef(null)
   const [hasDraft, setHasDraft] = useState(null)
-  const DRAFT_KEY = 'anma_prod_draft'
+  // Draft usa db() (user-scoped) en vez de localStorage crudo
 
   // ── Quick-cat popover ─────────────────────────────────────────────
   const [quickCatPop, setQuickCatPop]     = useState(null) // { prod, x, y }
@@ -221,12 +221,11 @@ export default function Catalogo() {
       setForm({ name: '', cat: cats[0] || '', cost: '', supplierId: '', image: '', price: '', stock: '' })
       // ── Detectar borrador guardado ──
       try {
-        const raw = localStorage.getItem(DRAFT_KEY)
-        if (raw) {
-          const d = JSON.parse(raw)
+        const d = db('prod_draft', null)
+        if (d) {
           // Solo restaurar borradores de las últimas 24h
           if (d._ts && Date.now() - d._ts < 86400000) { setHasDraft(d) }
-          else { localStorage.removeItem(DRAFT_KEY); setHasDraft(null) }
+          else { dbDel('prod_draft'); setHasDraft(null) }
         } else { setHasDraft(null) }
       } catch { setHasDraft(null) }
     }
@@ -262,7 +261,7 @@ export default function Catalogo() {
       costoExtra:     productMode === 'kit' ? packTotal : 0,
       updatedAt:   new Date().toISOString().slice(0, 10),
     })
-    try { localStorage.removeItem(DRAFT_KEY) } catch {}
+    try { dbDel('prod_draft') } catch {}
     setHasDraft(null)
     setModal(false)
     toast('Producto guardado', 'ok')
@@ -488,7 +487,7 @@ export default function Catalogo() {
   useEffect(() => {
     if (!modal) return
     const draft = { form, componentes, packagingItems, productMode, marginInput, _ts: Date.now() }
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)) } catch {}
+    try { dbW('prod_draft', draft) } catch {}
   }, [form, componentes, packagingItems, productMode, marginInput, modal]) // eslint-disable-line
 
   const handleCsvFile = (e) => {
@@ -1014,7 +1013,7 @@ export default function Catalogo() {
                   }}>
                   <i className="fa fa-rotate-left" /> Restaurar
                 </button>
-                <button onClick={() => { try { localStorage.removeItem(DRAFT_KEY) } catch {}; setHasDraft(null) }}
+                <button onClick={() => { try { dbDel('prod_draft') } catch {}; setHasDraft(null) }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#B45309', fontSize: 15, padding: '2px 4px', lineHeight: 1 }}>
                   <i className="fa fa-xmark" />
                 </button>

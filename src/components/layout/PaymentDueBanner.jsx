@@ -23,11 +23,10 @@ import { getBillingStatus, STATUS } from '../../lib/subscription'
  *                                       ya no hay alternativa que ofrecer).
  */
 
-const DISMISS_KEY = 'anma_payment_due_dismissed_at'
-const SNOOZE_KEY  = 'anma_payment_due_snoozed_until'
-
 export default function PaymentDueBanner() {
   const { user, role, loading } = useAuth()
+  const DISMISS_KEY = `anma_payment_due_dismissed_at_${user?.id || 'anon'}`
+  const SNOOZE_KEY  = `anma_payment_due_snoozed_until_${user?.id || 'anon'}`
   const [workspace, setWorkspace] = useState(null)
   const [hidden, setHidden] = useState(true)
   const [paying, setPaying] = useState(false)

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
  * WelcomeTour — coachmark tour de 4 pasos para usuarios nuevos de ANMA Regalos.
  * Espejo del de Pro, adaptado al lenguaje del producto (kits de regalo).
  */
-const TOUR_KEY = 'anma_welcome_tour_done'
+// Clave incluye userId para aislar el estado del tour entre usuarios en el mismo dispositivo
 const STEPS = [
   {
     icon: 'fa-chart-line', color: '#7C3AED',
@@ -42,7 +42,7 @@ export default function WelcomeTour() {
   useEffect(() => {
     if (loading || !user || !trial?.isTrial) return
     try {
-      const done = localStorage.getItem(TOUR_KEY)
+      const done = localStorage.getItem(`anma_welcome_tour_done_${user.id}`)
       if (!done) {
         const t = setTimeout(() => setShow(true), 1200)
         return () => clearTimeout(t)
@@ -51,7 +51,7 @@ export default function WelcomeTour() {
   }, [user, trial?.isTrial, loading])
 
   const finish = () => {
-    try { localStorage.setItem(TOUR_KEY, new Date().toISOString()) } catch { /* ignorar */ }
+    try { localStorage.setItem(`anma_welcome_tour_done_${user?.id}`, new Date().toISOString()) } catch { /* ignorar */ }
     setExiting(true)
     setTimeout(() => { setShow(false); setExiting(false) }, 280)
   }

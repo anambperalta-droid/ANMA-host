@@ -14,7 +14,7 @@ const ALL_SITES = {
     label: 'ANMA Hub',
     description: 'Gestión de stock y ventas',
     url: 'https://anmahub.com',
-    redirectTo: 'https://anmahub.com/bienvenida',
+    redirectTo: 'https://anmahub.com/app/bienvenida',
     icon: 'fa-chart-line',
     color: '#7C3AED',
   },

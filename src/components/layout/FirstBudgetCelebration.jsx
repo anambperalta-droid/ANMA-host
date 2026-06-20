@@ -1,28 +1,30 @@
 import { useEffect, useState, useRef } from 'react'
+import { useAuth } from '../../context/AuthContext'
 
 /**
  * FirstBudgetCelebration — overlay celebratorio al primer pedido en ANMA Regalos.
  * Espejo del de Pro, con copy adaptado.
  */
-const KEY = 'anma_first_budget_done'
+const key = (userId) => `anma_first_budget_done_${userId || 'anon'}`
 
-export function isFirstBudget() {
-  try { return !localStorage.getItem(KEY) } catch { return false }
+export function isFirstBudget(userId) {
+  try { return !localStorage.getItem(key(userId)) } catch { return false }
 }
 
-export function markFirstBudgetCelebrated() {
-  try { localStorage.setItem(KEY, new Date().toISOString()) } catch { /* ignorar */ }
+export function markFirstBudgetCelebrated(userId) {
+  try { localStorage.setItem(key(userId), new Date().toISOString()) } catch { /* ignorar */ }
 }
 
 export default function FirstBudgetCelebration() {
+  const { user } = useAuth()
   const [show, setShow]   = useState(false)
   const [exiting, setExiting] = useState(false)
   const dismissTimer = useRef(null)
 
   useEffect(() => {
     const onFire = () => {
-      if (!isFirstBudget()) return
-      markFirstBudgetCelebrated()
+      if (!isFirstBudget(user?.id)) return
+      markFirstBudgetCelebrated(user?.id)
       setShow(true)
       dismissTimer.current = setTimeout(close, 5000)
     }
