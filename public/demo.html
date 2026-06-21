@@ -299,7 +299,9 @@ td b{color:var(--txt);font-weight:600}
   .main{margin-left:0}
   .tb-burger{display:flex}
   .bento{grid-template-columns:repeat(2,1fr)}
-  .bento-chart{grid-column:span 4}
+  /* 1/-1 = el chart abarca todas las columnas sea el bento de 2 o 1 col.
+     Sin esto mantenia span 4 y rompia el grid a 4 columnas angostas -> KPIs cortadas. */
+  .bento-chart{grid-column:1 / -1}
   .form-grid{grid-template-columns:1fr}
   .cgrid,.wa-grid,.cfg-grid{grid-template-columns:1fr 1fr}
   .today-grid{grid-template-columns:1fr}
@@ -308,7 +310,8 @@ td b{color:var(--txt);font-weight:600}
   .brow-nav{display:none}
   .brow-bar{padding:8px 10px;gap:7px}
   .brow-back span,.brow-cta span{display:none}
-  .bento{grid-template-columns:1fr}
+  .bento{grid-template-columns:1fr 1fr;gap:10px}
+  .bento-kpi{min-width:0}
   .cgrid,.wa-grid,.cfg-grid{grid-template-columns:1fr}
   .tb-search{display:none}
   .topbar{padding:0 14px;gap:8px}
