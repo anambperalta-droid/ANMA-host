@@ -486,8 +486,6 @@ export default function Config() {
     { key: 'margenTabla',       icon: 'fa-percent',      color: '#059669', label: 'Margen % en presupuestos',        desc: 'Muestra el margen de ganancia en cada ítem del presupuesto' },
     { key: 'descuentoCliente',  icon: 'fa-tag',          color: '#D97706', label: 'Descuento fijo por cliente',      desc: 'Permite asignar un % de descuento personalizado a cada cliente' },
     { key: 'notasInternas',     icon: 'fa-note-sticky',  color: '#2563EB', label: 'Notas internas en pedidos',       desc: 'Campo privado de notas en cada presupuesto (no aparece en el PDF)' },
-    { key: 'alertaVencimiento', icon: 'fa-clock',        color: '#DC2626', label: 'Alerta de presupuestos vencidos', desc: 'Notifica cuando un presupuesto lleva más de 7 días sin respuesta' },
-    { key: 'stockAvanzado',     icon: 'fa-boxes-stacked',color: '#0891B2', label: 'Stock avanzado por variante',     desc: 'Gestiona stock individual por talle, color u otra variante del producto' },
   ]
 
   const allTabs = [
