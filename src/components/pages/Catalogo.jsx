@@ -1276,7 +1276,7 @@ export default function Catalogo() {
                       </div>
                     </div>
                     {/* Form agregar ítem */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 80px auto', gap: 5, alignItems: 'end' }}>
+                    <div className="comp-add-row" style={{ marginTop: 0 }}>
                       <input
                         type="text" value={packForm.nombre}
                         onChange={e => setPackForm(f => ({ ...f, nombre: e.target.value }))}
