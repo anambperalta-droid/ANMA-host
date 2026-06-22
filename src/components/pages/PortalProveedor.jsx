@@ -110,7 +110,7 @@ export default function PortalProveedor() {
   if (error) return (
     <div style={S.fullCenter}>
       <div style={S.msgCard}>
-        <div style={{ fontSize: 38, marginBottom: 14 }}>⚠️</div>
+        <div style={{ fontSize: 34, marginBottom: 14, color: '#DC2626' }}><i className="fa fa-triangle-exclamation" /></div>
         <h2 style={{ margin: '0 0 8px', color: '#111827', fontSize: 18, fontWeight: 800 }}>Link no disponible</h2>
         <p style={{ color: '#6B7280', fontSize: 14, margin: '0 0 8px', lineHeight: 1.6 }}>{error}</p>
         <p style={{ color: '#9CA3AF', fontSize: 12, margin: 0 }}>Si el problema persiste, contactá a quien te compartió el enlace.</p>
@@ -336,7 +336,7 @@ export default function PortalProveedor() {
         <div className="pc" style={{ ...S.ctaCard, borderColor: brandLine, boxShadow: `0 4px 18px ${alpha(brand, 0.08)}` }}>
           {confirmed ? (
             <div style={{ textAlign: 'center', padding: '8px 0' }}>
-              <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+              <div style={{ fontSize: 34, marginBottom: 12, color: '#16A34A' }}><i className="fa fa-circle-check" /></div>
               <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 6 }}>¡Confirmación enviada!</div>
               <div style={{ fontSize: 13.5, color: '#6B7280', lineHeight: 1.55 }}>
                 {data.ownerName || 'Tu cliente'} recibirá tu mensaje por WhatsApp en instantes.
@@ -502,14 +502,14 @@ const S = {
   },
 
   /* table */
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 480 },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: 15, minWidth: 480 },
   th: {
-    textAlign: 'left', padding: '10px 14px',
-    fontSize: 10, fontWeight: 800,
+    textAlign: 'left', padding: '11px 14px',
+    fontSize: 11, fontWeight: 800,
     textTransform: 'uppercase', letterSpacing: '.7px',
   },
   tr: { borderBottom: '1px solid #F3F4F6', transition: 'background .12s' },
-  td: { padding: '12px 14px', verticalAlign: 'middle' },
+  td: { padding: '15px 14px', verticalAlign: 'middle' },
   badgeOk: {
     display: 'inline-block', background: '#F0FDF4', color: '#16A34A',
     fontSize: 10.5, fontWeight: 700, letterSpacing: '.3px',
