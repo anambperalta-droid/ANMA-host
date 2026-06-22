@@ -716,8 +716,8 @@ export default function Catalogo() {
         .comp-row{display:grid;grid-template-columns:1fr 56px 80px 30px;gap:6px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:5px}
         .comp-row input{padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--txt);background:var(--surface);outline:none;width:100%;box-sizing:border-box}
         .comp-row input:focus{border-color:var(--brand)}
-        .comp-add-row{display:grid;grid-template-columns:1fr 64px 88px auto;gap:6px;align-items:end;margin-top:8px}
-        @media(max-width:520px){.comp-add-row{grid-template-columns:1fr 52px 72px auto}.comp-row{grid-template-columns:1fr 48px 72px 28px}}
+        .comp-add-row{display:grid;grid-template-columns:1fr 56px 80px auto;gap:6px;align-items:end;margin-top:8px}
+        @media(max-width:520px){.comp-add-row{grid-template-columns:1fr 50px 76px auto}.comp-row{grid-template-columns:1fr 50px 76px 26px}}
         .qcat-badge{cursor:pointer;transition:filter .12s,transform .12s;display:inline-flex;align-items:center;gap:4px}
         .qcat-badge:hover{filter:brightness(.92);transform:scale(.97)}
         .qcat-badge i{font-size:8px;opacity:.6}
@@ -1221,13 +1221,13 @@ export default function Catalogo() {
                     {/* Lista de ítems agregados */}
                     {packagingItems.length > 0 && (
                       <div style={{ marginBottom: 8, maxHeight: 168, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px 26px', gap: 4, padding: '0 6px 3px', fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.4, position: 'sticky', top: 0, background: 'rgba(255,255,255,.9)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 80px 26px', gap: 4, padding: '0 6px 3px', fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.4, position: 'sticky', top: 0, background: 'rgba(255,255,255,.9)' }}>
                           <span>Ítem</span><span style={{ textAlign: 'center' }}>Cant.</span><span style={{ textAlign: 'right' }}>Costo</span><span />
                         </div>
                         {packagingItems.map((p, idx) => {
                           const lineCost = num(p.qty) * num(p.costoUnit)
                           return (
-                            <div key={p._pid} style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px 26px', gap: 4, alignItems: 'center', padding: '5px 6px', borderRadius: 7, background: idx % 2 === 0 ? 'var(--surface)' : '#FFF5FB', marginBottom: 3 }}>
+                            <div key={p._pid} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 80px 26px', gap: 4, alignItems: 'center', padding: '5px 6px', borderRadius: 7, background: idx % 2 === 0 ? 'var(--surface)' : '#FFF5FB', marginBottom: 3 }}>
                               <div>
                                 <input
                                   value={p.nombre}
@@ -1276,7 +1276,7 @@ export default function Catalogo() {
                       </div>
                     </div>
                     {/* Form agregar ítem */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 44px 70px auto', gap: 5, alignItems: 'end' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 80px auto', gap: 5, alignItems: 'end' }}>
                       <input
                         type="text" value={packForm.nombre}
                         onChange={e => setPackForm(f => ({ ...f, nombre: e.target.value }))}
