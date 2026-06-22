@@ -3,6 +3,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, cfg, db, dbW } from '../../lib/storage'
+import { supabase } from '../../lib/supabase'
 
 export default function Proveedores() {
   const { get, set, saveEntity, deleteEntity } = useData()
@@ -371,7 +372,7 @@ export default function Proveedores() {
   }
 
   /* ── Generar link de portal para la proveedora ── */
-  const sharePortalLink = (s) => {
+  const sharePortalLink = async (s) => {
     if (!s) return
     const prods = supplierProducts(s)
     const appCfg = cfg()
@@ -400,9 +401,18 @@ export default function Proveedores() {
     if (brandColor)    payload.bc = brandColor
     if (appCfg.portalIntroCopy) payload.cp = appCfg.portalIntroCopy
 
-    const json = JSON.stringify(payload)
-    const b64 = btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-    const url = `${window.location.origin}/portal-proveedor?d=${b64}`
+    // Short-link: payload en Supabase + id corto. Fallback al link largo (?d=).
+    let url
+    try {
+      const id = (crypto?.randomUUID?.() || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))).replace(/-/g, '').slice(0, 16)
+      const { error } = await supabase.from('portal_links').insert({ id, payload, expires_at: new Date(payload.e).toISOString() })
+      if (error) throw error
+      url = `${window.location.origin}/portal-proveedor?id=${id}`
+    } catch {
+      const json = JSON.stringify(payload)
+      const b64 = btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      url = `${window.location.origin}/portal-proveedor?d=${b64}`
+    }
 
     // Mensaje WA personalizable
     const tpl = appCfg.portalShareMsg ||

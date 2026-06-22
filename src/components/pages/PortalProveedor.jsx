@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 
 /**
  * Portal público de proveedor — v3
@@ -33,14 +34,7 @@ export default function PortalProveedor() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    try {
-      const p = new URLSearchParams(loc.search)
-      const d = p.get('d')
-      if (!d) { setError('Link inválido o vencido.'); return }
-      const json = decodeURIComponent(escape(atob(d.replace(/-/g, '+').replace(/_/g, '/'))))
-      const raw = JSON.parse(json)
-
-      // Normaliza payload v2 (keys cortas) y v1 (keys largas — backward compat)
+    const applyRaw = (raw) => {
       const norm = {
         supplierName: raw.s || raw.supplierName || '',
         contact:      raw.c || raw.contact || '',
@@ -64,9 +58,28 @@ export default function PortalProveedor() {
         return
       }
       setData(norm)
-    } catch {
-      setError('No se pudo abrir el enlace. Verificá que esté completo.')
     }
+
+    const p = new URLSearchParams(loc.search)
+    const id = p.get('id')
+    const d = p.get('d')
+
+    if (id) {
+      supabase.rpc('get_portal_link', { link_id: id }).then(({ data: payload, error }) => {
+        if (error || !payload) { setError('Link inválido o vencido. Pedile a tu cliente que genere uno nuevo.'); return }
+        try { applyRaw(payload) } catch { setError('No se pudo abrir el enlace.') }
+      })
+      return
+    }
+    if (d) {
+      try {
+        applyRaw(JSON.parse(decodeURIComponent(escape(atob(d.replace(/-/g, '+').replace(/_/g, '/'))))))
+      } catch {
+        setError('No se pudo abrir el enlace. Verificá que esté completo.')
+      }
+      return
+    }
+    setError('Link inválido o vencido.')
   }, [loc.search])
 
   const fmt = n => '$ ' + Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
