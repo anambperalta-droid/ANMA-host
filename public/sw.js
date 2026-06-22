@@ -7,7 +7,7 @@
    Decisión: SaaS con updates frecuentes > optimización de bandwidth.
    El bug histórico (cliente ve versión vieja después de deploy) se elimina así.
 */
-const CACHE_VER = 'anma-regalos-v4'
+const CACHE_VER = 'anma-regalos-v5'
 const RUNTIME = `${CACHE_VER}-runtime`
 const OFFLINE_FALLBACK = `${CACHE_VER}-offline`
 
