@@ -1024,23 +1024,29 @@ export default function Catalogo() {
 
             {/* ── TIPO: Producto terminado vs Kit/Box ── */}
             <div style={{ display: 'flex', gap: 5, marginBottom: 16, background: 'var(--surface2)', borderRadius: 12, padding: 5, border: '1px solid var(--border)' }}>
-              <button onClick={() => setProductMode('producto')}
+              {/* La pestaña activa domina (flex:1); la inactiva se reduce a un chip
+                  compacto — sigue tappable para cambiar, pero no compite visualmente. */}
+              <button onClick={() => setProductMode('producto')} title="Producto terminado"
                 style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                  padding: '10px 14px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
-                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
+                  flex: productMode === 'producto' ? 1 : '0 0 auto',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  padding: '10px 16px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .2s', whiteSpace: 'nowrap',
                   background: productMode === 'producto' ? 'var(--brand)' : 'transparent',
                   color: productMode === 'producto' ? '#fff' : 'var(--txt3)',
+                  opacity: productMode === 'producto' ? 1 : .75,
                 }}>
                 <i className="fa fa-box" style={{ fontSize: 13 }} /> Producto
               </button>
-              <button onClick={() => setProductMode('kit')}
+              <button onClick={() => setProductMode('kit')} title="Kit o box armado con varios productos"
                 style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                  padding: '10px 14px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
-                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
+                  flex: productMode === 'kit' ? 1 : '0 0 auto',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  padding: '10px 16px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .2s', whiteSpace: 'nowrap',
                   background: productMode === 'kit' ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'transparent',
                   color: productMode === 'kit' ? '#fff' : 'var(--txt3)',
+                  opacity: productMode === 'kit' ? 1 : .75,
                 }}>
                 <i className="fa fa-gift" style={{ fontSize: 13 }} /> Kit / Box
               </button>

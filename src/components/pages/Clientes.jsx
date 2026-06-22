@@ -940,6 +940,12 @@ export default function Clientes() {
             <div key={c.id} className="cli-mob-card" onClick={() => openDetail(c)}
               style={{ background: selectedIds.has(c.id) ? 'rgba(124,58,237,.06)' : undefined }}>
 
+              {/* Checkbox de selección (acciones masivas en móvil) */}
+              <button onClick={e => { e.stopPropagation(); toggleSelect(c.id) }} aria-label="Seleccionar cliente"
+                style={{ flexShrink:0, width:24, height:24, borderRadius:7, border:`1.5px solid ${selectedIds.has(c.id) ? 'var(--brand)' : 'var(--border2)'}`, background: selectedIds.has(c.id) ? 'var(--brand)' : 'transparent', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:0 }}>
+                {selectedIds.has(c.id) && <i className="fa fa-check" style={{ fontSize:11 }} />}
+              </button>
+
               {/* SECTOR IZQUIERDO: identidad */}
               <div className="cli-mob-id">
                 <span className="cli-mob-dot" title={dotTip} style={{ background: dotColor }} />
