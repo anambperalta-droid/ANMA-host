@@ -289,6 +289,9 @@ export default function Clientes() {
   const [revinculModal, setRevinculModal] = useState(null)
   const [revinculMsg, setRevinculMsg] = useState('')
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [recontactModal, setRecontactModal] = useState(false)
+  const [recontactMsg, setRecontactMsg] = useState('')
+  const [recontactSent, setRecontactSent] = useState(new Set())
   const [importTab, setImportTab] = useState('archivo')
   const [pasteNums, setPasteNums] = useState('')
 
@@ -602,17 +605,25 @@ export default function Clientes() {
     const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='clientes-seleccionados.csv'; a.click()
     toast(`${sel.length} clientes exportados`,'ok')
   }
-  const bulkCopyWA = () => {
-    const nums = clients.filter(c => selectedIds.has(c.id) && c.wa).map(c => c.wa)
-    if (!nums.length) { toast('Ningún seleccionado tiene WhatsApp','in'); return }
-    navigator.clipboard.writeText(nums.join('\n'))
-    toast(`${nums.length} números copiados al portapapeles`,'ok')
-  }
   const bulkMailto = () => {
     const emails = clients.filter(c => selectedIds.has(c.id) && c.email).map(c => c.email)
     if (!emails.length) { toast('Ningún seleccionado tiene email','in'); return }
     window.open(`mailto:?bcc=${emails.join(',')}`)
     toast(`Email preparado para ${emails.length} destinatario${emails.length > 1 ? 's' : ''}`, 'ok')
+  }
+  /* ── Recontacto masivo por WhatsApp (de a uno, con template) ── */
+  const recontactClients = useMemo(() => clients.filter(c => selectedIds.has(c.id) && c.wa), [clients, selectedIds])
+  const openBulkRecontact = () => {
+    if (!recontactClients.length) { toast('Ningún seleccionado tiene WhatsApp', 'in'); return }
+    setRecontactMsg('Hola {nombre}! ¿Cómo estás? Hace un tiempo que no armamos un pedido y quería saber si tenés algún regalo o evento en puerta. Cualquier cosa quedo a disposición. ¡Saludos!')
+    setRecontactSent(new Set())
+    setRecontactModal(true)
+  }
+  const sendRecontactTo = (c) => {
+    const num = (c.wa || '').replace(/\D/g, '')
+    const msg = (recontactMsg || '').replace(/\{nombre\}/gi, c.contact || c.company || '')
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
+    setRecontactSent(prev => new Set(prev).add(c.id))
   }
 
   return (
@@ -993,30 +1004,69 @@ export default function Clientes() {
 
       <div style={{ marginTop: 8, fontSize: 11, color: 'var(--txt3)' }}>{filtered.length} cliente{filtered.length !== 1 ? 's' : ''}</div>
 
-      {/* ── Barra de acciones masivas ── */}
+      {/* ── Barra de acciones masivas (con etiquetas) ── */}
       {selectedIds.size > 0 && (
-        <div style={{ position:'fixed', right:12, top:'50%', transform:'translateY(-50%)', background:'rgba(12,10,40,.88)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:10, display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'6px 4px', boxShadow:'0 4px 18px rgba(0,0,0,.2)', zIndex:200, animation:'pgIn .15s ease both', border:'1px solid rgba(255,255,255,.08)' }}>
-          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.55)', paddingBottom:6, borderBottom:'1px solid rgba(255,255,255,.1)', marginBottom:2, width:'100%', textAlign:'center' }}>{selectedIds.size}</span>
+        <div style={{ position:'fixed', right:14, top:'50%', transform:'translateY(-50%)', background:'rgba(12,10,40,.93)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:14, display:'flex', flexDirection:'column', gap:2, padding:'10px 10px', boxShadow:'0 12px 32px rgba(0,0,0,.32)', zIndex:200, animation:'pgIn .15s ease both', border:'1px solid rgba(255,255,255,.1)', width:206 }}>
+          <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,.55)', padding:'2px 8px 9px', borderBottom:'1px solid rgba(255,255,255,.12)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.6px' }}>{selectedIds.size} seleccionado{selectedIds.size>1?'s':''}</div>
           {[
-            { fn: bulkExportCSV, icon:'fa fa-download',        tip:'Exportar CSV',             hBg:'rgba(255,255,255,.1)',   hCol:'#fff' },
-            { fn: bulkCopyWA,    icon:'fa-brands fa-whatsapp', tip:'Copiar números WhatsApp',  hBg:'rgba(74,222,128,.14)',   hCol:'#4ADE80' },
-            { fn: bulkMailto,    icon:'fa fa-envelope',         tip:'Enviar email',             hBg:'rgba(96,165,250,.14)',   hCol:'#93C5FD' },
-            { fn: bulkDelete,    icon:'fa fa-trash',            tip:'Eliminar seleccionados',   hBg:'rgba(220,38,38,.18)',    hCol:'#FCA5A5' },
-          ].map(({ fn, icon, tip, hBg, hCol }) => (
-            <button key={tip} onClick={fn} title={tip}
-              onMouseOver={e=>{e.currentTarget.style.background=hBg;e.currentTarget.style.color=hCol}}
-              onMouseOut={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,.65)'}}
-              style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.65)', borderRadius:7, width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, transition:'all .12s' }}>
-              <i className={icon} />
+            { fn: openBulkRecontact, icon:'fa-brands fa-whatsapp', label:'Recontactar por WhatsApp', hCol:'#4ADE80' },
+            { fn: bulkMailto,        icon:'fa fa-envelope',        label:'Enviar email',             hCol:'#93C5FD' },
+            { fn: bulkExportCSV,     icon:'fa fa-download',        label:'Exportar CSV',             hCol:'#fff' },
+            { fn: bulkDelete,        icon:'fa fa-trash',           label:'Eliminar',                 hCol:'#FCA5A5' },
+          ].map(({ fn, icon, label, hCol }) => (
+            <button key={label} onClick={fn}
+              onMouseOver={e=>{e.currentTarget.style.background='rgba(255,255,255,.08)';e.currentTarget.querySelector('i').style.color=hCol}}
+              onMouseOut={e=>{e.currentTarget.style.background='transparent';e.currentTarget.querySelector('i').style.color='rgba(255,255,255,.7)'}}
+              style={{ display:'flex', alignItems:'center', gap:11, background:'transparent', border:'none', color:'#fff', borderRadius:9, padding:'10px 10px', cursor:'pointer', fontFamily:'inherit', fontSize:12.5, fontWeight:600, textAlign:'left', transition:'background .12s', whiteSpace:'nowrap' }}>
+              <i className={icon} style={{ width:18, textAlign:'center', fontSize:14, color:'rgba(255,255,255,.7)', transition:'color .12s', flexShrink:0 }} />
+              {label}
             </button>
           ))}
-          <div style={{ width:12, height:1, background:'rgba(255,255,255,.1)', margin:'2px 0' }} />
-          <button onClick={() => setSelectedIds(new Set())} title="Cancelar"
-            onMouseOver={e=>e.currentTarget.style.color='rgba(255,255,255,.8)'}
-            onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.3)'}
-            style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.3)', borderRadius:7, width:26, height:26, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, transition:'color .12s' }}>
-            <i className="fa fa-xmark" />
+          <button onClick={() => setSelectedIds(new Set())}
+            style={{ display:'flex', alignItems:'center', gap:11, background:'transparent', border:'none', color:'rgba(255,255,255,.45)', borderRadius:9, padding:'9px 10px', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:500, textAlign:'left', marginTop:3, borderTop:'1px solid rgba(255,255,255,.1)' }}>
+            <i className="fa fa-xmark" style={{ width:18, textAlign:'center', flexShrink:0 }} /> Cancelar
           </button>
+        </div>
+      )}
+
+      {/* ── Modal: recontacto masivo por WhatsApp ── */}
+      {recontactModal && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setRecontactModal(false) }}>
+          <div className="modal-form-card" style={{ maxWidth: 560, minHeight:'auto', height:'auto', maxHeight:'90vh', overflow:'auto' }}>
+            <div style={{ padding:'18px 24px 14px', borderBottom:'1px solid var(--border)' }}>
+              <div className="mh" style={{ margin:0, paddingBottom:0, borderBottom:'none' }}>
+                <h3><i className="fa-brands fa-whatsapp" style={{ marginRight:8, color:'#16A34A' }} />Recontactar por WhatsApp</h3>
+                <button className="mclose" onClick={() => setRecontactModal(false)}><i className="fa fa-xmark" /></button>
+              </div>
+            </div>
+            <div style={{ padding:'18px 24px 22px' }}>
+              <p style={{ fontSize:12.5, color:'var(--txt2)', margin:'0 0 12px', lineHeight:1.55 }}>
+                Editá el mensaje (poné <b>{'{nombre}'}</b> y se reemplaza por cada contacto). Tocá <b>Enviar</b> en cada cliente: se abre su chat con el mensaje listo.
+              </p>
+              <textarea value={recontactMsg} onChange={e => setRecontactMsg(e.target.value)} rows={4} style={{ width:'100%', marginBottom:14, resize:'vertical', boxSizing:'border-box' }} />
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                <span style={{ fontSize:12.5, fontWeight:800, color:'var(--txt)' }}>{recontactSent.size} de {recontactClients.length} enviados</span>
+                {recontactSent.size === recontactClients.length && recontactClients.length > 0 && <span style={{ fontSize:11.5, color:'var(--green)', fontWeight:700 }}><i className="fa fa-circle-check" /> Listo</span>}
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:320, overflowY:'auto' }}>
+                {recontactClients.map(c => {
+                  const sent = recontactSent.has(c.id)
+                  return (
+                    <div key={c.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background:'var(--surface2)', borderRadius:10, border:'1px solid var(--border)' }}>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontWeight:700, fontSize:13, color:'var(--txt)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.contact || c.company}</div>
+                        <div style={{ fontSize:11, color:'var(--txt3)' }}>{c.wa}</div>
+                      </div>
+                      <button onClick={() => sendRecontactTo(c)}
+                        style={{ flexShrink:0, display:'inline-flex', alignItems:'center', gap:6, background: sent ? 'var(--surface)' : '#16A34A', color: sent ? 'var(--txt3)' : '#fff', border: sent ? '1px solid var(--border)' : 'none', borderRadius:8, padding:'8px 14px', fontSize:12.5, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                        <i className={sent ? 'fa fa-check' : 'fa-brands fa-whatsapp'} /> {sent ? 'Enviado' : 'Enviar'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
