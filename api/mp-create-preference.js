@@ -18,6 +18,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { applyCors } from './_cors.js'
 
 const PRICING = {
   onboarding: { amount: 120000, label: 'Pago de ingreso — Setup llave en mano + 1er mes' },
@@ -25,10 +26,7 @@ const PRICING = {
 }
 
 export default async function handler(req, res) {
-  // CORS para llamadas desde el cliente (vercel mismo dominio, pero defensive)
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  applyCors(req, res)
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ ok: false, message: 'Method not allowed' })
 
