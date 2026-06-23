@@ -166,12 +166,12 @@ export default function Login() {
         .lpr-confetti{position:absolute;font-size:22px;pointer-events:none;animation:lpr-float 4s ease-in-out infinite;opacity:.45;filter:drop-shadow(0 4px 12px rgba(236,72,153,.4))}
 
         .lpr-card{
-          position:relative;z-index:1;width:100%;max-width:480px;
+          position:relative;z-index:1;width:100%;max-width:540px;
           background:rgba(255,255,255,.07);
           backdrop-filter:blur(28px) saturate(180%);
           -webkit-backdrop-filter:blur(28px) saturate(180%);
           border:1px solid rgba(255,255,255,.14);
-          border-radius:28px;padding:44px 42px 36px;
+          border-radius:28px;padding:48px 46px 40px;
           box-shadow:0 24px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.10);
           animation:lpr-card-in .6s cubic-bezier(.2,.7,.2,1) both;
         }
