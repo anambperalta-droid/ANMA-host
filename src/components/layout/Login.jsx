@@ -166,17 +166,17 @@ export default function Login() {
         .lpr-confetti{position:absolute;font-size:22px;pointer-events:none;animation:lpr-float 4s ease-in-out infinite;opacity:.45;filter:drop-shadow(0 4px 12px rgba(236,72,153,.4))}
 
         .lpr-card{
-          position:relative;z-index:1;width:100%;max-width:420px;
+          position:relative;z-index:1;width:100%;max-width:480px;
           background:rgba(255,255,255,.07);
           backdrop-filter:blur(28px) saturate(180%);
           -webkit-backdrop-filter:blur(28px) saturate(180%);
           border:1px solid rgba(255,255,255,.14);
-          border-radius:24px;padding:36px 34px 28px;
+          border-radius:28px;padding:44px 42px 36px;
           box-shadow:0 24px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.10);
           animation:lpr-card-in .6s cubic-bezier(.2,.7,.2,1) both;
         }
 
-        .lpr-top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+        .lpr-top{display:flex;align-items:center;gap:14px;margin-bottom:26px}
         .lpr-logo{
           width:46px;height:46px;border-radius:13px;flex-shrink:0;
           background:linear-gradient(135deg,#ec4899 0%,#f472b6 50%,#a855f7 100%);
@@ -191,27 +191,27 @@ export default function Login() {
         .lpr-brand-tag{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;letter-spacing:.3px}
 
         .lpr-greet{
-          font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.2;
-          margin-bottom:6px;animation:lpr-fade .5s .15s ease both
+          font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.2;
+          margin-bottom:8px;animation:lpr-fade .5s .15s ease both
         }
         .lpr-greet em{font-style:normal;background:linear-gradient(90deg,#f472b6,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
         .lpr-sub{
-          font-size:13px;color:rgba(255,255,255,.65);margin-bottom:22px;line-height:1.55;
+          font-size:13.5px;color:rgba(255,255,255,.65);margin-bottom:26px;line-height:1.55;
           animation:lpr-fade .5s .25s ease both
         }
         .lpr-sub b{color:rgba(255,255,255,.9);font-weight:600}
 
-        .lpr-fg{margin-bottom:14px}
+        .lpr-fg{margin-bottom:18px}
         .lpr-lbl{
           display:flex;justify-content:space-between;align-items:center;
           font-size:10.5px;font-weight:700;color:rgba(255,255,255,.7);
           margin-bottom:7px;letter-spacing:.7px;text-transform:uppercase
         }
         .lpr-inp{
-          width:100%;padding:13px 15px;box-sizing:border-box;
+          width:100%;padding:15px 18px;box-sizing:border-box;
           background:rgba(255,255,255,.08);
           border:1.5px solid rgba(255,255,255,.14);
-          border-radius:12px;font-size:14px;color:#fff;outline:none;
+          border-radius:14px;font-size:15px;color:#fff;outline:none;
           transition:border-color .2s,background .2s,box-shadow .2s;
           font-family:'Inter',sans-serif;
         }
@@ -244,10 +244,10 @@ export default function Login() {
         .lpr-caps{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:10.5px;color:#fbbf24;font-weight:600}
 
         .lpr-btn{
-          width:100%;padding:14px;margin-top:8px;
+          width:100%;padding:16px;margin-top:10px;
           background:linear-gradient(135deg,#ec4899 0%,#db2777 60%,#a855f7 100%);
-          color:#fff;border:none;border-radius:12px;
-          font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;
+          color:#fff;border:none;border-radius:14px;
+          font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
           box-shadow:0 8px 24px rgba(219,39,119,.45),inset 0 1px 0 rgba(255,255,255,.18);
           transition:transform .15s,box-shadow .25s,filter .2s;
           display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.2px;
@@ -258,7 +258,7 @@ export default function Login() {
 
         .lpr-divider{
           display:flex;align-items:center;gap:10px;
-          margin:18px 0 12px;font-size:10.5px;color:rgba(255,255,255,.35);
+          margin:20px 0 14px;font-size:10.5px;color:rgba(255,255,255,.35);
           text-transform:uppercase;letter-spacing:1.2px;font-weight:600
         }
         .lpr-divider::before,.lpr-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.10)}
@@ -302,8 +302,8 @@ export default function Login() {
         .lpr-modal-send:disabled{opacity:.6;cursor:not-allowed}
 
         @media(max-width:480px){
-          .lpr-card{padding:30px 24px 24px;border-radius:20px}
-          .lpr-greet{font-size:21px}
+          .lpr-card{padding:32px 24px 26px;border-radius:22px}
+          .lpr-greet{font-size:22px}
           .lpr-confetti{display:none}
           /* iOS zoom prevention: inputs necesitan font-size ≥16px */
           .lpr-inp{font-size:16px!important;padding:14px 15px!important}
