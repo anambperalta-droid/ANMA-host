@@ -1267,8 +1267,8 @@ export default function Config() {
             </div>
           </div>
 
-          {/* ── 2 columnas: info + invitación ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 16, alignItems: 'start' }}>
+          {/* ── 2 columnas: info + invitación (se apila en 1 col en mobile) ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 16, alignItems: 'start' }}>
           {/* Cómo funciona */}
           <div style={{ padding: '14px 18px', borderRadius: 14, background: 'var(--surface2)', border: '1.5px solid var(--border)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
             <div style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>💡</div>
@@ -1317,7 +1317,7 @@ export default function Config() {
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: 12, marginBottom: 12 }}>
               <div className="fg" style={{ marginBottom: 0 }}>
                 <label className="f-lbl">Email <span style={{ color: 'var(--red)' }}>*</span></label>
                 <input type="email" className="f-inp" placeholder="persona@empresa.com"

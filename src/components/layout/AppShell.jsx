@@ -250,6 +250,21 @@ function AppShellInner() {
     applyThemeColors(c.brandColor || '#7C3AED', c.accentColor || '#059669')
   })
 
+  // ── Tocar fuera de un campo cierra el teclado (mobile) ──
+  useEffect(() => {
+    const FIELD = 'input, textarea, select, button, label, [contenteditable="true"], [role="button"]'
+    const onPointerDown = (e) => {
+      const ae = document.activeElement
+      if (!ae) return
+      const tag = ae.tagName
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') return
+      if (e.target.closest && e.target.closest(FIELD)) return
+      ae.blur()
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [])
+
   useEffect(() => {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(true) }
