@@ -120,7 +120,7 @@ export default function Alta({ appName = 'ANMA Regalos' }) {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: 12, marginBottom: 14 }}>
                 <div>
                   <label style={s.label}>WhatsApp</label>
                   <input

@@ -1054,7 +1054,7 @@ export default function Catalogo() {
 
             {/* ══ KIT: 2 columnas │ PRODUCTO: 1 columna ══ */}
             {productMode === 'kit' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 14, alignItems: 'start' }}>
 
               {/* ── COL IZQUIERDA: datos + componentes ── */}
               <div>
@@ -1601,7 +1601,7 @@ export default function Catalogo() {
                   </div>
                 </div>
                 {/* SKU + Tiempo de armado */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px', marginBottom: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0 12px', marginBottom: 10 }}>
                   <div className="fg" style={{ marginBottom: 0 }}>
                     <label><i className="fa fa-barcode" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />SKU / Código interno</label>
                     <input type="text" value={form.sku || ''} onChange={e => setF('sku', e.target.value)} placeholder="KIT-001, BOX-PAPA..." />
@@ -1632,7 +1632,7 @@ export default function Catalogo() {
                   <div className="fg"><label>Nombre *</label>
                     <input autoFocus type="text" value={form.name} onChange={e => setF('name', e.target.value)} placeholder="Taza sublimada 11oz" />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0 12px' }}>
                     <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
                       <select value={form.cat} onChange={e => setF('cat', e.target.value)}>
                         {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -1687,7 +1687,7 @@ export default function Catalogo() {
                       </div>
                     </div>
                     {/* SKU + Stock mínimo */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px', marginBottom: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0 12px', marginBottom: 10 }}>
                       <div className="fg" style={{ marginBottom: 0 }}>
                         <label><i className="fa fa-barcode" style={{ marginRight: 5, fontSize: 10, color: 'var(--txt3)' }} />SKU / Código interno</label>
                         <input type="text" value={form.sku || ''} onChange={e => setF('sku', e.target.value)} placeholder="PROD-001, TZA-11OZ..." />

@@ -630,7 +630,7 @@ export default function Config() {
             <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 7 }}>
               <i className="fa fa-phone" style={{ color: 'var(--brand)', fontSize: 14 }} />Datos de contacto
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0 14px' }}>
               <div className="fg"><label>Email</label><input type="email" value={cEmail} onChange={e => setCEmail(e.target.value)} placeholder="hola@anma.com" style={{ borderRadius: 12 }} /></div>
               <div className="fg"><label>WhatsApp</label><input type="text" value={cWA} onChange={e => setCWA(e.target.value)} placeholder="+54 351 ..." style={{ borderRadius: 12 }} /></div>
               <div className="fg"><label>Instagram</label><input type="text" value={cIG} onChange={e => setCIG(e.target.value)} placeholder="@anma_regalos" style={{ borderRadius: 12 }} /></div>
@@ -1014,7 +1014,7 @@ export default function Config() {
               <div className="pay-status on"><i className="fa fa-circle-check" /> ACTIVO</div>
             </div>
             <div className="pay-card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 10, marginBottom: 14 }}>
                 {[
                   { icon: 'fa-paper-plane', color: '#25D366', title: 'Enviar presupuesto', desc: 'Botón directo en cada presupuesto para compartirlo por WA' },
                   { icon: 'fa-rotate',      color: '#128C7E', title: 'Re-orden a proveedor', desc: 'Mensaje automático de reposición con lista de productos' },
