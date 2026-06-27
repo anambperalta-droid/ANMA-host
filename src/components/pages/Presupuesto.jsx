@@ -3206,6 +3206,20 @@ export default function Presupuesto() {
                       {calc.costPending && <i className="fa fa-circle-info" style={{ marginLeft: 4, fontSize: 10 }} title="Cargá el costo de los productos para calcular el margen real" />}
                     </span>
                   </div>
+                  {(() => {
+                    // Aclaración: si hay costos internos NO cobrados al cliente
+                    // (envío o logística), el margen real cae bajo el objetivo.
+                    const shipInterno = num(form.shipCost) > 0 && form.shipCharged === false
+                    const logiInterna = calc.viajesCost > 0 && !calc.logiCharged
+                    const hayCostoInterno = shipInterno || logiInterna
+                    if (calc.costPending || !hayCostoInterno || real >= target) return null
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '6px 8px', margin: '2px 0 4px', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 8, fontSize: 10.5, color: '#B45309', lineHeight: 1.35 }}>
+                        <i className="fa fa-circle-info" style={{ marginTop: 1, flexShrink: 0 }} />
+                        <span>El margen real baja porque hay <strong>costos internos no cobrados</strong> al cliente ({[shipInterno && 'envío', logiInterna && 'logística'].filter(Boolean).join(' y ')}). Si los cobrás, el margen sube.</span>
+                      </div>
+                    )
+                  })()}
                 </>
               )
             })()}
