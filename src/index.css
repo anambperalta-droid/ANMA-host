@@ -347,7 +347,9 @@ td b{color:var(--txt);font-weight:600}
 }
 /* Config mobile save bar + desktop save btn */
 .cfg-mob-save{display:none}
-@media(max-width:640px){.cfg-mob-save{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:200;padding:12px 16px 20px;background:linear-gradient(to top,var(--surface) 70%,transparent);pointer-events:none}.cfg-mob-save button{pointer-events:all;width:100%;height:44px;border-radius:9999px;border:none;background:var(--color-principal);color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 18px var(--brand-dim);display:flex;align-items:center;justify-content:center;gap:8px}.cfg-save-desk{display:none!important}}
+@media(max-width:640px){.cfg-mob-save{display:flex;position:fixed;bottom:82px;left:0;right:0;z-index:480;padding:8px 16px;background:linear-gradient(to top,var(--surface) 78%,transparent);pointer-events:none}.cfg-mob-save button{pointer-events:all;width:100%;height:44px;border-radius:9999px;border:none;background:var(--color-principal);color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 18px var(--brand-dim);display:flex;align-items:center;justify-content:center;gap:8px}.cfg-save-desk{display:none!important}
+  /* El contenido de Config debe librar la barra de guardar (82px) + el nav flotante (80px) */
+  .page-config{padding-bottom:170px!important}}
 .list-del-btn:hover{color:var(--red)}
 
 /* ─── FORMS ─── */
@@ -355,7 +357,7 @@ td b{color:var(--txt);font-weight:600}
 /* Labels: organizadores secundarios — gray-400, smaller, less bold */
 .fg label{display:block;font-size:10px;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
 /* Inputs/select/textarea: borde sutil, fondo gris ultra claro en reposo, brand al focus */
-.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;background:#FAFAFB;border:1px solid #E5E7EB;border-radius:8px;font-size:12.5px;color:var(--txt);outline:none;transition:border-color var(--tr),box-shadow var(--tr),background var(--tr);font-family:inherit}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;background:#FAFAFB;border:1px solid #E5E7EB;border-radius:8px;font-size:12.5px;color:#1f2937;outline:none;transition:border-color var(--tr),box-shadow var(--tr),background var(--tr);font-family:inherit}
 .fg input:hover,.fg select:hover,.fg textarea:hover{background:#fff;border-color:#D1D5DB}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.08)}
 .fg textarea{resize:vertical;min-height:68px;line-height:1.55}

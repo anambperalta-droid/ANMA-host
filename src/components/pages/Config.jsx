@@ -506,7 +506,7 @@ export default function Config() {
   }, [canManageTeam, tab])
 
   return (
-    <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
+    <div className="page active page-config" style={{ animation: 'pgIn .25s ease both' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 22 }}>
         <div style={{
           flex: 1, display: 'flex', gap: 6,
