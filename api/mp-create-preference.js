@@ -44,17 +44,23 @@ export default async function handler(req, res) {
     const baseUrl = process.env.APP_BASE_URL || `https://${req.headers.host}`
     const pricing = PRICING[kind]
 
-    // Validación opcional: workspace existe en Supabase
+    // Validación NO bloqueante: nunca bloqueamos un pago por esto. El webhook
+    // reconcilia por external_reference (workspaceId|kind). Si falta el row de
+    // workspace, lo creamos al vuelo para atribuir el cobro.
     if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.VITE_SUPABASE_URL) {
-      const supa = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-      const { data: ws, error: wsErr } = await supa
-        .from('workspaces')
-        .select('id, name, contact_email')
-        .eq('id', workspaceId)
-        .single()
-      if (wsErr || !ws) {
-        return res.status(404).json({ ok: false, message: 'Workspace no encontrado' })
-      }
+      try {
+        const supa = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+        const { data: ws } = await supa
+          .from('workspaces')
+          .select('id, name, contact_email')
+          .eq('id', workspaceId)
+          .maybeSingle()
+        if (!ws) {
+          await supa.from('workspaces')
+            .insert({ id: workspaceId, name: userEmail || 'Cliente', plan: 'solo', seats_allowed: 0 })
+            .then(() => {}, () => {})
+        }
+      } catch { /* nunca bloquear el pago */ }
     }
 
     // Crear preferencia en Mercado Pago
