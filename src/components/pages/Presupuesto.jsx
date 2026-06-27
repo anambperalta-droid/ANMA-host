@@ -10,6 +10,32 @@ import { pushBudget, getSheetsConfig } from '../../lib/sheets'
 /* ── Items legacy (backward compat) ── */
 const emptyItem = () => ({ name: '', qty: 1, costUnit: '', priceUnit: '' })
 
+/* Tip de ayuda descartable. Al cerrar uno, se ocultan TODOS (persiste en localStorage). */
+const TIPS_KEY = 'anma_hide_wiztips'
+function WizTip({ children, style }) {
+  const [hidden, setHidden] = useState(() => {
+    try { return localStorage.getItem(TIPS_KEY) === '1' } catch { return false }
+  })
+  useEffect(() => {
+    const h = () => setHidden(true)
+    window.addEventListener('anma:hide-wiztips', h)
+    return () => window.removeEventListener('anma:hide-wiztips', h)
+  }, [])
+  if (hidden) return null
+  const dismiss = () => {
+    try { localStorage.setItem(TIPS_KEY, '1') } catch { /* ignore */ }
+    window.dispatchEvent(new Event('anma:hide-wiztips'))
+  }
+  return (
+    <div className="wiz-tip" style={style}>
+      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+      <button type="button" onClick={dismiss} className="wiz-tip-x" title="No mostrar estos consejos" aria-label="Cerrar consejo">
+        <i className="fa fa-xmark" />
+      </button>
+    </div>
+  )
+}
+
 /* ── Estructura Kit/Box modular ── */
 const emptyPackComp = () => ({ id: '', name: '', costUnit: 0, qty: 1, fixedQty: false })
 const emptyProdComp = () => ({ id: '', name: '', costUnit: 0, qty: 1 })
@@ -1965,9 +1991,9 @@ export default function Presupuesto() {
                     </select>
                   </div>
                 </div>
-                <div className="wiz-tip">
+                <WizTip>
                   <i className="fa fa-lightbulb" /> Buscá un contacto existente o creá uno nuevo escribiendo el nombre. Seleccioná la ocasión para personalizar el presupuesto.
-                </div>
+                </WizTip>
               </>
             )}
 
@@ -2091,9 +2117,9 @@ export default function Presupuesto() {
                       </button>
                     </div>
                     {/* tip */}
-                    <div className="wiz-tip" style={{ marginTop: 12 }}>
+                    <WizTip style={{ marginTop: 12 }}>
                       <i className="fa fa-lightbulb" /> Empezá a escribir el nombre del producto para autocompletar desde tu catálogo — el costo y precio se llenan solos.
-                    </div>
+                    </WizTip>
 
                     {/* ─ Packaging / Insumos (simple mode) — estética unificada ─ */}
                     <div className="tbl-card" style={{ marginTop: 14 }}>
@@ -3087,9 +3113,9 @@ export default function Presupuesto() {
                     </div>
                   </div>
                 </div>
-                <div className="wiz-tip" style={{ marginTop: 14 }}>
+                <WizTip style={{ marginTop: 14 }}>
                   <i className="fa fa-circle-check" /> Todo listo. Al confirmar guardás el presupuesto y volvés al dashboard.
-                </div>
+                </WizTip>
               </>
             )}
 

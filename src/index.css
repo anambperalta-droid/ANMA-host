@@ -690,6 +690,8 @@ td b{color:var(--txt);font-weight:600}
 
 .wiz-tip{margin-top:14px;padding:10px 14px;background:var(--brand-xlt);border:1px solid var(--brand-dim);border-radius:10px;font-size:11px;color:var(--brand);display:flex;align-items:flex-start;gap:8px;line-height:1.45}
 .wiz-tip i{margin-top:2px;flex-shrink:0}
+.wiz-tip-x{flex-shrink:0;background:none;border:none;color:var(--brand);opacity:.5;cursor:pointer;padding:2px 4px;margin:-2px -4px -2px 0;font-size:13px;line-height:1;font-family:inherit;border-radius:6px;transition:opacity .15s,background .15s}
+.wiz-tip-x:hover{opacity:1;background:var(--brand-dim)}
 
 .wiz-review{display:grid;gap:10px}
 .wiz-rev-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
