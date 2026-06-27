@@ -823,13 +823,20 @@ export default function Presupuesto() {
     const discountPct = Math.min(Math.max(num(form.discount), 0), 100)
     const discountAmt = Math.round(totalRevenue * discountPct / 100)
     const total = totalRevenue - discountAmt + (shipCharged ? ship : 0) + (logiCharged ? viajesCost : 0)
-    const gain = hasFullCostData ? (total - baseCost) : 0
-    const marginReal = (hasFullCostData && total > 0)
+    // Ganancia/margen se muestran apenas hay AL MENOS un costo cargado (antes era
+    // "todo o nada": un solo ítem sin costo apagaba toda la ganancia). Si faltan
+    // costos, marcamos `costPartial` para avisar que el número es optimista.
+    const hasAnyCost  = itemsWithCost > 0
+    const costNone    = !hasAnyCost                                   // nada cargado
+    const costPartial = hasAnyCost && itemsWithCost < itemsWithName   // algunos faltan
+    const itemsMissingCost = Math.max(0, itemsWithName - itemsWithCost)
+    const gain = hasAnyCost ? (total - baseCost) : 0
+    const marginReal = (hasAnyCost && total > 0)
       ? (((total - baseCost) / total) * 100).toFixed(1)
       : '0.0'
-    const costPending = !hasFullCostData
+    const costPending = costNone   // "Pendiente" SOLO si no hay ningún costo
     const marginThreshold = num(c.marginLowThreshold) || 10
-    const marginLow = hasFullCostData && total > 0 && Number(marginReal) < marginThreshold
+    const marginLow = hasAnyCost && total > 0 && Number(marginReal) < marginThreshold
     const depositAmt = Math.round(total * num(form.deposit) / 100)
     // IVA SUMADO sobre el total (misma lógica que PDF/WA): si ivaEnabled,
     // el % se agrega al total y la seña se calcula sobre el total final.
@@ -837,7 +844,7 @@ export default function Presupuesto() {
     const ivaAmt = Math.round(total * ivaRate)
     const totalFinal = total + ivaAmt
     const depositFinal = ivaRate > 0 ? Math.round(totalFinal * num(form.deposit) / 100) : depositAmt
-    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct, viajesCost, logiCharged, costPending, hasFullCostData, persFixedTotal, ivaRate, ivaAmt, totalFinal, depositFinal }
+    return { totalCost, totalRevenue, logTotal, baseCost, total, gain, marginReal, marginLow, marginThreshold, depositAmt, totalQty, discountAmt, discountPct, viajesCost, logiCharged, costPending, costPartial, itemsMissingCost, hasFullCostData, persFixedTotal, ivaRate, ivaAmt, totalFinal, depositFinal }
   }, [items, form.shipCost, form.shipCharged, form.deposit, form.discount, form.logisticaParadas, form.logisticaCharged, c.marginLowThreshold, c.ivaEnabled, c.ivaRate, kitMode, simplePack, simplePers])
 
   /* ── Lógica de flujo: venta directa vs. cotización ──
@@ -3168,7 +3175,13 @@ export default function Presupuesto() {
                 </div>
               )
             })()}
-            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : { color: '#86EFAC' }}>{calc.costPending ? 'Pendiente' : fmt(calc.gain)}</span></div>}
+            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : (calc.costPartial ? { color: '#FBBF24', fontWeight: 700 } : { color: '#86EFAC' })}>{calc.costPending ? 'Pendiente' : fmt(calc.gain)}</span></div>}
+            {feats.margenTabla && calc.costPartial && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '6px 8px', margin: '2px 0 4px', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 8, fontSize: 10.5, color: '#B45309', lineHeight: 1.35 }}>
+                <i className="fa fa-circle-info" style={{ marginTop: 1, flexShrink: 0 }} />
+                <span>Cálculo <strong>parcial</strong>: {calc.itemsMissingCost} {calc.itemsMissingCost === 1 ? 'ítem sin costo' : 'ítems sin costo'}. La ganancia real será <strong>menor</strong> cuando completes esos costos.</span>
+              </div>
+            )}
             {feats.margenTabla && (() => {
               const target = num(form.margin)
               const real = Number(calc.marginReal) || 0
