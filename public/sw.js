@@ -51,6 +51,8 @@ self.addEventListener('fetch', e => {
   if (request.method !== 'GET') return
 
   const url = new URL(request.url)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return
+
   const isBypass = BYPASS_PATTERNS.some(p =>
     url.hostname.includes(p) || url.pathname.startsWith(p)
   )
