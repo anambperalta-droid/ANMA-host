@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Primeros pasos con ANMA Regalos — De cero al primer pedido en 10 minutos</title>
+<meta name="description" content="Guía visual para arrancar con ANMA Regalos: configurás tu marca, cargás productos, packaging y clientes, y mandás tu primer presupuesto sin perder la tarde en tutoriales.">
+<link rel="canonical" href="https://anma-host.vercel.app/recursos/primeros-pasos">
+<meta property="og:title" content="Primeros pasos con ANMA Regalos">
+<meta property="og:description" content="De cero al primer pedido en 10 minutos. Sin tutoriales largos.">
+<meta property="og:type" content="article">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
+
+:root{
+  --brand:#7C3AED; --brand2:#C026D3; --brand-dk:#5B21B6;
+  --emerald:#10B981; --emerald-dk:#047857;
+  --rose:#E11D74;
+  --ink:#1b1530; --txt:#3c3753; --txt2:#6a6680; --txt3:#94909f;
+  --line:#ece8f2; --bg:#fdfcfa; --surf:#f7f4fb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--txt);
+  font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;
+}
+
+.nav{display:flex;align-items:center;justify-content:space-between;padding:15px 26px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(253,252,250,.85);backdrop-filter:blur(12px);z-index:10}
+.logo{display:flex;align-items:center;gap:9px;font-family:'Poppins',sans-serif;font-weight:600;color:var(--ink);text-decoration:none;font-size:18.5px;letter-spacing:.2px}
+.logo img{width:30px;height:30px;border-radius:8px}
+.nav-r{display:flex;align-items:center;gap:18px}
+.nav-back{display:inline-flex;align-items:center;gap:6px;color:var(--txt);font-weight:600;font-size:14px;text-decoration:none}
+.nav-back:hover{color:var(--brand)}
+.nav-back::before{content:'←';font-size:15px}
+.nav .cta{background:var(--brand);color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;padding:10px 20px;border-radius:10px;transition:.15s}
+.nav .cta:hover{background:var(--brand-dk);transform:translateY(-1px)}
+@media(max-width:520px){.nav-back span{display:none}.nav-r{gap:12px}}
+
+.hero{max-width:780px;margin:0 auto;padding:64px 26px 24px;text-align:center}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#fdf2f8,#fbf5fe);border:1px solid #f3d7ea;color:var(--rose);font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:20px}
+.hero .eyebrow::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 3px rgba(225,29,116,.18)}
+.hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(36px,6vw,56px);line-height:1.06;letter-spacing:-1.3px;color:var(--ink);margin-bottom:18px;text-wrap:balance}
+.hero h1 em{font-style:italic;background:linear-gradient(120deg,var(--brand),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:19px;color:var(--txt);max-width:580px;margin:0 auto;line-height:1.55}
+
+.stats{max-width:780px;margin:32px auto 0;padding:0 26px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 14px;text-align:center}
+.stat-n{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--brand);line-height:1}
+.stat-l{font-size:12.5px;color:var(--txt2);margin-top:6px;font-weight:500}
+@media(max-width:520px){.stat-n{font-size:23px}.stat-l{font-size:11.5px}}
+
+.intro{max-width:780px;margin:60px auto 28px;padding:0 26px}
+.intro h2{font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:var(--brand);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+.intro p{color:var(--txt);font-size:16px}
+.intro p b{color:var(--ink)}
+
+.steps{max-width:820px;margin:0 auto;padding:0 26px 24px;position:relative}
+.step{position:relative;display:flex;gap:24px;padding:36px 0;border-bottom:1px dashed var(--line)}
+.step:last-child{border-bottom:none}
+.step-rail{flex-shrink:0;display:flex;flex-direction:column;align-items:center;position:relative}
+.step-num{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--rose));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:22px;box-shadow:0 8px 24px -8px rgba(124,58,237,.55);z-index:2;position:relative}
+.step-rail::after{content:'';position:absolute;top:54px;bottom:-36px;left:50%;width:2px;background:linear-gradient(180deg,var(--brand) 0%,transparent 100%);opacity:.25;transform:translateX(-50%)}
+.step:last-child .step-rail::after{display:none}
+.step-body{flex:1;min-width:0;padding-top:4px}
+.step-meta{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.step-time{display:inline-flex;align-items:center;gap:5px;background:var(--surf);color:var(--brand-dk);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.3px}
+.step-time::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--brand)}
+.step-tag{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px}
+.step h3{font-family:'Fraunces',serif;font-weight:600;font-size:26px;line-height:1.2;color:var(--ink);margin:0 0 10px;letter-spacing:-.4px;text-wrap:balance}
+.step .desc{color:var(--txt);font-size:15.5px;margin-bottom:18px;line-height:1.6}
+.step .desc b{color:var(--ink);font-weight:600}
+.checklist{list-style:none;padding:0;margin:0 0 18px;display:flex;flex-direction:column;gap:10px}
+.checklist li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:var(--txt);line-height:1.55}
+.checklist li::before{content:'';flex-shrink:0;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--emerald),var(--emerald-dk));margin-top:3px;position:relative;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px -1px rgba(16,185,129,.4)}
+.checklist li::after{content:'✓';position:absolute;color:#fff;font-size:11px;font-weight:700;margin-left:3.5px;margin-top:3.5px}
+.checklist li b{color:var(--ink);font-weight:600}
+.tip{background:linear-gradient(135deg,#fdf2f8,#fef3f9);border-left:3px solid var(--rose);border-radius:4px 12px 12px 4px;padding:13px 16px;font-size:14px;color:#6b1a3e;line-height:1.55}
+.tip b{color:#9d174d;font-weight:700;font-family:'Fraunces',serif;font-size:13.5px;display:block;margin-bottom:2px;letter-spacing:.2px}
+
+@media(max-width:600px){
+  .step{gap:16px;padding:30px 0}
+  .step-num{width:44px;height:44px;font-size:18px}
+  .step-rail::after{top:44px}
+  .step h3{font-size:22px}
+}
+
+.bonus{max-width:820px;margin:32px auto 0;padding:0 26px}
+.bonus-head{text-align:center;margin-bottom:24px}
+.bonus-head .lbl{display:inline-block;background:#fff;border:1px solid var(--line);color:var(--brand);font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px}
+.bonus-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:30px;color:var(--ink);letter-spacing:-.5px;text-wrap:balance}
+.bonus-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.bonus-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;transition:.2s;position:relative;overflow:hidden}
+.bonus-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px -16px rgba(225,29,116,.22);border-color:#f3d7ea}
+.bonus-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#fdf2f8,#fbf5fe);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;color:var(--brand)}
+.bonus-card h4{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--ink);margin-bottom:6px}
+.bonus-card p{font-size:13.5px;color:var(--txt2);line-height:1.55}
+
+.final{max-width:780px;margin:64px auto 0;padding:0 26px 80px}
+.box-cta{background:linear-gradient(150deg,#1a0420 0%,#451a3e 45%,#7C3AED 100%);border-radius:24px;padding:48px 36px;text-align:center;position:relative;overflow:hidden}
+.box-cta::before{content:'';position:absolute;top:-50%;left:50%;transform:translateX(-50%);width:520px;height:520px;background:radial-gradient(circle,rgba(225,29,116,.32),transparent 62%);pointer-events:none}
+.box-cta h2{font-family:'Fraunces',serif;color:#fff;font-size:32px;margin:0 0 12px;letter-spacing:-.5px;position:relative;text-wrap:balance}
+.box-cta p{color:rgba(255,255,255,.82);font-size:16px;margin:0 0 26px;line-height:1.55;position:relative;max-width:480px;margin-left:auto;margin-right:auto}
+.box-cta .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
+.box-cta a.primary{background:#fff;color:var(--brand-dk);text-decoration:none;font-weight:700;padding:15px 32px;border-radius:12px;font-size:15px;transition:.15s;box-shadow:0 10px 28px -8px rgba(0,0,0,.4)}
+.box-cta a.primary:hover{transform:translateY(-2px)}
+.box-cta a.ghost{color:rgba(255,255,255,.92);text-decoration:none;font-weight:600;padding:15px 24px;font-size:14.5px;border:1px solid rgba(255,255,255,.25);border-radius:12px;transition:.15s}
+.box-cta a.ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.45)}
+
+footer{border-top:1px solid var(--line);padding:30px 22px;text-align:center;font-size:13px;color:var(--txt3)}
+footer a{color:var(--brand);text-decoration:none}
+.foot-rich{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:center;margin-bottom:8px}
+.foot-credit{font-size:11.5px;margin-top:6px}
+
+@media(max-width:520px){
+  .hero{padding:44px 22px 20px}
+  .hero h1{font-size:clamp(32px,8vw,42px)}
+  .hero p{font-size:17px}
+  .stats{padding:0 22px;gap:8px}
+  .stat{padding:14px 8px}
+  .bonus-head h2{font-size:25px}
+  .box-cta{padding:36px 24px}
+  .box-cta h2{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="logo"><img src="/favicon.svg" alt=""> ANMA Regalos</a>
+  <span class="nav-r"><a href="/" class="nav-back"><span>Inicio</span></a><a href="/" class="cta">Entrar</a></span>
+</nav>
+
+<section class="hero">
+  <span class="eyebrow">Guía de inicio</span>
+  <h1>Tu regalería ordenada en <em>10 minutos</em></h1>
+  <p>5 pasos cortos para que el próximo regalo que armes salga con precio, packaging y envío resueltos sin volverte loca.</p>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n">5</div><div class="stat-l">pasos</div></div>
+  <div class="stat"><div class="stat-n">~10'</div><div class="stat-l">tiempo total</div></div>
+  <div class="stat"><div class="stat-n">∞</div><div class="stat-l">regalos felices</div></div>
+</div>
+
+<section class="intro">
+  <h2>Antes de arrancar</h2>
+  <p>No cargues todo el primer día. La idea es justo lo contrario: <b>el mínimo para armar tu primer presupuesto</b>, y el resto entra solo a medida que mandás regalos.</p>
+</section>
+
+<section class="steps">
+
+  <!-- 1 -->
+  <div class="step">
+    <div class="step-rail"><div class="step-num">1</div></div>
+    <div class="step-body">
+      <div class="step-meta">
+        <span class="step-time">2 min</span>
+        <span class="step-tag">Configuración › Marca</span>
+      </div>
+      <h3>Tu marca: nombre, logo y formas de pago</h3>
+      <p class="desc">Es lo primero que va a ver tu clienta cuando reciba un presupuesto. <b>Hacelo una vez, te olvidás para siempre.</b> Cinco minutos invertidos en esto te ahorran sentir vergüenza cada vez que mandás algo.</p>
+      <ul class="checklist">
+        <li><b>Nombre de tu marca</b> tal como querés que aparezca en los presupuestos.</li>
+        <li><b>Logo</b> en buena calidad — el PDF lo va a usar de portada.</li>
+        <li><b>WhatsApp y redes</b> para que la clienta sepa dónde encontrarte.</li>
+        <li><b>Formas de pago</b>: transferencia, MercadoPago, efectivo, tarjeta.</li>
+      </ul>
+      <div class="tip"><b>Detalle que enamora</b>Un PDF con tu logo, una fuente prolija y los colores de tu marca ya te diferencia del 90% que manda capturas de WhatsApp con precios escritos a mano.</div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="step">
+    <div class="step-rail"><div class="step-num">2</div></div>
+    <div class="step-body">
+      <div class="step-meta">
+        <span class="step-time">4 min</span>
+        <span class="step-tag">Productos</span>
+      </div>
+      <h3>Cargá los regalos estrella (no todos)</h3>
+      <p class="desc">Subí solo los regalos que más armás: la box de cumple, el desayuno, el set de mate, la opción para mamá. <b>10 a 15 productos alcanzan</b> para mandar el 80% de los presupuestos. Lo demás lo agregás cuando aparezca un pedido especial.</p>
+      <ul class="checklist">
+        <li><b>Nombre + foto + precio</b> de cada regalo (las fotos cuentan tanto como el precio).</li>
+        <li><b>Categoría</b>: cumple, San Valentín, día de la madre, corporativo.</li>
+        <li><b>Descripción cortita</b> de qué incluye, así no respondés lo mismo 20 veces por chat.</li>
+        <li><b>Variantes</b> si el mismo regalo viene en tamaños distintos (chico/mediano/grande).</li>
+      </ul>
+      <div class="tip"><b>Foto = venta</b>Una foto cuidada (luz natural, fondo limpio) vale lo que tres descripciones. Si todavía no tenés, sacalas con el celu cerca de una ventana — alcanza.</div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="step">
+    <div class="step-rail"><div class="step-num">3</div></div>
+    <div class="step-body">
+      <div class="step-meta">
+        <span class="step-time">90 seg</span>
+        <span class="step-tag">Packaging</span>
+      </div>
+      <h3>Sumá el packaging que usás (acá está la magia)</h3>
+      <p class="desc">Las cajas, bolsas, moños y etiquetas no son detalle — son parte del costo real de cada regalo. <b>Cargalos una vez y se descuentan solos</b> cada vez que armás un combo. Adiós a las sorpresas a fin de mes.</p>
+      <ul class="checklist">
+        <li><b>Caja</b>: medida, color, costo unitario.</li>
+        <li><b>Moño o cinta</b>: cuántos centímetros usás por regalo, costo por metro.</li>
+        <li><b>Bolsa de regalo</b>, etiquetas, papel de seda — todo lo que se va con el pedido.</li>
+        <li><b>Stock</b> para que ANMA te avise antes de quedarte sin moño en plena temporada.</li>
+      </ul>
+      <div class="tip"><b>Por qué hace la diferencia</b>Si no contabilizás el packaging, el regalo "rinde" 30% más en el papel de lo que rinde de verdad. Ese 30% es el que después te falta para reponer insumos.</div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="step">
+    <div class="step-rail"><div class="step-num">4</div></div>
+    <div class="step-body">
+      <div class="step-meta">
+        <span class="step-time">90 seg</span>
+        <span class="step-tag">Clientes</span>
+      </div>
+      <h3>Cargá a las clientas que vuelven</h3>
+      <p class="desc">Las que ya saben de vos: amigas que te encargan los regalos de la oficina, la empresa que te pide para fin de año, esa mamá que cada cumple confía. <b>Acordarte de quién es quién</b> es la mitad de tu valor agregado.</p>
+      <ul class="checklist">
+        <li><b>Nombre + WhatsApp</b> — botón verde directo desde la ficha.</li>
+        <li><b>Ocasión</b>: cumples, aniversarios, fechas que ya sabés que vuelven.</li>
+        <li><b>Notas</b>: "le gustó el desayuno chico", "no come maní", "factura a empresa X".</li>
+      </ul>
+      <div class="tip"><b>El detalle que conmueve</b>Acordarte de qué le regaló el año pasado y proponerle algo distinto no es marketing — es el tipo de atención que hace que esa clienta hable de vos.</div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="step">
+    <div class="step-rail"><div class="step-num">5</div></div>
+    <div class="step-body">
+      <div class="step-meta">
+        <span class="step-time">2 min</span>
+        <span class="step-tag">Nuevo presupuesto</span>
+      </div>
+      <h3>Hacé tu primer presupuesto (y mandalo por WhatsApp)</h3>
+      <p class="desc">Acá conectás todo. Probá con un pedido real o uno de prueba con una amiga. <b>Vas a sentir el momento</b> en que armar un presupuesto deja de ser una tarea y empieza a ser parte de la magia.</p>
+      <ul class="checklist">
+        <li>Elegís la clienta y los regalos: precios y packaging se suman solos.</li>
+        <li>El PDF sale con tu logo, fotos y total claro.</li>
+        <li><b>Botón "Enviar por WhatsApp"</b>: mensaje pre-armado, listo para mandar.</li>
+        <li>Queda guardado para hacerle seguimiento si no te contesta en 3 días.</li>
+      </ul>
+      <div class="tip"><b>Lo que sigue</b>Desde el Dashboard ves todos los presupuestos abiertos, los pedidos en camino y las cobranzas pendientes. Tu día empieza ahí, no en el WhatsApp.</div>
+    </div>
+  </div>
+
+</section>
+
+<section class="bonus">
+  <div class="bonus-head">
+    <span class="lbl">Cuando estés lista</span>
+    <h2>Lo que sumás después</h2>
+  </div>
+  <div class="bonus-grid">
+    <div class="bonus-card">
+      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h2l3-3 4 4 5-5 4 4M3 18h18"/></svg></div>
+      <h4>Proveedores</h4>
+      <p>Tu lista de mayoristas: a quién le comprás cada cosa, a qué precio y cuánto tardan en reponer.</p>
+    </div>
+    <div class="bonus-card">
+      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="14" height="11" rx="1"/><path d="M15 9h4l3 3v5h-7"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></div>
+      <h4>Logística</h4>
+      <p>Envíos por ViaCargo o moto propia — registrás cada pedido y la clienta sabe siempre dónde está.</p>
+    </div>
+    <div class="bonus-card">
+      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+      <h4>Mensajes WA</h4>
+      <p>Plantillas para presupuestos, seguimientos y agradecimientos. Tu voz, sin tipear desde cero.</p>
+    </div>
+    <div class="bonus-card">
+      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+      <h4>Dashboard</h4>
+      <p>El panel donde ves lo urgente del día: presupuestos abiertos, cobros pendientes, regalos por armar.</p>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="box-cta">
+    <h2>Tu próxima clienta merece la versión ordenada de vos.</h2>
+    <p>Si te trabás en algún paso, escribime por WhatsApp — te ayudo en vivo.</p>
+    <div class="btns">
+      <a class="primary" href="/">Entrar a ANMA Regalos →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-rich">
+    <a href="/">ANMA Regalos</a>
+    <a href="https://anmahub.com">ANMA Hub</a>
+  </div>
+  <div class="foot-credit">© 2026 ANMA · Hecho con cariño en Argentina</div>
+</footer>
+
+</body>
+</html>
