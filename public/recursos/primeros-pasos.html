@@ -4,32 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Primeros pasos con ANMA Regalos — De cero al primer pedido en 10 minutos</title>
-<meta name="description" content="Guía visual para arrancar con ANMA Regalos: configurás tu marca, cargás productos, packaging y clientes, y mandás tu primer presupuesto sin perder la tarde en tutoriales.">
+<meta name="description" content="Guía visual para arrancar con ANMA Regalos. 5 pasos, iconos claros, sin texto de más.">
 <link rel="canonical" href="https://anma-host.vercel.app/recursos/primeros-pasos">
 <meta property="og:title" content="Primeros pasos con ANMA Regalos">
-<meta property="og:description" content="De cero al primer pedido en 10 minutos. Sin tutoriales largos.">
+<meta property="og:description" content="De cero al primer pedido en 10 minutos.">
 <meta property="og:type" content="article">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
 
 :root{
-  --brand:#7C3AED; --brand2:#C026D3; --brand-dk:#5B21B6;
-  --emerald:#10B981; --emerald-dk:#047857;
-  --rose:#E11D74;
+  --brand:#7C3AED; --brand2:#C026D3; --brand-dk:#5B21B6; --brand-lt:#F5EFFE;
+  --emerald:#10B981; --emerald-dk:#047857; --emerald-lt:#ECFDF5;
+  --rose:#E11D74; --rose-lt:#FDF2F8; --rose-dk:#9D174D;
   --ink:#1b1530; --txt:#3c3753; --txt2:#6a6680; --txt3:#94909f;
   --line:#ece8f2; --bg:#fdfcfa; --surf:#f7f4fb;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{
-  background:var(--bg);color:var(--txt);
-  font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;
-  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;
-}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',-apple-system,'Segoe UI',sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+svg{display:block}
 
 .nav{display:flex;align-items:center;justify-content:space-between;padding:15px 26px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(253,252,250,.85);backdrop-filter:blur(12px);z-index:10}
-.logo{display:flex;align-items:center;gap:9px;font-family:'Poppins',sans-serif;font-weight:600;color:var(--ink);text-decoration:none;font-size:18.5px;letter-spacing:.2px}
+.logo{display:flex;align-items:center;gap:9px;font-family:'Poppins',sans-serif;font-weight:600;color:var(--ink);text-decoration:none;font-size:18.5px}
 .logo img{width:30px;height:30px;border-radius:8px}
 .nav-r{display:flex;align-items:center;gap:18px}
 .nav-back{display:inline-flex;align-items:center;gap:6px;color:var(--txt);font-weight:600;font-size:14px;text-decoration:none}
@@ -40,74 +37,88 @@ body{
 @media(max-width:520px){.nav-back span{display:none}.nav-r{gap:12px}}
 
 .hero{max-width:780px;margin:0 auto;padding:64px 26px 24px;text-align:center}
-.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#fdf2f8,#fbf5fe);border:1px solid #f3d7ea;color:var(--rose);font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:20px}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--rose-lt),#fbf5fe);border:1px solid #f3d7ea;color:var(--rose);font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:20px}
 .hero .eyebrow::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 3px rgba(225,29,116,.18)}
-.hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(36px,6vw,56px);line-height:1.06;letter-spacing:-1.3px;color:var(--ink);margin-bottom:18px;text-wrap:balance}
+.hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(36px,6vw,56px);line-height:1.06;letter-spacing:-1.3px;color:var(--ink);margin-bottom:14px;text-wrap:balance}
 .hero h1 em{font-style:italic;background:linear-gradient(120deg,var(--brand),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{font-size:19px;color:var(--txt);max-width:580px;margin:0 auto;line-height:1.55}
+.hero p{font-size:18px;color:var(--txt);max-width:520px;margin:0 auto}
 
-.stats{max-width:780px;margin:32px auto 0;padding:0 26px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 14px;text-align:center}
-.stat-n{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--brand);line-height:1}
-.stat-l{font-size:12.5px;color:var(--txt2);margin-top:6px;font-weight:500}
-@media(max-width:520px){.stat-n{font-size:23px}.stat-l{font-size:11.5px}}
-
-.intro{max-width:780px;margin:60px auto 28px;padding:0 26px}
-.intro h2{font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:var(--brand);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
-.intro p{color:var(--txt);font-size:16px}
-.intro p b{color:var(--ink)}
-
-.steps{max-width:820px;margin:0 auto;padding:0 26px 24px;position:relative}
-.step{position:relative;display:flex;gap:24px;padding:36px 0;border-bottom:1px dashed var(--line)}
-.step:last-child{border-bottom:none}
-.step-rail{flex-shrink:0;display:flex;flex-direction:column;align-items:center;position:relative}
-.step-num{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--rose));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:22px;box-shadow:0 8px 24px -8px rgba(124,58,237,.55);z-index:2;position:relative}
-.step-rail::after{content:'';position:absolute;top:54px;bottom:-36px;left:50%;width:2px;background:linear-gradient(180deg,var(--brand) 0%,transparent 100%);opacity:.25;transform:translateX(-50%)}
-.step:last-child .step-rail::after{display:none}
-.step-body{flex:1;min-width:0;padding-top:4px}
-.step-meta{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-.step-time{display:inline-flex;align-items:center;gap:5px;background:var(--surf);color:var(--brand-dk);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.3px}
-.step-time::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--brand)}
-.step-tag{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px}
-.step h3{font-family:'Fraunces',serif;font-weight:600;font-size:26px;line-height:1.2;color:var(--ink);margin:0 0 10px;letter-spacing:-.4px;text-wrap:balance}
-.step .desc{color:var(--txt);font-size:15.5px;margin-bottom:18px;line-height:1.6}
-.step .desc b{color:var(--ink);font-weight:600}
-.checklist{list-style:none;padding:0;margin:0 0 18px;display:flex;flex-direction:column;gap:10px}
-.checklist li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:var(--txt);line-height:1.55}
-.checklist li::before{content:'';flex-shrink:0;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--emerald),var(--emerald-dk));margin-top:3px;position:relative;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px -1px rgba(16,185,129,.4)}
-.checklist li::after{content:'✓';position:absolute;color:#fff;font-size:11px;font-weight:700;margin-left:3.5px;margin-top:3.5px}
-.checklist li b{color:var(--ink);font-weight:600}
-.tip{background:linear-gradient(135deg,#fdf2f8,#fef3f9);border-left:3px solid var(--rose);border-radius:4px 12px 12px 4px;padding:13px 16px;font-size:14px;color:#6b1a3e;line-height:1.55}
-.tip b{color:#9d174d;font-weight:700;font-family:'Fraunces',serif;font-size:13.5px;display:block;margin-bottom:2px;letter-spacing:.2px}
-
-@media(max-width:600px){
-  .step{gap:16px;padding:30px 0}
-  .step-num{width:44px;height:44px;font-size:18px}
-  .step-rail::after{top:44px}
-  .step h3{font-size:22px}
+.flowmap{max-width:780px;margin:38px auto 0;padding:0 26px}
+.flowmap-inner{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 18px;display:flex;align-items:center;justify-content:space-between;gap:6px;box-shadow:0 8px 24px -16px rgba(225,29,116,.18)}
+.fm-node{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0}
+.fm-ico{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--rose-lt),#fbf5fe);color:var(--rose);display:flex;align-items:center;justify-content:center;border:1px solid #f3d7ea}
+.fm-lbl{font-size:11px;font-weight:700;color:var(--ink);text-align:center;letter-spacing:.2px}
+.fm-arrow{color:var(--rose);opacity:.4;flex-shrink:0}
+@media(max-width:560px){
+  .flowmap-inner{padding:14px 10px}
+  .fm-ico{width:36px;height:36px;border-radius:10px}
+  .fm-lbl{font-size:9.5px}
+  .fm-arrow svg{width:14px;height:14px}
 }
 
-.bonus{max-width:820px;margin:32px auto 0;padding:0 26px}
-.bonus-head{text-align:center;margin-bottom:24px}
-.bonus-head .lbl{display:inline-block;background:#fff;border:1px solid var(--line);color:var(--brand);font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px}
-.bonus-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:30px;color:var(--ink);letter-spacing:-.5px;text-wrap:balance}
-.bonus-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.bonus-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;transition:.2s;position:relative;overflow:hidden}
-.bonus-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px -16px rgba(225,29,116,.22);border-color:#f3d7ea}
-.bonus-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#fdf2f8,#fbf5fe);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;color:var(--brand)}
-.bonus-card h4{font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--ink);margin-bottom:6px}
-.bonus-card p{font-size:13.5px;color:var(--txt2);line-height:1.55}
+.steps{max-width:820px;margin:24px auto 0;padding:0 26px}
+.step{display:grid;grid-template-columns:64px 1fr;gap:22px;padding:42px 0;border-bottom:1px dashed var(--line);position:relative}
+.step:last-child{border-bottom:none}
+.step-rail{position:relative;display:flex;flex-direction:column;align-items:center}
+.step-num{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--rose));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:22px;box-shadow:0 8px 24px -8px rgba(225,29,116,.45);position:relative;z-index:2}
+.step-rail::after{content:'';position:absolute;top:54px;bottom:-42px;left:50%;width:2px;background:linear-gradient(180deg,var(--rose) 0%,transparent 100%);opacity:.22;transform:translateX(-50%)}
+.step:last-child .step-rail::after{display:none}
+.step-body{min-width:0}
 
-.final{max-width:780px;margin:64px auto 0;padding:0 26px 80px}
+.step-head{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.step-bigicon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--rose-lt),#fbf5fe);color:var(--rose);display:flex;align-items:center;justify-content:center;border:1px solid #f3d7ea;flex-shrink:0;box-shadow:0 4px 14px -6px rgba(225,29,116,.3)}
+.step-titles{flex:1;min-width:0}
+.step-time{display:inline-flex;align-items:center;gap:5px;background:var(--rose-lt);color:var(--rose-dk);font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.3px;margin-bottom:3px}
+.step-time::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--rose)}
+.step h3{font-family:'Fraunces',serif;font-weight:600;font-size:24px;line-height:1.2;color:var(--ink);margin:0;letter-spacing:-.3px;text-wrap:balance}
+.step .desc{color:var(--txt);font-size:15px;margin:10px 0 18px;line-height:1.55;text-wrap:pretty}
+.step .desc b{color:var(--ink);font-weight:600}
+.step .desc em{font-style:italic;color:var(--rose-dk)}
+
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 14px;margin-bottom:16px;box-shadow:0 4px 14px -10px rgba(16,24,40,.12)}
+.flow-step{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
+.flow-ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-ico-1{background:var(--rose-lt);color:var(--rose);border:1px solid #f3d7ea}
+.flow-ico-2{background:var(--brand-lt);color:var(--brand);border:1px solid #ece1fb}
+.flow-ico-3{background:var(--emerald-lt);color:var(--emerald-dk);border:1px solid #a7f3d0}
+.flow-txt{font-size:11.5px;font-weight:600;color:var(--ink);line-height:1.25;max-width:100px}
+.flow-arrow{color:var(--rose);opacity:.45;flex-shrink:0}
+
+@media(max-width:560px){
+  .step{grid-template-columns:48px 1fr;gap:14px;padding:34px 0}
+  .step-num{width:44px;height:44px;font-size:18px}
+  .step-rail::after{top:44px;bottom:-34px}
+  .step-bigicon{width:42px;height:42px;border-radius:12px}
+  .step h3{font-size:21px}
+  .flow{grid-template-columns:1fr;gap:12px;padding:14px}
+  .flow-arrow{transform:rotate(90deg)}
+  .flow-txt{max-width:none;font-size:12.5px}
+}
+
+.tip{display:flex;gap:10px;background:var(--rose-lt);border-left:3px solid var(--rose);border-radius:4px 12px 12px 4px;padding:11px 14px;font-size:13.5px;color:#6b1a3e;line-height:1.5;align-items:flex-start}
+.tip-ico{flex-shrink:0;color:var(--rose-dk);margin-top:1px}
+.tip b{color:var(--rose-dk);font-weight:700}
+
+.bonus{max-width:820px;margin:48px auto 0;padding:0 26px}
+.bonus-head{text-align:center;margin-bottom:24px}
+.bonus-head .lbl{display:inline-block;background:#fff;border:1px solid var(--line);color:var(--rose);font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px}
+.bonus-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:28px;color:var(--ink);letter-spacing:-.5px;text-wrap:balance}
+.bonus-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.bonus-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;transition:.2s;text-align:center}
+.bonus-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px -16px rgba(225,29,116,.22);border-color:#f3d7ea}
+.bonus-ico{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--rose-lt),#fbf5fe);color:var(--rose);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:1px solid #f3d7ea}
+.bonus-card h4{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--ink);margin-bottom:4px}
+.bonus-card p{font-size:13px;color:var(--txt2);line-height:1.5}
+
+.final{max-width:780px;margin:60px auto 0;padding:0 26px 80px}
 .box-cta{background:linear-gradient(150deg,#1a0420 0%,#451a3e 45%,#7C3AED 100%);border-radius:24px;padding:48px 36px;text-align:center;position:relative;overflow:hidden}
 .box-cta::before{content:'';position:absolute;top:-50%;left:50%;transform:translateX(-50%);width:520px;height:520px;background:radial-gradient(circle,rgba(225,29,116,.32),transparent 62%);pointer-events:none}
-.box-cta h2{font-family:'Fraunces',serif;color:#fff;font-size:32px;margin:0 0 12px;letter-spacing:-.5px;position:relative;text-wrap:balance}
-.box-cta p{color:rgba(255,255,255,.82);font-size:16px;margin:0 0 26px;line-height:1.55;position:relative;max-width:480px;margin-left:auto;margin-right:auto}
+.box-cta-ico{width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18)}
+.box-cta h2{font-family:'Fraunces',serif;color:#fff;font-size:30px;margin:0 0 10px;letter-spacing:-.5px;position:relative;text-wrap:balance}
+.box-cta p{color:rgba(255,255,255,.82);font-size:15.5px;margin:0 0 24px;line-height:1.55;position:relative;max-width:460px;margin-left:auto;margin-right:auto}
 .box-cta .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
-.box-cta a.primary{background:#fff;color:var(--brand-dk);text-decoration:none;font-weight:700;padding:15px 32px;border-radius:12px;font-size:15px;transition:.15s;box-shadow:0 10px 28px -8px rgba(0,0,0,.4)}
+.box-cta a.primary{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--rose-dk);text-decoration:none;font-weight:700;padding:14px 28px;border-radius:12px;font-size:15px;transition:.15s;box-shadow:0 10px 28px -8px rgba(0,0,0,.4)}
 .box-cta a.primary:hover{transform:translateY(-2px)}
-.box-cta a.ghost{color:rgba(255,255,255,.92);text-decoration:none;font-weight:600;padding:15px 24px;font-size:14.5px;border:1px solid rgba(255,255,255,.25);border-radius:12px;transition:.15s}
-.box-cta a.ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.45)}
 
 footer{border-top:1px solid var(--line);padding:30px 22px;text-align:center;font-size:13px;color:var(--txt3)}
 footer a{color:var(--brand);text-decoration:none}
@@ -116,13 +127,10 @@ footer a{color:var(--brand);text-decoration:none}
 
 @media(max-width:520px){
   .hero{padding:44px 22px 20px}
-  .hero h1{font-size:clamp(32px,8vw,42px)}
-  .hero p{font-size:17px}
-  .stats{padding:0 22px;gap:8px}
-  .stat{padding:14px 8px}
-  .bonus-head h2{font-size:25px}
+  .hero p{font-size:16px}
+  .bonus-head h2{font-size:23px}
   .box-cta{padding:36px 24px}
-  .box-cta h2{font-size:26px}
+  .box-cta h2{font-size:24px}
 }
 </style>
 </head>
@@ -136,19 +144,38 @@ footer a{color:var(--brand);text-decoration:none}
 <section class="hero">
   <span class="eyebrow">Guía de inicio</span>
   <h1>Tu regalería ordenada en <em>10 minutos</em></h1>
-  <p>5 pasos cortos para que el próximo regalo que armes salga con precio, packaging y envío resueltos sin volverte loca.</p>
+  <p>5 pasos. Iconos claros. Sin tutoriales largos.</p>
 </section>
 
-<div class="stats">
-  <div class="stat"><div class="stat-n">5</div><div class="stat-l">pasos</div></div>
-  <div class="stat"><div class="stat-n">~10'</div><div class="stat-l">tiempo total</div></div>
-  <div class="stat"><div class="stat-n">∞</div><div class="stat-l">regalos felices</div></div>
+<!-- Mapa visual del flujo -->
+<div class="flowmap">
+  <div class="flowmap-inner">
+    <div class="fm-node">
+      <div class="fm-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+      <div class="fm-lbl">Marca</div>
+    </div>
+    <div class="fm-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="fm-node">
+      <div class="fm-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>
+      <div class="fm-lbl">Regalos</div>
+    </div>
+    <div class="fm-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="fm-node">
+      <div class="fm-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div>
+      <div class="fm-lbl">Packaging</div>
+    </div>
+    <div class="fm-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="fm-node">
+      <div class="fm-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="fm-lbl">Clientas</div>
+    </div>
+    <div class="fm-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="fm-node">
+      <div class="fm-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div>
+      <div class="fm-lbl">Pedido</div>
+    </div>
+  </div>
 </div>
-
-<section class="intro">
-  <h2>Antes de arrancar</h2>
-  <p>No cargues todo el primer día. La idea es justo lo contrario: <b>el mínimo para armar tu primer presupuesto</b>, y el resto entra solo a medida que mandás regalos.</p>
-</section>
 
 <section class="steps">
 
@@ -156,19 +183,34 @@ footer a{color:var(--brand);text-decoration:none}
   <div class="step">
     <div class="step-rail"><div class="step-num">1</div></div>
     <div class="step-body">
-      <div class="step-meta">
-        <span class="step-time">2 min</span>
-        <span class="step-tag">Configuración › Marca</span>
+      <div class="step-head">
+        <div class="step-bigicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <div class="step-titles">
+          <div class="step-time">2 min</div>
+          <h3>Configurá tu marca</h3>
+        </div>
       </div>
-      <h3>Tu marca: nombre, logo y formas de pago</h3>
-      <p class="desc">Es lo primero que va a ver tu clienta cuando reciba un presupuesto. <b>Hacelo una vez, te olvidás para siempre.</b> Cinco minutos invertidos en esto te ahorran sentir vergüenza cada vez que mandás algo.</p>
-      <ul class="checklist">
-        <li><b>Nombre de tu marca</b> tal como querés que aparezca en los presupuestos.</li>
-        <li><b>Logo</b> en buena calidad — el PDF lo va a usar de portada.</li>
-        <li><b>WhatsApp y redes</b> para que la clienta sepa dónde encontrarte.</li>
-        <li><b>Formas de pago</b>: transferencia, MercadoPago, efectivo, tarjeta.</li>
-      </ul>
-      <div class="tip"><b>Detalle que enamora</b>Un PDF con tu logo, una fuente prolija y los colores de tu marca ya te diferencia del 90% que manda capturas de WhatsApp con precios escritos a mano.</div>
+      <p class="desc">Logo, datos y formas de pago. <b>Lo que va a aparecer en cada presupuesto.</b></p>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
+          <div class="flow-txt">Subís tu logo</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+          <div class="flow-txt">Formas de pago</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="flow-txt">Listo</div>
+        </div>
+      </div>
+      <div class="tip">
+        <span class="tip-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+        <span><b>El detalle que enamora:</b> PDF con tu logo > captura desprolija de WhatsApp.</span>
+      </div>
     </div>
   </div>
 
@@ -176,19 +218,34 @@ footer a{color:var(--brand);text-decoration:none}
   <div class="step">
     <div class="step-rail"><div class="step-num">2</div></div>
     <div class="step-body">
-      <div class="step-meta">
-        <span class="step-time">4 min</span>
-        <span class="step-tag">Productos</span>
+      <div class="step-head">
+        <div class="step-bigicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>
+        <div class="step-titles">
+          <div class="step-time">4 min</div>
+          <h3>Cargá los regalos estrella</h3>
+        </div>
       </div>
-      <h3>Cargá los regalos estrella (no todos)</h3>
-      <p class="desc">Subí solo los regalos que más armás: la box de cumple, el desayuno, el set de mate, la opción para mamá. <b>10 a 15 productos alcanzan</b> para mandar el 80% de los presupuestos. Lo demás lo agregás cuando aparezca un pedido especial.</p>
-      <ul class="checklist">
-        <li><b>Nombre + foto + precio</b> de cada regalo (las fotos cuentan tanto como el precio).</li>
-        <li><b>Categoría</b>: cumple, San Valentín, día de la madre, corporativo.</li>
-        <li><b>Descripción cortita</b> de qué incluye, así no respondés lo mismo 20 veces por chat.</li>
-        <li><b>Variantes</b> si el mismo regalo viene en tamaños distintos (chico/mediano/grande).</li>
-      </ul>
-      <div class="tip"><b>Foto = venta</b>Una foto cuidada (luz natural, fondo limpio) vale lo que tres descripciones. Si todavía no tenés, sacalas con el celu cerca de una ventana — alcanza.</div>
+      <p class="desc">Los que más armás: box de cumple, desayuno, set de mate. <b>10-15 alcanzan</b> para el 80% de tus pedidos.</p>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
+          <div class="flow-txt">Foto + nombre</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="flow-txt">Precio + categoría</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+          <div class="flow-txt">Catálogo listo</div>
+        </div>
+      </div>
+      <div class="tip">
+        <span class="tip-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>
+        <span><b>Foto = venta.</b> Luz natural + fondo limpio + celu. Alcanza.</span>
+      </div>
     </div>
   </div>
 
@@ -196,19 +253,34 @@ footer a{color:var(--brand);text-decoration:none}
   <div class="step">
     <div class="step-rail"><div class="step-num">3</div></div>
     <div class="step-body">
-      <div class="step-meta">
-        <span class="step-time">90 seg</span>
-        <span class="step-tag">Packaging</span>
+      <div class="step-head">
+        <div class="step-bigicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div>
+        <div class="step-titles">
+          <div class="step-time">90 seg</div>
+          <h3>Sumá tu packaging</h3>
+        </div>
       </div>
-      <h3>Sumá el packaging que usás (acá está la magia)</h3>
-      <p class="desc">Las cajas, bolsas, moños y etiquetas no son detalle — son parte del costo real de cada regalo. <b>Cargalos una vez y se descuentan solos</b> cada vez que armás un combo. Adiós a las sorpresas a fin de mes.</p>
-      <ul class="checklist">
-        <li><b>Caja</b>: medida, color, costo unitario.</li>
-        <li><b>Moño o cinta</b>: cuántos centímetros usás por regalo, costo por metro.</li>
-        <li><b>Bolsa de regalo</b>, etiquetas, papel de seda — todo lo que se va con el pedido.</li>
-        <li><b>Stock</b> para que ANMA te avise antes de quedarte sin moño en plena temporada.</li>
-      </ul>
-      <div class="tip"><b>Por qué hace la diferencia</b>Si no contabilizás el packaging, el regalo "rinde" 30% más en el papel de lo que rinde de verdad. Ese 30% es el que después te falta para reponer insumos.</div>
+      <p class="desc">Cajas, moños, etiquetas, bolsas. <b>Se descuentan solos</b> en cada regalo. <em>Acá está la magia.</em></p>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+          <div class="flow-txt">Cargás insumos</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8v8M8 8v8M3 12h18"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+          <div class="flow-txt">Asignás al regalo</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="flow-txt">Costos reales</div>
+        </div>
+      </div>
+      <div class="tip">
+        <span class="tip-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+        <span><b>Sin packaging contabilizado</b>, el regalo "rinde" 30% más en papel que en plata real.</span>
+      </div>
     </div>
   </div>
 
@@ -216,18 +288,34 @@ footer a{color:var(--brand);text-decoration:none}
   <div class="step">
     <div class="step-rail"><div class="step-num">4</div></div>
     <div class="step-body">
-      <div class="step-meta">
-        <span class="step-time">90 seg</span>
-        <span class="step-tag">Clientes</span>
+      <div class="step-head">
+        <div class="step-bigicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="step-titles">
+          <div class="step-time">90 seg</div>
+          <h3>Cargá tus clientas que vuelven</h3>
+        </div>
       </div>
-      <h3>Cargá a las clientas que vuelven</h3>
-      <p class="desc">Las que ya saben de vos: amigas que te encargan los regalos de la oficina, la empresa que te pide para fin de año, esa mamá que cada cumple confía. <b>Acordarte de quién es quién</b> es la mitad de tu valor agregado.</p>
-      <ul class="checklist">
-        <li><b>Nombre + WhatsApp</b> — botón verde directo desde la ficha.</li>
-        <li><b>Ocasión</b>: cumples, aniversarios, fechas que ya sabés que vuelven.</li>
-        <li><b>Notas</b>: "le gustó el desayuno chico", "no come maní", "factura a empresa X".</li>
-      </ul>
-      <div class="tip"><b>El detalle que conmueve</b>Acordarte de qué le regaló el año pasado y proponerle algo distinto no es marketing — es el tipo de atención que hace que esa clienta hable de vos.</div>
+      <p class="desc">Las que ya saben de vos: amigas, empresas, mamás repetidoras. <b>Acordarte de quién es quién</b> = la mitad de tu valor.</p>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="flow-txt">Nombre + WhatsApp</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="flow-txt">Fechas clave</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
+          <div class="flow-txt">Notas y gustos</div>
+        </div>
+      </div>
+      <div class="tip">
+        <span class="tip-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+        <span><b>El detalle que conmueve:</b> acordarte qué le regaló el año pasado.</span>
+      </div>
     </div>
   </div>
 
@@ -235,19 +323,34 @@ footer a{color:var(--brand);text-decoration:none}
   <div class="step">
     <div class="step-rail"><div class="step-num">5</div></div>
     <div class="step-body">
-      <div class="step-meta">
-        <span class="step-time">2 min</span>
-        <span class="step-tag">Nuevo presupuesto</span>
+      <div class="step-head">
+        <div class="step-bigicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
+        <div class="step-titles">
+          <div class="step-time">2 min</div>
+          <h3>Mandá tu primer presupuesto</h3>
+        </div>
       </div>
-      <h3>Hacé tu primer presupuesto (y mandalo por WhatsApp)</h3>
-      <p class="desc">Acá conectás todo. Probá con un pedido real o uno de prueba con una amiga. <b>Vas a sentir el momento</b> en que armar un presupuesto deja de ser una tarea y empieza a ser parte de la magia.</p>
-      <ul class="checklist">
-        <li>Elegís la clienta y los regalos: precios y packaging se suman solos.</li>
-        <li>El PDF sale con tu logo, fotos y total claro.</li>
-        <li><b>Botón "Enviar por WhatsApp"</b>: mensaje pre-armado, listo para mandar.</li>
-        <li>Queda guardado para hacerle seguimiento si no te contesta en 3 días.</li>
-      </ul>
-      <div class="tip"><b>Lo que sigue</b>Desde el Dashboard ves todos los presupuestos abiertos, los pedidos en camino y las cobranzas pendientes. Tu día empieza ahí, no en el WhatsApp.</div>
+      <p class="desc">Acá conectás todo. Clienta + regalos + un clic = PDF con tu marca y WhatsApp pre-armado.</p>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></div>
+          <div class="flow-txt">Elegís clienta</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7"/></svg></div>
+          <div class="flow-txt">Sumás regalos</div>
+        </div>
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <div class="flow-step">
+          <div class="flow-ico flow-ico-3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+          <div class="flow-txt">Mandás por WhatsApp</div>
+        </div>
+      </div>
+      <div class="tip">
+        <span class="tip-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+        <span><b>Queda guardado</b> para hacer seguimiento si no contesta en 3 días.</span>
+      </div>
     </div>
   </div>
 
@@ -260,34 +363,35 @@ footer a{color:var(--brand);text-decoration:none}
   </div>
   <div class="bonus-grid">
     <div class="bonus-card">
-      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h2l3-3 4 4 5-5 4 4M3 18h18"/></svg></div>
+      <div class="bonus-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
       <h4>Proveedores</h4>
-      <p>Tu lista de mayoristas: a quién le comprás cada cosa, a qué precio y cuánto tardan en reponer.</p>
+      <p>Tus mayoristas y costos</p>
     </div>
     <div class="bonus-card">
-      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="14" height="11" rx="1"/><path d="M15 9h4l3 3v5h-7"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></div>
+      <div class="bonus-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="14" height="11" rx="1"/><path d="M15 9h4l3 3v5h-7"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></div>
       <h4>Logística</h4>
-      <p>Envíos por ViaCargo o moto propia — registrás cada pedido y la clienta sabe siempre dónde está.</p>
+      <p>Envíos rastreables</p>
     </div>
     <div class="bonus-card">
-      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+      <div class="bonus-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
       <h4>Mensajes WA</h4>
-      <p>Plantillas para presupuestos, seguimientos y agradecimientos. Tu voz, sin tipear desde cero.</p>
+      <p>Plantillas con tu voz</p>
     </div>
     <div class="bonus-card">
-      <div class="bonus-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+      <div class="bonus-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
       <h4>Dashboard</h4>
-      <p>El panel donde ves lo urgente del día: presupuestos abiertos, cobros pendientes, regalos por armar.</p>
+      <p>Lo urgente del día</p>
     </div>
   </div>
 </section>
 
 <section class="final">
   <div class="box-cta">
+    <div class="box-cta-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
     <h2>Tu próxima clienta merece la versión ordenada de vos.</h2>
-    <p>Si te trabás en algún paso, escribime por WhatsApp — te ayudo en vivo.</p>
+    <p>Si te trabás, escribime por WhatsApp.</p>
     <div class="btns">
-      <a class="primary" href="/">Entrar a ANMA Regalos →</a>
+      <a class="primary" href="/">Entrar a ANMA Regalos <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </div>
   </div>
 </section>
