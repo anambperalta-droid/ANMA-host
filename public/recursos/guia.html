@@ -10,6 +10,7 @@
 <meta property="og:description" content="Manual visual de cada sección de la app, paso a paso.">
 <meta property="og:type" content="article">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
 
@@ -155,6 +156,86 @@ footer a{color:var(--brand)}
   .box-cta{padding:36px 24px}
   .box-cta h2{font-size:24px}
 }
+
+/* ── Mapa visual de pantalla principal ── */
+.screen-map{max-width:1180px;margin:36px auto 0;padding:0 26px}
+.screen-map-inner{background:linear-gradient(180deg,#1a0420 0%,#451a3e 100%);border-radius:20px;padding:24px;box-shadow:0 20px 50px -20px rgba(225,29,116,.45);overflow:hidden;position:relative}
+.screen-map-bar{display:flex;align-items:center;gap:8px;padding:0 4px 12px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.screen-map-bar span{width:9px;height:9px;border-radius:50%;background:#475569}
+.screen-map-bar span:nth-child(1){background:#ef4444}
+.screen-map-bar span:nth-child(2){background:#f59e0b}
+.screen-map-bar span:nth-child(3){background:#10b981}
+.screen-map-url{margin-left:auto;font-size:10.5px;color:rgba(255,255,255,.4);font-family:monospace;background:rgba(255,255,255,.06);padding:3px 10px;border-radius:6px}
+.screen-grid{display:grid;grid-template-columns:200px 1fr;gap:16px;min-height:280px}
+.screen-side{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;gap:2px}
+.screen-side-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;padding:8px 10px 4px}
+.screen-side-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:500;transition:.15s;cursor:default}
+.screen-side-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.screen-side-item.active{background:rgba(225,29,116,.25);color:#fff;font-weight:700}
+.screen-side-item i{width:14px;text-align:center;font-size:12px;opacity:.85}
+.screen-main{background:#fafbfc;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.screen-main-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.screen-main-top h4{font-family:'Fraunces',serif;font-size:15px;color:var(--ink);font-weight:600}
+.screen-main-action{display:inline-flex;align-items:center;gap:5px;background:var(--rose);color:#fff;font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:7px}
+.screen-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.screen-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;display:flex;flex-direction:column;gap:3px}
+.screen-card-lbl{font-size:8.5px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.screen-card-num{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--ink)}
+.screen-card-num.warn{color:#dc2626}
+.screen-card-num.ok{color:var(--emerald-dk)}
+.screen-hint{font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:14px;font-style:italic}
+@media(max-width:780px){
+  .screen-grid{grid-template-columns:1fr}
+  .screen-side{flex-direction:row;flex-wrap:wrap;gap:4px;padding:8px}
+  .screen-side-lbl{display:none}
+  .screen-side-item{flex:0 0 auto;padding:6px 10px;font-size:11px}
+  .screen-cards{grid-template-columns:1fr 1fr}
+}
+
+/* ── Action → React block ── */
+.action-react{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:stretch;margin:0 0 18px;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ar-step{padding:18px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ar-lbl{font-size:9.5px;font-weight:800;color:var(--rose);text-transform:uppercase;letter-spacing:1.2px}
+.ar-content{display:flex;align-items:flex-start;gap:10px;flex:1}
+.ar-ico{flex-shrink:0;width:34px;height:34px;border-radius:9px;background:var(--rose-lt);color:var(--rose);display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid #f3d7ea}
+.ar-body{flex:1;min-width:0;font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.35}
+.ar-body small{display:block;font-size:11.5px;color:var(--txt2);font-weight:500;margin-top:2px;line-height:1.45}
+.ar-arrow{align-self:center;color:var(--rose);opacity:.5;padding:0 4px;font-size:16px}
+.ar-step.ar-result .ar-ico{background:var(--accent-lt);color:var(--accent);border-color:#ece1fb}
+.ar-step.ar-benefit .ar-ico{background:var(--emerald-lt);color:var(--emerald-dk);border-color:#a7f3d0}
+.ar-step.ar-benefit .ar-lbl{color:var(--emerald-dk)}
+.ar-step.ar-result .ar-lbl{color:var(--accent)}
+@media(max-width:680px){
+  .action-react{grid-template-columns:1fr;gap:0}
+  .ar-step{border-bottom:1px solid var(--line)}
+  .ar-step:last-child{border-bottom:none}
+  .ar-arrow{align-self:flex-start;padding:0 16px 8px;transform:rotate(90deg);height:auto}
+}
+
+/* ── Botones / iconos reales referenciados ── */
+.btn-ref{display:inline-flex;align-items:center;gap:5px;background:var(--surf);border:1px solid var(--line);color:var(--ink);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:7px;font-family:inherit;line-height:1.4;vertical-align:middle;margin:0 1px}
+.btn-ref i{font-size:11px;color:var(--rose);width:13px;text-align:center}
+.btn-ref.btn-ref-primary{background:var(--rose);color:#fff;border-color:var(--rose)}
+.btn-ref.btn-ref-primary i{color:#fff}
+.btn-ref.btn-ref-wa{background:#dcfce7;color:#15803d;border-color:#86efac}
+.btn-ref.btn-ref-wa i{color:#16a34a}
+.btn-ref.btn-ref-danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+.btn-ref.btn-ref-danger i{color:#dc2626}
+
+/* ── Bloque "Conexión con tu día" ── */
+.connect{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--rose-lt) 0%,#fbf5fe 100%);border:1px solid #f3d7ea;border-radius:14px;padding:14px 18px;margin:0 0 18px}
+.connect-ico{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--rose),var(--rose-dk));color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 4px 12px -4px rgba(225,29,116,.5)}
+.connect-body{flex:1;min-width:0;font-size:13.5px;color:var(--rose-dk);line-height:1.5}
+.connect-body b{font-weight:700;color:var(--ink)}
+
+/* ── Lista de pasos numerados con icono ── */
+.numbered{margin:0 0 18px;padding:0;list-style:none;counter-reset:numstep}
+.numbered li{counter-increment:numstep;display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.numbered li:last-child{border-bottom:none}
+.numbered li::before{content:counter(numstep);flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--rose);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:'Fraunces',serif}
+.numbered li .step-body{flex:1;min-width:0;font-size:14px;color:var(--txt);line-height:1.55;padding-top:3px}
+.numbered li .step-body b{color:var(--ink);font-weight:600}
+.numbered li .step-body small{display:block;margin-top:3px;font-size:12.5px;color:var(--txt2)}
 </style>
 </head>
 <body>
@@ -165,9 +246,9 @@ footer a{color:var(--brand)}
 </nav>
 
 <section class="hero">
-  <span class="eyebrow">Manual completo</span>
-  <h1>Conocé ANMA Regalos <em>pestaña por pestaña</em></h1>
-  <p>9 secciones de la app explicadas con flujos visuales, tips reales y errores que conviene evitar. Pensada para marcas que mueven volumen corporativo y necesitan operar con calma.</p>
+  <span class="eyebrow">Manual de usuario</span>
+  <h1>ANMA Regalos <em>en Acción</em></h1>
+  <p>Manual de consulta rápida para marcas corporativas: cada sección con su flujo <b>Acción → Reacción → Conexión</b>. Iconos reales de la app, pasos numerados, y para qué te sirve cada uno en tu operativa diaria.</p>
 </section>
 
 <div class="progress">
@@ -191,6 +272,49 @@ footer a{color:var(--brand)}
   </div>
 </div>
 
+<!-- ── INICIO RÁPIDO: mapa visual de la pantalla principal ── -->
+<section class="screen-map">
+  <div class="screen-map-inner">
+    <div class="screen-map-bar">
+      <span></span><span></span><span></span>
+      <span class="screen-map-url">anma-host.vercel.app</span>
+    </div>
+    <div class="screen-grid">
+      <aside class="screen-side">
+        <div class="screen-side-lbl">Gestión</div>
+        <div class="screen-side-item active"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+        <div class="screen-side-item"><i class="fa-solid fa-file-invoice-dollar"></i> Presupuesto</div>
+        <div class="screen-side-item"><i class="fa-solid fa-users"></i> Clientes</div>
+        <div class="screen-side-lbl">Catálogo</div>
+        <div class="screen-side-item"><i class="fa-solid fa-box-open"></i> Productos</div>
+        <div class="screen-side-item"><i class="fa-solid fa-industry"></i> Proveedores</div>
+        <div class="screen-side-item"><i class="fa-solid fa-cubes"></i> Packaging</div>
+        <div class="screen-side-item"><i class="fa-solid fa-truck-fast"></i> Logística</div>
+        <div class="screen-side-lbl">Comunicación</div>
+        <div class="screen-side-item"><i class="fa-brands fa-whatsapp"></i> Mensajes WA</div>
+        <div class="screen-side-lbl">Ayuda</div>
+        <div class="screen-side-item"><i class="fa-solid fa-book-open"></i> Guía</div>
+        <div class="screen-side-item"><i class="fa-solid fa-gear"></i> Configuración</div>
+      </aside>
+      <div class="screen-main">
+        <div class="screen-main-top">
+          <h4>Dashboard</h4>
+          <span class="screen-main-action"><i class="fa-solid fa-plus"></i> Nuevo</span>
+        </div>
+        <div class="screen-cards">
+          <div class="screen-card"><div class="screen-card-lbl">Cotizaciones abiertas</div><div class="screen-card-num warn">7</div></div>
+          <div class="screen-card"><div class="screen-card-lbl">OC por confirmar</div><div class="screen-card-num">3</div></div>
+          <div class="screen-card"><div class="screen-card-lbl">Facturado mes</div><div class="screen-card-num ok">$4,2M</div></div>
+          <div class="screen-card"><div class="screen-card-lbl">Cuentas activas</div><div class="screen-card-num">18</div></div>
+          <div class="screen-card"><div class="screen-card-lbl">Packaging crítico</div><div class="screen-card-num warn">2</div></div>
+          <div class="screen-card"><div class="screen-card-lbl">En logística</div><div class="screen-card-num">5</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="screen-hint">Sidebar a la izquierda · Dashboard al centro · Botón <b style="color:#fff">+ Nuevo</b> arriba a la derecha</p>
+  </div>
+</section>
+
 <div class="layout">
 
   <aside class="toc">
@@ -213,244 +337,469 @@ footer a{color:var(--brand)}
     <!-- 1 MARCA -->
     <section class="sec" id="config">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-gear" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">01 · Tu identidad</span>
           <h2>Configurá tu marca</h2>
         </div>
       </div>
-      <p class="why">Tu marca es <em>lo primero que ve un Comprador o RRHH</em> cuando recibe tu cotización. Logo, datos fiscales, formas de cobro: una buena configuración inicial hace que tu PDF transmita profesionalismo desde el primer envío. Se hace una sola vez en la vida.</p>
+      <p class="why">Logo, datos fiscales y formas de cobro. <b>Lo primero que ve RRHH o Compras</b> cuando recibe tu cotización.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="flow-txt">Subís tu logo</div><div class="flow-sub">En buena resolución</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.6 1.5-1.5 0-.4-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.6-1.5 1.5-1.5h2C19.5 17 22 14.5 22 11.5 22 6.5 17.5 2 12 2z"/></svg></div><div class="flow-txt">Tu color y datos</div><div class="flow-sub">Marca + WhatsApp</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="flow-txt">Formas de cobro</div><div class="flow-sub">MP, transferencia, efectivo</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-gear"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref"><i class="fa-solid fa-gear"></i>Configuración</span><small>Sidebar, sección Sistema</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-window-maximize"></i></div>
+            <div class="ar-body">Se abre el panel con pestañas<small>Marca · Datos fiscales · Pagos · Equipo</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-stamp"></i></div>
+            <div class="ar-body">Cotizás como una marca seria<small>Tu PDF compite con cualquier proveedor grande</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Datos fiscales completos</b>Las empresas necesitan factura A o B con CUIT y condición frente al IVA. Cargalo una vez y queda en todos los presupuestos automáticamente.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>Mandar una cotización a Compras sin logo ni datos fiscales. Para una empresa, eso ya descalifica antes de leerla.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Pestaña <span class="btn-ref"><i class="fa-solid fa-image"></i>Marca</span>:</b> subís logo (PNG/JPG, alta resolución para PDF), color principal, eslogan.</div></li>
+        <li><div class="step-body"><b>Pestaña <span class="btn-ref"><i class="fa-solid fa-receipt"></i>Datos fiscales</span>:</b> razón social, CUIT, condición frente al IVA, factura A o B.<small>Imprescindible para que Cuentas a Pagar te pueda cargar como proveedor.</small></div></li>
+        <li><div class="step-body"><b>Pestaña <span class="btn-ref"><i class="fa-solid fa-credit-card"></i>Pagos</span>:</b> activá transferencia, MercadoPago, cheque, condición a 30/60 días.</div></li>
+        <li><div class="step-body"><b>Tocás <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-floppy-disk"></i>Guardar</span></b> y queda aplicado en todos los documentos.</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> RRHH te pide cotización para 200 welcome kits. Mandás un PDF con tu logo, datos fiscales y condiciones — lo aprueban internamente sin volverte a pedir aclaraciones.</div>
       </div>
 
-      <a href="/config" class="sec-cta">Ir a Configuración <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/config" class="sec-cta">Ir a Configuración <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
-    <!-- 2 REGALOS -->
+    <!-- 2 KITS -->
     <section class="sec" id="productos">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-box-open" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">02 · Tu catálogo</span>
           <h2>Kits y Regalos</h2>
         </div>
       </div>
-      <p class="why">Subí los kits que más armás: <b>welcome kit, fin de año, día del empleado, lanzamiento</b>. Con 10-15 productos estrella ya cubrís el 80% de las cotizaciones corporativas. El kit a medida se arma en cada presupuesto.</p>
+      <p class="why">Welcome kit, fin de año, lanzamiento. <b>10-15 kits estrella</b> cubren el 80% de las cotizaciones.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="flow-txt">Foto + nombre del kit</div><div class="flow-sub">Render profesional</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="flow-txt">Precio por escala</div><div class="flow-sub">10, 50, 100+ unidades</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="flow-txt">Variantes</div><div class="flow-sub">Branding cliente / sin marca</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-box-open"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref"><i class="fa-solid fa-box-open"></i>Productos</span><small>Sidebar, sección Catálogo</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-table-cells"></i></div>
+            <div class="ar-body">Ves el catálogo en grid<small>Foto, nombre y escala de precios visible</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-bolt"></i></div>
+            <div class="ar-body">Cotizás profesional<small>Precio por volumen sin hacer cálculos</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Catálogo visual rinde</b>Un PDF con render del kit cierra más cotizaciones que una lista de precios. Las empresas necesitan mostrar el regalo internamente antes de aprobarlo.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>Cobrar el mismo precio a un pedido de 10 que a uno de 200. La escala es esperada en B2B — sin ella, parecés cara o desorganizada.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Tocás <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-plus"></i>Nuevo kit</span></b> arriba a la derecha.</div></li>
+        <li><div class="step-body"><b>Subís foto del kit</b> (render profesional o foto real con luz). Las empresas necesitan mostrar internamente.</div></li>
+        <li><div class="step-body"><b>Definís escala de precios</b>: 1-10 / 11-50 / 51-100 / 100+. ANMA aplica el correcto según la cantidad de la cotización.<small>Sin escala, parecés cara o desorganizada en pedidos grandes.</small></div></li>
+        <li><div class="step-body"><b>Sumás variantes</b>: con/sin branding cliente, tamaño chico/grande, opción premium.</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> Marketing pide cotización para 50 kits de lanzamiento. Lo armás en 3 minutos con foto + precio por escala + opción branded — la empresa ve el render antes de aprobar el presupuesto.</div>
       </div>
 
-      <a href="/catalogo" class="sec-cta">Ir al Catálogo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/catalogo" class="sec-cta">Ir al Catálogo <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
     <!-- 3 CLIENTES -->
     <section class="sec" id="clientes">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-users" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">03 · Tus cuentas</span>
           <h2>Clientes</h2>
         </div>
       </div>
-      <p class="why">Cada empresa con su ficha: <b>contacto en RRHH o Marketing, condición de pago, fechas anuales (fin de año, día del empleado), histórico de pedidos.</b> Tu activo más valioso son los 15-20 clientes corporativos que vuelven cada año.</p>
+      <p class="why">Cada empresa con su contacto, condiciones y fechas anuales. <b>Las 15-20 cuentas que vuelven cada año</b> son tu activo más valioso.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="flow-txt">Empresa + contacto</div><div class="flow-sub">RRHH o Marketing</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="flow-txt">Fechas anuales</div><div class="flow-sub">Fin de año, lanzamientos</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div><div class="flow-txt">Condiciones</div><div class="flow-sub">Pago a 30, factura A</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-users"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref"><i class="fa-solid fa-users"></i>Clientes</span><small>Sidebar, sección Gestión</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-building-user"></i></div>
+            <div class="ar-body">Ves tus cuentas con historial<small>Última compra, facturas pendientes, próxima fecha</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="ar-body">Llegás antes a cada temporada<small>Alerta 60 días antes de la fecha clave</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Anticipá la temporada</b>Te avisamos 60 días antes de la fecha clave de cada cuenta. Llegás vos primero con la propuesta — no esperás a que te llamen apurados en noviembre.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>No registrar la condición de pago. En B2B la mayoría paga a 30 o 60 días — sin ese dato confundís tu flujo de caja constantemente.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Tocás <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-plus"></i>Nuevo cliente</span></b> y cargás razón social, CUIT y contacto principal (nombre, rol, mail, WhatsApp).</div></li>
+        <li><div class="step-body"><b>Marcás condición de pago</b>: contado, 30 días, 60 días. ANMA calcula tu flujo de caja real.<small>En B2B la mayoría paga a 30/60 — sin este dato, te equivocás con el cash flow constantemente.</small></div></li>
+        <li><div class="step-body"><b>Cargás fechas anuales</b>: fin de año, día del empleado, aniversario. ANMA te avisa 60 días antes.</div></li>
+        <li><div class="step-body"><b>Sumás notas internas</b>: "aprueba con 2 firmas", "factura A obligatoria", "envía OC vía portal SAP".</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> es septiembre y ANMA te avisa que Acme S.A. te encargó kits de fin de año en noviembre del año pasado. Llegás vos con la propuesta antes que ellos te llamen apurados — y duplicás la cuenta.</div>
       </div>
 
-      <a href="/clientes" class="sec-cta">Ir a Clientes <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/clientes" class="sec-cta">Ir a Clientes <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
     <!-- 4 PROVEEDORES -->
     <section class="sec" id="proveedores">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-industry" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">04 · Tus aliados</span>
           <h2>Proveedores</h2>
         </div>
       </div>
-      <p class="why">A quién le comprás las cajas, los moños, los productos. <b>Llevar el registro de cada compra</b> te avisa cuando un costo subió fuera de tiempo — y te deja negociar desde el dato, no desde la sensación.</p>
+      <p class="why">Tus proveedores de cajas, moños, contenido. <b>Cada compra registrada</b> es un dato para negociar después.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9M14 17H5M17 20v-3M17 8V5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></div><div class="flow-txt">Cargás proveedor</div><div class="flow-sub">Datos + contacto</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><div class="flow-txt">Registrás compras</div><div class="flow-sub">Precio + cantidad</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="flow-txt">Alertas de costos</div><div class="flow-sub">Sin sorpresas</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-industry"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref"><i class="fa-solid fa-industry"></i>Proveedores</span><small>Sidebar, sección Catálogo</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="ar-body">Ves su histórico de precios<small>Cuándo y cuánto aumentó cada uno</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="ar-body">Cuidás el margen<small>Negociás con datos, no con la sensación</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Regla del 2</b>Tené al menos 2 proveedores por insumo crítico. Que el primero sepa que tenés opción cambia toda la relación.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>Comprar siempre al mismo por inercia. Los aumentos del 5% se cuelan hasta que el margen no cierra.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Tocás <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-plus"></i>Nuevo proveedor</span></b> y cargás razón social, contacto, lead time (días de reposición) y condición de pago.</div></li>
+        <li><div class="step-body"><b>Registrás cada compra</b> con <span class="btn-ref"><i class="fa-solid fa-cart-plus"></i>Nueva compra</span> dentro de la ficha. ANMA guarda precio, cantidad y fecha.</div></li>
+        <li><div class="step-body"><b>Cuando un costo sube</b> arriba del promedio, ANMA marca la alerta amarilla en el dashboard.</div></li>
+        <li><div class="step-body"><b>Tip: cargá 2 proveedores por insumo crítico</b>. Cuando el primero sabe que tenés opción, la negociación cambia.</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> tu proveedor de cajas branded te avisa de un aumento del 12%. Abrís su ficha, ves que la suba real del rubro fue 7%, y le respondés con argumento — no aceptás cualquier precio.</div>
       </div>
 
-      <a href="/proveedores" class="sec-cta">Ir a Proveedores <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/proveedores" class="sec-cta">Ir a Proveedores <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
     <!-- 5 PACKAGING -->
     <section class="sec" id="packaging">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-cubes" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">05 · Tu sello visual</span>
           <h2>Packaging</h2>
         </div>
       </div>
-      <p class="why">Cajas branded, moños, etiquetas con logo del cliente, fillers. <em>El packaging es lo que diferencia tu kit de uno genérico</em>. Se descuenta solo con cada venta para que nunca te quedes a mitad de un pedido de 200 unidades por no haber repuesto a tiempo.</p>
+      <p class="why">Cajas, moños, etiquetas branded, fillers. <b>Lo que diferencia tu kit</b> de uno genérico.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div><div class="flow-txt">Cargás packaging</div><div class="flow-sub">Caja, moño, etiqueta</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8v8M8 8v8M3 12h18"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div><div class="flow-txt">Asignás al kit</div><div class="flow-sub">"Welcome usa caja + filler"</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="flow-txt">Stock auto</div><div class="flow-sub">Se descuenta solo</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-cubes"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref"><i class="fa-solid fa-cubes"></i>Packaging</span><small>Sidebar, sección Catálogo</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-link"></i></div>
+            <div class="ar-body">Ves cada insumo vinculado<small>Qué kit consume qué material</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-bell"></i></div>
+            <div class="ar-body">Alerta antes que falte<small>Reponés antes que un pedido de 200 se trabe</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Lead time del proveedor</b>Cargá el tiempo de reposición de cada insumo. ANMA te avisa con anticipación para que no te corten un pedido de fin de año.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>No imputar el packaging al costo del kit. En B2B el margen es ajustado — un 30% de costo oculto se come la rentabilidad anual.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Tocás <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-plus"></i>Nuevo packaging</span></b> y cargás nombre, costo unitario y stock actual.</div></li>
+        <li><div class="step-body"><b>Definís stock mínimo</b> según tu lead time de proveedor.<small>Si tu caja branded tarda 15 días en reponer, el mínimo tiene que cubrir ese tiempo + el pedido más grande esperado.</small></div></li>
+        <li><div class="step-body"><b>Asociás al kit</b>: "welcome usa 1 caja branded + 1 filler + 1 etiqueta". ANMA lo descuenta al confirmar el pedido.</div></li>
+        <li><div class="step-body"><b>Bajo del mínimo</b> = aparece en <span class="btn-ref btn-ref-danger"><i class="fa-solid fa-triangle-exclamation"></i>Packaging crítico</span> del Dashboard.</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> entra orden de compra de 150 welcome kits con entrega en 10 días. ANMA te alerta que necesitás pedir más cajas branded ahora — el proveedor tarda 8 días en entregar.</div>
       </div>
 
-      <a href="/insumos" class="sec-cta">Ir a Packaging <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/insumos" class="sec-cta">Ir a Packaging <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
     <!-- 6 PRESUPUESTOS -->
     <section class="sec" id="pedidos">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-file-invoice-dollar" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">06 · El momento mágico</span>
           <h2>Presupuestos</h2>
         </div>
       </div>
-      <p class="why">Acá conectás todo. <b>En 2 minutos</b> Compras o Marketing recibe una cotización profesional con tu logo, render del kit, precio por escala y total claro. <em>El nivel de respuesta</em> que esperan las empresas y muchas marcas no entregan.</p>
+      <p class="why">Acá se conecta todo. <b>En 2 minutos</b>: cotización profesional con logo, render, precio por escala y total claro.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="flow-txt">Elegís empresa</div><div class="flow-sub">Condiciones auto</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7"/></svg></div><div class="flow-txt">Sumás kits + volumen</div><div class="flow-sub">Precio por escala se aplica</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div><div class="flow-txt">Enviás por WhatsApp</div><div class="flow-sub">Mensaje pre-armado</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-plus"></i>Presupuesto</span><small>Sidebar o desde ficha de cliente</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-file-pdf"></i></div>
+            <div class="ar-body">PDF con tu marca<small>Numeración, vigencia, condiciones, total</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-paper-plane"></i></div>
+            <div class="ar-body">Mandás en un clic<small>WhatsApp o mail a Compras/RRHH</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Follow-up sin presión</b>Las decisiones B2B pasan por 2-3 personas internas. ANMA te avisa a los 5 días para escribir "¿necesitan ajustar algo de la propuesta?" sin parecer ansiosa.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>No registrar la orden de compra (OC) que te manda la empresa. Después el pago se demora porque Cuentas a Pagar no lo encuentra cruzado.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Elegís empresa</b> (condiciones, factura A/B y pago a 30/60 se aplican solos).<small>Si es prospect nuevo, lo cargás en el momento sin salir del presupuesto.</small></div></li>
+        <li><div class="step-body"><b>Sumás kits con cantidad</b>. ANMA aplica el precio por escala correspondiente y descuenta packaging.</div></li>
+        <li><div class="step-body"><b>Confirmás con <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-check"></i>Generar cotización</span></b>. Aparecen botones <span class="btn-ref"><i class="fa-solid fa-file-pdf"></i>Ver PDF</span> · <span class="btn-ref btn-ref-wa"><i class="fa-brands fa-whatsapp"></i>WhatsApp</span> · <span class="btn-ref"><i class="fa-solid fa-envelope"></i>Mail</span>.</div></li>
+        <li><div class="step-body"><b>Cuando llega la OC</b>, la cargás con <span class="btn-ref"><i class="fa-solid fa-file-circle-check"></i>Registrar OC</span> dentro del pedido — queda cruzada para Cuentas a Pagar.</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> Marketing pide cotización por mail un viernes a las 16. Mandás PDF a las 16:15. El lunes te llega aprobada. Velocidad de respuesta = la diferencia entre ganar la cuenta o perderla con la competencia.</div>
       </div>
 
-      <a href="/presupuesto" class="sec-cta">Crear cotización <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/presupuesto" class="sec-cta">Crear cotización <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
     <!-- 7 LOGÍSTICA -->
     <section class="sec" id="logistica">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="14" height="11" rx="1"/><path d="M15 9h4l3 3v5h-7"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-truck-fast" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">07 · Llega bien</span>
           <h2>Logística</h2>
         </div>
       </div>
-      <p class="why">Generás envíos con <b>ViaCargo o flota propia</b> sin salir de ANMA. Para entregas masivas (100+ unidades a una misma empresa) coordinás todo desde una sola pantalla. RRHH recibe el tracking en tiempo real y deja de preguntar "¿llega para el evento?".</p>
+      <p class="why">Envíos por <b>ViaCargo o flota propia</b>. Una sola entrega masiva o un kit por colaborador a su casa.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div class="flow-txt">Dirección de entrega</div><div class="flow-sub">Una o múltiples por empresa</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 1-1 9-9 9s-9-8-9-9 1-9 9-9 9 8 9 9z"/></svg></div><div class="flow-txt">Generás guía</div><div class="flow-sub">PDF listo para imprimir</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div><div class="flow-txt">Tracking en vivo</div><div class="flow-sub">Te avisa cuando llega</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-truck-fast"></i></div>
+            <div class="ar-body">Desde el pedido tocás <span class="btn-ref"><i class="fa-solid fa-truck-fast"></i>Asignar envío</span><small>O entrás por Logística en sidebar</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-barcode"></i></div>
+            <div class="ar-body">Se genera la guía<small>PDF imprimible + código de tracking</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-location-arrow"></i></div>
+            <div class="ar-body">Cliente sigue el envío<small>RRHH deja de preguntar "¿llega para el evento?"</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Múltiples destinos en un solo pedido</b>Para entregas distribuidas (un kit por colaborador, a sus casas), cargás un Excel con direcciones y ANMA genera todas las guías de una.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>No confirmar el horario de recepción de la empresa. Mandás un envío un viernes a las 17 y nadie lo recibe — devolución y re-despacho a tu costo.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Confirmás dirección y horario de recepción</b> con el contacto.<small>Mandar un viernes 17h sin confirmar = devolución y re-despacho a tu costo.</small></div></li>
+        <li><div class="step-body"><b>Para entrega masiva</b> (1 destino, 100+ kits) tocás <span class="btn-ref btn-ref-primary"><i class="fa-solid fa-print"></i>Generar guía</span> y se descarga el PDF para pegar en el bulto.</div></li>
+        <li><div class="step-body"><b>Para entrega distribuida</b> (un kit por colaborador a su casa) usás <span class="btn-ref"><i class="fa-solid fa-file-csv"></i>Importar CSV</span> con todas las direcciones — ANMA genera las guías en lote.</div></li>
+        <li><div class="step-body"><b>Compartís tracking</b> con <span class="btn-ref btn-ref-wa"><i class="fa-brands fa-whatsapp"></i>Enviar link</span>. Te llega notificación cuando todos los paquetes fueron recibidos.</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> entrega de 200 welcome kits a 200 colaboradores en home office por todo el AMBA. En vez de manejar 200 guías manualmente, subís CSV una sola vez y RRHH ve en una pantalla quién ya recibió.</div>
       </div>
 
-      <a href="/logistica" class="sec-cta">Ir a Logística <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/logistica" class="sec-cta">Ir a Logística <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
     <!-- 8 MENSAJES -->
     <section class="sec" id="mensajes">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="sec-num"><i class="fa-brands fa-whatsapp" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">08 · Tu voz, lista</span>
           <h2>Mensajes WhatsApp</h2>
         </div>
       </div>
-      <p class="why">Plantillas para los <b>5 momentos clave del B2B</b>: envío de cotización, recordatorio de aprobación, confirmación de OC, listo para entrega, propuesta para próxima fecha. Mantenés una conversación profesional con cada cuenta sin re-escribir todo.</p>
+      <p class="why">5 plantillas B2B: <b>cotización, aprobación, OC, listo, próxima fecha</b>. Tono cordial sin informalidad.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico flow-ico-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div><div class="flow-txt">Editás plantillas</div><div class="flow-sub">Tono cordial y profesional</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4 4-4-4M12 8v8"/></svg></div><div class="flow-txt">Variables auto</div><div class="flow-sub">Empresa, OC, fecha entrega</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 13 11 22 2"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></div><div class="flow-txt">Mandás en 1 clic</div><div class="flow-sub">A WhatsApp o email</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-brands fa-whatsapp"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref"><i class="fa-brands fa-whatsapp"></i>Mensajes WA</span><small>Sidebar, sección Comunicación</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-pen-to-square"></i></div>
+            <div class="ar-body">Ves las plantillas editables<small>Con variables {empresa} {contacto} {monto}</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-paper-plane"></i></div>
+            <div class="ar-body">Mandás desde cada ficha<small>WhatsApp abre con texto personalizado</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>El after que retiene</b>"¿Cómo recibieron los kits en el equipo? Quedo atenta a la próxima fecha." dos semanas después del envío. Esa pregunta es la que renueva contratos anuales.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>Plantillas con tono de WhatsApp personal ("holaa cómo andás"). En B2B necesitás cordialidad sin informalidad — no es lo mismo escribirle a una amiga que a Compras.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Editás cada plantilla</b> con <span class="btn-ref"><i class="fa-solid fa-pen"></i>Editar</span>. Usás tono cordial profesional — no informal.<small>"Hola Lucía, te paso la cotización por los 150 welcome kits" ≠ "Holaa cómo andás 🙈".</small></div></li>
+        <li><div class="step-body"><b>Insertás variables</b>: <span class="btn-ref">{empresa}</span> <span class="btn-ref">{contacto}</span> <span class="btn-ref">{numero_pedido}</span> <span class="btn-ref">{fecha_entrega}</span>.</div></li>
+        <li><div class="step-body"><b>Disparás desde:</b><br>· Ficha de cliente · Detalle de cotización · Dashboard de seguimiento.</div></li>
+        <li><div class="step-body"><b>Tocás <span class="btn-ref btn-ref-wa"><i class="fa-brands fa-whatsapp"></i>Enviar</span></b> y se abre WhatsApp con el chat del contacto y el mensaje listo.</div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> dos semanas después de cada entrega mandás "¿Cómo recibieron los kits en el equipo? Quedo atenta a la próxima fecha". Esa pregunta es la que renueva los contratos anuales — no el descuento.</div>
       </div>
 
-      <a href="/mensajes" class="sec-cta">Ir a Mensajes <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/mensajes" class="sec-cta">Ir a Mensajes <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
     <!-- 9 DASHBOARD -->
     <section class="sec" id="dashboard">
       <div class="sec-head">
-        <div class="sec-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+        <div class="sec-num"><i class="fa-solid fa-chart-line" style="font-size:22px"></i></div>
         <div class="sec-titles">
           <span class="sec-tag">09 · Tu mañana</span>
           <h2>Dashboard</h2>
         </div>
       </div>
-      <p class="why">El panel que vas a abrir <em>cada mañana</em>. Te muestra qué resolver primero sin pensar: <b>entregas comprometidas para hoy, cotizaciones abiertas, facturas vencidas y stock de packaging que se viene</b>.</p>
+      <p class="why">El panel que abrís <em>cada mañana</em>: entregas de hoy, cotizaciones abiertas, facturas vencidas, packaging crítico.</p>
 
-      <div class="flow">
-        <div class="flow-step"><div class="flow-ico" style="background:#FEF2F2;color:#DC2626;border:1px solid #fecaca;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="flow-txt">Urgente hoy</div><div class="flow-sub">Entregas + cobros</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="flow-txt">Pendientes</div><div class="flow-sub">Presupuestos abiertos</div></div>
-        <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-        <div class="flow-step"><div class="flow-ico flow-ico-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="flow-txt">Facturación</div><div class="flow-sub">Mes + regalos top</div></div>
+      <div class="action-react">
+        <div class="ar-step">
+          <span class="ar-lbl">Tu acción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="ar-body">Tocás <span class="btn-ref"><i class="fa-solid fa-chart-line"></i>Dashboard</span><small>Sidebar — primera pestaña</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-result">
+          <span class="ar-lbl">Reacción</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-table-cells-large"></i></div>
+            <div class="ar-body">Ves 3 bloques en grid<small>Urgente hoy · Pendientes · Facturado</small></div>
+          </div>
+        </div>
+        <div class="ar-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="ar-step ar-benefit">
+          <span class="ar-lbl">Para qué</span>
+          <div class="ar-content">
+            <div class="ar-ico"><i class="fa-solid fa-mug-hot"></i></div>
+            <div class="ar-body">Empezás con foco<small>Sabés qué resolver primero</small></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip chip-tip"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15.09 8.26 22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span><b>Ritual de 5 minutos</b>Abrilo cada mañana antes que el mail. Empezás el día sabiendo qué cotización seguir, qué OC todavía no pagaron y qué stock urge — no apagando incendios.</span></div>
-        <div class="chip chip-warn"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span><span><b>Error común</b>Ignorar las facturas vencidas. Una empresa que paga a 60 puede pasar a 90 sin que vos notes — y eso te rompe el flujo del mes siguiente.</span></div>
+      <ol class="numbered">
+        <li><div class="step-body"><b>Bloque <span class="btn-ref btn-ref-danger"><i class="fa-solid fa-triangle-exclamation"></i>Urgente hoy</span></b>: entregas comprometidas para el día, facturas vencidas, packaging crítico para pedidos próximos.</div></li>
+        <li><div class="step-body"><b>Bloque <span class="btn-ref"><i class="fa-solid fa-clock"></i>Pendientes</span></b>: cotizaciones abiertas hace +5 días, OC pendientes de confirmar, cuentas dormidas hace +90 días.</div></li>
+        <li><div class="step-body"><b>Bloque <span class="btn-ref"><i class="fa-solid fa-chart-pie"></i>Facturado</span></b>: total mes, top 5 cuentas, margen real por kit, comparativa vs. mes anterior.</div></li>
+        <li><div class="step-body"><b>Cada card es clickeable</b> y te lleva al detalle.<small>Tocás "3 facturas vencidas" y vas directo a la lista filtrada por empresa.</small></div></li>
+      </ol>
+
+      <div class="connect">
+        <div class="connect-ico"><i class="fa-solid fa-bullseye"></i></div>
+        <div class="connect-body"><b>Tu día a día:</b> abrís ANMA antes que el mail. En 5 minutos sabés que tenés 2 entregas para hoy, una OC sin confirmar y Acme pasó de pagar a 60 a 80 días. Resolvés lo crítico antes que la mañana se descontrole.</div>
       </div>
 
-      <a href="/" class="sec-cta">Ir al Dashboard <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="/" class="sec-cta">Ir al Dashboard <i class="fa-solid fa-arrow-right"></i></a>
     </section>
 
   </main>
