@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
 import { usePrivacy } from '../../context/PrivacyContext'
+import GuideBanner from '../layout/GuideBanner'
 
 function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
@@ -1188,6 +1189,7 @@ export default function Historial() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
+      <GuideBanner />
       {/* Mobile: single combined period + tabs row */}
       <div className="dash-ctrl-bar">
         <div style={{ position: 'relative', flexShrink: 0 }}>
