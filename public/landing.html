@@ -6,13 +6,13 @@
 <title>ANMA Regalos — El motor detrás de tu emprendimiento</title>
 <meta name="description" content="Plataforma de gestión hecha para emprendimientos de regalos personalizados. Pedidos, seguimiento, entregas y métricas — todo coordinado en un solo panel.">
 <meta property="og:title" content="ANMA Regalos — El motor detrás de tu emprendimiento">
-<meta property="og:description" content="Tus pedidos, entregas y mensajes coordinados. Sin Excel ni anotadores. Hecho para marcas de regalo y detalles.">
+<meta property="og:description" content="Pedidos, entregas y mensajes coordinados. Sin chats perdidos ni planillas dispersas. Hecho para marcas de regalo y detalles.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://anma-host.vercel.app/landing.html">
 <meta property="og:image" content="https://anma-host.vercel.app/og-cover.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ANMA Regalos — El motor detrás de tu emprendimiento">
-<meta name="twitter:description" content="Tus pedidos, entregas y mensajes coordinados. Sin Excel ni anotadores. Hecho para marcas de regalo y detalles.">
+<meta name="twitter:description" content="Pedidos, entregas y mensajes coordinados. Sin chats perdidos ni planillas dispersas. Hecho para marcas de regalo y detalles.">
 <meta name="keywords" content="gestión regalos, emprendimiento regalos Argentina, cajas personalizadas, pedidos online, stock insumos, logística entregas, ANMA Regalos">
 <link rel="canonical" href="https://anma-host.vercel.app/landing.html">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -97,19 +97,30 @@ a{color:inherit;text-decoration:none}
 
 /* SECTIONS */
 section{padding:52px 0}
-.eyebrow-dark{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:#fce7f3;color:#db2777;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.eyebrow-dark{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#fafbfc;border:1px solid #e5e7eb;color:#9D174D;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px}
+.eyebrow-dark::before{content:"";width:6px;height:6px;border-radius:50%;background:#E11D74;flex-shrink:0}
 .h2{font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1.15;margin:0 0 14px;color:#1F1338}
 .sub{font-size:17px;color:#6b5b8c;max-width:640px;margin:0 0 28px;line-height:1.65}
 .center{text-align:center;margin-left:auto;margin-right:auto}
 
 /* IMPACTO */
-.impact{background:#1F1338;color:#fff;padding:44px 0}
-.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
-.impact-card{text-align:center}
-.impact-num{font-size:54px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:8px;background:linear-gradient(135deg,#fbcfe8,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
-.impact-lbl{font-size:14px;color:rgba(255,255,255,.85);font-weight:600;margin-bottom:4px}
-.impact-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5}
-@media(max-width:780px){.impact-grid{grid-template-columns:1fr;gap:30px}.impact-num{font-size:42px}}
+.impact{background:linear-gradient(160deg,#1a0420 0%,#2d1538 50%,#3a1145 100%);color:#fff;padding:64px 0;position:relative;overflow:hidden}
+.impact::before{content:"";position:absolute;top:-30%;right:-15%;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(225,29,116,.18),transparent 65%);pointer-events:none}
+.impact::after{content:"";position:absolute;bottom:-30%;left:-15%;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.16),transparent 65%);pointer-events:none}
+.impact-head{text-align:center;max-width:680px;margin:0 auto 36px;position:relative;z-index:1}
+.impact-head h2{font-family:'Fraunces',serif;color:#fff;font-size:34px;font-weight:600;letter-spacing:-.8px;line-height:1.15;margin:0 0 10px;text-wrap:balance}
+.impact-head h2 em{font-style:italic;background:linear-gradient(120deg,#fbcfe8,#c084fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.impact-head p{color:rgba(255,255,255,.65);font-size:15px;margin:0;line-height:1.55}
+.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;position:relative;z-index:1}
+.impact-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:28px 24px;backdrop-filter:blur(8px);transition:transform .2s,border-color .2s,background .2s}
+.impact-card:hover{transform:translateY(-3px);border-color:rgba(225,29,116,.35);background:rgba(255,255,255,.07)}
+.impact-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(225,29,116,.18),rgba(124,58,237,.18));display:flex;align-items:center;justify-content:center;margin-bottom:18px;border:1px solid rgba(225,29,116,.25)}
+.impact-icon i{font-size:17px;color:#fbcfe8}
+.impact-num{font-family:'Fraunces',serif;font-size:46px;font-weight:600;letter-spacing:-1.5px;line-height:1;margin-bottom:6px;color:#fff}
+.impact-num em{font-style:italic;background:linear-gradient(120deg,#fbcfe8,#c084fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.impact-lbl{font-size:13.5px;color:rgba(255,255,255,.92);font-weight:700;margin-bottom:8px;letter-spacing:-.2px}
+.impact-desc{font-size:13.5px;color:rgba(255,255,255,.6);line-height:1.55}
+@media(max-width:780px){.impact-grid{grid-template-columns:1fr;gap:14px}.impact-num{font-size:40px}.impact-head h2{font-size:28px}.impact{padding:48px 0}}
 
 /* PROBLEMA */
 .problem{background:#fafbfc}
@@ -427,25 +438,28 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 
 <section class="impact">
   <div class="wrap">
-    <div style="text-align:center;max-width:680px;margin:0 auto 24px">
-      <h2 class="h2" style="color:#fff;font-size:28px;margin:0 0 8px">Resultados que vas a ver</h2>
-      <p style="color:rgba(255,255,255,.65);font-size:14px;margin:0">Lo que típicamente pasa cuando un emprendimiento de regalos deja Excel y arranca con ANMA.</p>
+    <div class="impact-head">
+      <h2>Lo que cambia <em>cuando ordenás</em></h2>
+      <p>Tres cosas concretas que vas a notar en las primeras semanas usando ANMA en tu emprendimiento de regalos.</p>
     </div>
     <div class="impact-grid">
       <div class="impact-card">
-        <div class="impact-num">−10 hs</div>
-        <div class="impact-lbl">por semana</div>
-        <div class="impact-desc">Menos coordinación manual entre WhatsApp y planillas. Más tiempo para crear y vender.</div>
+        <div class="impact-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <div class="impact-num"><em>−10 hs</em></div>
+        <div class="impact-lbl">recuperás por semana</div>
+        <div class="impact-desc">Menos copiar y pegar entre chats y planillas. Más tiempo para diseñar, armar y vender.</div>
       </div>
       <div class="impact-card">
-        <div class="impact-num">+25%</div>
-        <div class="impact-lbl">más pedidos resueltos a tiempo</div>
-        <div class="impact-desc">Alertas de entregas urgentes y stock crítico — nada se cae por olvido.</div>
+        <div class="impact-icon"><i class="fa-solid fa-gift"></i></div>
+        <div class="impact-num"><em>+25%</em></div>
+        <div class="impact-lbl">pedidos entregados a tiempo</div>
+        <div class="impact-desc">Alertas de entregas urgentes y stock de packaging crítico — nada se cae por olvido.</div>
       </div>
       <div class="impact-card">
-        <div class="impact-num">0</div>
-        <div class="impact-lbl">pedidos olvidados</div>
-        <div class="impact-desc">Cada pedido tiene su seguimiento, su entrega y su cobro registrados — todo trazable.</div>
+        <div class="impact-icon"><i class="fa-solid fa-heart"></i></div>
+        <div class="impact-num"><em>0</em></div>
+        <div class="impact-lbl">regalos olvidados</div>
+        <div class="impact-desc">Cada pedido con su seña, su fecha de entrega y su cobro — todo a la vista, todo trazable.</div>
       </div>
     </div>
   </div>
@@ -454,8 +468,8 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 <section class="problem">
   <div class="wrap">
     <span class="eyebrow-dark">Sabemos lo que pasa</span>
-    <h2 class="h2">Entre Excel, WhatsApp<br>y la cabeza no llegás.</h2>
-    <p class="sub">Tu emprendimiento crece y la operativa se vuelve un caos. Cada pedido es distinto, cada entrega tiene su detalle, y vos terminás copiando y pegando lo mismo todo el día.</p>
+    <h2 class="h2">Entre los <em>chats, los post-it</em><br>y la memoria, algo siempre se cae.</h2>
+    <p class="sub">Tu emprendimiento crece y cada regalo tiene su detalle: una dedicatoria, una fecha de entrega, una variante de packaging, una seña a cuenta. Sin un lugar donde todo eso viva junto, terminás copiando y pegando lo mismo todo el día — y aun así algo se escapa.</p>
     <div class="prob-grid">
       <div class="prob-card"><i class="fa-solid fa-spinner"></i><h4>Pedidos que se mezclan</h4><p>Notas en el celu, capturas de WhatsApp, planillas que nadie actualiza. Algo siempre se escapa, justo cuando no podés permitirte el error.</p></div>
       <div class="prob-card"><i class="fa-solid fa-clock"></i><h4>Entregas que se atrasan</h4><p>Cumpleaños, eventos, fechas patrias. Olvidarse una entrega significa perder un cliente — y la recomendación que venía con él.</p></div>
@@ -469,7 +483,7 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
     <div style="text-align:center;max-width:700px;margin:0 auto 20px">
       <span class="eyebrow-dark">Funcionalidades</span>
       <h2 class="h2">Todo lo que tu emprendimiento<br>necesita para volar</h2>
-      <p class="sub center">Hecho específicamente para negocios de regalos. No es un Excel disfrazado — es una herramienta de verdad.</p>
+      <p class="sub center">Hecho específicamente para negocios de regalos. No es un sistema genérico adaptado — es una herramienta pensada para cómo funciona tu día.</p>
     </div>
     <p style="text-align:center;font-size:15px;font-weight:700;color:#db2777;margin:0 0 28px;letter-spacing:-.1px">— Menos ruido operativo, más espacio para crear. —</p>
     <div class="feat-grid">
@@ -509,13 +523,13 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
   <div class="wrap">
     <div style="text-align:center;max-width:700px;margin:0 auto 24px">
       <span class="eyebrow-dark">Por qué ANMA</span>
-      <h2 class="h2">Excel hasta acá. ANMA desde acá.</h2>
+      <h2 class="h2">El caos <em>hasta acá</em>.<br>ANMA <em>desde acá</em>.</h2>
       <p class="sub center">Las planillas y el WhatsApp son geniales para empezar. Cuando son 30 pedidos al mes, dejan de funcionar.</p>
     </div>
     <div class="compare-table">
       <div class="compare-row head">
         <div class="col">Lo que necesitás</div>
-        <div class="col">Excel + WhatsApp</div>
+        <div class="col">Chats + planillas</div>
         <div class="col col-anma">ANMA Regalos</div>
       </div>
       <div class="compare-row">
@@ -560,7 +574,7 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
     </div>
     <div class="how-grid">
       <div class="step"><div class="step-n">1</div><h4>Te creás cuenta</h4><p>Email + contraseña, listo. Sin tarjeta, sin instalación. Configurás tu logo, datos y plantillas en menos de 10 minutos.</p></div>
-      <div class="step"><div class="step-n">2</div><h4>Cargás tu catálogo</h4><p>Tus productos, opciones y precios. Si tenés Excel, lo importás. Si arrancás de cero, te guiamos paso a paso.</p></div>
+      <div class="step"><div class="step-n">2</div><h4>Cargás tus regalos</h4><p>Tus productos estrella con foto, opciones y precios. Si ya tenés una lista en planilla, la importás en bloque. Si arrancás de cero, te guiamos paso a paso.</p></div>
       <div class="step"><div class="step-n">3</div><h4>Vendés con todo en orden</h4><p>Presupuestás, cobrás señas, despachás y medís. Tu emprendimiento operando como una marca grande.</p></div>
     </div>
   </div>
@@ -1097,7 +1111,7 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
             <option value="">Elegí una opción</option>
             <option>Probar la plataforma</option>
             <option>Pedir una demo guiada</option>
-            <option>Migrar desde Excel</option>
+            <option>Migrar mis datos actuales</option>
             <option>Cotizar plan a medida</option>
             <option>Otra consulta</option>
           </select>
