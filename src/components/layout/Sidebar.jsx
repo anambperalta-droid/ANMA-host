@@ -17,6 +17,8 @@ const NAV = [
   { path: '/logistica', icon: 'fa-truck-fast', label: 'Logística', perm: 'logistica.view' },
   { section: 'Comunicación' },
   { path: '/mensajes', icon: 'fa-brands fa-whatsapp', label: 'Mensajes WA', perm: 'mensajes.view' },
+  { section: 'Ayuda' },
+  { path: '/guia', icon: 'fa-book-open', label: 'Guía completa' },
   { section: 'Sistema', ownerOnly: true },
   { path: '/config', icon: 'fa-gear', label: 'Configuración', ownerOnly: true },
 ]

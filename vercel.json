@@ -8,6 +8,8 @@
   "rewrites": [
     { "source": "/landing.html", "destination": "/landing.html" },
     { "source": "/demo.html", "destination": "/demo.html" },
+    { "source": "/recursos/:slug", "destination": "/recursos/:slug.html" },
+    { "source": "/recursos/:slug.html", "destination": "/recursos/:slug.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
