@@ -1241,6 +1241,13 @@ export default function Presupuesto() {
   }, [previewHtml])
 
   const buildPdfHtml = () => {
+    // Escape HTML — todos los valores user-controlled deben pasar por acá antes
+    // de interpolarse en el template. Previene XSS aunque el PDF sea "self-inflicted"
+    // (solo lo ve el propio usuario), porque los datos pueden venir de terceros
+    // (proveedor que arma su config, import de CSV externo, etc.).
+    const esc = s => String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
     const fmtD = iso => { if (!iso) return ''; const p = String(iso).slice(0,10).split('-'); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : iso }
     const brandColor = c.brandColor || '#7C3AED'
     const bName = c.businessName || 'ANMA'
@@ -1583,8 +1590,8 @@ export default function Presupuesto() {
         <div class="cobro-title">💳 Datos para el pago</div>
         ${bank && bank.enabled && (bank.cbu || bank.alias) ? `
           <table class="cobro-tbl" width="100%" cellpadding="0" cellspacing="0">
-          ${bank.cbu ? '<tr><td class="cobro-lbl">CBU</td><td class="cobro-val">' + bank.cbu + '<button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.cbu + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></td></tr>' : ''}
-          ${bank.alias ? '<tr><td class="cobro-lbl">Alias</td><td class="cobro-val">' + bank.alias + '<button class="copy-cbu" onclick="navigator.clipboard.writeText(\'' + bank.alias + '\').catch(()=>{});var b=this;b.textContent=\'✓ Copiado\';setTimeout(function(){b.innerHTML=\'⎘ Copiar\'},1400)">⎘ Copiar</button></td></tr>' : ''}
+          ${bank.cbu ? `<tr><td class="cobro-lbl">CBU</td><td class="cobro-val">${esc(bank.cbu)}<button class="copy-cbu" data-copy="${esc(bank.cbu)}" onclick="navigator.clipboard.writeText(this.dataset.copy).catch(()=>{});var b=this;b.textContent='✓ Copiado';setTimeout(function(){b.innerHTML='⎘ Copiar'},1400)">⎘ Copiar</button></td></tr>` : ''}
+          ${bank.alias ? `<tr><td class="cobro-lbl">Alias</td><td class="cobro-val">${esc(bank.alias)}<button class="copy-cbu" data-copy="${esc(bank.alias)}" onclick="navigator.clipboard.writeText(this.dataset.copy).catch(()=>{});var b=this;b.textContent='✓ Copiado';setTimeout(function(){b.innerHTML='⎘ Copiar'},1400)">⎘ Copiar</button></td></tr>` : ''}
           ${bank.accountName ? '<tr><td class="cobro-lbl">Titular</td><td class="cobro-val">' + bank.accountName + '</td></tr>' : ''}
           ${bank.bank ? '<tr><td class="cobro-lbl">Banco</td><td class="cobro-val">' + bank.bank + '</td></tr>' : ''}
           </table>
