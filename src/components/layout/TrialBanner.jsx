@@ -56,8 +56,7 @@ export default function TrialBanner() {
         </span>
       </span>
       <a
-        href="https://api.whatsapp.com/send?phone=5491169456863&text=%C2%A1Hola%21%20Quiero%20activar%20mi%20plan%20de%20ANMA%20Regalos."
-        target="_blank" rel="noopener noreferrer"
+        href="/activar"
         style={{
           background: 'rgba(255,255,255,.16)', color: '#fff', textDecoration: 'none',
           padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
