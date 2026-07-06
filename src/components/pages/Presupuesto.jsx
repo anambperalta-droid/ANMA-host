@@ -445,7 +445,8 @@ export default function Presupuesto() {
   const marginPct = c.defaultMargin || 40
 
   /* ── Draft persistence ── */
-  const DRAFT_KEY = 'presupDraft'  // user-scoped via dbW/db/dbDel
+  const DRAFT_KEY     = 'presupDraft'      // user-scoped via dbW/db/dbDel
+  const DUPLICATE_KEY = 'presupDuplicate'  // seteado por Historial cuando duplicás
 
   useEffect(() => {
     if (id) {
@@ -484,6 +485,46 @@ export default function Presupuesto() {
         if (b.simplePers) setSimplePers(prev => ({ ...prev, ...b.simplePers }))
       }
     } else {
+      // Prioridad 1: si hay un "duplicado" pendiente (usuario tocó "Duplicar"
+      // en el Historial), lo cargamos como base para el nuevo pedido.
+      const dup = db(DUPLICATE_KEY, null)
+      if (dup) {
+        // dup = { source: <budget> }  — reusamos exactamente los datos del
+        // pedido original pero SIN editId (para que se guarde como uno nuevo).
+        const b = dup.source
+        if (b) {
+          setForm({
+            contact: b.contact || '', company: b.company || '', wa: b.wa || '', clientEmail: b.clientEmail || '',
+            ocasion: b.ocasion || '', delivery: b.delivery || '', deliveryDate: '',  // fecha en blanco: la nueva es distinta
+            shipCost: b.shipCost || 0, shipCharged: b.shipCharged !== false,
+            status: 'draft',  // arranca como borrador
+            noteInt: b.noteInt || '', noteCli: b.noteCli || '',
+            payStatus: 'pending',  // nunca copiamos el pago del original
+            margin: b.margin ?? c.defaultMargin ?? 40,
+            deposit: b.deposit ?? c.defaultDeposit ?? 50,
+            logoCost: b.logoCost || 0,
+            discount: b.discount || 0,
+            viajeId: null, logisticaParadas: [], comisionista: '', viajeFecha: '',
+            logisticaCharged: false, logisticaShowDetail: false,
+          })
+          if (b.alternatives?.length) {
+            // Copiamos alternativas pero reseteamos aprobación (es un pedido nuevo)
+            setAlternatives(b.alternatives.map(a => ({ ...a, approved: false })))
+          } else if (b.items?.length) {
+            setAlternatives([{ label: 'Alternativa 1', kits: b.items }])
+          }
+          const hasKitItems = (b.alternatives || []).some(a => (a.kits || []).some(i => i.type === 'kit'))
+            || (b.items || []).some(i => i.type === 'kit')
+          setKitMode(hasKitItems)
+          if (b.simplePack?.length) setSimplePack(b.simplePack)
+          if (b.simplePers) setSimplePers(prev => ({ ...prev, ...b.simplePers }))
+          toast(`Duplicado del pedido ${b.num || `#${b.id}`} — ajustá lo que necesites y guardá`, 'ok')
+        }
+        // Limpiamos el marcador y el borrador viejo (el duplicado los reemplaza)
+        dbDel(DUPLICATE_KEY)
+        dbDel(DRAFT_KEY)
+        return
+      }
       const saved = db(DRAFT_KEY, null)
       if (saved) {
         const { f, it, step } = saved

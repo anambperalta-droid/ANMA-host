@@ -934,6 +934,14 @@ export default function Historial() {
   const totGain = pagados.reduce((s, b) => s + ganCobrada(b), 0)
 
   const editB = (id) => nav(`/presupuesto/${id}`)
+
+  // ── Duplicar pedido — abre /presupuesto con los datos precargados ──
+  // Guarda el pedido source en localStorage; Presupuesto.jsx lo detecta
+  // al montar y lo usa como base para un nuevo presupuesto (sin editId).
+  const duplicateBudget = (b) => {
+    dbW('presupDuplicate', { source: b, at: Date.now() })
+    nav('/presupuesto')
+  }
   const copyWA = (b) => {
     const text = `Hola ${b.contact || ''}! Te envío el presupuesto ${b.num} por ${fmt(b.total)}. Quedamos a disposición!`
     navigator.clipboard.writeText(text).then(() => toast('Mensaje WA copiado', 'ok'))
@@ -1446,6 +1454,7 @@ export default function Historial() {
                                   >
                                     {[
                                       { icon: 'fa-pen', label: 'Editar', action: () => { editB(b.id); setOpenMenuId(null) } },
+                                      { icon: 'fa-copy', label: 'Duplicar', action: () => { duplicateBudget(b); setOpenMenuId(null) } },
                                       { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', action: () => { copyWA(b); setOpenMenuId(null) } },
                                       { icon: 'fa-paper-plane', label: 'Re-enviar', action: () => { handleResend(b); setOpenMenuId(null) } },
                                     ].map((item, idx) => (
@@ -1814,6 +1823,8 @@ export default function Historial() {
                         <div className="acts" style={{ gap: 2 }}>
                           <button className="hist-act" onClick={() => editB(b.id)} title="Editar"
                             onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-pen" /></button>
+                          <button className="hist-act" onClick={() => duplicateBudget(b)} title="Duplicar como nuevo pedido"
+                            onMouseEnter={e => e.currentTarget.style.color = '#7C3AED'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-copy" /></button>
                           <button className="hist-act" onClick={() => copyWA(b)} title="WhatsApp"
                             onMouseEnter={e => e.currentTarget.style.color = '#25D366'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa-brands fa-whatsapp" /></button>
                           <button className="hist-act" onClick={() => handleDelete(b)} title="Eliminar"

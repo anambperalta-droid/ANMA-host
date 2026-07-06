@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, db, dbW, dbDel } from '../../lib/storage'
+import MoneyInput from '../common/MoneyInput'
 
 const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
   const reader = new FileReader()
@@ -1510,14 +1511,20 @@ export default function Catalogo() {
                       </span>
                     </div>
                   ) : (
-                    <input tabIndex={5} type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
+                    <MoneyInput
+                      tabIndex={5}
+                      value={form.cost === '' ? '' : Number(form.cost)}
+                      onChange={v => onCostChange(v)}
+                      allowEmpty
+                      placeholder="0"
+                    />
                   )}
                 </div>
                 {/* Margen y Precio de Venta removidos — se aplican al armar el presupuesto */}
               </div>
               <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 8, fontStyle: 'italic' }}>
                 <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
-                El margen y precio de venta se definen al armar el presupuesto. Acá solo cargás el costo.
+                Escribí como en Excel: <b>10.000</b>, <b>$8.500</b>, <b>1.5k</b> — todo se entiende. El margen y precio final se aplican al armar el presupuesto.
               </div>
             </div>
 
@@ -1660,10 +1667,15 @@ export default function Catalogo() {
                     <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} /> Costo del producto ($)
                     </label>
-                    <input type="number" value={form.cost} onFocus={selectOnFocus} onChange={e => onCostChange(e.target.value)} onBlur={e => { if (e.target.value === '') setF('cost', 0) }} min="0" />
+                    <MoneyInput
+                      value={form.cost === '' ? '' : Number(form.cost)}
+                      onChange={v => onCostChange(v)}
+                      allowEmpty
+                      placeholder="0"
+                    />
                     <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 5, fontStyle: 'italic' }}>
                       <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
-                      El margen y precio final se calculan al armar el presupuesto.
+                      Escribí como en Excel: <b>10.000</b>, <b>$8.500</b>, <b>1.5k</b> — todo se entiende.
                     </div>
                   </div>
                 </div>
