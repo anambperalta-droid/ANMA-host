@@ -25,6 +25,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { notifyAdmin, paymentReceivedEmail } from './_admin-notify.js'
+import { supabaseUrl, supabaseServiceKey, missingSupabaseEnv } from './_env.js'
 
 export default async function handler(req, res) {
   // MP a veces hace GET para verificar la URL
@@ -76,14 +77,12 @@ export default async function handler(req, res) {
     }
 
     // Inicializar Supabase con service role para bypass RLS
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VITE_SUPABASE_URL) {
-      console.error('[mp-webhook] Supabase service role key no configurada')
-      return res.status(500).json({ ok: false, message: 'Server misconfigured' })
+    const missing = missingSupabaseEnv()
+    if (missing) {
+      console.error('[mp-webhook] Env vars faltantes:', missing)
+      return res.status(500).json({ ok: false, message: `Vercel: faltan env vars — ${missing}` })
     }
-    const supa = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
+    const supa = createClient(supabaseUrl(), supabaseServiceKey())
 
     // Idempotencia: si ya registramos este payment_id, no duplicamos
     const { data: existing } = await supa

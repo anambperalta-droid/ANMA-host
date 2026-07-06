@@ -291,43 +291,27 @@ export default function Admin() {
   }
 
   // ── Registrar pago manual (transferencia, efectivo, MP externo) ─────
-  // Acepta preset onboarding/monthly con monto fijo, o kind=null para
-  // que el admin elija tipo + monto en un solo prompt (caso: transferencia
-  // directa a la cuenta bancaria fuera de MP).
-  const markAsPaid = async (w, kindPreset = null) => {
-    let kind = kindPreset
-    let amount = null
-    if (kind === 'onboarding') amount = ONBOARDING_AMOUNT
-    else if (kind === 'monthly') amount = MONTHLY_AMOUNT
-    else {
-      // Prompt: elegir tipo
-      const tipo = prompt(
-        `Registrar pago manual para "${w.name}"\n\n` +
-        'Elegí tipo:\n' +
-        '  1 → Pago de ingreso ($120.000)\n' +
-        '  2 → Cuota mensual ($30.000)\n' +
-        '  3 → Otro monto\n\n' +
-        'Escribí 1, 2 o 3:'
-      )
-      if (tipo === null) return
-      const t = tipo.trim()
-      if (t === '1') { kind = 'onboarding'; amount = ONBOARDING_AMOUNT }
-      else if (t === '2') { kind = 'monthly'; amount = MONTHLY_AMOUNT }
-      else if (t === '3') {
-        const raw = prompt('Monto del pago (solo números, sin puntos ni $):')
-        if (raw === null) return
-        const n = Number(String(raw).replace(/[^\d]/g, ''))
-        if (!n || n <= 0) { toast('Monto inválido', 'er'); return }
-        amount = n
-        kind = 'manual'
-      } else { toast('Opción inválida', 'er'); return }
-    }
-    const label = kind === 'onboarding' ? `pago de ingreso (${fmtMoney(amount)})`
-                : kind === 'monthly'    ? `cuota mensual (${fmtMoney(amount)})`
+  // Estado del modal para pago manual (reemplaza prompts encadenados).
+  // El markAsPaid ahora solo abre el modal — el submit final llama al API.
+  const markAsPaid = (w) => {
+    setPayModalFor(w)
+    setPayForm({
+      kind: 'onboarding', amount: ONBOARDING_AMOUNT,
+      method: 'transferencia', notes: '',
+    })
+  }
+
+  // ── Submit del modal: dispara el registro real del pago ────────────
+  const submitManualPayment = async () => {
+    if (!payModalFor) return
+    const w = payModalFor
+    const amount = Number(payForm.amount) || 0
+    if (amount <= 0) { toast('Monto inválido', 'er'); return }
+    const label = payForm.kind === 'onboarding' ? `pago de ingreso (${fmtMoney(amount)})`
+                : payForm.kind === 'monthly'    ? `cuota mensual (${fmtMoney(amount)})`
                 : `pago manual (${fmtMoney(amount)})`
-    const notes = prompt(`Método de pago para "${w.name}" — ${label}\n\n(transferencia / efectivo / mp externo / otro):`)
-    if (notes === null) return
-    if (!confirm(`¿Registrar ${label} de "${w.name}"?\n\nEsto va a actualizar lifetime_revenue y el estado del workspace, y te va a mandar un mail de confirmación.`)) return
+    const notesFull = `${label} — ${payForm.method}${payForm.notes ? ` · ${payForm.notes}` : ''}`
+    setPayLoading(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) { toast('Sin sesión activa', 'er'); return }
@@ -341,15 +325,18 @@ export default function Admin() {
           workspaceId: w.id,
           amount,
           kind: 'manual',
-          notes: notes ? `${label} — ${notes}` : label,
+          notes: notesFull,
         }),
       })
       const data = await resp.json()
       if (!data.ok) throw new Error(data.message || 'Error')
       toast(`Pago registrado: ${fmtMoney(amount)} · ${label}`, 'ok')
+      setPayModalFor(null)
       await load()
     } catch (e) {
       toast(`Error: ${e?.message || 'No se pudo registrar el pago'}`, 'er')
+    } finally {
+      setPayLoading(false)
     }
   }
 
@@ -391,6 +378,16 @@ export default function Admin() {
 
   // ── Ver historial de pagos del workspace ────────────────────────────
   const [paymentHistoryFor, setPaymentHistoryFor] = useState(null)
+  // Modal de pago manual
+  const [payModalFor, setPayModalFor] = useState(null)
+  const [payForm, setPayForm] = useState({ kind: 'onboarding', amount: ONBOARDING_AMOUNT, method: 'transferencia', notes: '' })
+  const [payLoading, setPayLoading] = useState(false)
+  // Actualizar amount al cambiar kind (excepto si eligió "otro")
+  const setPayKind = (kind) => {
+    if (kind === 'onboarding') setPayForm(f => ({ ...f, kind, amount: ONBOARDING_AMOUNT }))
+    else if (kind === 'monthly') setPayForm(f => ({ ...f, kind, amount: MONTHLY_AMOUNT }))
+    else setPayForm(f => ({ ...f, kind, amount: '' }))
+  }
   // Selección múltiple en tab billing (bulk cobros)
   const [selectedBilling, setSelectedBilling] = useState(new Set())
   const [bulkProcessing, setBulkProcessing] = useState(false)
@@ -1379,6 +1376,163 @@ export default function Admin() {
                   </tbody>
                 </table>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Modal: Registrar pago manual ═══ */}
+      {payModalFor && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget && !payLoading) setPayModalFor(null) }}>
+          <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+            <div className="mh">
+              <h3><i className="fa fa-dollar-sign" style={{ color: '#16A34A', marginRight: 8 }} />Registrar pago manual</h3>
+              <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
+                Workspace: <strong style={{ color: 'var(--txt)' }}>{payModalFor.name}</strong>
+              </div>
+            </div>
+
+            {/* Radio de tipo */}
+            <div style={{ padding: '14px 20px 0' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--txt3)' }}>
+                Tipo de pago
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
+                {[
+                  { key: 'onboarding', lbl: 'Ingreso',    hint: '$120.000', ico: 'fa-rocket' },
+                  { key: 'monthly',    lbl: 'Mensual',    hint: '$30.000',  ico: 'fa-calendar-days' },
+                  { key: 'manual',     lbl: 'Otro monto', hint: 'personalizado', ico: 'fa-pen' },
+                ].map(opt => {
+                  const active = payForm.kind === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setPayKind(opt.key)}
+                      style={{
+                        padding: '10px 8px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
+                        border: `1.5px solid ${active ? '#16A34A' : 'var(--border)'}`,
+                        background: active ? 'rgba(22,163,74,.08)' : 'var(--surface)',
+                        color: active ? '#065F46' : 'var(--txt2)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                        transition: 'all .15s',
+                      }}
+                    >
+                      <i className={`fa ${opt.ico}`} style={{ fontSize: 14 }} />
+                      <div style={{ fontSize: 12, fontWeight: 700 }}>{opt.lbl}</div>
+                      <div style={{ fontSize: 10, color: active ? '#059669' : 'var(--txt3)' }}>{opt.hint}</div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Monto */}
+            <div style={{ padding: '14px 20px 0' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--txt3)' }}>
+                Monto (ARS)
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#16A34A' }}>$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={payForm.amount === '' ? '' : Number(payForm.amount).toLocaleString('es-AR')}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^\d]/g, '')
+                    setPayForm(f => ({ ...f, amount: raw === '' ? '' : Number(raw) }))
+                  }}
+                  disabled={payForm.kind !== 'manual'}
+                  style={{
+                    flex: 1, fontSize: 18, fontWeight: 700, padding: '8px 12px',
+                    border: '1.5px solid var(--border)', borderRadius: 8,
+                    background: payForm.kind === 'manual' ? 'var(--surface)' : 'var(--surface2)',
+                    color: 'var(--txt)', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Método */}
+            <div style={{ padding: '14px 20px 0' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--txt3)' }}>
+                Método de pago
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginTop: 8 }}>
+                {[
+                  { key: 'transferencia', lbl: 'Transf.', ico: 'fa-building-columns' },
+                  { key: 'efectivo',      lbl: 'Efectivo', ico: 'fa-money-bill-wave' },
+                  { key: 'mp externo',    lbl: 'MP', ico: 'fa-credit-card' },
+                  { key: 'otro',          lbl: 'Otro', ico: 'fa-ellipsis' },
+                ].map(opt => {
+                  const active = payForm.method === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setPayForm(f => ({ ...f, method: opt.key }))}
+                      style={{
+                        padding: '8px 4px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                        border: `1.5px solid ${active ? 'var(--brand)' : 'var(--border)'}`,
+                        background: active ? 'rgba(225,29,116,.08)' : 'var(--surface)',
+                        color: active ? 'var(--brand)' : 'var(--txt2)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                        fontSize: 11,
+                      }}
+                    >
+                      <i className={`fa ${opt.ico}`} style={{ fontSize: 12 }} />
+                      <span style={{ fontWeight: 600 }}>{opt.lbl}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Notas */}
+            <div style={{ padding: '14px 20px 0' }}>
+              <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--txt3)' }}>
+                Notas (opcional)
+              </label>
+              <textarea
+                value={payForm.notes}
+                onChange={e => setPayForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Ej: transferencia recibida el 5/07, comprobante #123"
+                rows={2}
+                style={{
+                  width: '100%', marginTop: 6, padding: '8px 12px',
+                  border: '1.5px solid var(--border)', borderRadius: 8,
+                  fontSize: 13, fontFamily: 'inherit', color: 'var(--txt)', resize: 'vertical',
+                  background: 'var(--surface)',
+                }}
+              />
+            </div>
+
+            {/* Info visual + botones */}
+            <div style={{ padding: '14px 20px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 11.5, color: 'var(--txt3)', lineHeight: 1.4, padding: '8px 12px', background: 'rgba(22,163,74,.05)', borderRadius: 8, border: '1px solid rgba(22,163,74,.15)' }}>
+                <i className="fa fa-circle-info" style={{ marginRight: 6, color: '#16A34A' }} />
+                Se va a sumar a <strong>lifetime_revenue</strong>, adelantar <strong>next_payment_due_at</strong> +30 días y enviarte un mail de confirmación.
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setPayModalFor(null)}
+                  disabled={payLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="btn"
+                  onClick={submitManualPayment}
+                  disabled={payLoading || !payForm.amount || Number(payForm.amount) <= 0}
+                  style={{ background: '#16A34A', color: '#fff', border: 'none' }}
+                >
+                  {payLoading
+                    ? <><i className="fa fa-spinner fa-spin" style={{ marginRight: 6 }} />Registrando…</>
+                    : <><i className="fa fa-check" style={{ marginRight: 6 }} />Registrar {fmtMoney(Number(payForm.amount) || 0)}</>
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </div>

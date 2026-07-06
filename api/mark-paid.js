@@ -18,6 +18,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { applyCors } from './_cors.js'
 import { notifyAdmin, paymentReceivedEmail } from './_admin-notify.js'
+import { supabaseUrl, supabaseAnonKey, supabaseServiceKey, missingSupabaseEnv } from './_env.js'
 
 const ADMIN_EMAILS = ['ana.mbperalta@gmail.com']
 
@@ -32,14 +33,15 @@ export default async function handler(req, res) {
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
     if (!token) return res.status(401).json({ ok: false, message: 'Missing auth token' })
 
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VITE_SUPABASE_URL) {
-      return res.status(500).json({ ok: false, message: 'Server misconfigured' })
+    const missing = missingSupabaseEnv()
+    if (missing) {
+      return res.status(500).json({ ok: false, message: `Vercel: faltan env vars — ${missing}` })
     }
 
     // Verificar el JWT con Supabase
     const supaUser = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '',
+      supabaseUrl(),
+      supabaseAnonKey() || '',
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     )
     const { data: { user }, error: uErr } = await supaUser.auth.getUser(token)
@@ -60,10 +62,7 @@ export default async function handler(req, res) {
     }
 
     // Insert con service role (bypass RLS)
-    const supa = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
+    const supa = createClient(supabaseUrl(), supabaseServiceKey())
 
     const { data, error } = await supa
       .from('workspace_payments')
