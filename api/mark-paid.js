@@ -17,6 +17,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { applyCors } from './_cors.js'
+import { notifyAdmin, paymentReceivedEmail } from './_admin-notify.js'
 
 const ADMIN_EMAILS = ['ana.mbperalta@gmail.com']
 
@@ -83,6 +84,25 @@ export default async function handler(req, res) {
     if (error) {
       return res.status(500).json({ ok: false, message: error.message })
     }
+
+    // Traer el nombre del workspace para el email
+    const { data: wsRow } = await supa
+      .from('workspaces')
+      .select('id, name')
+      .eq('id', workspaceId)
+      .maybeSingle()
+
+    // Notificar al admin (a sí mismo) que el registro quedó ok
+    await notifyAdmin(paymentReceivedEmail({
+      workspaceName: wsRow?.name,
+      workspaceId,
+      amount,
+      kind: kind === 'manual' ? 'manual' : kind,
+      mpStatus: 'manual_confirmed',
+      method: 'manual',
+      paidAt: data.paid_at,
+      source: 'manual',
+    })).catch(err => console.error('[mark-paid] notify failed', err))
 
     return res.status(200).json({ ok: true, payment: data })
   } catch (e) {

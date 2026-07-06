@@ -4,6 +4,7 @@ import { useToast } from './ToastContext'
 import { CURRENT_SITE } from '../lib/invites'
 import { setStorageUser } from '../lib/storage'
 import { initSync, pullFromCloud } from '../lib/sync'
+import { getTrialStatus } from '../lib/trial'
 
 const Ctx = createContext()
 
@@ -163,8 +164,10 @@ export function AuthProvider({ children }) {
     return OPERATOR_PERMS.has(perm)
   }, [role])
 
+  const trial = getTrialStatus(user)
+
   return (
-    <Ctx.Provider value={{ authed, loading, user, login, logout, siteBlocked, isGlobalAdmin, changePassword, resetPassword, role, can }}>
+    <Ctx.Provider value={{ authed, loading, user, login, logout, siteBlocked, isGlobalAdmin, changePassword, resetPassword, role, can, trial }}>
       {children}
     </Ctx.Provider>
   )

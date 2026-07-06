@@ -76,15 +76,28 @@ const fmtDate = (iso) => {
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
-// Mensaje WhatsApp pre-cargado para contactar prospect
-const waLink = (wsName, kind = 'trial') => {
+// Mensaje WhatsApp pre-cargado para contactar prospect / cliente
+// según su estado real de facturación y trial. Cada kind arma una copy
+// distinta enfocada en la acción concreta que corresponde.
+const waLink = (wsName, kind = 'trial', phone = '') => {
+  const wsRef = wsName ? ` (${wsName})` : ''
   const msgs = {
-    trial:    `¡Hola! Soy de ANMA Regalos. Vi que estás probando el sistema con ${wsName || 'tu negocio'}. ¿Cómo va? Si necesitás una mano, estoy acá.`,
-    expiring: `¡Hola! Te escribo desde ANMA Regalos. Tu prueba está por vencer y no quiero que pierdas tus datos. ¿Charlamos para activar tu plan?`,
-    expired:  `¡Hola! Tu prueba de ANMA Regalos terminó hace unos días. Tus datos siguen guardados — si querés retomarlos, en 1 click activamos.`,
-    paid:     `¡Hola! Soy de ANMA Regalos. ¿Cómo está yendo todo con el sistema?`,
+    // Trials
+    trial:     `¡Hola! Soy Ana de ANMA Regalos. Vi que estás probando el sistema${wsRef}. ¿Cómo va? Si necesitás una mano armando algún kit o cotización, estoy acá.`,
+    expiring:  `¡Hola! Te escribo desde ANMA Regalos${wsRef}. Tu prueba está por vencer y no quiero que pierdas tus datos ni el flujo que armaste. ¿Charlamos para activar tu plan?`,
+    expired:   `¡Hola! Tu prueba de ANMA Regalos terminó${wsRef}. Tus datos siguen guardados 90 días — si querés retomar exactamente donde quedaste, con el pago de ingreso de $120.000 activo tu plan y arrancamos.`,
+    // Cobros — cuota mensual $30k
+    overdue:   `¡Hola! Te escribo por la cuota mensual de ANMA Regalos${wsRef} — quedó pendiente y quería avisarte antes de que se pause. En un rato te paso el link para regularizarla ($30.000 por Mercado Pago o transferencia). Cualquier duda estoy.`,
+    due_soon:  `¡Hola! Te escribo desde ANMA Regalos${wsRef}. Se viene el vencimiento de tu cuota mensual ($30.000). Si querés te paso el link ahora para dejarlo resuelto — así arrancás el mes tranquila.`,
+    paused:    `¡Hola! Tu workspace de ANMA Regalos${wsRef} está pausado por la cuota impaga. Tus datos siguen guardados (90 días). Reactivamos apenas regularicemos — te paso el link cuando me digas.`,
+    // Al día
+    paid:      `¡Hola! Soy Ana de ANMA Regalos. ¿Cómo está yendo todo con el sistema${wsRef}? Cualquier cosa que necesites, estoy acá.`,
   }
-  return `https://api.whatsapp.com/send?text=${encodeURIComponent(msgs[kind] || msgs.trial)}`
+  const text = msgs[kind] || msgs.trial
+  const p = String(phone || '').replace(/[^\d]/g, '')
+  return p
+    ? `https://wa.me/${p}?text=${encodeURIComponent(text)}`
+    : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`
 }
 
 // ── Componente ──────────────────────────────────────────────────────────
@@ -277,13 +290,44 @@ export default function Admin() {
     }
   }
 
-  // ── Registrar pago manual (transferencia, efectivo) ─────────────────
-  const markAsPaid = async (w, kind = 'monthly') => {
-    const amount = kind === 'onboarding' ? ONBOARDING_AMOUNT : MONTHLY_AMOUNT
-    const label = kind === 'onboarding' ? 'pago de ingreso ($120.000)' : 'cuota mensual ($30.000)'
-    const notes = prompt(`Confirmar ${label} de "${w.name}".\n\nMétodo (transferencia / efectivo / otro):`)
-    if (notes === null) return  // cancelado
-    if (!confirm(`¿Registrar ${label} de "${w.name}"?\n\nEsto va a actualizar el estado del workspace.`)) return
+  // ── Registrar pago manual (transferencia, efectivo, MP externo) ─────
+  // Acepta preset onboarding/monthly con monto fijo, o kind=null para
+  // que el admin elija tipo + monto en un solo prompt (caso: transferencia
+  // directa a la cuenta bancaria fuera de MP).
+  const markAsPaid = async (w, kindPreset = null) => {
+    let kind = kindPreset
+    let amount = null
+    if (kind === 'onboarding') amount = ONBOARDING_AMOUNT
+    else if (kind === 'monthly') amount = MONTHLY_AMOUNT
+    else {
+      // Prompt: elegir tipo
+      const tipo = prompt(
+        `Registrar pago manual para "${w.name}"\n\n` +
+        'Elegí tipo:\n' +
+        '  1 → Pago de ingreso ($120.000)\n' +
+        '  2 → Cuota mensual ($30.000)\n' +
+        '  3 → Otro monto\n\n' +
+        'Escribí 1, 2 o 3:'
+      )
+      if (tipo === null) return
+      const t = tipo.trim()
+      if (t === '1') { kind = 'onboarding'; amount = ONBOARDING_AMOUNT }
+      else if (t === '2') { kind = 'monthly'; amount = MONTHLY_AMOUNT }
+      else if (t === '3') {
+        const raw = prompt('Monto del pago (solo números, sin puntos ni $):')
+        if (raw === null) return
+        const n = Number(String(raw).replace(/[^\d]/g, ''))
+        if (!n || n <= 0) { toast('Monto inválido', 'er'); return }
+        amount = n
+        kind = 'manual'
+      } else { toast('Opción inválida', 'er'); return }
+    }
+    const label = kind === 'onboarding' ? `pago de ingreso (${fmtMoney(amount)})`
+                : kind === 'monthly'    ? `cuota mensual (${fmtMoney(amount)})`
+                : `pago manual (${fmtMoney(amount)})`
+    const notes = prompt(`Método de pago para "${w.name}" — ${label}\n\n(transferencia / efectivo / mp externo / otro):`)
+    if (notes === null) return
+    if (!confirm(`¿Registrar ${label} de "${w.name}"?\n\nEsto va a actualizar lifetime_revenue y el estado del workspace, y te va a mandar un mail de confirmación.`)) return
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) { toast('Sin sesión activa', 'er'); return }
@@ -297,15 +341,51 @@ export default function Admin() {
           workspaceId: w.id,
           amount,
           kind: 'manual',
-          notes: notes || `${label} manual`,
+          notes: notes ? `${label} — ${notes}` : label,
         }),
       })
       const data = await resp.json()
       if (!data.ok) throw new Error(data.message || 'Error')
-      toast(`Pago registrado: ${fmtMoney(amount)}`, 'ok')
+      toast(`Pago registrado: ${fmtMoney(amount)} · ${label}`, 'ok')
       await load()
     } catch (e) {
       toast(`Error: ${e?.message || 'No se pudo registrar el pago'}`, 'er')
+    }
+  }
+
+  // ── Reconciliar pago con Mercado Pago ────────────────────────────────
+  // Uso: cuando el webhook no llegó y Ana ve el pago en su panel de MP.
+  // Pega el ID del pago (el número que aparece en MP) y el sistema lo
+  // sincroniza contra nuestra DB.
+  const reconcilePaymentWithMP = async () => {
+    const paymentId = prompt(
+      'Reconciliar un pago de Mercado Pago con la base:\n\n' +
+      '1. Andá a mercadopago.com.ar → Actividad\n' +
+      '2. Copiá el ID del pago (número largo)\n' +
+      '3. Pegalo acá:'
+    )
+    if (!paymentId || !paymentId.trim()) return
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) { toast('Sin sesión activa', 'er'); return }
+      toast('Consultando Mercado Pago…', 'in')
+      const resp = await fetch('/api/reconcile-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ paymentId: paymentId.trim() }),
+      })
+      const data = await resp.json()
+      if (!data.ok) throw new Error(data.message || 'Error reconciliando')
+      const actionLabel = data.action === 'created' ? 'Pago registrado ✓'
+        : data.action === 'updated' ? 'Estado actualizado ✓'
+        : 'Ya estaba sincronizado ✓'
+      toast(`${actionLabel} · ${fmtMoney(data.amount)} · ${data.mp_status}`, 'ok')
+      await load()
+    } catch (e) {
+      toast(`Error: ${e?.message || 'No se pudo reconciliar'}`, 'er')
     }
   }
 
@@ -655,6 +735,15 @@ export default function Admin() {
             <i className={`fa ${loading ? 'fa-spinner fa-spin' : 'fa-rotate-right'}`} style={{ marginRight: 6 }} />
             Refrescar
           </button>
+          <button
+            className="btn btn-secondary"
+            onClick={reconcilePaymentWithMP}
+            title="Sincronizar un pago desde Mercado Pago cuando el webhook no llegó"
+            style={{ background: 'rgba(0,158,247,.08)', color: '#009EE3', borderColor: 'rgba(0,158,247,.25)' }}
+          >
+            <i className="fa fa-rotate" style={{ marginRight: 6 }} />
+            Reconciliar MP
+          </button>
           <button className="btn btn-primary" onClick={() => setShowCreateUser(true)}>
             <i className="fa fa-user-plus" style={{ marginRight: 6 }} />
             Crear usuario
@@ -986,10 +1075,19 @@ export default function Admin() {
                 const isOpen = expanded === w.id
                 const overLimit = w.seats_used > w.seats_allowed
                 const ut = urgencyTone(w.trial.urgency)
-                const waKind = w.trial.urgency === 'last' || w.trial.urgency === 'hot'
-                  ? 'expiring'
-                  : w.trial.urgency === 'expired' ? 'expired'
-                  : w.plan !== 'solo' ? 'paid' : 'trial'
+                // Elegir mensaje WA según el estado REAL del workspace.
+                // El billing pesa más que el trial (si ya es cliente, no le hablamos como prospect).
+                const bStatus = w.billing?.status
+                const bDays   = w.billing?.daysUntilDue
+                const waKind =
+                  bStatus === STATUS.PAUSED || bStatus === STATUS.CHURNED ? 'paused' :
+                  bStatus === STATUS.PENDING_PAYMENT                       ? 'overdue' :
+                  bStatus === STATUS.ACTIVE && bDays !== null && bDays <= 3 ? 'due_soon' :
+                  bStatus === STATUS.ACTIVE                                 ? 'paid' :
+                  w.trial.urgency === 'last' || w.trial.urgency === 'hot'  ? 'expiring' :
+                  w.trial.urgency === 'expired'                            ? 'expired' :
+                  w.plan !== 'solo'                                        ? 'paid' :
+                  'trial'
                 return (
                   <>
                     <tr key={w.id} className="trial-row" style={{ borderTop: '1px solid var(--border)', background: tab === 'billing' && selectedBilling.has(w.id) ? 'rgba(124,58,237,.06)' : undefined }}>
@@ -1091,11 +1189,28 @@ export default function Admin() {
                             </>
                           ) : (
                             <>
-                              <a href={waLink(w.name, waKind)} target="_blank" rel="noopener noreferrer" className="wa-btn">
+                              <a href={waLink(w.name, waKind, w.contact_phone)} target="_blank" rel="noopener noreferrer" className="wa-btn" title={`Mensaje ${waKind} pre-armado`}>
                                 <i className="fa-brands fa-whatsapp" /> WhatsApp
                               </a>
                               <button onClick={() => setExpanded(isOpen ? null : w.id)} title="Ver miembros">
                                 <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} /> Miembros
+                              </button>
+                              <button
+                                onClick={() => generateMpLinkAndShare(w)}
+                                title="Generar link MP de $30.000 (cuota mensual) y abrir WhatsApp con el mensaje"
+                                style={{ color: '#009EE3', background: 'rgba(0,158,247,.08)', borderColor: 'rgba(0,158,247,.25)' }}
+                              >
+                                <i className="fa fa-link" /> $30k
+                              </button>
+                              <button
+                                onClick={() => markAsPaid(w)}
+                                title="Registrar pago manual (transferencia, efectivo, MP externo)"
+                                style={{ color: '#16A34A', background: 'rgba(22,163,74,.08)', borderColor: 'rgba(22,163,74,.25)' }}
+                              >
+                                <i className="fa fa-dollar-sign" />
+                              </button>
+                              <button onClick={() => showPaymentHistory(w)} title="Ver historial de pagos de este workspace">
+                                <i className="fa fa-clock-rotate-left" />
                               </button>
                               <button onClick={() => toggleStatus(w.id, w.status)} title={w.status === 'active' ? 'Pausar' : 'Activar'}>
                                 <i className={`fa fa-${w.status === 'active' ? 'pause' : 'play'}`} />

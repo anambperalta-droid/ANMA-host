@@ -24,6 +24,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { notifyAdmin, paymentReceivedEmail } from './_admin-notify.js'
 
 export default async function handler(req, res) {
   // MP a veces hace GET para verificar la URL
@@ -91,13 +92,33 @@ export default async function handler(req, res) {
       .eq('mp_payment_id', String(paymentId))
       .maybeSingle()
 
+    // Traer nombre del workspace para el email al admin
+    const { data: wsRow } = await supa
+      .from('workspaces')
+      .select('id, name')
+      .eq('id', workspaceId)
+      .maybeSingle()
+
     if (existing) {
-      // Si el estado cambió (ej: pending → approved), actualizamos
+      // Si el estado cambió (ej: pending → approved), actualizamos y notificamos
       if (existing.mp_status !== payment.status) {
         await supa
           .from('workspace_payments')
           .update({ mp_status: payment.status })
           .eq('id', existing.id)
+        // Notificar al admin si el pago pasó a aprobado
+        if (payment.status === 'approved') {
+          await notifyAdmin(paymentReceivedEmail({
+            workspaceName: wsRow?.name,
+            workspaceId,
+            amount: payment.transaction_amount,
+            kind: kind || 'onboarding',
+            mpStatus: payment.status,
+            method: payment.payment_method_id,
+            paidAt: payment.date_approved || payment.date_created,
+            source: 'webhook',
+          })).catch(err => console.error('[mp-webhook] notify failed', err))
+        }
       }
       return res.status(200).json({ ok: true, action: 'updated', paymentId })
     }
@@ -117,11 +138,37 @@ export default async function handler(req, res) {
 
     if (insErr) {
       console.error('[mp-webhook] Failed to insert payment:', insErr)
+      // Notificar al admin del error (para que no se pierda un pago silenciosamente)
+      await notifyAdmin({
+        subject: `⚠️ Error registrando pago MP ${paymentId}`,
+        headline: 'No se pudo guardar un pago en la base',
+        body: [
+          `Workspace: ${wsRow?.name || '(sin nombre)'} — id ${workspaceId}`,
+          `Payment id: ${paymentId}`,
+          `Monto: ${payment.transaction_amount}`,
+          `Estado MP: ${payment.status}`,
+          `Error: ${insErr.message}`,
+          '',
+          'Revisá los logs de Vercel y reconciliá manualmente en Mercado Pago.',
+        ].join('\n'),
+      }).catch(() => {})
       return res.status(500).json({ ok: false, message: 'No se pudo registrar el pago' })
     }
 
     // El trigger SQL `on_payment_received` actualiza workspaces auto
     // si payment.status === 'approved'
+
+    // Notificar al admin de cada pago que llega (aprobado o con problema)
+    await notifyAdmin(paymentReceivedEmail({
+      workspaceName: wsRow?.name,
+      workspaceId,
+      amount: payment.transaction_amount,
+      kind: kind || 'onboarding',
+      mpStatus: payment.status,
+      method: payment.payment_method_id,
+      paidAt: payment.date_approved || payment.date_created,
+      source: 'webhook',
+    })).catch(err => console.error('[mp-webhook] notify failed', err))
 
     return res.status(200).json({ ok: true, action: 'created', paymentId, status: payment.status })
   } catch (e) {

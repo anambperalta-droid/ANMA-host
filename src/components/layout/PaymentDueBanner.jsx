@@ -24,12 +24,22 @@ import { getBillingStatus, STATUS } from '../../lib/subscription'
  */
 
 export default function PaymentDueBanner() {
-  const { user, role, loading } = useAuth()
+  const { user, role, loading, trial } = useAuth()
   const DISMISS_KEY = `anma_payment_due_dismissed_at_${user?.id || 'anon'}`
   const SNOOZE_KEY  = `anma_payment_due_snoozed_until_${user?.id || 'anon'}`
   const [workspace, setWorkspace] = useState(null)
   const [hidden, setHidden] = useState(true)
   const [paying, setPaying] = useState(false)
+
+  // ── Trial vencido sin pago → bloqueo automático ────────────────────
+  // Cuando el trial de 7 días expiró y el workspace NUNCA se activó
+  // con un pago, mostramos el modal bloqueante (mismo que PAUSED).
+  // Copy custom orientado a "activar tu plan" en vez de "reactivar".
+  const trialLockout = !!(
+    role === 'owner' &&
+    trial?.expired &&
+    workspace && !workspace.activated_at
+  )
 
   // Cargar workspace solo si es owner
   useEffect(() => {
@@ -74,12 +84,12 @@ export default function PaymentDueBanner() {
   }, [workspace?.id, workspace?.subscription_status])
 
   const billing = getBillingStatus(workspace)
-  if (!billing.shouldShowBanner) return null
+  if (!billing.shouldShowBanner && !trialLockout) return null
 
-  // PAUSED es siempre bloqueante (nivel 4) — no se puede ocultar
-  const isPaused = billing.urgency === 'paused'
+  // PAUSED / trial vencido son bloqueantes — no se pueden ocultar
+  const isPaused = billing.urgency === 'paused' || trialLockout
   const isOverdue = billing.urgency === 'overdue'
-  // Permite dismiss/snooze si es nivel 1-2 (no es vencido ni paused)
+  // Permite dismiss/snooze si es nivel 1-2 (no es vencido ni bloqueado)
   const canDismiss = !isPaused && !isOverdue
   // Snooze permitido también en overdue (pero solo 1 vez por día efectivamente)
   const canSnooze = !isPaused
@@ -95,7 +105,9 @@ export default function PaymentDueBanner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workspaceId: workspace.id,
-          kind: 'monthly',
+          // Si nunca activó, el primer pago es onboarding ($120k). Si ya pagó,
+          // este flujo no aplica (billing manejaría 'monthly').
+          kind: trialLockout ? 'onboarding' : 'monthly',
           userEmail: user?.email,
         }),
       })
@@ -126,8 +138,24 @@ export default function PaymentDueBanner() {
     window.open(`https://api.whatsapp.com/send?phone=5491169456863&text=${encodeURIComponent(msg)}`, '_blank')
   }
 
-  // ── NIVEL 4: PAUSED (bloqueante) ───────────────────────────────────────
+  // ── NIVEL 4: bloqueante (paused o trial vencido sin pago) ─────────────
   if (isPaused) {
+    // Copy adaptado según causa del bloqueo
+    const modalCopy = trialLockout
+      ? {
+          title: 'Tu prueba de 7 días terminó',
+          body: 'Para seguir usando ANMA Regalos activá tu plan. Tus datos están guardados y disponibles apenas actives — nada se borra.',
+          cta: 'Activar mi plan',
+          icon: 'fa-hourglass-end',
+          iconGrad: 'linear-gradient(135deg, #7C3AED, #6366F1)',
+        }
+      : {
+          title: billing.bannerCopy.title,
+          body: billing.bannerCopy.body,
+          cta: billing.bannerCopy.cta,
+          icon: 'fa-pause',
+          iconGrad: 'linear-gradient(135deg, #6B7280, #9CA3AF)',
+        }
     return (
       <div style={{
         position: 'fixed', inset: 0, zIndex: 9998,
@@ -143,17 +171,17 @@ export default function PaymentDueBanner() {
         }}>
           <div style={{
             width: 76, height: 76, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #6B7280, #9CA3AF)',
+            background: modalCopy.iconGrad,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 18px', color: '#fff', fontSize: 32,
           }}>
-            <i className="fa fa-pause" />
+            <i className={`fa ${modalCopy.icon}`} />
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', margin: '0 0 10px', letterSpacing: '-.4px' }}>
-            {billing.bannerCopy.title}
+            {modalCopy.title}
           </h2>
           <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.65, margin: '0 0 22px' }}>
-            {billing.bannerCopy.body}
+            {modalCopy.body}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
@@ -167,7 +195,7 @@ export default function PaymentDueBanner() {
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              {paying ? <><i className="fa fa-spinner fa-spin" /> Generando link…</> : <><i className="fa fa-bolt" /> {billing.bannerCopy.cta}</>}
+              {paying ? <><i className="fa fa-spinner fa-spin" /> Generando link…</> : <><i className="fa fa-bolt" /> {modalCopy.cta}</>}
             </button>
             <button
               onClick={openWA}
