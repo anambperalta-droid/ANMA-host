@@ -164,8 +164,8 @@ export default function Catalogo() {
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
-  const products = get('products')
-  const suppliers = get('suppliers')
+  const products = get('products') || []
+  const suppliers = get('suppliers') || []
   const cats = c.productCats || []
   // ── Detector: cats desactualizadas vs las sugeridas para regalos ──
   const SUGGESTED_REGALOS_CATS = [
@@ -1138,27 +1138,33 @@ export default function Catalogo() {
                   </select>
                 </div>
               ) : (
-                /* ── Producto: 3 cols (Categoría + Proveedor + Stock) ── */
-                <div className="modal-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 12px' }}>
-                  <div className="fg" style={{ marginBottom: 0 }}><label>Categoría</label>
-                    <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
+                /* ── Producto: 3 columnas flex que garantizan los 3 campos
+                     visibles. Con flex 1 1 180px cada uno cabe en escritorio,
+                     y si no entra hace wrap a 2 filas en pantalla estrecha. */
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                  <div className="fg" style={{ marginBottom: 0, flex: '1 1 180px', minWidth: 0 }}><label>Categoría</label>
+                    <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)} style={{ width: '100%' }}>
                       {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                       {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
                     </select>
                   </div>
-                  <div className="fg" style={{ marginBottom: 0 }}><label>Proveedor</label>
-                    <select tabIndex={3} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)}>
+                  <div className="fg" style={{ marginBottom: 0, flex: '1 1 180px', minWidth: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <i className="fa fa-industry" style={{ color: 'var(--brand)', fontSize: 11 }} />
+                      Proveedor
+                    </label>
+                    <select tabIndex={3} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)} style={{ width: '100%' }}>
                       <option value="">Sin asignar</option>
                       {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
-                  <div className="fg" style={{ marginBottom: 0 }}>
+                  <div className="fg" style={{ marginBottom: 0, flex: '1 1 180px', minWidth: 0 }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 11 }} />
                       Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <input tabIndex={4} type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ paddingRight: form.stock !== '' ? 52 : undefined }} />
+                      <input tabIndex={4} type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ width: '100%', paddingRight: form.stock !== '' ? 52 : undefined }} />
                       {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
                     </div>
                   </div>
