@@ -305,6 +305,19 @@ thead th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:v
 tbody td{padding:9px 12px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--border);transition:background var(--tr);font-variant-numeric:tabular-nums}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--surface2)}
+
+/* Listado de Catálogo (Productos) — más aireado.
+   Solo aplica a la vista lista del catálogo (.cat-desk-view .tbl-card).
+   Otras tablas de la app (Historial, Presupuesto, Insumos, etc.) NO se afectan. */
+.cat-desk-view .tbl-card thead th{padding:14px 16px;font-size:11px;letter-spacing:.8px}
+.cat-desk-view .tbl-card tbody td{padding:14px 16px;font-size:13px;line-height:1.5}
+.cat-desk-view .tbl-card tbody td b,
+.cat-desk-view .tbl-card tbody td span[style*="font-weight"]{font-size:14px}
+.cat-desk-view .tbl-card tbody tr{transition:background .15s}
+.cat-desk-view .tbl-card tbody tr:hover td{background:var(--surface2)}
+.cat-desk-view .tbl-card table{border-spacing:0 4px}
+/* Imagen del producto en la fila — un poco más grande y con separación */
+.cat-desk-view .tbl-card tbody td img{width:38px!important;height:38px!important;border-radius:7px!important;margin-right:12px!important;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 td b{color:var(--txt);font-weight:600}
 .acts{display:flex;gap:4px}
 .act{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--txt2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}

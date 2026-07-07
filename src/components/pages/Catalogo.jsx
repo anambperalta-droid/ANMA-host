@@ -1479,8 +1479,18 @@ export default function Catalogo() {
                         background: 'var(--surface)', outline: 'none', boxSizing: 'border-box',
                       }}
                     />
-                    {/* Dropdown solo cuando es Contenido (packaging es libre) */}
-                    {compDropdown && compForm._type !== 'packaging' && compSuggestions.length > 0 && (
+                    {/* Dropdown: filtra las sugerencias según el modo.
+                        Contenido → solo productos del catálogo.
+                        Packaging → solo insumos del inventario.
+                        Así cada modo muestra lo que realmente corresponde. */}
+                    {compDropdown && (() => {
+                      const filtered = compSuggestions.filter(s =>
+                        compForm._type === 'packaging'
+                          ? s._source === 'insumo'
+                          : s._source !== 'insumo'
+                      )
+                      if (filtered.length === 0 && !compSearch) return null
+                      return (
                       <div style={{
                         position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 400,
                         background: 'var(--surface)', border: '1.5px solid #DDD6FE',
@@ -1496,7 +1506,7 @@ export default function Catalogo() {
                             Usar "<b>{compSearch}</b>" como item libre
                           </div>
                         )}
-                        {compSuggestions.map(p => (
+                        {filtered.map(p => (
                           <div
                             key={p.id}
                             onMouseDown={() => selectFromCatalog(p)}
@@ -1505,7 +1515,7 @@ export default function Catalogo() {
                               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                               borderBottom: '1px solid var(--border)',
                             }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#F5F3FF'}
+                            onMouseEnter={e => e.currentTarget.style.background = compForm._type === 'packaging' ? '#FDF2F8' : '#F5F3FF'}
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
                             <span style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1517,7 +1527,8 @@ export default function Catalogo() {
                           </div>
                         ))}
                       </div>
-                    )}
+                      )
+                    })()}
                   </div>
                   <input
                     type="number" min={compForm._type === 'packaging' ? '1' : '0.1'} step={compForm._type === 'packaging' ? '1' : '0.1'}
