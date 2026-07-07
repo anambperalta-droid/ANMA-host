@@ -1963,42 +1963,20 @@ export default function Catalogo() {
               {/* ── COL DERECHA: precio + imagen ── */}
               <div>
 
-            {/* ── CARD COSTO · MARGEN · PRECIO ── */}
-            <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fa fa-coins" /> {productMode === 'kit' ? 'Precio por 1 Kit' : 'Costo · Margen · Precio'}
-              </div>
-              {productMode === 'kit' && (
-                <div style={{ fontSize: 10, color: 'var(--txt4)', marginBottom: 10 }}>
-                  Cargá el costo del kit (auto si tiene componentes) — el precio final lo definís en el presupuesto.
+            {/* ── CARD COSTO (solo modo Producto simple).
+                En modo Kit el costo se muestra al final del constructor
+                (card verde "Costo de 1 kit"), no necesitamos duplicarlo. */}
+            {productMode !== 'kit' && (
+              <div style={{ background: 'var(--surface2)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.7px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="fa fa-coins" /> Costo del producto
                 </div>
-              )}
-              <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0 6px', alignItems: 'end', maxWidth: 320 }}>
-                <div className="fg" style={{ marginBottom: 0 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} />
-                    {productMode === 'kit' ? 'Costo del Kit (auto)' : 'Costo del producto'}
-                  </label>
-                  {productMode === 'kit' ? (
-                    // Costo auto-calculado — read only con indicador visual
-                    <div style={{
-                      padding: '8px 10px', background: componentes.length > 0 ? '#F0FDF4' : 'var(--surface)',
-                      border: `1.5px solid ${componentes.length > 0 ? '#86EFAC' : 'var(--border)'}`,
-                      borderRadius: 8, fontSize: 13, fontWeight: 800,
-                      color: componentes.length > 0 ? '#059669' : 'var(--txt4)',
-                      display: 'flex', alignItems: 'center', gap: 6,
-                    }}>
-                      <i className="fa fa-calculator" style={{ fontSize: 10 }} />
-                      <span>
-                        {componentes.length > 0 || packTotal > 0 ? fmt(kitTotal) : '— Agregá componentes'}
-                        {packTotal > 0 && kitCost > 0 && (
-                          <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--txt3)', display: 'block' }}>
-                            prod {fmt(kitCost)} + pkg {fmt(packTotal)}
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  ) : (
+                <div className="cat-price-calc" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0 6px', alignItems: 'end', maxWidth: 320 }}>
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <i className="fa fa-arrow-trend-down" style={{ color: 'var(--txt3)', fontSize: 10 }} />
+                      Costo unitario
+                    </label>
                     <MoneyInput
                       tabIndex={5}
                       value={form.cost === '' ? '' : Number(form.cost)}
@@ -2006,15 +1984,14 @@ export default function Catalogo() {
                       allowEmpty
                       placeholder="0"
                     />
-                  )}
+                  </div>
                 </div>
-                {/* Margen y Precio de Venta removidos — se aplican al armar el presupuesto */}
+                <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 8, fontStyle: 'italic' }}>
+                  <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
+                  Escribí como en Excel: <b>10.000</b>, <b>$8.500</b>, <b>1.5k</b> — todo se entiende. El margen y precio final se aplican al armar el presupuesto.
+                </div>
               </div>
-              <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 8, fontStyle: 'italic' }}>
-                <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
-                Escribí como en Excel: <b>10.000</b>, <b>$8.500</b>, <b>1.5k</b> — todo se entiende. El margen y precio final se aplican al armar el presupuesto.
-              </div>
-            </div>
+            )}
 
             {/* ── CARD PRODUCCIÓN (kit mode only) ──
                 Simplificada: solo lo esencial (cuántos armás + inversión).
