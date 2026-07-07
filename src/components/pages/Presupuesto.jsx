@@ -812,13 +812,20 @@ export default function Presupuesto() {
     }))
   }
 
-  const setMarginAndReprice = (val) => {
-    setF('margin', val)
-    _repriceAllKits(val, form.discount)
-  }
-  const setDiscountAndReprice = (val) => {
-    setF('discount', val)
-    _repriceAllKits(form.margin, val)
+  // Opción C · márgenes: el margen del pedido YA NO reescribe los precios
+  // automáticamente. Los precios respetan el catálogo por default y el
+  // usuario puede editar cada línea o disparar el reprice manual con el
+  // botón "Aplicar". Filosofía: el catálogo es sugerido, el usuario
+  // controla lo que factura.
+  const setMarginAndReprice = (val) => setF('margin', val)
+  const setDiscountAndReprice = (val) => setF('discount', val)
+
+  // Trigger explícito: recalcula TODOS los precios de los kits con el
+  // margen y descuento actuales del pedido. Útil para negociar sin
+  // tocar el catálogo.
+  const repricePedidoAhora = () => {
+    _repriceAllKits(form.margin, form.discount)
+    toast(`Precios recalculados con margen ${form.margin}%${form.discount > 0 ? ` y descuento ${form.discount}%` : ''}`, 'ok')
   }
 
   /* ── Logística / Comisionista — paradas atribuidas a ESTE presupuesto ── */
@@ -2854,7 +2861,24 @@ export default function Presupuesto() {
                 {/* Fila 3: Parámetros financieros — todos en una línea (wiz-money-grid
                     los mantiene lado a lado también en mobile, igual que Pro) */}
                 <div className={`wiz-money-grid ${feats.descuentoCliente ? 'grid3' : 'grid2'}`} style={{ marginTop: 4 }}>
-                  <div className="fg"><label>Margen ganancia (%)</label><input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" /></div>
+                  <div className="fg">
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                      <span>Margen ganancia (%)</span>
+                      {items.some(it => (it.priceUnit ?? 0) > 0 || (it.costUnit ?? 0) > 0) && (
+                        <button
+                          type="button"
+                          onClick={repricePedidoAhora}
+                          title="Recalcular precios de todos los kits con el margen y descuento actuales. NO toca el catálogo — solo este pedido."
+                          style={{ background: 'transparent', border: '1px solid var(--brand)', color: 'var(--brand)', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, lineHeight: 1 }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand)'; e.currentTarget.style.color = '#fff' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--brand)' }}
+                        >
+                          <i className="fa fa-arrows-rotate" style={{ fontSize: 9 }} />Aplicar
+                        </button>
+                      )}
+                    </label>
+                    <input type="number" value={form.margin} onFocus={selectOnFocus} onChange={e => setMarginAndReprice(e.target.value)} onBlur={e => { if (e.target.value === '') setMarginAndReprice(0) }} min="0" max="100" />
+                  </div>
                   <div className="fg"><label>Seña requerida (%)</label><input type="number" value={form.deposit} onFocus={selectOnFocus} onChange={e => setF('deposit', e.target.value)} onBlur={e => { if (e.target.value === '') setF('deposit', 0) }} min="0" max="100" /></div>
                   {feats.descuentoCliente && (
                     <div className="fg">
