@@ -3430,7 +3430,31 @@ export default function Presupuesto() {
                 </div>
               )
             })()}
-            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : (calc.costPartial ? { color: '#FBBF24', fontWeight: 700 } : { color: '#86EFAC' })}>{calc.costPending ? 'Pendiente' : fmt(calc.gain)}</span></div>}
+            {/* ⛔ Alerta prominente cuando la ganancia da NEGATIVA — o sea el
+                pedido se vende por debajo del costo. Antes solo aparecía un
+                triangulito chiquito al lado del margen; los usuarios no lo
+                registraban y confirmaban pedidos con pérdida (caso real de
+                Regalos: -16.5%, -$945.240). Ahora el aviso ocupa espacio y
+                explica exactamente qué está mal + cómo arreglarlo. */}
+            {feats.margenTabla && !calc.costPending && calc.gain < 0 && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(220,38,38,.18), rgba(185,28,28,.14))',
+                border: '1.5px solid #EF4444',
+                borderRadius: 8, padding: '8px 10px', margin: '4px 0 8px',
+                display: 'flex', alignItems: 'flex-start', gap: 8,
+              }}>
+                <i className="fa fa-triangle-exclamation" style={{ color: '#FCA5A5', fontSize: 15, marginTop: 1, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0, fontSize: 11, lineHeight: 1.4, color: '#FEE2E2' }}>
+                  <div style={{ fontWeight: 800, marginBottom: 2 }}>
+                    Estás vendiendo por debajo del costo — pérdida {fmt(Math.abs(calc.gain))}
+                  </div>
+                  <div style={{ opacity: .88 }}>
+                    El precio es menor que el costo real. Subí el precio manual o tocá <b>"Aplicar"</b> arriba para recalcular con el margen objetivo ({num(form.margin)}%).
+                  </div>
+                </div>
+              </div>
+            )}
+            {feats.margenTabla && <div className="cp-row"><span className="cp-lbl">Ganancia</span><span className="cp-val" style={calc.costPending ? { color: '#F59E0B', fontStyle: 'italic', fontWeight: 700 } : (calc.gain < 0 ? { color: '#FCA5A5', fontWeight: 800 } : (calc.costPartial ? { color: '#FBBF24', fontWeight: 700 } : { color: '#86EFAC' }))}>{calc.costPending ? 'Pendiente' : fmt(calc.gain)}</span></div>}
             {feats.margenTabla && calc.costPartial && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '6px 8px', margin: '2px 0 4px', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 8, fontSize: 10.5, color: '#B45309', lineHeight: 1.35 }}>
                 <i className="fa fa-circle-info" style={{ marginTop: 1, flexShrink: 0 }} />
