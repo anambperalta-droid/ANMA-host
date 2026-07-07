@@ -142,7 +142,7 @@ export default function Catalogo() {
 
   // ── Estado del Kit Builder ────────────────────────────────────────
   const [componentes, setComponentes]   = useState([])
-  const [compForm, setCompForm]         = useState({ nombre: '', qty: 1, costoUnit: '' })
+  const [compForm, setCompForm]         = useState({ nombre: '', qty: 1, costoUnit: '', _type: 'contenido' })
   const [compSearch, setCompSearch]     = useState('')
   const [compDropdown, setCompDropdown] = useState(false)
   const compInputRef = useRef(null)
@@ -377,6 +377,107 @@ export default function Catalogo() {
   const removePackaging = (pid) => setPackagingItems(prev => prev.filter(p => p._pid !== pid))
   const updatePackaging = (pid, field, val) =>
     setPackagingItems(prev => prev.map(p => p._pid === pid ? { ...p, [field]: val } : p))
+
+  // ══════════════════════════════════════════════════════════════════
+  // VISTA UNIFICADA: "¿Qué lleva 1 kit?"
+  // Fusiona componentes[] + packagingItems[] en una sola lista para la UI.
+  // El STATE INTERNO no cambia (los 2 arrays siguen existiendo por separado
+  // → el save y el load son 100% compatibles con kits ya guardados).
+  // ══════════════════════════════════════════════════════════════════
+
+  // Lista unificada con _type y un _id compuesto para React keys y lookups.
+  // Los "contenido" van primero (más importantes visualmente), packaging después.
+  const kitItems = useMemo(() => [
+    ...componentes.map(c => ({
+      _id: `c-${c._cid}`,
+      _type: 'contenido',
+      _cid: c._cid,
+      nombre: c.nombre,
+      qty: c.qty,
+      costoUnit: c.costoUnit,
+      productId: c.productId,
+    })),
+    ...packagingItems.map(p => ({
+      _id: `p-${p._pid}`,
+      _type: 'packaging',
+      _pid: p._pid,
+      nombre: p.nombre,
+      qty: p.qty,
+      costoUnit: p.costoUnit,
+    })),
+  ], [componentes, packagingItems])
+
+  // Agrega un item nuevo a la lista correspondiente según el tipo.
+  const addKitItem = ({ nombre, qty = 1, costoUnit = 0, productId = null, _type = 'contenido' }) => {
+    const cleanNombre = String(nombre || '').trim()
+    if (!cleanNombre) { toast('Ingresá el nombre del item', 'er'); return }
+    const id = Date.now() + Math.floor(Math.random() * 1000)
+    if (_type === 'packaging') {
+      setPackagingItems(prev => [...prev, {
+        _pid: id, nombre: cleanNombre,
+        qty: Math.max(1, num(qty) || 1),
+        costoUnit: num(costoUnit) || 0,
+      }])
+    } else {
+      setComponentes(prev => [...prev, {
+        _cid: id, nombre: cleanNombre,
+        qty: Math.max(0.1, num(qty) || 1),
+        costoUnit: num(costoUnit) || 0,
+        productId: productId || null,
+      }])
+    }
+  }
+
+  // Elimina por _id compuesto. El prefijo indica de qué lista sacar.
+  const removeKitItem = (_id) => {
+    if (String(_id).startsWith('c-')) {
+      const cid = Number(String(_id).slice(2))
+      setComponentes(prev => prev.filter(c => c._cid !== cid))
+    } else if (String(_id).startsWith('p-')) {
+      const pid = Number(String(_id).slice(2))
+      setPackagingItems(prev => prev.filter(p => p._pid !== pid))
+    }
+  }
+
+  // Actualiza inline un campo del item (nombre, qty, costoUnit).
+  const updateKitItem = (_id, field, val) => {
+    if (String(_id).startsWith('c-')) {
+      const cid = Number(String(_id).slice(2))
+      setComponentes(prev => prev.map(c => c._cid === cid ? { ...c, [field]: val } : c))
+    } else if (String(_id).startsWith('p-')) {
+      const pid = Number(String(_id).slice(2))
+      setPackagingItems(prev => prev.map(p => p._pid === pid ? { ...p, [field]: val } : p))
+    }
+  }
+
+  // Cambia el tipo de un item (contenido ↔ packaging) moviéndolo de lista.
+  // Preserva los datos y le da un nuevo id para React.
+  const toggleKitItemType = (_id) => {
+    if (String(_id).startsWith('c-')) {
+      const cid = Number(String(_id).slice(2))
+      const item = componentes.find(c => c._cid === cid)
+      if (!item) return
+      setComponentes(prev => prev.filter(c => c._cid !== cid))
+      setPackagingItems(prev => [...prev, {
+        _pid: Date.now() + Math.floor(Math.random() * 1000),
+        nombre: item.nombre,
+        qty: Math.max(1, num(item.qty) || 1),
+        costoUnit: num(item.costoUnit) || 0,
+      }])
+    } else if (String(_id).startsWith('p-')) {
+      const pid = Number(String(_id).slice(2))
+      const item = packagingItems.find(p => p._pid === pid)
+      if (!item) return
+      setPackagingItems(prev => prev.filter(p => p._pid !== pid))
+      setComponentes(prev => [...prev, {
+        _cid: Date.now() + Math.floor(Math.random() * 1000),
+        nombre: item.nombre,
+        qty: Math.max(0.1, num(item.qty) || 1),
+        costoUnit: num(item.costoUnit) || 0,
+        productId: null,
+      }])
+    }
+  }
 
   const doBulk = () => {
     const lines = bulkData.split('\n').filter(l => l.trim())
@@ -1173,9 +1274,333 @@ export default function Catalogo() {
             </div>{/* /card 1 */}
 
             {/* ══════════════════════════════════════════════
-                CARD 2 KIT: CONSTRUCTOR DE COMPONENTES
+                CARD 2 KIT (NUEVO): ¿Qué lleva 1 kit?
+                Vista unificada: una sola lista, un solo formulario.
+                Backend: mantiene componentes[] y packagingItems[] separados
+                (mismo save/load que antes → kits ya guardados NO se pierden).
             ══════════════════════════════════════════════ */}
-            {true && (
+            <div style={{
+              background: 'linear-gradient(135deg, #FAF5FF, #FDF2F8)',
+              borderRadius: 12, padding: '14px 16px', marginBottom: 12,
+              border: '1.5px solid #DDD6FE',
+            }}>
+              {/* ── Header ── */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#8B5CF6,#DB2777)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className="fa fa-gift" style={{ color: '#fff', fontSize: 13 }} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)' }}>¿Qué lleva 1 kit?</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 1 }}>Cargá los items que van en <b>una unidad</b> del kit</div>
+                    </div>
+                  </div>
+                  {kitItems.length > 0 && (
+                    <span style={{ background: '#EDE9FE', color: '#8B5CF6', fontSize: 10, padding: '3px 9px', borderRadius: 12, fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                      {kitItems.length} {kitItems.length === 1 ? 'item' : 'items'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Lista unificada de items ── */}
+              {kitItems.length > 0 && (
+                <div style={{ background: 'rgba(255,255,255,.85)', borderRadius: 10, border: '1px solid #DDD6FE', marginBottom: 10, overflow: 'hidden' }}>
+                  {/* Headers de columnas */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, padding: '8px 10px 6px', fontSize: 9, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.5, background: 'rgba(139,92,246,.05)', borderBottom: '1px solid #EDE9FE' }}>
+                    <span title="Tipo: 🎁 contenido / 📦 packaging">Tipo</span>
+                    <span>Item</span>
+                    <span style={{ textAlign: 'center' }}>Cant.</span>
+                    <span style={{ textAlign: 'right' }}>Costo u.</span>
+                    <span />
+                  </div>
+                  {kitItems.map((it, idx) => {
+                    const lineCost = num(it.qty) * num(it.costoUnit)
+                    const isPack = it._type === 'packaging'
+                    return (
+                      <div key={it._id} style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, alignItems: 'center', padding: '6px 10px', background: idx % 2 === 0 ? 'var(--surface)' : 'rgba(253,242,248,.4)', borderBottom: idx < kitItems.length - 1 ? '1px solid rgba(221,214,254,.4)' : 'none' }}>
+                        {/* Chip de tipo (click para cambiar) */}
+                        <button
+                          type="button"
+                          onClick={() => toggleKitItemType(it._id)}
+                          title={isPack ? 'Packaging — click para cambiar a Contenido' : 'Contenido — click para cambiar a Packaging'}
+                          style={{
+                            width: 28, height: 26, borderRadius: 6,
+                            border: `1px solid ${isPack ? '#FBCFE8' : '#C4B5FD'}`,
+                            background: isPack ? '#FCE7F3' : '#EDE9FE',
+                            color: isPack ? '#DB2777' : '#8B5CF6',
+                            fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all .15s',
+                          }}
+                        >
+                          <i className={`fa ${isPack ? 'fa-box' : 'fa-gift'}`} />
+                        </button>
+                        {/* Nombre editable */}
+                        <div style={{ minWidth: 0 }}>
+                          <input
+                            value={it.nombre}
+                            onChange={e => updateKitItem(it._id, 'nombre', e.target.value)}
+                            style={{ width: '100%', padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)', background: 'transparent', fontWeight: 600, boxSizing: 'border-box' }}
+                          />
+                          {lineCost > 0 && (
+                            <div style={{ fontSize: 9, color: '#059669', fontWeight: 700, marginTop: 2, paddingLeft: 8 }}>
+                              Subtotal: {fmt(lineCost)}
+                              {it.productId && <i className="fa fa-link" style={{ marginLeft: 4, color: '#8B5CF6', fontSize: 8 }} title="Vinculado al catálogo" />}
+                            </div>
+                          )}
+                        </div>
+                        {/* Cantidad */}
+                        <input
+                          type="number" min={isPack ? '1' : '0.1'} step={isPack ? '1' : '0.1'}
+                          value={it.qty}
+                          onChange={e => updateKitItem(it._id, 'qty', e.target.value)}
+                          onFocus={selectOnFocus}
+                          style={{ padding: '5px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
+                        />
+                        {/* Costo unitario */}
+                        <input
+                          type="number" min="0"
+                          value={it.costoUnit}
+                          onChange={e => updateKitItem(it._id, 'costoUnit', e.target.value)}
+                          onFocus={selectOnFocus}
+                          style={{ padding: '5px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
+                        />
+                        {/* Eliminar */}
+                        <button
+                          type="button"
+                          onClick={() => removeKitItem(it._id)}
+                          style={{ width: 22, height: 22, border: '1px solid #FECACA', background: '#FFF1F2', color: '#DC2626', borderRadius: 5, cursor: 'pointer', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Quitar del kit"
+                        >
+                          <i className="fa fa-xmark" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* ── Formulario unificado para agregar un item nuevo ── */}
+              <div style={{ background: 'rgba(255,255,255,.85)', borderRadius: 10, padding: '10px 12px', border: '1.5px dashed #C4B5FD' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                    <i className="fa fa-plus-circle" style={{ marginRight: 4 }} />Agregar item
+                  </span>
+                  {/* Toggle tipo: 🎁 Contenido / 📦 Packaging */}
+                  <div style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 20, overflow: 'hidden', fontSize: 10.5, fontWeight: 700 }}>
+                    <button
+                      type="button"
+                      onClick={() => setCompForm(f => ({ ...f, _type: 'contenido' }))}
+                      style={{
+                        padding: '3px 10px', border: 'none',
+                        background: (compForm._type || 'contenido') === 'contenido' ? '#8B5CF6' : 'transparent',
+                        color: (compForm._type || 'contenido') === 'contenido' ? '#fff' : 'var(--txt3)',
+                        cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4,
+                      }}
+                    >
+                      <i className="fa fa-gift" style={{ fontSize: 9 }} />Contenido
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCompForm(f => ({ ...f, _type: 'packaging' }))}
+                      style={{
+                        padding: '3px 10px', border: 'none',
+                        background: compForm._type === 'packaging' ? '#DB2777' : 'transparent',
+                        color: compForm._type === 'packaging' ? '#fff' : 'var(--txt3)',
+                        cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4,
+                      }}
+                    >
+                      <i className="fa fa-box" style={{ fontSize: 9 }} />Packaging
+                    </button>
+                  </div>
+                </div>
+
+                {/* Chips rápidos SÓLO en modo Packaging Y con input vacío */}
+                {compForm._type === 'packaging' && !compSearch && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 700, color: '#DB2777', alignSelf: 'center', marginRight: 3, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      <i className="fa fa-bolt" style={{ fontSize: 8, marginRight: 2 }} />Comunes:
+                    </span>
+                    {['Caja', 'Cinta/Ribbon', 'Papel tissue', 'Bolsa', 'Tarjeta', 'Virutas', 'Film', 'Sticker'].map(preset => (
+                      <button key={preset}
+                        type="button"
+                        onMouseDown={e => {
+                          e.preventDefault()
+                          setCompSearch(preset)
+                          setCompForm(f => ({ ...f, nombre: preset, _type: 'packaging', productId: null }))
+                          setTimeout(() => compInputRef.current?.focus(), 30)
+                        }}
+                        style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, border: '1px solid #FBCFE8', background: 'var(--surface)', color: '#DB2777', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                        <i className="fa fa-plus" style={{ fontSize: 7, opacity: .6 }} />{preset}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Fila del formulario: [nombre / autocomplete] [qty] [costo] [+] */}
+                <div className="comp-add-row">
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      ref={compInputRef}
+                      type="text"
+                      value={compSearch}
+                      onChange={e => {
+                        const v = e.target.value
+                        setCompSearch(v)
+                        setCompForm(f => ({ ...f, nombre: v, productId: null }))
+                        setCompDropdown(true)
+                      }}
+                      onFocus={() => setCompDropdown(true)}
+                      onBlur={() => setTimeout(() => setCompDropdown(false), 150)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          addKitItem({
+                            nombre: compForm.nombre || compSearch,
+                            qty: compForm.qty || 1,
+                            costoUnit: compForm.costoUnit || 0,
+                            productId: compForm.productId || null,
+                            _type: compForm._type || 'contenido',
+                          })
+                          setCompForm({ nombre: '', qty: 1, costoUnit: '', _type: compForm._type || 'contenido' })
+                          setCompSearch('')
+                          setCompDropdown(false)
+                          setTimeout(() => compInputRef.current?.focus(), 30)
+                        }
+                      }}
+                      placeholder={compForm._type === 'packaging' ? 'Caja, cinta, tarjeta…' : 'Termo, mate, libreta… o buscar del catálogo'}
+                      style={{
+                        width: '100%', padding: '7px 10px',
+                        border: `1.5px solid ${compForm._type === 'packaging' ? '#FBCFE8' : '#DDD6FE'}`, borderRadius: 8,
+                        fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
+                        background: 'var(--surface)', outline: 'none', boxSizing: 'border-box',
+                      }}
+                    />
+                    {/* Dropdown solo cuando es Contenido (packaging es libre) */}
+                    {compDropdown && compForm._type !== 'packaging' && compSuggestions.length > 0 && (
+                      <div style={{
+                        position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 400,
+                        background: 'var(--surface)', border: '1.5px solid #DDD6FE',
+                        borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+                        maxHeight: 220, overflowY: 'auto', marginTop: 2,
+                      }}>
+                        {compSearch && (
+                          <div
+                            onMouseDown={() => { setCompForm(f => ({ ...f, nombre: compSearch, productId: null })); setCompDropdown(false) }}
+                            style={{ padding: '8px 12px', fontSize: 11.5, cursor: 'pointer', color: 'var(--txt3)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6 }}
+                          >
+                            <i className="fa fa-pen" style={{ color: '#94A3B8' }} />
+                            Usar "<b>{compSearch}</b>" como item libre
+                          </div>
+                        )}
+                        {compSuggestions.map(p => (
+                          <div
+                            key={p.id}
+                            onMouseDown={() => selectFromCatalog(p)}
+                            style={{
+                              padding: '9px 12px', fontSize: 12, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              borderBottom: '1px solid var(--border)',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#F5F3FF'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <span style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <i className={`fa ${p._source === 'insumo' ? 'fa-wrench' : 'fa-box'}`} style={{ color: p._source === 'insumo' ? '#F59E0B' : '#8B5CF6', fontSize: 9 }} />
+                              {p.name}
+                              {p._source === 'insumo' && <span style={{ fontSize: 9, fontWeight: 700, background: '#FFFBEB', color: '#D97706', border: '1px solid #FDE68A', padding: '1px 5px', borderRadius: 8 }}>INSUMO</span>}
+                            </span>
+                            <span style={{ fontSize: 11, color: '#059669', fontWeight: 700 }}>{fmt(p.cost)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="number" min={compForm._type === 'packaging' ? '1' : '0.1'} step={compForm._type === 'packaging' ? '1' : '0.1'}
+                    value={compForm.qty}
+                    onChange={e => setCompForm(f => ({ ...f, qty: e.target.value }))}
+                    onFocus={selectOnFocus}
+                    placeholder="Cant."
+                    style={{ padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <input
+                    type="number" min="0"
+                    value={compForm.costoUnit}
+                    onChange={e => setCompForm(f => ({ ...f, costoUnit: e.target.value }))}
+                    onFocus={selectOnFocus}
+                    placeholder="$ Costo"
+                    style={{ padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    onClick={() => {
+                      addKitItem({
+                        nombre: compForm.nombre || compSearch,
+                        qty: compForm.qty || 1,
+                        costoUnit: compForm.costoUnit || 0,
+                        productId: compForm.productId || null,
+                        _type: compForm._type || 'contenido',
+                      })
+                      setCompForm({ nombre: '', qty: 1, costoUnit: '', _type: compForm._type || 'contenido' })
+                      setCompSearch('')
+                      setCompDropdown(false)
+                      setTimeout(() => compInputRef.current?.focus(), 30)
+                    }}
+                    disabled={!((compForm.nombre || compSearch) || '').trim()}
+                    style={{
+                      height: 34, padding: '0 14px', borderRadius: 8, border: 'none',
+                      background: ((compForm.nombre || compSearch) || '').trim()
+                        ? (compForm._type === 'packaging' ? 'linear-gradient(135deg,#DB2777,#9333EA)' : 'linear-gradient(135deg,#8B5CF6,#DB2777)')
+                        : 'var(--surface3)',
+                      color: ((compForm.nombre || compSearch) || '').trim() ? '#fff' : 'var(--txt4)',
+                      fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                      whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    <i className="fa fa-plus" /> Agregar
+                  </button>
+                </div>
+                {compForm.costoUnit && num(compForm.qty) > 0 && num(compForm.costoUnit) > 0 && (
+                  <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 5, textAlign: 'right' }}>
+                    Subtotal: <span style={{ color: '#059669', fontWeight: 800 }}>{fmt(num(compForm.qty) * num(compForm.costoUnit))}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Empty state cuando no hay items */}
+              {kitItems.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '10px 0 2px', fontSize: 11, color: 'var(--txt4)' }}>
+                  <i className="fa fa-arrow-up" style={{ marginRight: 4 }} />
+                  Elegí el tipo, escribí el item y tocá <b>Agregar</b>
+                </div>
+              )}
+
+              {/* Costo total de 1 kit — resumen prominente */}
+              {kitTotal > 0 && (
+                <div style={{ marginTop: 10, padding: '10px 14px', background: 'linear-gradient(135deg,#F0FDF4,#ECFDF5)', borderRadius: 10, border: '1.5px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: .6 }}>
+                      <i className="fa fa-calculator" style={{ marginRight: 5 }} />Costo de 1 kit
+                    </div>
+                    {packTotal > 0 && kitCost > 0 && (
+                      <div style={{ fontSize: 9.5, color: 'var(--txt3)', marginTop: 2 }}>
+                        contenido {fmt(kitCost)} + packaging {fmt(packTotal)}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#059669' }}>{fmt(kitTotal)}</div>
+                </div>
+              )}
+            </div>
+
+            {/* ══════════════════════════════════════════════
+                CARD 2 KIT · Constructor viejo (dejado como fallback).
+                Cambiar false → true para volver al layout anterior si el
+                nuevo (más abajo) da algún problema.
+            ══════════════════════════════════════════════ */}
+            {false && (
               <div style={{
                 background: 'linear-gradient(135deg, #FAF5FF, #FDF2F8)',
                 borderRadius: 12, padding: '14px 16px', marginBottom: 12,
