@@ -1749,14 +1749,28 @@ td b{color:var(--txt);font-weight:600}
   min-height:0!important;
 }
 /* Body internos NO scrollean ni se estiran (flex:1 que clipeaba) */
-.modal-form-card:not(.cli-detail-card) > div[style*="overflow-y"],
-.modal-form-card:not(.cli-detail-card) > div[style*="overflow:auto"],
-.modal-form-card:not(.cli-detail-card) > div[style*="overflow: auto"]{
+.modal-form-card:not(.cli-detail-card):not(.prod-modal-card) > div[style*="overflow-y"],
+.modal-form-card:not(.cli-detail-card):not(.prod-modal-card) > div[style*="overflow:auto"],
+.modal-form-card:not(.cli-detail-card):not(.prod-modal-card) > div[style*="overflow: auto"]{
   overflow:visible!important;
   max-height:none!important;
   min-height:0!important;
   flex:0 0 auto!important;
   height:auto!important;
+}
+
+/* ── Modal producto: header + body scrollable + footer sticky ───────
+   El modal tiene max-height:95vh (regla arriba). Para que dentro de esa
+   altura veamos el header arriba y el footer abajo con el body en el
+   medio scrolleando, marcamos overflow:hidden en el card y flex:1 en
+   el div del body (todo lo que no sea .mh ni .mfooter). */
+.prod-modal-card{display:flex;flex-direction:column;overflow:hidden!important}
+.prod-modal-card > .mh,
+.prod-modal-card > .mfooter{flex-shrink:0}
+.prod-modal-card > div:not(.mh):not(.mfooter):not([style*="flex-shrink:0"]){
+  overflow-y:auto!important;
+  min-height:0!important;
+  flex:1 1 auto!important;
 }
 /* Footers sticky declarados inline → flujo natural, anclado al fondo
    por margin-top:auto en el flex column del modal-form-card */
