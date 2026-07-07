@@ -285,12 +285,13 @@ export default function Catalogo() {
     if (keepOpen) {
       // Modo carga en cadena — mantenemos categoría y proveedor (contexto que
       // suele repetirse entre productos del mismo lote) y reseteamos el resto.
+      // Importante: NO llevamos form.id (esa es la marca de edición); así el
+      // próximo save es un INSERT limpio.
       const keepCat      = formClean.cat || ''
       const keepSupplier = formClean.supplierId || ''
       setForm({ name: '', cat: keepCat, cost: '', supplierId: keepSupplier, image: '', price: '', stock: '' })
       setComponentes([])
       setPackagingItems([])
-      setEditId(null)
       // Devolver el foco al input Nombre para carga inmediata
       setTimeout(() => {
         const nameInput = document.querySelector('.modal input[autoFocus], .modal input:first-of-type')
@@ -1767,7 +1768,7 @@ export default function Catalogo() {
             <div className="mfooter" style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '12px 20px' }}>
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
               {/* Solo mostramos "Guardar + otro" cuando es CREAR (no edición) y modo producto simple */}
-              {!editId && productMode !== 'kit' && (
+              {!form.id && productMode !== 'kit' && (
                 <button
                   className="btn btn-secondary"
                   onClick={() => save({ keepOpen: true })}
