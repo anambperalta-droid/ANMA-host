@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Guía completa de ANMA Regalos — Sección por sección</title>
+<!-- Cuando la guía se renderiza dentro de un iframe (post-login), forzamos que
+     todos los links naveguen la ventana top en vez del propio iframe, para
+     evitar dashboards duplicados. Al abrir la guía suelta, _top === self,
+     así que no cambia el comportamiento. -->
+<base target="_top">
+<style>a[href^="#"]{--this-is-a-hash-link:1}</style>
+<script>
+  // Los links con hash (#seccion) deben seguir navegando DENTRO del iframe,
+  // no reventar el top window. Sobreescribimos target al montar el DOM.
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a[href^="#"]').forEach(a => a.removeAttribute('target'))
+  })
+</script>
 <meta name="description" content="Manual visual de ANMA Regalos: cómo configurar tu marca, cargar regalos estrella, packaging, clientas, presupuestos, logística y mensajes. Una pestaña por sección.">
 <link rel="canonical" href="https://anma-host.vercel.app/recursos/guia">
 <meta property="og:title" content="Guía completa de ANMA Regalos">
@@ -280,8 +293,8 @@ footer a{color:var(--brand)}
 <body>
 
 <nav class="nav">
-  <a href="/" class="logo"><img src="/favicon.svg" alt=""> ANMA Regalos</a>
-  <span class="nav-r"><a href="/" class="nav-back"><span>Inicio</span></a><a href="/" class="cta">Entrar</a></span>
+  <a href="/" target="_top" class="logo"><img src="/favicon.svg" alt=""> ANMA Regalos</a>
+  <span class="nav-r"><a href="/" target="_top" class="nav-back"><span>Inicio</span></a><a href="/" target="_top" class="cta">Entrar</a></span>
 </nav>
 
 <section class="hero">
@@ -953,7 +966,7 @@ footer a{color:var(--brand)}
     <h2>Tu próxima cuenta merece la versión ordenada de tu marca.</h2>
     <p>Si te trabás en cualquier sección, escribime por WhatsApp y lo resolvemos juntas.</p>
     <div class="btns">
-      <a class="primary" href="/">Entrar a ANMA Regalos <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="primary" href="/" target="_top">Entrar a ANMA Regalos <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a class="ghost" href="https://wa.me/5491169456863?text=Hola%20Ana%2C%20estoy%20viendo%20la%20gu%C3%ADa%20de%20ANMA%20Regalos%20y%20tengo%20una%20duda" target="_blank">Hablar por WhatsApp</a>
     </div>
   </div>

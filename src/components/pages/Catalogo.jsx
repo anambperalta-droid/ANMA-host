@@ -120,6 +120,16 @@ export default function Catalogo() {
   const [hasDraft, setHasDraft] = useState(null)
   // Draft usa db() (user-scoped) en vez de localStorage crudo
 
+  // Al abrir el modal, resetear scroll del body para que arranque desde el
+  // header y no muestre el formulario cortado por la mitad.
+  useEffect(() => {
+    if (modal && bodyRef.current) {
+      requestAnimationFrame(() => {
+        try { bodyRef.current.scrollTop = 0 } catch { /* ignore */ }
+      })
+    }
+  }, [modal, form.id])
+
   // ── Quick-cat popover ─────────────────────────────────────────────
   const [quickCatPop, setQuickCatPop]     = useState(null) // { prod, x, y }
   const [quickCatInput, setQuickCatInput] = useState('')
