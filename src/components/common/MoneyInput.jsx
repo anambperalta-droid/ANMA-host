@@ -98,7 +98,7 @@ function formatDisplay(n) {
 
 export default function MoneyInput({
   value, onChange, placeholder, allowEmpty = false, min = 0,
-  showPrefix = true, style = {}, ...rest
+  showPrefix = true, style = {}, inputStyle = {}, ...rest
 }) {
   // Guardamos el texto "en vivo" para respetar lo que tipea el usuario.
   // Sincronizamos con `value` externo cuando cambia por afuera.
@@ -167,6 +167,7 @@ export default function MoneyInput({
           paddingLeft: showPrefix ? 22 : undefined,
           textAlign: 'right',
           fontVariantNumeric: 'tabular-nums',
+          ...inputStyle,
         }}
         {...rest}
       />

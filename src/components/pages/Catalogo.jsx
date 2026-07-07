@@ -1359,13 +1359,14 @@ export default function Catalogo() {
                           onFocus={selectOnFocus}
                           style={{ padding: '5px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
                         />
-                        {/* Costo unitario */}
-                        <input
-                          type="number" min="0"
-                          value={it.costoUnit}
-                          onChange={e => updateKitItem(it._id, 'costoUnit', e.target.value)}
-                          onFocus={selectOnFocus}
-                          style={{ padding: '5px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
+                        {/* Costo unitario (MoneyInput tolerante: acepta 10.000, $8.500, 1.5k) */}
+                        <MoneyInput
+                          value={it.costoUnit === '' ? '' : Number(it.costoUnit)}
+                          onChange={v => updateKitItem(it._id, 'costoUnit', v)}
+                          allowEmpty
+                          showPrefix={false}
+                          placeholder="0"
+                          inputStyle={{ padding: '5px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
                         />
                         {/* Eliminar */}
                         <button
@@ -1526,13 +1527,13 @@ export default function Catalogo() {
                     placeholder="Cant."
                     style={{ padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
                   />
-                  <input
-                    type="number" min="0"
-                    value={compForm.costoUnit}
-                    onChange={e => setCompForm(f => ({ ...f, costoUnit: e.target.value }))}
-                    onFocus={selectOnFocus}
-                    placeholder="$ Costo"
-                    style={{ padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
+                  {/* Costo unitario (MoneyInput tolerante: acepta 10.000, $8.500, 1.5k) */}
+                  <MoneyInput
+                    value={compForm.costoUnit === '' ? '' : Number(compForm.costoUnit)}
+                    onChange={v => setCompForm(f => ({ ...f, costoUnit: v }))}
+                    allowEmpty
+                    placeholder="Costo"
+                    inputStyle={{ padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
                   />
                   <button
                     onClick={() => {
