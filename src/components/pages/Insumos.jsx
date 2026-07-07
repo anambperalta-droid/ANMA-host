@@ -3,6 +3,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
+import MoneyInput from '../common/MoneyInput'
 
 // Formateo con hasta 2 decimales para costos fraccionados
 const fmtDec = (v) => {
@@ -508,8 +509,8 @@ export default function Insumos() {
             {/* Fila 2: Costo + Unidad */}
             <div className="grid2" style={{ marginTop: 10 }}>
               <div className="fg">
-                <label><i className="fa fa-coins" style={{ color: '#F59E0B', fontSize: 10, marginRight: 4 }} />Costo unitario ($)</label>
-                <input type="number" value={form.cost} onChange={e => setF('cost', e.target.value)} onFocus={numFocus} placeholder="0" min="0" />
+                <label><i className="fa fa-coins" style={{ color: '#F59E0B', fontSize: 10, marginRight: 4 }} />Costo unitario</label>
+                <MoneyInput value={form.cost === '' ? '' : Number(form.cost)} onChange={v => setF('cost', v)} allowEmpty placeholder="0" />
               </div>
               <div className="fg">
                 <label><i className="fa fa-ruler-combined" style={{ color: '#64748B', fontSize: 10, marginRight: 4 }} />Unidad de medida</label>
@@ -536,8 +537,8 @@ export default function Insumos() {
 
                 <div className="grid2" style={{ marginBottom: 8 }}>
                   <div className="fg">
-                    <label>Costo del pack completo ($)</label>
-                    <input type="number" value={form.packCost} onChange={e => setF('packCost', e.target.value)} onFocus={numFocus} placeholder="Ej: 10000" min="0" />
+                    <label>Costo del pack completo</label>
+                    <MoneyInput value={form.packCost === '' || form.packCost == null ? '' : Number(form.packCost)} onChange={v => setF('packCost', v)} allowEmpty placeholder="Ej: 10000" />
                   </div>
                   <div className="fg">
                     <label>Cantidad total del pack</label>
@@ -548,10 +549,10 @@ export default function Insumos() {
                 <div className="fg" style={{ marginBottom: 10 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <i className="fa fa-truck" style={{ color: '#8B5CF6', fontSize: 10 }} />
-                    Envío del pedido ($)
+                    Envío del pedido
                     <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(opcional — se suma al costo total)</span>
                   </label>
-                  <input type="number" value={form.shippingCost || ''} onChange={e => setF('shippingCost', e.target.value)} onFocus={numFocus} placeholder="0" min="0" />
+                  <MoneyInput value={form.shippingCost === '' || form.shippingCost == null ? '' : Number(form.shippingCost)} onChange={v => setF('shippingCost', v)} allowEmpty placeholder="0" />
                 </div>
 
                 <div className="fg">
