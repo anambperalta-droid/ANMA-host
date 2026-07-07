@@ -1716,7 +1716,7 @@ export default function Historial() {
                   Ganancia{sortArrow('gain')}
                   {hidden && <i className="fa fa-eye-slash" style={{ marginLeft: 4, fontSize: 9, color: 'var(--txt4)' }} />}
                 </th>
-                <th>Estado</th><th className="col-hide-mobile">Pago</th><th>Acciones</th>
+                <th>Estado</th><th>Pago</th><th>Acciones</th>
               </tr></thead>
               <tbody>
                 {filteredBudgets.length ? filteredBudgets.map(b => {
@@ -1769,7 +1769,7 @@ export default function Historial() {
                           </div>
                         </div>
                       </td>
-                      <td className="col-hide-mobile" style={{ whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                      <td style={{ whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
                         {/* Celda PAGO minimalista (07/07):
                             Patron Stripe/QuickBooks — solo lo esencial:
                             Fila 1: chip de estado (el nombre ya dice todo)
