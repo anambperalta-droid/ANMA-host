@@ -263,6 +263,25 @@ export default function Catalogo() {
     setModal(true)
   }
 
+  // Duplica un producto/kit del catálogo. Crea una copia con sufijo "(copia)"
+  // en el nombre, sin id (saveEntity le asigna uno nuevo) y con stock reseteado.
+  // Los componentes/packaging/costos se preservan tal cual — Ana ajusta lo que quiera.
+  const duplicateProduct = (p) => {
+    if (!p) return
+    const { id: _omitId, updatedAt: _omitUpd, ...rest } = p
+    const cleaned = {
+      ...rest,
+      name: `${p.name || 'Producto'} (copia)`,
+      stock: null,  // stock arranca en 0 — la copia se produce aparte
+      // Clonar arrays profundamente para no compartir referencias con el original
+      componentes: (p.componentes || []).map(c => ({ ...c, _cid: Date.now() + Math.floor(Math.random() * 1000) })),
+      packagingItems: (p.packagingItems || []).map(pk => ({ ...pk, _pid: Date.now() + Math.floor(Math.random() * 1000) })),
+      updatedAt: new Date().toISOString().slice(0, 10),
+    }
+    saveEntity('products', cleaned)
+    toast(`"${p.name}" duplicado — editá la copia`, 'ok')
+  }
+
   const handleImgUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -351,7 +370,12 @@ export default function Catalogo() {
   }
 
   const selectFromCatalog = (p) => {
-    setCompForm({ nombre: p.name, qty: 1, costoUnit: p.cost, productId: p.id })
+    // Auto-detección de tipo: si viene de "insumos" (packaging del inventario)
+    // → Packaging. Si viene de "products" (catálogo) → Contenido. El usuario
+    // puede cambiarlo con el toggle si necesita, pero el default es el correcto
+    // en el 95% de los casos y elimina un click.
+    const autoType = p._source === 'insumo' ? 'packaging' : 'contenido'
+    setCompForm({ nombre: p.name, qty: 1, costoUnit: p.cost, productId: p.id, _type: autoType })
     setCompSearch(p.name)
     setCompDropdown(false)
     setTimeout(() => compInputRef.current?.focus(), 50)
@@ -787,6 +811,7 @@ export default function Catalogo() {
         {/* Columna Precio sugerido removida — se calcula al armar el presupuesto */}
         <td><div className="acts" style={{ display:'flex',gap:5 }}>
           <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
+          <button onClick={() => duplicateProduct(p)} title={p.tipo === 'kit' ? 'Duplicar kit — crea una copia editable' : 'Duplicar producto'} style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #DDD6FE',background:'#F5F3FF',color:'#7C3AED',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-copy" /></button>
           <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-trash" /></button>
         </div></td>
       </tr>
