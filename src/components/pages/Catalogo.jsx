@@ -1264,30 +1264,33 @@ export default function Catalogo() {
                   </select>
                 </div>
               ) : (
-                /* ── Producto: 3 columnas flex que garantizan los 3 campos
-                     visibles. Con flex 1 1 180px cada uno cabe en escritorio,
-                     y si no entra hace wrap a 2 filas en pantalla estrecha. */
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                  <div className="fg" style={{ marginBottom: 0, flex: '1 1 180px', minWidth: 0 }}><label>Categoría</label>
+                /* ── Producto: 3 columnas grid.
+                     Grid con auto-fit + minmax(130px, 1fr) es más predecible que
+                     flex: no depende del cálculo dinámico del navegador. Si no
+                     entran las 3, hace wrap solo. Categoría · Proveedor · Stock
+                     siempre visibles con el mismo ancho. */
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
+                  <div className="fg" style={{ marginBottom: 0, minWidth: 0 }}>
+                    <label style={{ whiteSpace: 'nowrap' }}>Categoría</label>
                     <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)} style={{ width: '100%' }}>
                       {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                       {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
                     </select>
                   </div>
-                  <div className="fg" style={{ marginBottom: 0, flex: '1 1 180px', minWidth: 0 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div className="fg" style={{ marginBottom: 0, minWidth: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
                       <i className="fa fa-industry" style={{ color: 'var(--brand)', fontSize: 11 }} />
                       Proveedor
                     </label>
-                    <select tabIndex={3} value={form.supplierId} onChange={e => setF('supplierId', e.target.value)} style={{ width: '100%' }}>
+                    <select tabIndex={3} value={form.supplierId || ''} onChange={e => setF('supplierId', e.target.value)} style={{ width: '100%' }}>
                       <option value="">Sin asignar</option>
-                      {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      {(suppliers || []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
-                  <div className="fg" style={{ marginBottom: 0, flex: '1 1 180px', minWidth: 0 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div className="fg" style={{ marginBottom: 0, minWidth: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
                       <i className="fa fa-cubes-stacked" style={{ color: form.stock !== '' && num(form.stock) <= 5 ? '#D97706' : 'var(--brand)', fontSize: 11 }} />
-                      Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(unid.)</span>
+                      Stock <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(u.)</span>
                     </label>
                     <div style={{ position: 'relative' }}>
                       <input tabIndex={4} type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ width: '100%', paddingRight: form.stock !== '' ? 52 : undefined }} />
