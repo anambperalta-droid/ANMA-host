@@ -1770,83 +1770,59 @@ export default function Historial() {
                         </div>
                       </td>
                       <td className="col-hide-mobile" style={{ whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
-                        {/* Celda PAGO rediseñada (07/07):
-                            - Chip de estado + % pagado en la misma fila (escaneo rápido)
-                            - Barra de progreso visual (color según estado)
-                            - Info secundaria en 1 línea con acción clara
-                            Mantiene toda la funcionalidad: select de estado, botón registrar. */}
+                        {/* Celda PAGO minimalista (07/07):
+                            Patron Stripe/QuickBooks — solo lo esencial:
+                            Fila 1: chip de estado (el nombre ya dice todo)
+                            Fila 2: CTA "Cobrar" (pending) o resumen chico (partial/paid)
+                            Sin barra, sin %, sin desglose — el detalle vive en el modal Pagos. */}
                         {(() => {
-                          const totalDue   = b.totalFinal || b.total || 0
-                          const paid       = cobrado(b)
-                          const pays       = Array.isArray(b.payments) ? b.payments : []
+                          const totalDue    = b.totalFinal || b.total || 0
+                          const paid        = cobrado(b)
+                          const pays        = Array.isArray(b.payments) ? b.payments : []
                           const hasPayments = pays.length > 0
-                          const seña       = Number(b.depositAmt) || 0
                           const statusColor = DOT_PAY[b.payStatus] || '#DC2626'
                           const statusBg = b.payStatus === 'paid' ? '#F0FDF4'
                                          : b.payStatus === 'partial' ? '#FFFBEB'
                                          : '#FEF2F2'
-                          const pct = totalDue > 0 ? Math.min(100, Math.round((paid / totalDue) * 100)) : 0
-                          // Color de la barra: verde si pagado, ámbar si parcial/pendiente
-                          const barColor = b.payStatus === 'paid' ? '#16A34A'
-                                          : pct > 0 ? '#F59E0B'
-                                          : '#E5E7EB'
                           return (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 150, maxWidth: 180 }}>
-                              {/* Fila 1: chip estado + % */}
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: statusBg, padding: '2px 8px', borderRadius: 99, flexShrink: 0 }}>
-                                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0, display: 'inline-block' }} />
-                                  <select
-                                    style={{ fontSize: 11, fontWeight: 700, padding: 0, border: 'none', background: 'transparent', color: statusColor, cursor: 'pointer', outline: 'none', fontFamily: 'inherit' }}
-                                    value={b.payStatus || 'pending'}
-                                    onClick={e => e.stopPropagation()}
-                                    onChange={e => handlePayStatusChange(b.id, e.target.value)}
-                                  >
-                                    {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                                  </select>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 130, maxWidth: 170 }}>
+                              {/* Fila 1: chip estado (dropdown editable) */}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: statusBg, padding: '3px 9px', borderRadius: 99, alignSelf: 'flex-start', maxWidth: 'fit-content' }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0, display: 'inline-block' }} />
+                                <select
+                                  style={{ fontSize: 11.5, fontWeight: 700, padding: 0, border: 'none', background: 'transparent', color: statusColor, cursor: 'pointer', outline: 'none', fontFamily: 'inherit' }}
+                                  value={b.payStatus || 'pending'}
+                                  onClick={e => e.stopPropagation()}
+                                  onChange={e => handlePayStatusChange(b.id, e.target.value)}
+                                >
+                                  {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                                </select>
+                              </span>
+                              {/* Fila 2: acción o resumen mínimo */}
+                              {b.payStatus === 'paid' && hasPayments ? (
+                                <span style={{ fontSize: 10.5, color: 'var(--txt4)' }}>
+                                  <i className="fa fa-check" style={{ color: '#16A34A', marginRight: 4 }} />
+                                  {pays.length} pago{pays.length > 1 ? 's' : ''}
                                 </span>
-                                {totalDue > 0 && (
-                                  <span style={{ fontSize: 10.5, fontWeight: 800, color: statusColor, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                                    {pct}%
-                                  </span>
-                                )}
-                              </div>
-                              {/* Fila 2: barra de progreso — impacto visual inmediato */}
-                              {totalDue > 0 && (
-                                <div style={{ height: 4, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden' }}>
-                                  <div style={{ height: '100%', width: `${pct}%`, background: barColor, transition: 'width .3s ease, background .2s ease' }} />
-                                </div>
-                              )}
-                              {/* Fila 3: cobrado/total + acción */}
-                              {totalDue > 0 && (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, fontSize: 10.5, color: 'var(--txt3)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.3 }}>
-                                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    <b style={{ color: paid > 0 ? '#15803D' : 'var(--txt3)' }}>{fmt(paid)}</b>
-                                    {b.payStatus !== 'paid' && (
-                                      <>
-                                        <span style={{ color: 'var(--txt4)' }}> · falta </span>
-                                        <b style={{ color: 'var(--txt2)' }}>{fmt(Math.max(0, totalDue - paid))}</b>
-                                      </>
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              {/* Fila 4: pagos previos + botón registrar */}
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, fontSize: 10, color: 'var(--txt4)', lineHeight: 1.3 }}>
-                                {hasPayments
-                                  ? <span><i className="fa fa-check-circle" style={{ color: '#16A34A', marginRight: 3 }} />{pays.length} pago{pays.length > 1 ? 's' : ''}</span>
-                                  : b.payStatus === 'paid'
-                                    ? <span style={{ color: '#D97706', fontWeight: 600 }}><i className="fa fa-triangle-exclamation" style={{ marginRight: 3 }} />Sin comprobante</span>
-                                  : seña > 0
-                                    ? <span style={{ color: 'var(--txt4)' }}>Seña sug: {fmt(seña)}</span>
-                                  : <span>&nbsp;</span>
-                                }
+                              ) : b.payStatus === 'partial' ? (
                                 <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
-                                  title={hasPayments ? 'Ver / agregar pagos' : 'Registrar pago cobrado'}
-                                  style={{ background: hasPayments ? 'transparent' : 'var(--brand-xlt, #F5F3FF)', border: hasPayments ? 'none' : '1px solid var(--brand)', color: 'var(--brand)', cursor: 'pointer', padding: '2px 8px', fontSize: 10.5, fontWeight: 700, borderRadius: 6, whiteSpace: 'nowrap', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                                  <i className="fa fa-hand-holding-dollar" />{hasPayments ? 'Pagos' : 'Cobrar'}
+                                  title="Ver / agregar pagos"
+                                  style={{ background: 'transparent', border: 'none', color: 'var(--brand)', cursor: 'pointer', padding: 0, fontSize: 10.5, fontWeight: 700, textAlign: 'left', fontFamily: 'inherit' }}>
+                                  {fmt(paid)}<span style={{ color: 'var(--txt4)', fontWeight: 400 }}> / {fmt(totalDue)}</span>
                                 </button>
-                              </div>
+                              ) : b.payStatus === 'paid' ? (
+                                <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
+                                  title="Registrar comprobante del pago"
+                                  style={{ background: 'transparent', border: 'none', color: '#D97706', cursor: 'pointer', padding: 0, fontSize: 10.5, fontWeight: 600, textAlign: 'left', fontFamily: 'inherit' }}>
+                                  <i className="fa fa-triangle-exclamation" style={{ marginRight: 4 }} />Sin comprobante
+                                </button>
+                              ) : totalDue > 0 && (
+                                <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
+                                  title="Registrar cobro"
+                                  style={{ background: 'var(--brand-xlt, #F5F3FF)', border: '1px solid var(--brand)', color: 'var(--brand)', cursor: 'pointer', padding: '3px 10px', fontSize: 10.5, fontWeight: 700, borderRadius: 6, alignSelf: 'flex-start', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                  <i className="fa fa-hand-holding-dollar" /> Cobrar
+                                </button>
+                              )}
                             </div>
                           )
                         })()}
