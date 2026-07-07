@@ -1752,7 +1752,7 @@ export default function Historial() {
                         )}
                       </td>
                       <td style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(b.total)}</td>
-                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : (b.totalGain < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(b.totalGain)}</td>
+                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : (b.totalGain == null ? 'var(--txt4)' : b.totalGain < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontStyle: b.totalGain == null ? 'italic' : undefined }}>{b.totalGain == null ? 'Pendiente' : money(b.totalGain)}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />

@@ -689,16 +689,23 @@ export default function Presupuesto() {
   const addKit = () => setItems(prev => [...prev, emptyKit()])
   const updateKit = (kitIdx, key, val) => setItems(prev => prev.map((k, i) => {
     if (i !== kitIdx) return k
-    // Si cambia la cantidad de kits del lote, re-escalar automáticamente todos los items
-    // que estaban en sync (qty === qty anterior del kit). Items con qty distinta los respeta
-    // (significa que el user los ajustó manualmente).
+    // Si cambia la cantidad de kits del lote, re-escalar PROPORCIONALMENTE
+    // TODOS los items (packaging + products) por el factor newQty/oldQty.
+    // Antes: solo se rescalaban los items con qty === oldQty. Bug: si el
+    // template tenía "2 cintas por kit" (qty=10 para 5 kits), al subir a
+    // 15 kits la cinta quedaba en 10 → costo por kit incorrecto.
+    // Ahora: cinta con qty=10 y kit 5→15 → qty=30. Preserva la proporción
+    // "por 1 kit" original. Items con fixedQty conservan su valor original
+    // (útil para overhead que NO escala con el batch, ej: honorario fijo).
     if (key === 'qty') {
       const oldQty = Math.max(1, num(k.qty) || 1)
       const newQty = Math.max(1, num(val) || 1)
       if (oldQty !== newQty) {
+        const factor = newQty / oldQty
         const rescale = (items) => (items || []).map(it => {
-          // Solo reescalar si el item estaba sincronizado (qty === oldQty del kit)
-          return num(it.qty) === oldQty ? { ...it, qty: newQty } : it
+          if (it.fixedQty) return it  // costos fijos NO escalan (ej: setup)
+          const scaled = Math.round(num(it.qty) * factor)
+          return { ...it, qty: Math.max(1, scaled) }
         })
         return { ...k, qty: val, packaging: rescale(k.packaging), products: rescale(k.products) }
       }
@@ -1028,7 +1035,10 @@ export default function Presupuesto() {
     // Preserve totalCost from the confirmed budget to prevent retroactive
     // gain changes if product/insumo costs are updated later.
     const frozenTotalCost = wasStockDeducted ? (prevBudget.totalCost ?? calc.baseCost) : calc.baseCost
-    const totalGain       = calc.total - frozenTotalCost
+    // Solo guardamos totalGain si tenemos AL MENOS un item con costo cargado.
+    // Sin costos → guardar null en vez de un número inflado (calc.total sin baseCost
+    // real da una "ganancia" ficticia). El Historial usa null para mostrar "Pendiente".
+    const totalGain = calc.costPending ? null : (calc.total - frozenTotalCost)
 
     const savedBudget = saveBudget({
       ...(editId ? { id: editId } : {}), ...saveForm,
