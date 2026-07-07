@@ -14,21 +14,26 @@ import MoneyInput from './MoneyInput'
  * Props:
  *   open        — bool, controla visibilidad
  *   onClose()   — cierra el modal
- *   onSave(payload) — recibe { name, cost }; también dispara cuando se elige
- *                     "Guardar + otro" (el modal queda abierto y limpio)
+ *   onSave(payload) — recibe { name, cost, cat, supplierId }; también dispara
+ *                     cuando se elige "Guardar + otro" (modal queda abierto)
  *   defaultCat  — opcional, categoría default heredada si venís del catálogo
+ *   suppliers   — opcional, array de proveedores [{ id, name }] para mostrar
+ *                 dropdown. Si viene vacío, no se muestra el campo.
  */
 
 const num = (v) => Number(v) || 0
 
-export default function QuickProductModal({ open, onClose, onSave, defaultCat = '' }) {
+export default function QuickProductModal({ open, onClose, onSave, defaultCat = '', suppliers = [] }) {
   const [name, setName] = useState('')
   const [cost, setCost] = useState('')
+  const [supplierId, setSupplierId] = useState('')
   const nameRef = useRef(null)
 
   useEffect(() => {
     if (open) {
       setName(''); setCost('')
+      // supplierId NO se resetea entre saves: si el usuario está cargando 10
+      // productos del mismo proveedor, mantiene el contexto.
       setTimeout(() => nameRef.current?.focus(), 30)
     }
   }, [open])
@@ -41,9 +46,11 @@ export default function QuickProductModal({ open, onClose, onSave, defaultCat = 
       name: name.trim(),
       cost: num(cost),
       cat: defaultCat,
+      supplierId: supplierId || '',
     }, { keepOpen })
     if (keepOpen) {
       setName(''); setCost('')
+      // supplierId se mantiene para carga en cadena del mismo proveedor
       setTimeout(() => nameRef.current?.focus(), 30)
     } else {
       onClose()
@@ -118,7 +125,7 @@ export default function QuickProductModal({ open, onClose, onSave, defaultCat = 
           />
         </div>
 
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 12 }}>
           <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--txt2)', marginBottom: 5 }}>
             Costo <span style={{ fontWeight: 400, color: 'var(--txt4)' }}>(opcional — podés dejarlo en 0 y completarlo después)</span>
           </label>
@@ -130,6 +137,31 @@ export default function QuickProductModal({ open, onClose, onSave, defaultCat = 
             style={{ maxWidth: 220 }}
           />
         </div>
+
+        {/* Proveedor — solo si hay proveedores cargados. Se mantiene entre
+            saves para carga en cadena de productos del mismo proveedor. */}
+        {suppliers && suppliers.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--txt2)', marginBottom: 5 }}>
+              Proveedor <span style={{ fontWeight: 400, color: 'var(--txt4)' }}>(opcional)</span>
+            </label>
+            <select
+              value={supplierId}
+              onChange={(e) => setSupplierId(e.target.value)}
+              style={{
+                width: '100%', padding: '10px 12px',
+                border: '1.5px solid var(--border)', borderRadius: 8,
+                fontSize: 14, color: 'var(--txt)', background: 'var(--surface)',
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            >
+              <option value="">Sin asignar</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div style={{
           fontSize: 11, color: 'var(--txt3)',

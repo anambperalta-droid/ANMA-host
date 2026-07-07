@@ -71,14 +71,16 @@ export default function Catalogo() {
   const [modal, setModal] = useState(false)
   const [quickOpen, setQuickOpen] = useState(false)
 
-  // Quick-create: crea el producto con solo nombre + costo. Después el usuario
-  // puede editar la ficha completa desde el catálogo si quiere agregar más info.
+  // Quick-create: crea el producto con solo nombre + costo (+ proveedor
+  // opcional si hay proveedores cargados). Después el usuario puede editar
+  // la ficha completa desde el catálogo si quiere agregar más info.
   const handleQuickSave = (payload, { keepOpen } = {}) => {
     if (!payload?.name) return
     saveEntity('products', {
       name:  payload.name,
       cat:   payload.cat || '',
       cost:  Number(payload.cost) || 0,
+      supplierId: payload.supplierId || '',
       stock: null,
       tipo:  'producto',
       componentes: [], packagingItems: [], costoExtra: 0,
@@ -1804,6 +1806,7 @@ export default function Catalogo() {
         onClose={() => setQuickOpen(false)}
         onSave={handleQuickSave}
         defaultCat={cats[0] || ''}
+        suppliers={suppliers}
       />
 
       {/* ══ RESTO DE MODALES (sin cambios) ══ */}
