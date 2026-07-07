@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, db, dbW, dbDel } from '../../lib/storage'
 import MoneyInput from '../common/MoneyInput'
+import QuickProductModal from '../common/QuickProductModal'
 
 const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
   const reader = new FileReader()
@@ -68,6 +69,23 @@ export default function Catalogo() {
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState('all')
   const [modal, setModal] = useState(false)
+  const [quickOpen, setQuickOpen] = useState(false)
+
+  // Quick-create: crea el producto con solo nombre + costo. Después el usuario
+  // puede editar la ficha completa desde el catálogo si quiere agregar más info.
+  const handleQuickSave = (payload, { keepOpen } = {}) => {
+    if (!payload?.name) return
+    saveEntity('products', {
+      name:  payload.name,
+      cat:   payload.cat || '',
+      cost:  Number(payload.cost) || 0,
+      stock: null,
+      tipo:  'producto',
+      componentes: [], packagingItems: [], costoExtra: 0,
+      updatedAt: new Date().toISOString().slice(0, 10),
+    })
+    toast(keepOpen ? 'Producto cargado — seguí con el próximo' : 'Producto cargado', 'ok')
+  }
   const [bulkModal, setBulkModal] = useState(false)
   const [csvModal, setCsvModal] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -241,7 +259,7 @@ export default function Catalogo() {
     e.target.value = ''
   }
 
-  const save = () => {
+  const save = ({ keepOpen = false } = {}) => {
     if (!form.name) { toast('Ingresá el nombre del producto.', 'er'); return }
     if (productMode === 'kit' && componentes.length === 0) {
       toast('Agregá al menos un componente al kit.', 'er'); return
@@ -264,8 +282,25 @@ export default function Catalogo() {
     })
     try { dbDel('prod_draft') } catch {}
     setHasDraft(null)
-    setModal(false)
-    toast('Producto guardado', 'ok')
+    if (keepOpen) {
+      // Modo carga en cadena — mantenemos categoría y proveedor (contexto que
+      // suele repetirse entre productos del mismo lote) y reseteamos el resto.
+      const keepCat      = formClean.cat || ''
+      const keepSupplier = formClean.supplierId || ''
+      setForm({ name: '', cat: keepCat, cost: '', supplierId: keepSupplier, image: '', price: '', stock: '' })
+      setComponentes([])
+      setPackagingItems([])
+      setEditId(null)
+      // Devolver el foco al input Nombre para carga inmediata
+      setTimeout(() => {
+        const nameInput = document.querySelector('.modal input[autoFocus], .modal input:first-of-type')
+        if (nameInput) nameInput.focus()
+      }, 30)
+      toast('Producto guardado — cargá el siguiente', 'ok')
+    } else {
+      setModal(false)
+      toast('Producto guardado', 'ok')
+    }
   }
 
   const del = (id) => confirm('¿Eliminar producto?', () => { deleteEntity('products', id); toast('Producto eliminado', 'in') })
@@ -696,6 +731,14 @@ export default function Catalogo() {
               </button>
             </div>
           </div>
+          <button
+            className="cli-pill"
+            onClick={() => setQuickOpen(true)}
+            title="Cargar producto rápido — solo nombre + costo"
+            style={{ background: 'linear-gradient(135deg, rgba(251,191,36,.12), rgba(245,158,11,.10))', borderColor: '#FBBF24', color: '#B45309' }}
+          >
+            <i className="fa fa-bolt" style={{ color: '#F59E0B' }} /><span>Rápido</span>
+          </button>
           <button className="cli-pill-new" onClick={() => open()}>
             <i className="fa fa-plus" /><span>Nuevo</span>
           </button>
@@ -1723,7 +1766,18 @@ export default function Catalogo() {
             {/* ── FOOTER FIJO ── */}
             <div className="mfooter" style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '12px 20px' }}>
               <button className="btn btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={save}
+              {/* Solo mostramos "Guardar + otro" cuando es CREAR (no edición) y modo producto simple */}
+              {!editId && productMode !== 'kit' && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => save({ keepOpen: true })}
+                  title="Guardar y cargar otro producto sin cerrar el modal — mantiene categoría y proveedor"
+                  style={{ borderColor: 'var(--brand)', color: 'var(--brand)' }}
+                >
+                  <i className="fa fa-plus" /> Guardar + otro
+                </button>
+              )}
+              <button className="btn btn-primary" onClick={() => save()}
                 style={productMode === 'kit' ? { background: 'linear-gradient(135deg,#8B5CF6,#DB2777)', border: 'none' } : {}}>
                 <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-floppy-disk'}`} />
                 {' '}{productMode === 'kit' ? 'Guardar Kit' : 'Guardar'}
@@ -1732,6 +1786,14 @@ export default function Catalogo() {
           </div>
         </div>
       )}
+
+      {/* ── Modal quick-create (nombre + costo) ── */}
+      <QuickProductModal
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        onSave={handleQuickSave}
+        defaultCat={cats[0] || ''}
+      />
 
       {/* ══ RESTO DE MODALES (sin cambios) ══ */}
 
