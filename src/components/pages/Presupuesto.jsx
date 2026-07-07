@@ -3517,7 +3517,9 @@ export default function Presupuesto() {
                   const hasPrint  = isKit && num(it.personalizacion?.printCost)  > 0
                   return (
                     <div key={idx} style={{ marginBottom: 8, padding: isKit && (products.length || packaging.length || hasPers || hasDesign || hasLabor || hasPrint) ? '6px 8px 4px' : 0, background: isKit && (products.length || packaging.length) ? 'rgba(255,255,255,.03)' : 'transparent', borderRadius: 6, border: isKit && (products.length || packaging.length) ? '1px solid rgba(255,255,255,.06)' : 'none' }}>
-                      {/* Header del ítem (kit o producto simple) */}
+                      {/* Header del ítem (kit o producto simple).
+                          El número mostrado es el PRECIO DE VENTA (qty × precioUnit).
+                          Etiqueta "venta" evita que se confunda con costos. */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
                         <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11.5, color: 'rgba(255,255,255,.85)', fontWeight: 700 }}>
                           {isKit ? '📦 ' : ''}{isKit ? (it.name || 'Kit') : it.name}
@@ -3525,9 +3527,14 @@ export default function Presupuesto() {
                             ({it.qty} {isKit ? (it.qty !== 1 ? 'uds' : 'ud') : (it.qty !== 1 ? 'unidades' : 'unidad')})
                           </span>
                         </span>
-                        <span style={{ fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,.95)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                          {fmt(num(it.qty) * (isKit ? effectiveKitPrice(it) : num(it.priceUnit)))}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                          <span style={{ fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,.95)', fontVariantNumeric: 'tabular-nums' }}>
+                            {fmt(num(it.qty) * (isKit ? effectiveKitPrice(it) : num(it.priceUnit)))}
+                          </span>
+                          <span style={{ fontSize: 8.5, color: 'rgba(134,239,172,.7)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: .5, marginTop: -2 }} title="Precio de venta al cliente (qty × precio unitario)">
+                            venta
+                          </span>
+                        </div>
                       </div>
 
                       {/* Subtítulo cost u. — sólo para productos simples (no kits anidados) */}
@@ -3537,9 +3544,18 @@ export default function Presupuesto() {
                         </div>
                       )}
 
-                      {/* ── Componentes anidados del kit (sangrado + línea vertical) ── */}
+                      {/* ── Componentes anidados del kit (sangrado + línea vertical) ──
+                          IMPORTANTE: los números de cada componente son COSTOS
+                          (qty_total × costoUnit), NO precios de venta. La suma NO
+                          coincide con el header — la diferencia entre venta y suma
+                          de costos es la ganancia mostrada arriba. */}
                       {isKit && (products.length > 0 || packaging.length > 0 || hasPers || hasDesign || hasLabor || hasPrint) && (
                         <div style={{ marginTop: 6, marginLeft: 16, paddingLeft: 10, borderLeft: '1.5px solid rgba(167,139,250,.28)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {/* Micro-header aclarando que los importes anidados son costos */}
+                          <div style={{ fontSize: 8.5, color: 'rgba(255,255,255,.28)', textTransform: 'uppercase', letterSpacing: .5, fontWeight: 700, marginBottom: 2, display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Costos que arma este kit</span>
+                            <span style={{ color: 'rgba(255,180,120,.55)' }}>← costo</span>
+                          </div>
                           {/* B — Productos del kit (cant. es TOTAL del pedido) */}
                           {products.map((p, pi) => (
                             <div key={`p-${pi}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'rgba(255,255,255,.55)' }}>
