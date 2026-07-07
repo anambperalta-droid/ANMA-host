@@ -377,6 +377,10 @@ export default function Presupuesto() {
 
   /* ── Modo: simple (lista de productos) | kit (constructor regalo) ── */
   const [kitMode, setKitMode] = useState(false)
+  /* Picker de templates: modal que muestra los kits del catálogo listos
+     para pre-cargar como una alternativa nueva del presupuesto. */
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
+  const [templateSearch, setTemplateSearch] = useState('')
   /* Buffers de auto-guardado: cuando el usuario cambia de pestaña, no perdemos
      los datos. Cada modo guarda su propia copia de `alternatives` y se restaura
      al volver. Si ambos tienen datos cargados, mostramos un aviso. */
@@ -618,6 +622,49 @@ export default function Presupuesto() {
     const label = `Alternativa ${alternatives.length + 1}`
     setAlternatives(prev => [...prev, emptyAlt(label)])
     setActiveAltIdx(alternatives.length)
+  }
+
+  /* Carga un producto tipo 'kit' del catálogo como una alternativa NUEVA
+     del presupuesto. El template NO se toca — solo copiamos su receta.
+     El usuario después ajusta cantidad de regalos, precios, agrega
+     packaging/productos extra, etc. Todo sin afectar el template original.
+
+     Mapeo:
+       template.componentes[]    → kit.products[]   (contenido)
+       template.packagingItems[] → kit.packaging[]  (packaging)
+       template.name             → kit.name
+       template.image            → kit.imageRef (opcional)
+     La cantidad de regalos arranca en 1 (el usuario la ajusta). */
+  const loadTemplateAsAlt = (template) => {
+    if (!template) return
+    const kitQty = 1
+    const newKit = {
+      type: 'kit',
+      name: template.name || '',
+      qty: kitQty,
+      priceUnit: 0,
+      manualPriceUnit: false,
+      packaging: (template.packagingItems || []).map(pk => ({
+        id: pk.id || '',
+        name: pk.nombre || '',
+        costUnit: num(pk.costoUnit) || 0,
+        qty: Math.max(1, num(pk.qty) || 1) * kitQty,
+        fixedQty: false,
+      })),
+      products: (template.componentes || []).map(cp => ({
+        id: cp.productId || '',
+        name: cp.nombre || '',
+        costUnit: num(cp.costoUnit) || 0,
+        qty: Math.max(1, num(cp.qty) || 1) * kitQty,
+      })),
+      personalizacion: { desc: '', costUnit: 0, designCost: 0, laborCost: 0, printCost: 0 },
+    }
+    const label = `${template.name || 'Template'}`
+    setAlternatives(prev => [...prev, { label, kits: [newKit] }])
+    setActiveAltIdx(alternatives.length)
+    setTemplatePickerOpen(false)
+    setTemplateSearch('')
+    toast(`Template "${template.name}" cargado — ajustá la cantidad de regalos`, 'ok')
   }
   const removeAlt = (altIdx) => {
     if (alternatives.length <= 1) return
@@ -2391,6 +2438,16 @@ export default function Presupuesto() {
                   >
                     <i className="fa fa-plus" style={{ fontSize: 10 }} /> Nueva alternativa
                   </button>
+                  {/* ⚡ Cargar un kit del catálogo como alternativa nueva. */}
+                  {(products || []).some(p => p.tipo === 'kit') && (
+                    <button
+                      onClick={() => setTemplatePickerOpen(true)}
+                      title="Cargar un kit ya guardado del catálogo — se copia como alternativa nueva sin tocar el template original"
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'linear-gradient(135deg, rgba(251,191,36,.12), rgba(245,158,11,.10))', border: '1.5px solid #FBBF24', borderRadius: 10, cursor: 'pointer', padding: '5px 12px', fontSize: 12, color: '#B45309', fontFamily: 'inherit', whiteSpace: 'nowrap', fontWeight: 700 }}
+                    >
+                      <i className="fa fa-bolt" style={{ fontSize: 10, color: '#F59E0B' }} /> Desde template
+                    </button>
+                  )}
                 </div>
 
                 {/* ── Banner de aprobación de la alternativa activa ── */}
@@ -2810,6 +2867,96 @@ export default function Presupuesto() {
                     setInsPickerTarget(null)
                   }}
                 />
+
+                {/* ── Modal picker de templates de kits ──
+                    Muestra los productos tipo 'kit' del catálogo con buscador.
+                    Al elegir uno se crea una alternativa nueva con esa receta
+                    precargada. El template original NO se toca. */}
+                {templatePickerOpen && (() => {
+                  const kits = (products || []).filter(p => p.tipo === 'kit')
+                  const sq = templateSearch.trim().toLowerCase()
+                  const filtered = sq
+                    ? kits.filter(k => (k.name || '').toLowerCase().includes(sq) || (k.cat || '').toLowerCase().includes(sq))
+                    : kits
+                  return (
+                    <div
+                      onClick={e => { if (e.target === e.currentTarget) setTemplatePickerOpen(false) }}
+                      style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(15,12,60,.45)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+                    >
+                      <div style={{ background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--border)', boxShadow: '0 20px 60px rgba(0,0,0,.25)', padding: 22, width: '100%', maxWidth: 640, maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexShrink: 0 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #FBBF24, #F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <i className="fa fa-bolt" style={{ color: '#fff', fontSize: 15 }} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--txt)' }}>Cargar desde template</div>
+                            <div style={{ fontSize: 11.5, color: 'var(--txt3)', marginTop: 1 }}>El kit se copia como alternativa nueva — no se toca el catálogo</div>
+                          </div>
+                          <button onClick={() => setTemplatePickerOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--txt3)', fontSize: 16, cursor: 'pointer', padding: 4 }} aria-label="Cerrar">
+                            <i className="fa fa-xmark" />
+                          </button>
+                        </div>
+
+                        <div style={{ marginBottom: 12, flexShrink: 0 }}>
+                          <input
+                            autoFocus
+                            type="text"
+                            value={templateSearch}
+                            onChange={e => setTemplateSearch(e.target.value)}
+                            placeholder="Buscar por nombre u ocasión…"
+                            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 13, color: 'var(--txt)', background: 'var(--surface)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                          />
+                        </div>
+
+                        <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+                          {filtered.length === 0 && (
+                            <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--txt3)' }}>
+                              <i className="fa fa-inbox" style={{ fontSize: 24, opacity: .4, display: 'block', marginBottom: 6 }} />
+                              {kits.length === 0
+                                ? <>No hay kits guardados en el catálogo todavía.<br /><span style={{ fontSize: 11 }}>Creá un Kit / Box desde <b>Productos</b> y volvé acá.</span></>
+                                : `Sin resultados para "${templateSearch}"`}
+                            </div>
+                          )}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+                            {filtered.map(k => {
+                              const compCount = (k.componentes || []).length
+                              const packCount = (k.packagingItems || []).length
+                              return (
+                                <button
+                                  key={k.id}
+                                  onClick={() => loadTemplateAsAlt(k)}
+                                  style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', border: '1.5px solid var(--border)', borderRadius: 12, background: 'var(--surface)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', transition: 'all .15s' }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#F59E0B'; e.currentTarget.style.background = 'linear-gradient(135deg,rgba(251,191,36,.05),rgba(245,158,11,.03))' }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)' }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    {k.image
+                                      ? <img src={k.image} alt={k.name} loading="lazy" style={{ width: 42, height: 42, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
+                                      : <div style={{ width: 42, height: 42, borderRadius: 8, background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                          <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 16 }} />
+                                        </div>
+                                    }
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k.name || '(sin nombre)'}</div>
+                                      {k.cat && <div style={{ fontSize: 10.5, color: 'var(--txt3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{k.cat}</div>}
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
+                                    <div style={{ display: 'flex', gap: 6, fontSize: 10, color: 'var(--txt3)' }}>
+                                      {compCount > 0 && <span><i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 3 }} />{compCount}</span>}
+                                      {packCount > 0 && <span><i className="fa fa-box" style={{ color: '#DB2777', marginRight: 3 }} />{packCount}</span>}
+                                    </div>
+                                    <span style={{ fontSize: 12, fontWeight: 800, color: '#059669' }}>{fmt(num(k.cost) || 0)}</span>
+                                  </div>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
 
               </>
             )}
