@@ -946,6 +946,56 @@ td b{color:var(--txt);font-weight:600}
   .analysis-grid{grid-template-columns:1fr!important}
   /* Ocultar col menos importantes en tabla */
   .col-hide-mobile{display:none!important}
+
+  /* ── Tabla de pedidos → CARDS mobile (07/07 Airtable-style) ──
+     Cada fila es una tarjeta legible en 1 pantalla con jerarquia clara:
+     1) Cliente grande (titulo) + acciones a la derecha
+     2) N° chico + Total destacado
+     3) Estado (fila propia con label)
+     4) Pago (fila propia con CTA)
+     5) Ganancia como stat al final (si aplica)
+     Padding-bottom generoso para no chocar con bottom nav. */
+  .hist-tbl{overflow:visible!important;border:none!important;background:transparent!important;box-shadow:none!important;padding:0 0 80px!important}
+  .hist-tbl table,.hist-tbl tbody{display:block!important;width:100%!important}
+  .hist-tbl thead{display:none!important}
+  .hist-tbl table{min-width:0!important}
+  .hist-tbl tbody tr{
+    display:grid!important;
+    grid-template-columns:auto 1fr auto;
+    grid-template-areas:
+      'sel cli acc'
+      'sel num total'
+      'sel estado estado'
+      'sel pago pago'
+      'sel gan gan';
+    align-items:center;column-gap:10px;row-gap:8px;
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(15,23,42,.05);
+    position:relative;left:auto!important;
+  }
+  .hist-tbl tbody tr:active{background:var(--surface2)}
+  /* Todas ocultas por default; solo data-cell visibles */
+  .hist-tbl tbody td{display:none!important}
+  .hist-tbl tbody td[data-cell]{display:block!important;border:none!important;padding:0!important;position:static!important;box-shadow:none!important}
+  /* Reset sticky positioning en mobile */
+  .hist-tbl tbody td:nth-child(1),
+  .hist-tbl tbody td:nth-child(2),
+  .hist-tbl tbody td:last-child{position:static!important;left:auto!important;right:auto!important;box-shadow:none!important}
+  .hist-tbl td[data-cell="sel"]{grid-area:sel;align-self:start;padding-top:2px!important}
+  .hist-tbl td[data-cell="cli"]{grid-area:cli;max-width:none!important;align-self:start}
+  .hist-tbl td[data-cell="cli"] [data-cli]{font-size:16px!important;font-weight:800!important;white-space:normal!important;text-decoration:none!important;line-height:1.25!important;color:var(--txt)!important}
+  .hist-tbl td[data-cell="acc"]{grid-area:acc;justify-self:end;align-self:start}
+  .hist-tbl td[data-cell="acc"]>div{gap:4px!important}
+  .hist-tbl td[data-cell="num"]{grid-area:num;font-size:11px!important;color:var(--txt4)!important;font-weight:700!important;letter-spacing:.02em;align-self:center}
+  .hist-tbl td[data-cell="total"]{grid-area:total;text-align:right!important;font-size:17px!important;font-weight:800!important;align-self:center;line-height:1.1}
+  .hist-tbl td[data-cell="total"]::before{content:attr(data-label);display:block;font-size:9px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.05em;text-align:right;margin-bottom:2px}
+  .hist-tbl td[data-cell="estado"]{grid-area:estado;white-space:normal!important;align-self:center;padding-top:8px!important;border-top:1px solid var(--border)!important;display:flex!important;align-items:center;gap:8px}
+  .hist-tbl td[data-cell="estado"]::before{content:'Estado';font-size:10px;font-weight:600;color:var(--txt4);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+  .hist-tbl td[data-cell="pago"]{grid-area:pago;white-space:normal!important;align-self:center;display:flex!important;align-items:center;gap:8px;justify-content:space-between}
+  .hist-tbl td[data-cell="pago"]::before{content:'Pago';font-size:10px;font-weight:600;color:var(--txt4);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+  .hist-tbl td[data-cell="pago"]>div{min-width:0!important;max-width:none!important;flex:1;align-items:flex-end!important}
+  .hist-tbl td[data-cell="gan"]{grid-area:gan;text-align:left!important;font-size:12px!important;padding-top:8px!important;border-top:1px solid var(--border)!important}
+  .hist-tbl td[data-cell="gan"]::before{content:attr(data-label) ': ';font-size:11px;font-weight:600;color:var(--txt4);text-transform:none;letter-spacing:0}
   /* Budget detail modal header */
   .dm-head{flex-wrap:wrap;gap:8px}
   .dm-head .badge{margin-left:0}

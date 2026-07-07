@@ -1724,10 +1724,10 @@ export default function Historial() {
                   const overdue = dDays !== null && dDays <= 0 && !['confirmed', 'lost'].includes(b.status)
                   return (
                     <tr key={b.id} className={selectedIds.has(b.id) ? 'selected' : ''} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
-                      <td><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
-                      <td style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--txt)' }}>{b.num || '—'}</td>
+                      <td data-cell="sel"><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
+                      <td data-cell="num" style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--txt)' }}>{b.num || '—'}</td>
                       <td className="col-hide-mobile" style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', color: 'var(--txt3)' }}>{fmtDate(b.date)}</td>
-                      <td style={{ maxWidth: 200 }}>
+                      <td data-cell="cli" style={{ maxWidth: 200 }}>
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setPreviewBudget(b) }}
@@ -1751,9 +1751,9 @@ export default function Historial() {
                           </div>
                         )}
                       </td>
-                      <td style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(b.total)}</td>
-                      <td className="col-hide-mobile" style={{ color: hidden ? 'var(--txt4)' : (b.totalGain == null ? 'var(--txt4)' : b.totalGain < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontStyle: b.totalGain == null ? 'italic' : undefined }}>{b.totalGain == null ? 'Pendiente' : money(b.totalGain)}</td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
+                      <td data-cell="total" data-label="Total" style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(b.total)}</td>
+                      <td className="col-hide-mobile" data-cell="gan" data-label="Ganancia" style={{ color: hidden ? 'var(--txt4)' : (b.totalGain == null ? 'var(--txt4)' : b.totalGain < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontStyle: b.totalGain == null ? 'italic' : undefined }}>{b.totalGain == null ? 'Pendiente' : money(b.totalGain)}</td>
+                      <td data-cell="estado" style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
                           <div>
@@ -1769,7 +1769,7 @@ export default function Historial() {
                           </div>
                         </div>
                       </td>
-                      <td style={{ whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                      <td data-cell="pago" style={{ whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
                         {/* Celda PAGO minimalista (07/07):
                             Patron Stripe/QuickBooks — solo lo esencial:
                             Fila 1: chip de estado (el nombre ya dice todo)
@@ -1827,7 +1827,7 @@ export default function Historial() {
                           )
                         })()}
                       </td>
-                      <td>
+                      <td data-cell="acc">
                         <div className="acts" style={{ gap: 2 }}>
                           <button className="hist-act" onClick={() => editB(b.id)} title="Editar"
                             onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-pen" /></button>
