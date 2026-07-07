@@ -1388,10 +1388,17 @@ export default function Presupuesto() {
         </td>
       </tr>`
 
-    /* ── Helper: cálculo de totales para una lista de kits ── */
+    /* ── Helper: cálculo de totales para una lista de kits ──
+       IMPORTANTE: usamos effectiveKitPrice() para el precio unitario porque
+       cuando el kit NO tiene manualPriceUnit el campo `priceUnit` queda en 0
+       (el precio se calcula al vuelo desde el margen). Si usáramos directo
+       `k.priceUnit` el PDF mostraría $0 (bug reportado por Ana en P-0029). */
     const calcAltTotals = (kits) => {
       let rev = 0
-      kits.forEach(k => { rev += num(k.qty) * num(k.priceUnit) })
+      kits.forEach(k => {
+        const pEff = k.type === 'kit' ? effectiveKitPrice(k) : num(k.priceUnit)
+        rev += num(k.qty) * pEff
+      })
       const dp = Math.min(Math.max(num(form.discount), 0), 100)
       const da = Math.round(rev * dp / 100)
       const tot = rev - da
@@ -1438,7 +1445,10 @@ export default function Presupuesto() {
         const kitSep = kitN > 0
           ? `<tr><td colspan="4" style="height:10px;padding:0;background:${isMultiAlt ? '#FAFAFA' : '#fff'};border:none"></td></tr>` : ''
 
-        /* Fila principal del kit — peso aligerado (semibold en vez de extra-bold) */
+        /* Fila principal del kit — peso aligerado (semibold en vez de extra-bold).
+           Usamos effectiveKitPrice(i) para respetar el precio calculado por margen
+           (cuando manualPriceUnit=false, i.priceUnit=0 pero el precio real existe). */
+        const kitPriceUnit = effectiveKitPrice(i)
         const kitRow = `
           <tr>
             <td style="background:${bg};border-left:3px solid ${bc};border-bottom:none;padding:9px 12px 6px">
@@ -1446,8 +1456,8 @@ export default function Presupuesto() {
               <strong style="font-size:13px;color:#1F1B45;font-weight:700;letter-spacing:-.2px;line-height:1.2">${i.name || 'Kit sin nombre'}</strong>
             </td>
             <td style="background:${bg};border-bottom:none;text-align:center;font-weight:600;font-size:13px;color:#1F1B45;padding:9px 12px 6px">${i.qty}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;font-size:12.5px;font-weight:500;color:#1F1B45;padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(i.priceUnit)}</td>
-            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:700;font-size:13px;color:${bc};padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(num(i.qty) * num(i.priceUnit))}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-size:12.5px;font-weight:500;color:#1F1B45;padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(kitPriceUnit)}</td>
+            <td style="background:${bg};border-bottom:none;text-align:right;font-weight:700;font-size:13px;color:${bc};padding:9px 12px 6px;font-variant-numeric:tabular-nums">${fmt(num(i.qty) * kitPriceUnit)}</td>
           </tr>`
 
         /* ── Bloque A: Packaging / Insumos ── */
@@ -3186,7 +3196,7 @@ export default function Presupuesto() {
                                 </span>
                               )}
                             </span>
-                            <span>{fmt(num(it.qty) * num(it.priceUnit))}</span>
+                            <span>{fmt(num(it.qty) * (it.type === 'kit' ? effectiveKitPrice(it) : num(it.priceUnit)))}</span>
                           </div>
                           {it.type === 'kit' && ((it.packaging || []).concat(it.products || [])).filter(c => c.name).map((c, ci) => (
                             <div key={ci} style={{ fontSize: 10, color: 'var(--txt3)', paddingLeft: 20, paddingBottom: 1 }}>↳ {c.name}{c.qty > 1 ? ` ×${c.qty}` : ''}</div>
@@ -3219,7 +3229,7 @@ export default function Presupuesto() {
                               <i className="fa fa-gift" style={{ fontSize: 9, color: 'var(--brand)', opacity: .7 }} />
                               {it.type === 'kit' ? (it.name || 'Kit sin nombre') : it.name} ×{it.qty}
                             </span>
-                            <span style={{ color: 'var(--brand)' }}>{fmt(num(it.qty) * num(it.priceUnit))}</span>
+                            <span style={{ color: 'var(--brand)' }}>{fmt(num(it.qty) * (it.type === 'kit' ? effectiveKitPrice(it) : num(it.priceUnit)))}</span>
                           </div>
                           {it.type === 'kit' && (() => {
                             const packLines = (it.packaging || []).filter(c => c.name)
