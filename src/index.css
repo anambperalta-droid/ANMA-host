@@ -1766,6 +1766,62 @@ td b{color:var(--txt);font-weight:600}
 .ins-pstat{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--txt3)}
 .ins-pstat:last-child{border-bottom:none;padding-bottom:0}
 .ins-pstat b{color:var(--txt);font-size:13px;font-weight:700}
+
+/* Filter bar (search + selects + chips) responsivo */
+.ins-filter-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.ins-filter-bar .search-row{max-width:100%!important;flex:auto}
+.ins-filter-bar .ins-filter-sel{height:var(--touch);border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt);font-size:13px;padding:0 10px;outline:none;font-family:inherit;cursor:pointer;width:100%;transition:border-color var(--tr);appearance:none;-webkit-appearance:none}
+.ins-filter-bar .ins-filter-sel:focus{border-color:var(--brand)}
+@media(min-width:641px){
+  .ins-filter-bar{flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap}
+  .ins-filter-bar .search-row{max-width:280px!important;flex:1}
+  .ins-filter-bar .ins-filter-sel{width:auto;max-width:220px}
+}
+
+/* ── Insumos: KPI strip compacto mobile ── */
+.ins-kpi-strip{display:flex;gap:8px;margin:0 -2px 12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px}
+.ins-kpi-strip::-webkit-scrollbar{display:none}
+.ins-kpi-chip{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);flex-shrink:0;min-width:130px;-webkit-tap-highlight-color:transparent}
+.ins-kpi-chip i{font-size:14px;color:var(--txt3);flex-shrink:0}
+.ins-kpi-chip .lbl{font-size:9px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.06em;line-height:1.2}
+.ins-kpi-chip .val{font-size:14px;font-weight:800;color:var(--txt);line-height:1.2;margin-top:1px;letter-spacing:-.02em}
+.ins-kpi-chip.alert{border-color:#FCA5A5;background:linear-gradient(135deg,#FEF2F2,#FFF);cursor:pointer}
+.ins-kpi-chip.alert i{color:#DC2626}
+.ins-kpi-chip.alert .val{color:#DC2626}
+.ins-kpi-chip.alert:active{transform:scale(.97)}
+.ins-kpi-chip.ok{border-color:#BBF7D0;background:linear-gradient(135deg,#F0FDF4,#FFF)}
+.ins-kpi-chip.ok i{color:#16A34A}
+.ins-kpi-chip.ok .val{color:#16A34A;font-size:12.5px}
+.ins-kpi-chip.neutral{background:var(--surface2)}
+@media(min-width:641px){
+  .ins-kpi-strip{display:none}
+  .ins-hide-mob{display:inline-flex!important}
+}
+@media(max-width:640px){
+  .ins-hide-mob{display:none!important}
+}
+
+/* Chip toggle "Solo stock bajo" */
+.ins-chip-toggle{display:inline-flex;align-items:center;gap:5px;height:var(--touch);padding:0 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.ins-chip-toggle:hover{border-color:#DC2626;color:#DC2626}
+.ins-chip-toggle.active{background:#FEF2F2;border-color:#DC2626;color:#DC2626}
+.ins-chip-toggle .cnt{background:#DC2626;color:#FFF;font-size:9.5px;padding:1px 6px;border-radius:8px;font-weight:800;margin-left:2px}
+.ins-chip-toggle.active .cnt{background:#FFF;color:#DC2626}
+
+/* Sortable table headers */
+.tbl th.tbl-sort{cursor:pointer;user-select:none;transition:color .12s;-webkit-tap-highlight-color:transparent}
+.tbl th.tbl-sort:hover{color:var(--brand)}
+.tbl th.tbl-sort:active{opacity:.7}
+
+/* FAB flotante mobile */
+.ins-fab{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom,0px));right:16px;width:56px;height:56px;border-radius:50%;background:var(--brand);color:#FFF;border:none;font-size:22px;box-shadow:0 8px 22px rgba(244,63,94,.42),0 2px 6px rgba(0,0,0,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:60;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}
+.ins-fab:active{transform:scale(.92);box-shadow:0 4px 12px rgba(244,63,94,.35)}
+@media(min-width:641px){.ins-fab{display:none}}
+
+/* Solo mobile helper */
+.ins-only-mob{display:block}
+@media(min-width:641px){.ins-only-mob{display:none!important}}
+
 /* Calculadora de fraccionamiento */
 .pkg-calc-card{background:rgba(99,102,241,.06);border:1.5px solid rgba(99,102,241,.2);border-radius:12px;padding:14px 16px;margin-top:8px;display:flex;flex-direction:column;gap:10px}
 .pkg-calc-result{background:rgba(99,102,241,.12);border:2px solid rgba(99,102,241,.35);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px}
