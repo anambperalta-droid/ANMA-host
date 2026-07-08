@@ -276,29 +276,18 @@ export default function Insumos() {
         </div>
       </div>
 
-      {/* ── HERO status mobile (una sola card grande, tap-to-filter) ── */}
+      {/* ── Status bar mobile (una línea delgada, tap-to-filter) ── */}
       <div
-        className={`ins-hero-mob ${lowStock.length > 0 ? 'alert' : 'ok'}`}
+        className={`ins-statusbar ${lowStock.length > 0 ? 'alert' : 'ok'}`}
         onClick={() => { if (lowStock.length > 0) setShowLowOnly(v => !v) }}
         role={lowStock.length > 0 ? 'button' : undefined}
       >
-        <div className="ins-hero-icon">
-          <i className={`fa fa-${lowStock.length > 0 ? 'triangle-exclamation' : 'circle-check'}`} />
-        </div>
-        <div className="ins-hero-body">
-          <div className="ins-hero-title">
-            {lowStock.length === 0 ? 'Todo en orden' : `${lowStock.length} ${lowStock.length === 1 ? 'material crítico' : 'materiales críticos'}`}
-          </div>
-          <div className="ins-hero-sub">
-            {insumos.length} {insumos.length === 1 ? 'material' : 'materiales'} · {fmt(totalValue)}
-          </div>
-        </div>
-        {lowStock.length > 0 && (
-          <div className="ins-hero-cta">
-            {showLowOnly ? 'Ver todos' : 'Ver'}
-            <i className="fa fa-arrow-right" />
-          </div>
-        )}
+        <i className={`ins-statusbar-ic fa fa-${lowStock.length > 0 ? 'triangle-exclamation' : 'circle-check'}`} />
+        <span className="ins-statusbar-label">
+          {lowStock.length === 0 ? 'Todo en orden' : `${lowStock.length} ${lowStock.length === 1 ? 'crítico' : 'críticos'}`}
+        </span>
+        <span className="ins-statusbar-meta">{insumos.length} ítems · {fmt(totalValue)}</span>
+        {lowStock.length > 0 && <i className="ins-statusbar-arrow fa fa-chevron-right" />}
       </div>
 
       {/* ── KPIs desktop ── */}

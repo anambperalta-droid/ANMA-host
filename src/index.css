@@ -1802,16 +1802,17 @@ td b{color:var(--txt);font-weight:600}
 .ins-filter-grid{display:grid;gap:8px;margin-bottom:14px}
 @media(max-width:640px){
   .ins-filter-grid{
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr 1fr auto;
     grid-template-areas:
-      "search search"
-      "cat sort"
-      "alert alert";
+      "search search search"
+      "cat sort alert";
+    gap:8px;
   }
   .ins-fg-search{grid-area:search}
-  .ins-fg-cat{grid-area:cat}
-  .ins-fg-sort{grid-area:sort}
-  .ins-fg-alert{grid-area:alert;width:100%;justify-content:center}
+  .ins-fg-cat{grid-area:cat;min-width:0}
+  .ins-fg-sort{grid-area:sort;min-width:0}
+  .ins-fg-alert{grid-area:alert;width:auto;padding:0 12px!important}
+  .ins-fg-alert .ins-fg-alert-txt{display:none}
   .ins-filter-grid .search-row{max-width:100%!important;flex:auto}
   .ins-filter-grid .ins-filter-sel{
     width:100%;height:var(--touch);
@@ -1840,47 +1841,25 @@ td b{color:var(--txt);font-weight:600}
   }
 }
 
-/* HERO status mobile */
-.ins-hero-mob{display:none}
+/* Status bar delgada (una línea, tap-to-filter) */
+.ins-statusbar{display:none}
 @media(max-width:640px){
-  .ins-hero-mob{
-    display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:16px;margin-bottom:12px;
-    border:1.5px solid;-webkit-tap-highlight-color:transparent;animation:hero-in .3s ease both;
+  .ins-statusbar{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 14px;border-radius:12px;margin-bottom:10px;
+    border:1.5px solid;-webkit-tap-highlight-color:transparent;
   }
-  .ins-hero-mob.ok{background:linear-gradient(135deg,#F0FDF4 0%,#DCFCE7 100%);border-color:#86EFAC}
-  .ins-hero-mob.alert{background:linear-gradient(135deg,#FEF2F2 0%,#FEE2E2 100%);border-color:#FCA5A5;cursor:pointer}
-  .ins-hero-mob.alert:active{transform:scale(.98)}
-  .ins-hero-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
-  .ins-hero-mob.ok .ins-hero-icon{background:#16A34A;color:#FFF;box-shadow:0 4px 10px rgba(22,163,74,.3)}
-  .ins-hero-mob.alert .ins-hero-icon{background:#DC2626;color:#FFF;box-shadow:0 4px 10px rgba(220,38,38,.35);animation:pulse-alert 1.8s ease-in-out infinite}
-  .ins-hero-body{flex:1;min-width:0}
-  .ins-hero-title{font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
-  .ins-hero-mob.ok .ins-hero-title{color:#15803D}
-  .ins-hero-mob.alert .ins-hero-title{color:#B91C1C}
-  .ins-hero-sub{font-size:11.5px;color:var(--txt3);margin-top:3px;font-weight:600}
-  .ins-hero-cta{display:flex;align-items:center;gap:5px;background:#DC2626;color:#FFF;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;box-shadow:0 4px 10px rgba(220,38,38,.3)}
-  .ins-hero-cta i{font-size:9px}
-}
-@keyframes hero-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-@keyframes pulse-alert{0%,100%{box-shadow:0 4px 10px rgba(220,38,38,.35)}50%{box-shadow:0 4px 18px rgba(220,38,38,.6)}}
-
-/* Chips horizontales categoría (mobile) */
-.ins-chip-row{display:none}
-@media(max-width:640px){
-  .ins-chip-row{
-    display:flex;gap:6px;overflow-x:auto;padding:2px 14px 8px;margin:0 -14px 4px;
-    scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;
-  }
-  .ins-chip-row::-webkit-scrollbar{display:none}
-  .ins-chip{
-    flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);
-    font-size:12px;font-weight:700;color:var(--txt3);cursor:pointer;font-family:inherit;white-space:nowrap;
-    transition:all .15s;-webkit-tap-highlight-color:transparent;scroll-snap-align:start;
-  }
-  .ins-chip:active{transform:scale(.94)}
-  .ins-chip.active{background:var(--brand);border-color:var(--brand);color:#FFF;box-shadow:0 3px 10px rgba(244,63,94,.28)}
-  .ins-chip.active.alert{background:#DC2626;border-color:#DC2626;box-shadow:0 3px 10px rgba(220,38,38,.3)}
-  .ins-chip-sep{width:1px;flex-shrink:0;background:var(--border);margin:2px 4px}
+  .ins-statusbar.ok{background:#F0FDF4;border-color:#BBF7D0}
+  .ins-statusbar.alert{background:#FEF2F2;border-color:#FCA5A5;cursor:pointer}
+  .ins-statusbar.alert:active{transform:scale(.99)}
+  .ins-statusbar-ic{font-size:14px;flex-shrink:0}
+  .ins-statusbar.ok .ins-statusbar-ic{color:#16A34A}
+  .ins-statusbar.alert .ins-statusbar-ic{color:#DC2626}
+  .ins-statusbar-label{font-size:13px;font-weight:800;letter-spacing:-.01em;flex-shrink:0}
+  .ins-statusbar.ok .ins-statusbar-label{color:#15803D}
+  .ins-statusbar.alert .ins-statusbar-label{color:#B91C1C}
+  .ins-statusbar-meta{font-size:11.5px;color:var(--txt3);font-weight:600;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ins-statusbar-arrow{font-size:11px;color:#DC2626;flex-shrink:0;margin-left:4px}
 }
 
 /* Card mobile V2: STOCK como hero */
@@ -1899,9 +1878,9 @@ td b{color:var(--txt);font-weight:600}
   .ins-mob-card-name{font-size:14.5px;font-weight:800;color:var(--txt);letter-spacing:-.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ins-mob-card-cat{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
   .ins-mob-card-sub{font-size:10.5px;color:var(--txt3);font-weight:600}
-  .ins-mob-card-stock{flex-shrink:0;text-align:right;font-family:ui-monospace,SFMono-Regular,monospace}
-  .ins-mob-card-stock .stk-num{font-size:26px;font-weight:900;line-height:1;letter-spacing:-.04em}
-  .ins-mob-card-stock .stk-unit{font-size:10px;color:var(--txt4);font-weight:600;margin-top:2px;font-family:inherit}
+  .ins-mob-card-stock{flex-shrink:0;text-align:right}
+  .ins-mob-card-stock .stk-num{font-size:26px;font-weight:900;line-height:1;letter-spacing:-.03em}
+  .ins-mob-card-stock .stk-unit{font-size:10px;color:var(--txt4);font-weight:600;margin-top:2px}
   .ins-mob-card-bar{position:relative;height:5px;background:var(--surface3,#E2E8F0);border-radius:6px;overflow:visible}
   .ins-mob-card-bar-fill{height:100%;border-radius:6px;transition:width .3s ease}
   .ins-mob-card-bar-min{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--txt3);border-radius:2px;opacity:.5}
@@ -1921,8 +1900,7 @@ td b{color:var(--txt);font-weight:600}
 
 /* Desktop overrides — hide mobile-only bits */
 @media(min-width:641px){
-  .ins-hero-mob{display:none!important}
-  .ins-chip-row{display:none!important}
+  .ins-statusbar{display:none!important}
 }
 
 /* Chip toggle "Solo stock bajo" (desktop) */
