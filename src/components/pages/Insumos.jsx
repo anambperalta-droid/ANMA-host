@@ -260,18 +260,18 @@ export default function Insumos() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
-      <div className="ph ins-ph-desk">
-        <div style={{ flex: 1 }}>
+      <div className="ph">
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 2 }}>
             <i className="fa fa-cube" style={{ marginRight: 4 }} />Materiales de Packaging
           </div>
         </div>
-        <div className="ph-right" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button className="btn btn-ghost btn-sm" onClick={exportCsv} title="Exportar CSV" style={{ minHeight: 40 }}>
-            <i className="fa fa-file-arrow-down" /> Exportar
+        <div className="ph-right ins-actions" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <button className="btn btn-ghost btn-sm ins-act-export" onClick={exportCsv} title="Exportar CSV">
+            <i className="fa fa-file-arrow-down" /><span className="ins-act-txt"> Exportar</span>
           </button>
-          <button className="btn btn-primary" onClick={openNew} style={{ minHeight: 44 }}>
-            <i className="fa fa-plus" /> Nuevo material
+          <button className="btn btn-primary ins-act-new" onClick={openNew} title="Nuevo material">
+            <i className="fa fa-plus" /><span className="ins-act-txt"> Nuevo material</span><span className="ins-act-txt-short"> Nuevo</span>
           </button>
         </div>
       </div>
@@ -351,18 +351,18 @@ export default function Insumos() {
             </div>
           )}
 
-          {/* Filtros — mobile: search + chips; desktop: fila plana */}
-          <div className="ins-filter-bar">
-            <div className="search-row">
+          {/* Filters — grid 2 cols mobile, flow desktop */}
+          <div className="ins-filter-grid">
+            <div className="search-row ins-fg-search">
               <i className="fa fa-magnifying-glass" />
-              <input type="text" placeholder="Buscar material..." value={search} onChange={e => setSearch(e.target.value)} />
+              <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <select className="ins-filter-sel ins-desk-only" value={catFilter} onChange={e => setCatFilter(e.target.value)}>
+            <select className="ins-filter-sel ins-fg-cat" value={catFilter} onChange={e => setCatFilter(e.target.value)}>
               <option value="all">Todas las categorías</option>
               {cats.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
             </select>
             <select
-              className="ins-filter-sel ins-desk-only"
+              className="ins-filter-sel ins-fg-sort"
               value={`${sortField}:${sortDir}`}
               onChange={e => {
                 const [f, d] = e.target.value.split(':')
@@ -370,36 +370,20 @@ export default function Insumos() {
                 try { localStorage.setItem('ins_sort_f', f); localStorage.setItem('ins_sort_d', d) } catch {}
               }}
             >
-              <option value="recent:desc">Más recientes</option>
+              <option value="recent:desc">Recientes</option>
               <option value="name:asc">Nombre A-Z</option>
               <option value="stock:desc">Stock ↓</option>
+              <option value="stock:asc">Stock ↑</option>
               <option value="cost:desc">Costo ↓</option>
             </select>
             <button
               onClick={() => setShowLowOnly(v => !v)}
-              className={`ins-chip-toggle ins-desk-only${showLowOnly ? ' active' : ''}`}
+              className={`ins-chip-toggle ins-fg-alert${showLowOnly ? ' active' : ''}`}
               title="Filtrar solo stock bajo"
             >
               <i className="fa fa-triangle-exclamation" style={{ fontSize: 10 }} />
-              Stock bajo
+              <span className="ins-fg-alert-txt">Stock bajo</span>
               {lowStock.length > 0 && <span className="cnt">{lowStock.length}</span>}
-            </button>
-          </div>
-
-          {/* Chips horizontales mobile — categoría + stock bajo */}
-          <div className="ins-chip-row">
-            <button className={`ins-chip${catFilter === 'all' ? ' active' : ''}`} onClick={() => setCatFilter('all')}>
-              Todas
-            </button>
-            {cats.map(cat => (
-              <button key={cat.id} className={`ins-chip${catFilter === cat.id ? ' active' : ''}`} onClick={() => setCatFilter(cat.id)}>
-                {cat.label}
-              </button>
-            ))}
-            <div className="ins-chip-sep" />
-            <button className={`ins-chip${showLowOnly ? ' active alert' : ''}`} onClick={() => setShowLowOnly(v => !v)}>
-              <i className="fa fa-triangle-exclamation" style={{ fontSize: 9, marginRight: 3 }} />
-              Bajo{lowStock.length > 0 && ` (${lowStock.length})`}
             </button>
           </div>
 
@@ -616,11 +600,6 @@ export default function Insumos() {
         </div>
 
       </div>
-
-      {/* ── FAB mobile — Nuevo material siempre accesible ── */}
-      <button className="ins-fab" onClick={openNew} title="Nuevo material" aria-label="Nuevo material">
-        <i className="fa fa-plus" />
-      </button>
 
       {/* ── Modal: crear / editar material ── */}
       {modal && (

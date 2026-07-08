@@ -1782,8 +1782,62 @@ td b{color:var(--txt);font-weight:600}
 /* ── INSUMOS · MOBILE UX RADICAL REDESIGN ──                */
 /* ══════════════════════════════════════════════════════════ */
 @media(max-width:640px){
-  .ins-ph-desk{display:none!important}
   .ins-desk-only{display:none!important}
+}
+
+/* Header actions: compactos en mobile */
+.ins-actions{flex-wrap:wrap;justify-content:flex-end}
+.ins-act-txt-short{display:none}
+@media(max-width:640px){
+  .ins-act-export{padding:0 10px!important;min-height:38px!important;font-size:12px!important}
+  .ins-act-new{padding:0 14px!important;min-height:38px!important;font-size:12.5px!important}
+  .ins-act-new .ins-act-txt{display:none}
+  .ins-act-new .ins-act-txt-short{display:inline}
+}
+@media(min-width:641px){
+  .ins-act-txt-short{display:none}
+}
+
+/* Filter grid — 2 cols mobile, fila desktop */
+.ins-filter-grid{display:grid;gap:8px;margin-bottom:14px}
+@media(max-width:640px){
+  .ins-filter-grid{
+    grid-template-columns:1fr 1fr;
+    grid-template-areas:
+      "search search"
+      "cat sort"
+      "alert alert";
+  }
+  .ins-fg-search{grid-area:search}
+  .ins-fg-cat{grid-area:cat}
+  .ins-fg-sort{grid-area:sort}
+  .ins-fg-alert{grid-area:alert;width:100%;justify-content:center}
+  .ins-filter-grid .search-row{max-width:100%!important;flex:auto}
+  .ins-filter-grid .ins-filter-sel{
+    width:100%;height:var(--touch);
+    border-radius:10px;border:1.5px solid var(--border);
+    background:var(--surface2);color:var(--txt);
+    font-size:12.5px;padding:0 32px 0 12px;
+    font-family:inherit;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:12px;
+    outline:none;
+  }
+  .ins-filter-grid .ins-filter-sel:focus{border-color:var(--brand)}
+}
+@media(min-width:641px){
+  .ins-filter-grid{display:flex;flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap}
+  .ins-fg-search{max-width:280px;flex:1}
+  .ins-fg-search .search-row{max-width:100%!important}
+  .ins-filter-grid .ins-filter-sel{
+    height:var(--touch);border-radius:10px;
+    border:1.5px solid var(--border);background:var(--surface2);
+    color:var(--txt);font-size:13px;padding:0 10px;
+    outline:none;font-family:inherit;cursor:pointer;
+    max-width:200px;transition:border-color var(--tr);
+    appearance:none;-webkit-appearance:none;
+  }
 }
 
 /* HERO status mobile */
@@ -1883,11 +1937,7 @@ td b{color:var(--txt);font-weight:600}
 .tbl th.tbl-sort:hover{color:var(--brand)}
 .tbl th.tbl-sort:active{opacity:.7}
 
-/* FAB flotante mobile — más notorio */
-.ins-fab{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom,0px));right:18px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--brand) 0%,#E11D48 100%);color:#FFF;border:none;font-size:24px;box-shadow:0 10px 28px rgba(244,63,94,.5),0 3px 8px rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:60;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
-.ins-fab:active{transform:scale(.9);box-shadow:0 5px 14px rgba(244,63,94,.4)}
-.ins-fab::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(244,63,94,.15);pointer-events:none}
-@media(min-width:641px){.ins-fab{display:none}}
+/* (FAB removido — botón "Nuevo" ahora inline en header) */
 
 /* Calculadora de fraccionamiento */
 .pkg-calc-card{background:rgba(99,102,241,.06);border:1.5px solid rgba(99,102,241,.2);border-radius:12px;padding:14px 16px;margin-top:8px;display:flex;flex-direction:column;gap:10px}
