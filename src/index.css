@@ -1778,30 +1778,100 @@ td b{color:var(--txt);font-weight:600}
   .ins-filter-bar .ins-filter-sel{width:auto;max-width:220px}
 }
 
-/* ── Insumos: KPI strip compacto mobile ── */
-.ins-kpi-strip{display:flex;gap:8px;margin:0 -2px 12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px}
-.ins-kpi-strip::-webkit-scrollbar{display:none}
-.ins-kpi-chip{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);flex-shrink:0;min-width:130px;-webkit-tap-highlight-color:transparent}
-.ins-kpi-chip i{font-size:14px;color:var(--txt3);flex-shrink:0}
-.ins-kpi-chip .lbl{font-size:9px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.06em;line-height:1.2}
-.ins-kpi-chip .val{font-size:14px;font-weight:800;color:var(--txt);line-height:1.2;margin-top:1px;letter-spacing:-.02em}
-.ins-kpi-chip.alert{border-color:#FCA5A5;background:linear-gradient(135deg,#FEF2F2,#FFF);cursor:pointer}
-.ins-kpi-chip.alert i{color:#DC2626}
-.ins-kpi-chip.alert .val{color:#DC2626}
-.ins-kpi-chip.alert:active{transform:scale(.97)}
-.ins-kpi-chip.ok{border-color:#BBF7D0;background:linear-gradient(135deg,#F0FDF4,#FFF)}
-.ins-kpi-chip.ok i{color:#16A34A}
-.ins-kpi-chip.ok .val{color:#16A34A;font-size:12.5px}
-.ins-kpi-chip.neutral{background:var(--surface2)}
-@media(min-width:641px){
-  .ins-kpi-strip{display:none}
-  .ins-hide-mob{display:inline-flex!important}
-}
+/* ══════════════════════════════════════════════════════════ */
+/* ── INSUMOS · MOBILE UX RADICAL REDESIGN ──                */
+/* ══════════════════════════════════════════════════════════ */
 @media(max-width:640px){
-  .ins-hide-mob{display:none!important}
+  .ins-ph-desk{display:none!important}
+  .ins-desk-only{display:none!important}
 }
 
-/* Chip toggle "Solo stock bajo" */
+/* HERO status mobile */
+.ins-hero-mob{display:none}
+@media(max-width:640px){
+  .ins-hero-mob{
+    display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:16px;margin-bottom:12px;
+    border:1.5px solid;-webkit-tap-highlight-color:transparent;animation:hero-in .3s ease both;
+  }
+  .ins-hero-mob.ok{background:linear-gradient(135deg,#F0FDF4 0%,#DCFCE7 100%);border-color:#86EFAC}
+  .ins-hero-mob.alert{background:linear-gradient(135deg,#FEF2F2 0%,#FEE2E2 100%);border-color:#FCA5A5;cursor:pointer}
+  .ins-hero-mob.alert:active{transform:scale(.98)}
+  .ins-hero-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+  .ins-hero-mob.ok .ins-hero-icon{background:#16A34A;color:#FFF;box-shadow:0 4px 10px rgba(22,163,74,.3)}
+  .ins-hero-mob.alert .ins-hero-icon{background:#DC2626;color:#FFF;box-shadow:0 4px 10px rgba(220,38,38,.35);animation:pulse-alert 1.8s ease-in-out infinite}
+  .ins-hero-body{flex:1;min-width:0}
+  .ins-hero-title{font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  .ins-hero-mob.ok .ins-hero-title{color:#15803D}
+  .ins-hero-mob.alert .ins-hero-title{color:#B91C1C}
+  .ins-hero-sub{font-size:11.5px;color:var(--txt3);margin-top:3px;font-weight:600}
+  .ins-hero-cta{display:flex;align-items:center;gap:5px;background:#DC2626;color:#FFF;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;box-shadow:0 4px 10px rgba(220,38,38,.3)}
+  .ins-hero-cta i{font-size:9px}
+}
+@keyframes hero-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes pulse-alert{0%,100%{box-shadow:0 4px 10px rgba(220,38,38,.35)}50%{box-shadow:0 4px 18px rgba(220,38,38,.6)}}
+
+/* Chips horizontales categoría (mobile) */
+.ins-chip-row{display:none}
+@media(max-width:640px){
+  .ins-chip-row{
+    display:flex;gap:6px;overflow-x:auto;padding:2px 14px 8px;margin:0 -14px 4px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;
+  }
+  .ins-chip-row::-webkit-scrollbar{display:none}
+  .ins-chip{
+    flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);
+    font-size:12px;font-weight:700;color:var(--txt3);cursor:pointer;font-family:inherit;white-space:nowrap;
+    transition:all .15s;-webkit-tap-highlight-color:transparent;scroll-snap-align:start;
+  }
+  .ins-chip:active{transform:scale(.94)}
+  .ins-chip.active{background:var(--brand);border-color:var(--brand);color:#FFF;box-shadow:0 3px 10px rgba(244,63,94,.28)}
+  .ins-chip.active.alert{background:#DC2626;border-color:#DC2626;box-shadow:0 3px 10px rgba(220,38,38,.3)}
+  .ins-chip-sep{width:1px;flex-shrink:0;background:var(--border);margin:2px 4px}
+}
+
+/* Card mobile V2: STOCK como hero */
+@media(max-width:640px){
+  .ins-mob-list{gap:10px}
+  .ins-mob-card.v2{
+    padding:14px 16px;border-radius:16px;background:var(--surface);border:1.5px solid var(--border);
+    display:flex;flex-direction:column;gap:10px;cursor:pointer;
+    transition:transform .12s,box-shadow .12s,border-color .12s;-webkit-tap-highlight-color:transparent;
+  }
+  .ins-mob-card.v2:active{transform:scale(.98);box-shadow:0 4px 14px rgba(0,0,0,.06)}
+  .ins-mob-card.v2.low{border-color:#FCA5A5;background:linear-gradient(180deg,#FFFBFB 0%,var(--surface) 60%)}
+  .ins-mob-card.v2.warn{border-color:#FDE68A}
+  .ins-mob-card-head{display:flex;align-items:flex-start;gap:12px}
+  .ins-mob-card-name-wrap{flex:1;min-width:0}
+  .ins-mob-card-name{font-size:14.5px;font-weight:800;color:var(--txt);letter-spacing:-.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ins-mob-card-cat{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
+  .ins-mob-card-sub{font-size:10.5px;color:var(--txt3);font-weight:600}
+  .ins-mob-card-stock{flex-shrink:0;text-align:right;font-family:ui-monospace,SFMono-Regular,monospace}
+  .ins-mob-card-stock .stk-num{font-size:26px;font-weight:900;line-height:1;letter-spacing:-.04em}
+  .ins-mob-card-stock .stk-unit{font-size:10px;color:var(--txt4);font-weight:600;margin-top:2px;font-family:inherit}
+  .ins-mob-card-bar{position:relative;height:5px;background:var(--surface3,#E2E8F0);border-radius:6px;overflow:visible}
+  .ins-mob-card-bar-fill{height:100%;border-radius:6px;transition:width .3s ease}
+  .ins-mob-card-bar-min{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--txt3);border-radius:2px;opacity:.5}
+  .ins-mob-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .ins-mob-card-foot-info{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--txt3);flex-wrap:wrap}
+  .ins-mob-card-min{font-weight:600;color:var(--txt3)}
+  .ins-mob-card-price{font-size:12px;font-weight:700;color:var(--money)}
+  .ins-mob-card-unit{font-size:10px;color:var(--txt4);font-weight:500;margin-left:1px}
+  .ins-mob-card-acts{display:flex;gap:4px}
+  .ins-mob-card-btn{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--txt2);display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:transform .1s,opacity .1s;-webkit-tap-highlight-color:transparent;position:relative}
+  .ins-mob-card-btn::before{content:'';position:absolute;inset:-6px}
+  .ins-mob-card-btn:active{transform:scale(.9);opacity:.75}
+  .ins-mob-card-btn:disabled{opacity:.3}
+  .ins-mob-card-btn.green{background:#DCFCE7;border-color:#86EFAC;color:#15803D}
+  .ins-mob-card-btn.red{background:#FEF2F2;border-color:#FECACA;color:#DC2626}
+}
+
+/* Desktop overrides — hide mobile-only bits */
+@media(min-width:641px){
+  .ins-hero-mob{display:none!important}
+  .ins-chip-row{display:none!important}
+}
+
+/* Chip toggle "Solo stock bajo" (desktop) */
 .ins-chip-toggle{display:inline-flex;align-items:center;gap:5px;height:var(--touch);padding:0 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent}
 .ins-chip-toggle:hover{border-color:#DC2626;color:#DC2626}
 .ins-chip-toggle.active{background:#FEF2F2;border-color:#DC2626;color:#DC2626}
@@ -1813,14 +1883,11 @@ td b{color:var(--txt);font-weight:600}
 .tbl th.tbl-sort:hover{color:var(--brand)}
 .tbl th.tbl-sort:active{opacity:.7}
 
-/* FAB flotante mobile */
-.ins-fab{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom,0px));right:16px;width:56px;height:56px;border-radius:50%;background:var(--brand);color:#FFF;border:none;font-size:22px;box-shadow:0 8px 22px rgba(244,63,94,.42),0 2px 6px rgba(0,0,0,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:60;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}
-.ins-fab:active{transform:scale(.92);box-shadow:0 4px 12px rgba(244,63,94,.35)}
+/* FAB flotante mobile — más notorio */
+.ins-fab{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom,0px));right:18px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--brand) 0%,#E11D48 100%);color:#FFF;border:none;font-size:24px;box-shadow:0 10px 28px rgba(244,63,94,.5),0 3px 8px rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:60;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+.ins-fab:active{transform:scale(.9);box-shadow:0 5px 14px rgba(244,63,94,.4)}
+.ins-fab::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(244,63,94,.15);pointer-events:none}
 @media(min-width:641px){.ins-fab{display:none}}
-
-/* Solo mobile helper */
-.ins-only-mob{display:block}
-@media(min-width:641px){.ins-only-mob{display:none!important}}
 
 /* Calculadora de fraccionamiento */
 .pkg-calc-card{background:rgba(99,102,241,.06);border:1.5px solid rgba(99,102,241,.2);border-radius:12px;padding:14px 16px;margin-top:8px;display:flex;flex-direction:column;gap:10px}

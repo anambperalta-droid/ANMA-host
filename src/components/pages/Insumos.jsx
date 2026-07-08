@@ -260,49 +260,49 @@ export default function Insumos() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
-      <div className="ph">
+      <div className="ph ins-ph-desk">
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 2 }}>
             <i className="fa fa-cube" style={{ marginRight: 4 }} />Materiales de Packaging
           </div>
         </div>
         <div className="ph-right" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button className="btn btn-ghost btn-sm ins-hide-mob" onClick={exportCsv} title="Exportar CSV" style={{ minHeight: 40 }}>
+          <button className="btn btn-ghost btn-sm" onClick={exportCsv} title="Exportar CSV" style={{ minHeight: 40 }}>
             <i className="fa fa-file-arrow-down" /> Exportar
           </button>
-          <button className="btn btn-primary ins-hide-mob" onClick={openNew} style={{ minHeight: 44 }}>
+          <button className="btn btn-primary" onClick={openNew} style={{ minHeight: 44 }}>
             <i className="fa fa-plus" /> Nuevo material
           </button>
         </div>
       </div>
 
-      {/* ── KPI strip mobile (compacto, solo lo esencial) ── */}
-      <div className="ins-kpi-strip">
-        <div className={`ins-kpi-chip ${lowStock.length > 0 ? 'alert' : 'ok'}`} onClick={() => { if (lowStock.length > 0) setShowLowOnly(v => !v) }}>
+      {/* ── HERO status mobile (una sola card grande, tap-to-filter) ── */}
+      <div
+        className={`ins-hero-mob ${lowStock.length > 0 ? 'alert' : 'ok'}`}
+        onClick={() => { if (lowStock.length > 0) setShowLowOnly(v => !v) }}
+        role={lowStock.length > 0 ? 'button' : undefined}
+      >
+        <div className="ins-hero-icon">
           <i className={`fa fa-${lowStock.length > 0 ? 'triangle-exclamation' : 'circle-check'}`} />
-          <div>
-            <div className="lbl">Stock bajo</div>
-            <div className="val">{lowStock.length === 0 ? 'Todo OK' : `${lowStock.length} material${lowStock.length === 1 ? '' : 'es'}`}</div>
+        </div>
+        <div className="ins-hero-body">
+          <div className="ins-hero-title">
+            {lowStock.length === 0 ? 'Todo en orden' : `${lowStock.length} ${lowStock.length === 1 ? 'material crítico' : 'materiales críticos'}`}
+          </div>
+          <div className="ins-hero-sub">
+            {insumos.length} {insumos.length === 1 ? 'material' : 'materiales'} · {fmt(totalValue)}
           </div>
         </div>
-        <div className="ins-kpi-chip neutral">
-          <i className="fa fa-coins" />
-          <div>
-            <div className="lbl">Valor packaging</div>
-            <div className="val">{fmt(totalValue)}</div>
+        {lowStock.length > 0 && (
+          <div className="ins-hero-cta">
+            {showLowOnly ? 'Ver todos' : 'Ver'}
+            <i className="fa fa-arrow-right" />
           </div>
-        </div>
-        <div className="ins-kpi-chip neutral">
-          <i className="fa fa-cubes" />
-          <div>
-            <div className="lbl">Total</div>
-            <div className="val">{insumos.length}</div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ── KPIs desktop ── */}
-      <div className="bento bento-kpis-4 ins-hide-mob" style={{ marginBottom: 14 }}>
+      <div className="bento bento-kpis-4 ins-desk-only" style={{ marginBottom: 14 }}>
         <div className="bento-kpi" style={{ borderLeft: '3px solid var(--brand)', padding: '12px 14px 10px' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Total materiales</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.03em', lineHeight: 1.1 }}>{insumos.length}</div>
@@ -327,9 +327,9 @@ export default function Insumos() {
         </div>
       </div>
 
-      {/* Low stock banner */}
+      {/* Low stock banner (desktop) — mobile ya lo cubre el HERO */}
       {lowStock.length > 0 && !alertDismissed && (
-        <div style={{ background: 'var(--red-lt)', border: '1.5px solid #FCA5A5', borderRadius: 10, padding: '10px 16px', marginBottom: 14, fontSize: 12, color: 'var(--red)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="ins-desk-only" style={{ background: 'var(--red-lt)', border: '1.5px solid #FCA5A5', borderRadius: 10, padding: '10px 16px', marginBottom: 14, fontSize: 12, color: 'var(--red)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <i className="fa fa-triangle-exclamation" />
           <span style={{ flex: 1 }}><b>{lowStock.length} material{lowStock.length > 1 ? 'es' : ''}</b> con stock bajo: {lowStock.slice(0, 4).map(x => x.name).join(', ')}{lowStock.length > 4 ? '...' : ''}</span>
           <button onClick={dismissLowAlert} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '2px 4px', borderRadius: 4, fontSize: 14, flexShrink: 0, opacity: 0.7 }}><i className="fa fa-xmark" /></button>
@@ -351,18 +351,18 @@ export default function Insumos() {
             </div>
           )}
 
-          {/* Filtros */}
+          {/* Filtros — mobile: search + chips; desktop: fila plana */}
           <div className="ins-filter-bar">
             <div className="search-row">
               <i className="fa fa-magnifying-glass" />
-              <input type="text" placeholder="Buscar material o tipo..." value={search} onChange={e => setSearch(e.target.value)} />
+              <input type="text" placeholder="Buscar material..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <select className="ins-filter-sel" value={catFilter} onChange={e => setCatFilter(e.target.value)}>
+            <select className="ins-filter-sel ins-desk-only" value={catFilter} onChange={e => setCatFilter(e.target.value)}>
               <option value="all">Todas las categorías</option>
               {cats.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
             </select>
             <select
-              className="ins-filter-sel ins-only-mob"
+              className="ins-filter-sel ins-desk-only"
               value={`${sortField}:${sortDir}`}
               onChange={e => {
                 const [f, d] = e.target.value.split(':')
@@ -372,20 +372,34 @@ export default function Insumos() {
             >
               <option value="recent:desc">Más recientes</option>
               <option value="name:asc">Nombre A-Z</option>
-              <option value="name:desc">Nombre Z-A</option>
-              <option value="stock:asc">Stock ↑</option>
               <option value="stock:desc">Stock ↓</option>
-              <option value="cost:asc">Costo ↑</option>
               <option value="cost:desc">Costo ↓</option>
             </select>
             <button
               onClick={() => setShowLowOnly(v => !v)}
-              className={`ins-chip-toggle${showLowOnly ? ' active' : ''}`}
+              className={`ins-chip-toggle ins-desk-only${showLowOnly ? ' active' : ''}`}
               title="Filtrar solo stock bajo"
             >
               <i className="fa fa-triangle-exclamation" style={{ fontSize: 10 }} />
               Stock bajo
               {lowStock.length > 0 && <span className="cnt">{lowStock.length}</span>}
+            </button>
+          </div>
+
+          {/* Chips horizontales mobile — categoría + stock bajo */}
+          <div className="ins-chip-row">
+            <button className={`ins-chip${catFilter === 'all' ? ' active' : ''}`} onClick={() => setCatFilter('all')}>
+              Todas
+            </button>
+            {cats.map(cat => (
+              <button key={cat.id} className={`ins-chip${catFilter === cat.id ? ' active' : ''}`} onClick={() => setCatFilter(cat.id)}>
+                {cat.label}
+              </button>
+            ))}
+            <div className="ins-chip-sep" />
+            <button className={`ins-chip${showLowOnly ? ' active alert' : ''}`} onClick={() => setShowLowOnly(v => !v)}>
+              <i className="fa fa-triangle-exclamation" style={{ fontSize: 9, marginRight: 3 }} />
+              Bajo{lowStock.length > 0 && ` (${lowStock.length})`}
             </button>
           </div>
 
@@ -402,36 +416,49 @@ export default function Insumos() {
             )}
             {filtered.map(item => {
               const level = stockLevel(item.stock, item.minStock)
-              const led = LED_DOT[level]
               const rend = rendimiento(item)
+              const stock = item.stock || 0
+              const minS = item.minStock || 0
+              const target = minS > 0 ? minS * 2 : Math.max(stock, 10)
+              const pct = Math.max(4, Math.min(100, Math.round((stock / target) * 100)))
+              const barColor = level === 'low' ? '#DC2626' : level === 'warn' ? '#F59E0B' : '#16A34A'
               return (
-                <div key={item.id} className={`ins-mob-card${level === 'low' ? ' low' : ''}`}>
-                  {led
-                    ? <div className={`ins-mob-card-dot${led.pulse ? ' ins-led-pulse' : ''}`} style={{ background: led.bg }} />
-                    : <div className="ins-mob-card-dot" style={{ background: 'transparent' }} />
-                  }
-                  <div className="ins-mob-card-body">
-                    <div className="ins-mob-card-name">{item.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3, flexWrap: 'wrap', minHeight: 16 }}>
-                      {item.cat && <span className={`badge ${CAT_CLS[item.cat] || 'b-draft'}`} style={{ fontSize: 9, padding: '1px 5px' }}>{catLabel(item.cat)}</span>}
-                      {rend !== null && <span style={{ fontSize: 10, color: '#16A34A', fontWeight: 700 }}>~{rend} regalos</span>}
+                <div key={item.id} className={`ins-mob-card v2 ${level}`} onClick={() => openEdit(item)}>
+                  <div className="ins-mob-card-head">
+                    <div className="ins-mob-card-name-wrap">
+                      <div className="ins-mob-card-name">{item.name}</div>
+                      <div className="ins-mob-card-cat">
+                        {item.cat && <span className={`badge ${CAT_CLS[item.cat] || 'b-draft'}`} style={{ fontSize: 9, padding: '1px 6px' }}>{catLabel(item.cat)}</span>}
+                        {rend !== null && <span className="ins-mob-card-sub" style={{ color: '#16A34A', fontWeight: 700 }}>~{rend} regalos</span>}
+                      </div>
                     </div>
-                    <div className="ins-mob-card-meta">
-                      Stock: <b style={{ color: level === 'low' ? '#DC2626' : level === 'warn' ? '#D97706' : 'var(--txt)' }}>{item.stock || 0}</b> {item.unit || 'un'}
-                      {item.minStock > 0 && <span style={{ color: 'var(--txt4)', marginLeft: 6 }}>· mín {item.minStock}</span>}
+                    <div className="ins-mob-card-stock" style={{ color: barColor }}>
+                      <div className="stk-num">{stock}</div>
+                      <div className="stk-unit">{item.unit || 'un'}</div>
                     </div>
                   </div>
-                  <div className="ins-mob-card-right">
-                    <div>
-                      <div className="ins-mob-card-price">{fmt(item.cost)}</div>
-                      <div className="ins-mob-card-unit">/{item.unit || 'un'}</div>
+
+                  <div className="ins-mob-card-bar">
+                    <div className="ins-mob-card-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
+                    {minS > 0 && <div className="ins-mob-card-bar-min" style={{ left: `${Math.min(95, Math.round((minS / target) * 100))}%` }} />}
+                  </div>
+
+                  <div className="ins-mob-card-foot">
+                    <div className="ins-mob-card-foot-info">
+                      {minS > 0 && (
+                        <span className="ins-mob-card-min">
+                          <i className="fa fa-flag" style={{ fontSize: 8, marginRight: 3, opacity: .6 }} />
+                          mín {minS}
+                        </span>
+                      )}
+                      <span className="ins-mob-card-price">{fmt(item.cost)}<span className="ins-mob-card-unit">/{item.unit || 'un'}</span></span>
                     </div>
-                    <div className="ins-mob-card-acts">
+                    <div className="ins-mob-card-acts" onClick={e => e.stopPropagation()}>
+                      <button className="ins-mob-card-btn" title="-1" onClick={() => quickAdjust(item, -1)} disabled={stock <= 0}>
+                        <i className="fa fa-minus" />
+                      </button>
                       <button className="ins-mob-card-btn green" title="+1" onClick={() => quickAdjust(item, 1)}>
                         <i className="fa fa-plus" />
-                      </button>
-                      <button className="ins-mob-card-btn" title="Editar" onClick={() => openEdit(item)}>
-                        <i className="fa fa-pen" />
                       </button>
                       <button className="ins-mob-card-btn red" title="Eliminar" onClick={() => remove(item.id)}>
                         <i className="fa fa-trash" />
