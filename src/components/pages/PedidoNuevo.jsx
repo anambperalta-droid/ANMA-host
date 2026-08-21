@@ -77,6 +77,26 @@ export default function PedidoNuevo() {
   const saveTimer   = useRef(null)
   const dirtyRef    = useRef(false)
   const skipNextRef = useRef(false)
+  const firstMount  = useRef(true)
+
+  // ── Sincronizar cambios de URL con el estado ──
+  // "+ Nuevo pedido" navega a /pedido (sin id) desde /pedido/:id → reset.
+  // Editar desde Historial navega a /pedido/:id → cargar ese pedido.
+  // El primer save hace nav(replace) a /pedido/:id — se ignora acá porque
+  // pedido.id ya coincide con id de la URL.
+  useEffect(() => {
+    if (firstMount.current) { firstMount.current = false; return }
+    if (id && String(pedido.id) === String(id)) return
+    if (id) {
+      const b = get('budgets', []).find(x => String(x.id) === String(id))
+      if (b) { setPedido(pedidoFromBudget(b)); setLastSaved(Date.now()) }
+    } else {
+      setPedido(pedidoVacio())
+      setLastSaved(null)
+    }
+    dirtyRef.current    = false
+    skipNextRef.current = true
+  }, [id]) // eslint-disable-line
 
   const clients  = get('clients', [])
   const products = get('products', [])
@@ -91,6 +111,7 @@ export default function PedidoNuevo() {
     setSaving(true)
     saveTimer.current = setTimeout(() => {
       try {
+        const wasNew = !pedido.id
         const prev  = pedido.id ? get('budgets', []).find(x => x.id === pedido.id) : {}
         const budget = budgetFromPedido(pedido, prev)
         const saved  = saveBudget(budget)
@@ -98,6 +119,9 @@ export default function PedidoNuevo() {
         setPedido(p => ({ ...p, id: saved.id, numero: saved.num, updatedAt: saved.updatedAt }))
         setLastSaved(Date.now())
         dirtyRef.current = false
+        // Primer save de un pedido nuevo: reflejamos el id en la URL para
+        // que F5 no pierda la referencia. replace: true no ensucia el back.
+        if (wasNew && saved?.id) nav(`/pedido/${saved.id}`, { replace: true })
       } catch {
         toast('No se pudo guardar. Revisá los datos.', 'er')
       } finally {
@@ -191,7 +215,14 @@ export default function PedidoNuevo() {
               })
             }}
           />
-          <button onClick={() => nav(-1)} className="btn btn-ghost btn-sm" style={{ borderRadius: 10 }}>
+          {pedido.id && (
+            <button onClick={() => nav('/pedido')} className="btn btn-sm"
+              title="Empezar otro pedido"
+              style={{ borderRadius: 10, background: 'var(--brand, #7c3aed)', color: '#fff', border: 'none' }}>
+              <i className="fa fa-plus" /> Nuevo
+            </button>
+          )}
+          <button onClick={() => nav('/')} className="btn btn-ghost btn-sm" style={{ borderRadius: 10 }}>
             <i className="fa fa-arrow-left" /> Volver
           </button>
         </div>
