@@ -26,6 +26,33 @@ const ESTADO_COMPRA_LABELS = {
   recibido:  'Recibido',
 }
 
+// Paleta de estados — chips con color diferenciado por etapa del ciclo
+const ESTADO_COLOR = {
+  consulta:      { bg: '#f1f5f9', fg: '#475569', bd: '#cbd5e1' },
+  presupuestado: { bg: '#dbeafe', fg: '#1d4ed8', bd: '#bfdbfe' },
+  pausado:       { bg: '#fef3c7', fg: '#b45309', bd: '#fde68a' },
+  confirmado:    { bg: '#dcfce7', fg: '#15803d', bd: '#bbf7d0' },
+  produccion:    { bg: '#ede9fe', fg: '#6d28d9', bd: '#ddd6fe' },
+  entregado:     { bg: '#d1fae5', fg: '#065f46', bd: '#a7f3d0' },
+  cerrado:       { bg: '#f1f5f9', fg: '#64748b', bd: '#cbd5e1' },
+  perdido:       { bg: '#fee2e2', fg: '#b91c1c', bd: '#fecaca' },
+}
+
+const ESTADO_COMPRA_COLOR = {
+  pendiente: { bg: '#f8fafc', fg: '#64748b', bd: '#e2e8f0' },
+  pedido:    { bg: '#dbeafe', fg: '#1e40af', bd: '#bfdbfe' },
+  recibido:  { bg: '#dcfce7', fg: '#166534', bd: '#bbf7d0' },
+}
+
+// Iconos por bloque con color soft — le da identidad sin ruido
+const SECCION_META = {
+  cliente:  { icon: 'fa-user-tie',    color: '#7c3aed' },
+  lineas:   { icon: 'fa-list-check',  color: '#0891b2' },
+  precio:   { icon: 'fa-coins',       color: '#16a34a' },
+  entrega:  { icon: 'fa-truck-fast',  color: '#ea580c' },
+  nota:     { icon: 'fa-pen-to-square', color: '#64748b' },
+}
+
 const hasMinimum = (p) =>
   !!(p.clienteNombre || p.contact || p.company) &&
   p.lineas.some(l => l.descripcion && l.descripcion.trim().length > 0)
@@ -143,11 +170,7 @@ export default function PedidoNuevo() {
           <SaveIndicator saving={saving} lastSaved={lastSaved} pedido={pedido} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <select value={pedido.estado} onChange={e => update({ estado: e.target.value })}
-            title="Estado del pedido"
-            style={{ ...inputStyle, padding: '7px 10px', maxWidth: 170, fontWeight: 600 }}>
-            {ESTADOS.map(k => <option key={k} value={k}>{ESTADO_LABELS[k]}</option>)}
-          </select>
+          <EstadoSelect value={pedido.estado} onChange={v => update({ estado: v })} />
           <MenuMore
             pedido={pedido}
             onDuplicate={() => {
@@ -177,7 +200,7 @@ export default function PedidoNuevo() {
 
         {/* ── CLIENTE ── */}
         <section style={cardStyle}>
-          <h3 style={sectionTitle}>Cliente</h3>
+          <SectionTitle meta={SECCION_META.cliente} label="Cliente" />
           <div ref={clientBoxRef} style={{ position: 'relative' }}>
             <input
               type="text"
@@ -225,7 +248,7 @@ export default function PedidoNuevo() {
         {/* ── LÍNEAS ── */}
         <section style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h3 style={sectionTitle}>Líneas</h3>
+            <SectionTitle meta={SECCION_META.lineas} label="Líneas" />
             <button onClick={addLinea} className="btn btn-sm"
               style={{ background: 'var(--brand, #7c3aed)', color: '#fff', border: 'none', borderRadius: 10, padding: '6px 12px' }}>
               <i className="fa fa-plus" /> Agregar
@@ -254,7 +277,7 @@ export default function PedidoNuevo() {
 
         {/* ── PRECIO ── */}
         <section style={cardStyle}>
-          <h3 style={sectionTitle}>Precio</h3>
+          <SectionTitle meta={SECCION_META.precio} label="Precio" />
           <PrecioBlock pedido={pedido} totales={totales}
             onTotalChange={setPrecioFinal}
             onMargenChange={setMargen}
@@ -265,7 +288,7 @@ export default function PedidoNuevo() {
 
         {/* ── ENTREGA ── */}
         <section style={cardStyle}>
-          <h3 style={sectionTitle}>Entrega</h3>
+          <SectionTitle meta={SECCION_META.entrega} label="Entrega" />
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,240px)', gap: 12 }}>
             <div>
               <label style={labelStyle}>Fecha</label>
@@ -278,7 +301,7 @@ export default function PedidoNuevo() {
 
         {/* ── NOTA INTERNA ── */}
         <section style={cardStyle}>
-          <h3 style={sectionTitle}>Nota interna</h3>
+          <SectionTitle meta={SECCION_META.nota} label="Nota interna" />
           <textarea value={pedido.notaInterna}
             onChange={e => update({ notaInterna: e.target.value })}
             rows={4}
@@ -346,11 +369,8 @@ function LineaRow({ linea, onChange, onRemove, canRemove }) {
       <input className="l-precio" type="number" min={0} value={linea.precioUnit}
         onChange={e => onChange({ precioUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
         placeholder="0" style={{ ...inputStyle, textAlign: 'right' }} />
-      <select className="l-estado" value={linea.estadoCompra}
-        onChange={e => onChange({ estadoCompra: e.target.value })}
-        style={{ ...inputStyle, padding: '7px 8px' }}>
-        {ESTADOS_COMPRA.map(k => <option key={k} value={k}>{ESTADO_COMPRA_LABELS[k]}</option>)}
-      </select>
+      <EstadoCompraChip className="l-estado" value={linea.estadoCompra}
+        onChange={v => onChange({ estadoCompra: v })} />
       <button onClick={onRemove} disabled={!canRemove}
         title={canRemove ? 'Eliminar línea' : 'Al menos una línea'}
         className="l-remove"
@@ -380,16 +400,22 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
 
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
-        marginTop: 4, marginBottom: 4,
+        padding: '12px 14px',
+        background: totales.total > 0 ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : 'transparent',
+        border: totales.total > 0 ? '1px solid #bbf7d0' : '1px solid var(--border)',
+        borderRadius: 10,
+        marginTop: 6, marginBottom: 6,
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.03em' }}>TOTAL</span>
+        <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.05em', color: totales.total > 0 ? '#065f46' : 'var(--txt)' }}>TOTAL</span>
         <input type="number" min={0}
           value={totales.total || ''}
           onChange={e => onTotalChange(e.target.value)}
           style={{
-            ...inputStyle, textAlign: 'right', fontWeight: 700, fontSize: 16,
-            maxWidth: 180, borderColor: 'var(--brand, #7c3aed)',
+            ...inputStyle, textAlign: 'right', fontWeight: 800, fontSize: 17,
+            maxWidth: 180,
+            borderColor: totales.total > 0 ? '#86efac' : 'var(--brand, #7c3aed)',
+            color: totales.total > 0 ? '#065f46' : 'var(--txt)',
+            background: '#fff',
           }} />
       </div>
 
@@ -424,6 +450,60 @@ function Row({ label, value }) {
       <span style={{ color: 'var(--txt3)' }}>{label}</span>
       <span style={{ fontWeight: 600, color: 'var(--txt)' }}>{value}</span>
     </div>
+  )
+}
+
+function SectionTitle({ meta, label }) {
+  return (
+    <h3 style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      fontSize: 12, fontWeight: 700,
+      color: 'var(--txt3, #64748b)',
+      textTransform: 'uppercase', letterSpacing: '.06em',
+      margin: '0 0 12px',
+    }}>
+      <span style={{
+        width: 24, height: 24, borderRadius: 7,
+        background: meta.color + '18', color: meta.color,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
+      }}>
+        <i className={`fa ${meta.icon}`} />
+      </span>
+      {label}
+    </h3>
+  )
+}
+
+function EstadoSelect({ value, onChange }) {
+  const st = ESTADO_COLOR[value] || ESTADO_COLOR.consulta
+  return (
+    <select value={value} onChange={e => onChange(e.target.value)}
+      title="Estado del pedido"
+      style={{
+        padding: '7px 12px', maxWidth: 180, fontWeight: 700, fontSize: 12,
+        border: `1.5px solid ${st.bd}`, borderRadius: 999,
+        background: st.bg, color: st.fg,
+        fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
+        letterSpacing: '.02em',
+      }}>
+      {ESTADOS.map(k => <option key={k} value={k}>{ESTADO_LABELS[k]}</option>)}
+    </select>
+  )
+}
+
+function EstadoCompraChip({ value, onChange, className }) {
+  const st = ESTADO_COMPRA_COLOR[value] || ESTADO_COMPRA_COLOR.pendiente
+  return (
+    <select className={className} value={value} onChange={e => onChange(e.target.value)}
+      style={{
+        padding: '6px 10px', fontSize: 11, fontWeight: 700,
+        border: `1px solid ${st.bd}`, borderRadius: 999,
+        background: st.bg, color: st.fg,
+        fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
+        appearance: 'none', WebkitAppearance: 'none', textAlign: 'center',
+      }}>
+      {ESTADOS_COMPRA.map(k => <option key={k} value={k}>{ESTADO_COMPRA_LABELS[k]}</option>)}
+    </select>
   )
 }
 
@@ -489,15 +569,6 @@ const cardStyle = {
   border: '1px solid var(--border, #e2e8f0)',
   borderRadius: 14,
   padding: 18,
-}
-
-const sectionTitle = {
-  fontSize: 11,
-  fontWeight: 700,
-  color: 'var(--txt3, #64748b)',
-  textTransform: 'uppercase',
-  letterSpacing: '.06em',
-  margin: '0 0 12px',
 }
 
 const labelStyle = {
