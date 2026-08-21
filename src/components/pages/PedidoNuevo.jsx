@@ -241,7 +241,7 @@ export default function PedidoNuevo() {
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
-        <section style={cardStyle}>
+        <section style={cardStyleFor('cliente')}>
           <SectionTitle meta={SECCION_META.cliente} label="Cliente" />
           <div ref={clientBoxRef} style={{ position: 'relative' }}>
             <input
@@ -288,7 +288,7 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── LÍNEAS ── */}
-        <section style={cardStyle}>
+        <section style={cardStyleFor('lineas')}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <SectionTitle meta={SECCION_META.lineas} label="Líneas" />
             <button onClick={addLinea} className="btn btn-sm"
@@ -320,7 +320,7 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── PRECIO ── */}
-        <section style={cardStyle}>
+        <section style={cardStyleFor('precio')}>
           <SectionTitle meta={SECCION_META.precio} label="Precio" />
           <PrecioBlock pedido={pedido} totales={totales}
             onTotalChange={setPrecioFinal}
@@ -331,20 +331,42 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── ENTREGA ── */}
-        <section style={cardStyle}>
+        <section style={cardStyleFor('entrega')}>
           <SectionTitle meta={SECCION_META.entrega} label="Entrega" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,240px)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12 }} className="pedido-entrega-grid">
             <div>
               <label style={labelStyle}>Fecha</label>
               <input type="date" value={pedido.fechaEntrega || ''}
                 onChange={e => update({ fechaEntrega: e.target.value })}
                 style={inputStyle} />
             </div>
+            <div>
+              <label style={labelStyle}>Horario / preferencia</label>
+              <input type="text" value={pedido.horarioEntrega || ''}
+                onChange={e => update({ horarioEntrega: e.target.value })}
+                placeholder="Ej: mañana antes de las 12" style={inputStyle} />
+            </div>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={labelStyle}>Dirección</label>
+            <input type="text" value={pedido.direccionEntrega || ''}
+              onChange={e => update({ direccionEntrega: e.target.value })}
+              placeholder="Calle, número, piso, ciudad" style={inputStyle} />
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <label style={labelStyle}>Contacto para coordinar</label>
+            <input type="text" value={pedido.contactoEntrega || ''}
+              onChange={e => update({ contactoEntrega: e.target.value })}
+              placeholder="Nombre y teléfono de quien recibe" style={inputStyle} />
+          </div>
+          <div style={{ marginTop: 10, fontSize: 11, color: 'var(--txt3)' }}>
+            <i className="fa fa-info-circle" style={{ marginRight: 6 }} />
+            Los envíos con comisionista se cargan en <b>Logística</b> y se enlazan por número de pedido.
           </div>
         </section>
 
         {/* ── NOTA INTERNA ── */}
-        <section style={cardStyle}>
+        <section style={cardStyleFor('nota')}>
           <SectionTitle meta={SECCION_META.nota} label="Nota interna" />
           <textarea value={pedido.notaInterna}
             onChange={e => update({ notaInterna: e.target.value })}
@@ -688,13 +710,18 @@ function MenuItem({ icon, label, onClick, color, disabled }) {
 
 // ── Styles ─────────────────────────────────────────────────────────
 
-const cardStyle = {
-  background: 'var(--surface, #fff)',
-  border: '1px solid var(--border, #e2e8f0)',
-  borderRadius: 14,
-  padding: 18,
+// Card con banda superior del color del bloque + sombra suave
+function cardStyleFor(sectionKey) {
+  const color = SECCION_META[sectionKey]?.color || '#7c3aed'
+  return {
+    background: 'var(--surface, #fff)',
+    border: '1px solid var(--border, #e2e8f0)',
+    borderRadius: 14,
+    padding: 18,
+    borderTop: `3px solid ${color}`,
+    boxShadow: '0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.03)',
+  }
 }
-
 const labelStyle = {
   display: 'block',
   fontSize: 11,

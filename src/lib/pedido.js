@@ -298,8 +298,11 @@ export function pedidoFromBudget(budget) {
     precioFinalManual: num(budget.total) > 0 ? num(budget.total) : null,
     aplicaIva:    !!budget.aplicaIva,
 
-    fechaEntrega: budget.deliveryDate || '',
-    seniaMonto:   num(budget.depositAmt) || (num(budget.total) * num(budget.deposit) / 100) || 0,
+    fechaEntrega:     budget.deliveryDate    || '',
+    horarioEntrega:   budget.deliveryTime    || '',
+    direccionEntrega: budget.deliveryAddress || '',
+    contactoEntrega:  budget.deliveryContact || '',
+    seniaMonto:       num(budget.depositAmt) || (num(budget.total) * num(budget.deposit) / 100) || 0,
 
     notaInterna:  budget.noteInt || '',
 
@@ -421,8 +424,11 @@ export function budgetFromPedido(pedido, prevBudget = {}) {
     aplicaIva:  !!pedido.aplicaIva,
 
     // ── Entrega (contrato Mensajes) ──
-    deliveryDate: pedido.fechaEntrega || '',
-    delivery:     prevBudget.delivery || '',
+    deliveryDate:    pedido.fechaEntrega     || '',
+    deliveryTime:    pedido.horarioEntrega   || '',
+    deliveryAddress: pedido.direccionEntrega || '',
+    deliveryContact: pedido.contactoEntrega  || '',
+    delivery:        prevBudget.delivery     || '',
     shipCost:     pedido.lineas.filter(l => l.tag === 'envio').reduce((s, l) => s + num(l.costoUnit), 0),
     shipCharged:  pedido.lineas.some(l => l.tag === 'envio' && num(l.precioUnit) > 0),
     envioACotizar: false,
@@ -546,6 +552,9 @@ export function pedidoVacio(overrides = {}) {
     precioFinalManual: null,
     aplicaIva: false,
     fechaEntrega: '',
+    horarioEntrega: '',
+    direccionEntrega: '',
+    contactoEntrega: '',
     seniaMonto: 0,
     notaInterna: '',
     alternativas: [],
