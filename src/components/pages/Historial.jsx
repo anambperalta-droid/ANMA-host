@@ -624,7 +624,7 @@ const ganCobrada = (b) => {
 // ─────────────────────────────────────────────────────────────────
 
 export default function Historial() {
-  const { get, config, updateBudgetStatus, deleteBudget, saveBudget, deductKitStock, restoreKitStock } = useData()
+  const { get, config, updateBudgetStatus, deleteBudget, saveBudget } = useData()
   const toast   = useToast()
   const confirm = useConfirm()
   const nav = useNavigate()
@@ -990,52 +990,22 @@ export default function Historial() {
     partial: { bg: '#FFFBEB', color: '#D97706', border: '#FCD34D' },
     paid:    { bg: '#F0FDF4', color: '#16A34A', border: '#86EFAC' },
   }
-  const REGALOS_QUALIFYING = new Set(['inprogress', 'delivered'])
-  const REGALOS_REVERSING  = new Set(['lost', 'cancelled', 'draft', 'pending', 'sent', 'negotiating'])
-  const getApprovedAlt = (b) => (b.alternatives || []).find(a => a.approved) || (b.alternatives || [])[0]
   const handlePayStatusChange = (id, payStatus) => {
     const b = budgets.find(x => x.id === id)
     if (!b) return
-    // Revertir descuento si el pago vuelve a pending/partial y el pedido NO está en estado calificador
-    if ((payStatus === 'pending' || payStatus === 'partial') && b.stockDeducted && !REGALOS_QUALIFYING.has(b.status)) {
-      const approvedAlt = getApprovedAlt(b)
-      if (approvedAlt) restoreKitStock(approvedAlt, b.num || '', 'pago revertido')
-      saveBudget({ ...b, payStatus, stockDeducted: false })
-      toast('Pago actualizado · stock restaurado', 'ok')
-      return
-    }
-    saveBudget({ ...b, payStatus }); toast('Pago actualizado', 'ok')
+    saveBudget({ ...b, payStatus })
+    toast('Pago actualizado', 'ok')
   }
   const handleStatusChange = (id, status) => {
-    if (status === 'lost') {
-      setPendingLossId(id)
-      return
-    }
-    const b = budgets.find(x => x.id === id)
-    if (!b) return
-    // Reverso: si pasa a un estado que cancela la venta y había stock descontado → devolver al inventario
-    if (b.stockDeducted && REGALOS_REVERSING.has(status)) {
-      const approvedAlt = getApprovedAlt(b)
-      if (approvedAlt) restoreKitStock(approvedAlt, b.num || '', status)
-      saveBudget({ ...b, status, stockDeducted: false })
-      toast('Estado actualizado · stock restaurado', 'ok')
-      return
-    }
-    if (REGALOS_QUALIFYING.has(status) && !b.stockDeducted) {
-      const approvedAlt = getApprovedAlt(b)
-      if (approvedAlt) deductKitStock(approvedAlt, b.num || '')
-      const frozenCost = b.totalCost ?? (b.baseCost || 0)
-      saveBudget({ ...b, status, stockDeducted: true, totalCost: frozenCost, totalGain: (b.total || 0) - frozenCost })
-      toast('Estado actualizado', 'ok')
-      return
-    }
-    updateBudgetStatus(id, status); toast('Estado actualizado', 'ok')
+    if (status === 'lost') { setPendingLossId(id); return }
+    updateBudgetStatus(id, status)
+    toast('Estado actualizado', 'ok')
   }
   const confirmLoss = ({ reason, keptDeposit }) => {
     if (!pendingLossId) return
     const b = budgets.find(x => x.id === pendingLossId)
     if (b) {
-      const payments = keptDeposit === false ? [] : (b.payments || [])
+      const payments  = keptDeposit === false ? [] : (b.payments || [])
       const payStatus = keptDeposit === false ? 'pending' : b.payStatus
       const patch = {
         status: 'lost',
@@ -1045,17 +1015,9 @@ export default function Historial() {
         payments,
         payStatus,
       }
-      if (b.stockDeducted) {
-        const approvedAlt = getApprovedAlt(b)
-        if (approvedAlt) restoreKitStock(approvedAlt, b.num || '', 'lost')
-        saveBudget({ ...b, ...patch, stockDeducted: false })
-        const extra = keptDeposit === true ? ' · seña preservada como ingreso' : keptDeposit === false ? ' · seña devuelta' : ''
-        toast(`Marcado como perdido · ${reason} · stock restaurado${extra}`, 'in')
-      } else {
-        saveBudget({ ...b, ...patch })
-        const extra = keptDeposit === true ? ' · seña preservada' : keptDeposit === false ? ' · seña devuelta' : ''
-        toast(`Marcado como perdido · ${reason}${extra}`, 'in')
-      }
+      saveBudget({ ...b, ...patch })
+      const extra = keptDeposit === true ? ' · seña preservada' : keptDeposit === false ? ' · seña devuelta' : ''
+      toast(`Marcado como perdido · ${reason}${extra}`, 'in')
     }
     setPendingLossId(null)
   }
@@ -1071,31 +1033,8 @@ export default function Historial() {
       toast('Marcá los presupuestos como "Perdido" uno a uno para registrar el motivo', 'in')
       return
     }
-    const isQualifying = REGALOS_QUALIFYING.has(bulkStatus)
-    const isReversing  = REGALOS_REVERSING.has(bulkStatus)
-    let restoredCount = 0
-    selectedIds.forEach(id => {
-      const b = budgets.find(x => x.id === id)
-      if (!b) return
-      if (isReversing && b.stockDeducted) {
-        const approvedAlt = getApprovedAlt(b)
-        if (approvedAlt) restoreKitStock(approvedAlt, b.num || '', bulkStatus)
-        saveBudget({ ...b, status: bulkStatus, stockDeducted: false })
-        restoredCount++
-        return
-      }
-      if (isQualifying && !b.stockDeducted) {
-        const approvedAlt = getApprovedAlt(b)
-        if (approvedAlt) deductKitStock(approvedAlt, b.num || '')
-        const frozenCost = b.totalCost ?? (b.baseCost || 0)
-        saveBudget({ ...b, status: bulkStatus, stockDeducted: true, totalCost: frozenCost, totalGain: (b.total || 0) - frozenCost })
-        return
-      }
-      updateBudgetStatus(id, bulkStatus)
-    })
-    toast(restoredCount > 0
-      ? `${selectedIds.size} presupuestos actualizados · stock restaurado en ${restoredCount}`
-      : `${selectedIds.size} presupuestos actualizados`, 'ok')
+    selectedIds.forEach(id => updateBudgetStatus(id, bulkStatus))
+    toast(`${selectedIds.size} presupuestos actualizados`, 'ok')
     setSelectedIds(new Set()); setBulkStatus('')
   }
   // CSV escape + protección contra CSV injection (Excel/Sheets ejecutan fórmulas si la celda empieza con = + - @ \t \r).
@@ -1104,7 +1043,7 @@ export default function Historial() {
     if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
     return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const CSV_HEADERS = ['N°','Fecha','Cliente','Empresa','Estado','Pago','Total','Costo','Ganancia','Margen%','Seña','Stock descontado','Fecha costo']
+  const CSV_HEADERS = ['N°','Fecha','Cliente','Empresa','Estado','Pago','Total','Costo','Ganancia','Margen%','Seña','Fecha costo']
   const budgetToRow = (b) => [
     b.num, b.date,
     csvEsc(b.contact || ''), csvEsc(b.company || ''),
@@ -1113,7 +1052,6 @@ export default function Historial() {
     b.total ?? '', b.totalCost ?? '', b.totalGain ?? '',
     b.marginBudgeted != null ? `${b.marginBudgeted}%` : '',
     b.depositAmt ?? '',
-    b.stockDeducted ? 'Sí' : 'No',
     b.costSnapshot?.date || '',
   ].join(',')
   const downloadCSV = (rows, filename) => {

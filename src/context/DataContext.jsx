@@ -120,38 +120,9 @@ export function DataProvider({ children }) {
 
   const deleteBudget = useCallback((id) => {
     const existing = db('budgets', []).find(b => b.id === id)
-    // Si el presupuesto descontó stock, lo devolvemos al inventario antes de borrar.
-    // Sin esto el stock virtual se "evapora" silenciosamente con cada cancelación.
-    if (existing?.stockDeducted) {
-      const approvedAlt = (existing.alternatives || []).find(a => a.id === existing.approvedAltId) ||
-                          (existing.alternatives || [])[0]
-      if (approvedAlt?.kits?.length) {
-        const today = new Date().toISOString().slice(0, 10)
-        const moves = db('stockMoves', [])
-        const insumos = db('insumos', [])
-        const products = db('products', [])
-        const numV = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
-        approvedAlt.kits.forEach(kit => {
-          const kitQty = numV(kit.qty); if (!kitQty) return
-          ;(kit.packaging || []).forEach(comp => {
-            const qty = numV(comp.qty) * kitQty; if (!qty || !comp.name) return
-            const idx = insumos.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-            moves.push({ id: nextId(), type: 'return', date: today, insumoId: idx > -1 ? insumos[idx].id : null, qty, ref: existing.num || 'Eliminado', note: `Restauración por borrado · ${kit.name || 'Kit'} — ${comp.name}` })
-            if (idx > -1 && typeof insumos[idx].stock === 'number') insumos[idx] = { ...insumos[idx], stock: (insumos[idx].stock || 0) + qty, lastMove: today, updatedAt: Date.now() }
-          })
-          ;(kit.products || []).forEach(comp => {
-            const qty = numV(comp.qty) * kitQty; if (!qty || !comp.name) return
-            const idx = products.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-            moves.push({ id: nextId(), type: 'return', date: today, productId: idx > -1 ? products[idx].id : null, qty, ref: existing.num || 'Eliminado', note: `Restauración por borrado · ${kit.name || 'Kit'} — ${comp.name}` })
-            if (idx > -1 && typeof products[idx].stock === 'number') products[idx] = { ...products[idx], stock: (products[idx].stock || 0) + qty, lastMove: today, updatedAt: Date.now() }
-          })
-        })
-        dbW('stockMoves', moves); dbW('insumos', insumos); dbW('products', products)
-      }
-    }
     dbW('budgets', db('budgets', []).filter((b) => b.id !== id))
     refresh()
-    logAudit('delete', 'budget', id, existing ? { num: existing.num, total: existing.total, stockRestored: !!existing.stockDeducted } : null)
+    logAudit('delete', 'budget', id, existing ? { num: existing.num, total: existing.total } : null)
   }, [refresh])
 
   const updateBudgetStatus = useCallback((id, status) => {
@@ -249,116 +220,14 @@ export function DataProvider({ children }) {
     return { nuevos, actualizados, omitidos, total: filas.length, listaActualizada: updated }
   }, [refresh])
 
-  /* ── Restauración de stock de kit (inversa de deductKitStock) ──
-     Devuelve al inventario las unidades de packaging y productos cuando un
-     presupuesto se cancela, marca como perdido o se borra. Registra cada
-     restauración con type:'return' para trazabilidad de auditoría. */
-  const restoreKitStock = useCallback((approvedAlt, budgetRef = '', reason = 'cancel') => {
-    if (!approvedAlt?.kits?.length) return
-    const today    = new Date().toISOString().slice(0, 10)
-    const moves    = db('stockMoves', [])
-    const insumos  = db('insumos', [])
-    const products = db('products', [])
-    const numV = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
-
-    approvedAlt.kits.forEach(kit => {
-      const kitQty = numV(kit.qty)
-      if (!kitQty) return
-
-      ;(kit.packaging || []).forEach(comp => {
-        if (!comp.name) return
-        const qty = numV(comp.qty) * kitQty
-        if (!qty) return
-        const idx = insumos.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-        moves.push({
-          id: nextId(), type: 'return', date: today,
-          insumoId: idx > -1 ? insumos[idx].id : null,
-          qty, ref: budgetRef || 'Devolución', note: `Restauración por ${reason} · ${kit.name || 'Kit'} — ${comp.name}`,
-        })
-        if (idx > -1 && typeof insumos[idx].stock === 'number') {
-          insumos[idx] = { ...insumos[idx], stock: (insumos[idx].stock || 0) + qty, lastMove: today, updatedAt: Date.now() }
-        }
-      })
-
-      ;(kit.products || []).forEach(comp => {
-        if (!comp.name) return
-        const qty = numV(comp.qty) * kitQty
-        if (!qty) return
-        const idx = products.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-        moves.push({
-          id: nextId(), type: 'return', date: today,
-          productId: idx > -1 ? products[idx].id : null,
-          qty, ref: budgetRef || 'Devolución', note: `Restauración por ${reason} · ${kit.name || 'Kit'} — ${comp.name}`,
-        })
-        if (idx > -1 && typeof products[idx].stock === 'number') {
-          products[idx] = { ...products[idx], stock: (products[idx].stock || 0) + qty, lastMove: today, updatedAt: Date.now() }
-        }
-      })
-    })
-
-    dbW('stockMoves', moves)
-    dbW('insumos', insumos)
-    dbW('products', products)
-    refresh()
-  }, [refresh])
-
-  /* ── Descuento de stock de kit (batch atómico + registro de movimientos) ──
-     Recibe la alternativa aprobada, lee todos los stores de una vez, aplica todos
-     los cambios en memoria y escribe en un solo bloque. Registra cada deducción
-     como un stockMove para trazabilidad completa. */
-  const deductKitStock = useCallback((approvedAlt, budgetRef = '') => {
-    if (!approvedAlt?.kits?.length) return
-    const today    = new Date().toISOString().slice(0, 10)
-    const moves    = db('stockMoves', [])
-    const insumos  = db('insumos', [])
-    const products = db('products', [])
-    const numV = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
-
-    approvedAlt.kits.forEach(kit => {
-      const kitQty = numV(kit.qty)
-      if (!kitQty) return
-
-      // Packaging / Insumos (componente A)
-      ;(kit.packaging || []).forEach(comp => {
-        if (!comp.name) return
-        const qty = numV(comp.qty) * kitQty
-        if (!qty) return
-        const idx = insumos.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-        moves.push({
-          id: nextId(), type: 'sale', date: today,
-          insumoId: idx > -1 ? insumos[idx].id : null,
-          qty, costUnit: numV(comp.costUnit),
-          ref: budgetRef || 'Kit', note: `${kit.name || 'Kit'} — ${comp.name}`,
-        })
-        if (idx > -1 && typeof insumos[idx].stock === 'number') {
-          insumos[idx] = { ...insumos[idx], stock: Math.max(0, insumos[idx].stock - qty), lastMove: today, updatedAt: Date.now() }
-        }
-      })
-
-      // Productos del kit (componente B)
-      ;(kit.products || []).forEach(comp => {
-        if (!comp.name) return
-        const qty = numV(comp.qty) * kitQty
-        if (!qty) return
-        const idx = products.findIndex(x => (comp.id && x.id === comp.id) || x.name === comp.name)
-        moves.push({
-          id: nextId(), type: 'sale', date: today,
-          productId: idx > -1 ? products[idx].id : null,
-          qty, costUnit: numV(comp.costUnit),
-          ref: budgetRef || 'Kit', note: `${kit.name || 'Kit'} — ${comp.name}`,
-        })
-        if (idx > -1 && typeof products[idx].stock === 'number') {
-          products[idx] = { ...products[idx], stock: Math.max(0, products[idx].stock - qty), lastMove: today, updatedAt: Date.now() }
-        }
-      })
-    })
-
-    // Batch write — single window for all three stores
-    dbW('stockMoves', moves)
-    dbW('insumos', insumos)
-    dbW('products', products)
-    refresh()
-  }, [refresh])
+  /* ── Stubs no-op (Fase 3 rediseño) ──
+     La lógica de stock fue eliminada — ANMA Regalos trabaja 100% a pedido
+     sin inventario. Los stubs mantienen la API para que Presupuesto.jsx
+     (wizard viejo) no rompa hasta que se lo desmonte en el corte final.
+     Los datos existentes en `insumos`, `stockMoves`, y los flags
+     `stockDeducted` en budgets viejos se preservan sin tocar. */
+  const restoreKitStock = useCallback(() => { /* no-op */ }, [])
+  const deductKitStock  = useCallback(() => { /* no-op */ }, [])
 
   return (
     <Ctx.Provider value={{

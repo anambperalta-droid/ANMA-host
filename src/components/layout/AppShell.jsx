@@ -366,9 +366,6 @@ function AppShellInner() {
         {can('mensajes.view') && (
           <BottomSheetItem icon="fa-brands fa-whatsapp" label="Mensajes WA" sub="Plantillas y envíos" onClick={() => goSheet('/mensajes')} iconBg="#DCFCE7" iconColor="#16A34A" />
         )}
-        {can('catalogo.view') && (
-          <BottomSheetItem icon="fa-cubes" label="Packaging" sub="Materiales y presentación" onClick={() => goSheet('/insumos')} />
-        )}
         {can('config.access') && (
           <>
             <BottomSheetItem icon="fa-file-import" label="Importador" sub="Cargá datos desde CSV o Excel" onClick={() => goSheet('/importador')} iconBg="#FCE7F3" iconColor="#DB2777" />
