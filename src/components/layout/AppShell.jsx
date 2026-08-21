@@ -20,7 +20,7 @@ import RouteFallback from './RouteFallback'
 
 // Code splitting + prefetch caching centralizados en lib/routes.js
 import {
-  Historial, Presupuesto, Clientes, Catalogo, Proveedores, Logistica,
+  Historial, Presupuesto, PedidoNuevo, Clientes, Catalogo, Proveedores, Logistica,
   Mensajes, Insumos, Config, Admin, Importador, MiCuenta, NotFound, Guia,
 } from '../../lib/routes'
 
@@ -333,6 +333,8 @@ function AppShellInner() {
               <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />
               <Route path="/presupuesto" element={<Guard perm="pedido.create"><Presupuesto /></Guard>} />
               <Route path="/presupuesto/:id" element={<Guard perm="pedido.edit"><Presupuesto /></Guard>} />
+              <Route path="/pedido" element={<Guard perm="pedido.create"><PedidoNuevo /></Guard>} />
+              <Route path="/pedido/:id" element={<Guard perm="pedido.edit"><PedidoNuevo /></Guard>} />
               <Route path="/clientes" element={<Guard perm="cliente.view"><Clientes /></Guard>} />
               <Route path="/catalogo" element={<Guard perm="catalogo.view"><Catalogo /></Guard>} />
               <Route path="/proveedores" element={<Guard perm="proveedor.view"><Proveedores /></Guard>} />

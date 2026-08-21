@@ -1277,6 +1277,10 @@ export default function Historial() {
             </div>
           )}
           <button className="btn btn-ghost ph-export-btn" onClick={exportCSV} style={{minHeight:44}}><i className="fa fa-download" /><span>Exportar</span></button>
+          <button className="btn btn-ghost" onClick={() => nav('/pedido')} title="Probar la nueva vista de carga (en construcción)"
+            style={{ minHeight:44, borderColor: '#c4b5fd', color: '#6d28d9', background: '#f5f3ff' }}>
+            <i className="fa fa-flask" /><span>Probar carga nueva</span>
+          </button>
           <button className="btn btn-primary ph-fab" onClick={() => nav('/presupuesto')} style={{ minHeight:44, background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /><span>Nuevo presupuesto</span></button>
         </div>
       </div>
