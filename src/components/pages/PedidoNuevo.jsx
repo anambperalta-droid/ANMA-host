@@ -78,7 +78,8 @@ export default function PedidoNuevo() {
   const dirtyRef    = useRef(false)
   const skipNextRef = useRef(false)
 
-  const clients = get('clients', [])
+  const clients  = get('clients', [])
+  const products = get('products', [])
 
   // ── Autosave con debounce 500ms ──
   useEffect(() => {
@@ -269,6 +270,7 @@ export default function PedidoNuevo() {
           {pedido.lineas.map((linea, idx) => (
             <LineaRow key={linea.id}
               linea={linea}
+              products={products}
               onChange={patch => setLinea(idx, patch)}
               onRemove={() => removeLinea(idx)}
               canRemove={pedido.lineas.length > 1 || !!linea.descripcion} />
@@ -354,12 +356,11 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
   )
 }
 
-function LineaRow({ linea, onChange, onRemove, canRemove }) {
+function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
   return (
     <div className="pedido-linea-row" style={{ ...lineaGrid, marginBottom: 8, alignItems: 'center' }}>
-      <input className="l-desc" type="text" value={linea.descripcion}
-        onChange={e => onChange({ descripcion: e.target.value })}
-        placeholder="Descripción" style={inputStyle} />
+      <DescripcionInput className="l-desc" value={linea.descripcion} products={products}
+        onChange={patch => onChange(patch)} />
       <input className="l-cant" type="number" min={0} value={linea.cantidad}
         onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
         style={{ ...inputStyle, textAlign: 'right' }} />
@@ -449,6 +450,67 @@ function Row({ label, value }) {
     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
       <span style={{ color: 'var(--txt3)' }}>{label}</span>
       <span style={{ fontWeight: 600, color: 'var(--txt)' }}>{value}</span>
+    </div>
+  )
+}
+
+function DescripcionInput({ value, products, onChange, className }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [])
+
+  const q = (value || '').toLowerCase().trim()
+  const matches = q
+    ? products.filter(p => (p.name || '').toLowerCase().includes(q)).slice(0, 8)
+    : []
+
+  const pick = (p) => {
+    onChange({
+      descripcion: p.name || '',
+      costoUnit: Number(p.cost) || 0,
+      precioUnit: Number(p.price) || 0,
+      productoId: p.id,
+    })
+    setOpen(false)
+  }
+
+  return (
+    <div ref={ref} className={className} style={{ position: 'relative', minWidth: 0 }}>
+      <input type="text" value={value}
+        onChange={e => { onChange({ descripcion: e.target.value, productoId: null }); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        placeholder="Descripción — escribí para buscar en el catálogo"
+        autoComplete="off"
+        style={inputStyle} />
+      {open && matches.length > 0 && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
+          background: 'var(--surface, #fff)',
+          border: '1px solid var(--brand, #7c3aed)',
+          borderRadius: 8, maxHeight: 260, overflowY: 'auto', marginTop: 4,
+          boxShadow: '0 8px 24px rgba(0,0,0,.1)',
+        }}>
+          {matches.map(p => (
+            <div key={p.id} onClick={() => pick(p)}
+              style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border, #e2e8f0)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-xlt, #f5f3ff)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                {p.cat && <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{p.cat}</div>}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--txt3)', flexShrink: 0, textAlign: 'right' }}>
+                <div>Costo <b style={{ color: 'var(--txt)' }}>{fmt(Number(p.cost) || 0)}</b></div>
+                {Number(p.price) > 0 && <div>Precio <b style={{ color: '#16a34a' }}>{fmt(Number(p.price))}</b></div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

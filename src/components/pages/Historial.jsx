@@ -933,11 +933,17 @@ export default function Historial() {
   // Analysis metrics
   const totGain = pagados.reduce((s, b) => s + ganCobrada(b), 0)
 
-  const editB = (id) => nav(`/presupuesto/${id}`)
+  // Ruta según el origen del pedido: los creados con /pedido tienen el
+  // campo `estado` (nuevo modelo); los viejos solo tienen `status`.
+  const pedidoRoute = (b) => b?.estado ? `/pedido/${b.id}` : `/presupuesto/${b.id}`
+  const editB = (id) => {
+    const b = budgets.find(x => x.id === id)
+    nav(pedidoRoute(b))
+  }
 
-  // ── Duplicar pedido — abre /presupuesto con los datos precargados ──
-  // Guarda el pedido source en localStorage; Presupuesto.jsx lo detecta
-  // al montar y lo usa como base para un nuevo presupuesto (sin editId).
+  // ── Duplicar pedido — abre /presupuesto o /pedido según el source ──
+  // Presupuesto viejo detecta `presupDuplicate` en localStorage al montar.
+  // Para /pedido nuevo todavía no está implementado — cae al viejo por ahora.
   const duplicateBudget = (b) => {
     dbW('presupDuplicate', { source: b, at: Date.now() })
     nav('/presupuesto')
@@ -2170,7 +2176,7 @@ export default function Historial() {
                 </button>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => setPreviewBudget(null)}>Cerrar</button>
-                  <button className="btn btn-primary btn-sm" onClick={() => { setPreviewBudget(null); nav(`/presupuesto/${b.id}`) }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => { setPreviewBudget(null); nav(pedidoRoute(b)) }}>
                     <i className="fa fa-pen" /> Editar
                   </button>
                 </div>
@@ -2272,7 +2278,7 @@ export default function Historial() {
                 {cliBudgets.length ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {[...cliBudgets].sort((a, b) => b.id - a.id).slice(0, 8).map(b => (
-                      <div key={b.id} onClick={() => { nav(`/presupuesto/${b.id}`); closePreview() }}
+                      <div key={b.id} onClick={() => { nav(pedidoRoute(b)); closePreview() }}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 9, cursor: 'pointer', transition: 'background .15s' }}
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--surface3,var(--border))'}
                         onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}
