@@ -17,7 +17,7 @@ import { fmt } from '../../lib/storage'
 import {
   pedidoFromBudget, budgetFromPedido, calcularTotales,
   totalDesdeMargen, pedidoVacio, nuevaLinea,
-  ESTADOS, ESTADO_LABELS, ESTADOS_COMPRA,
+  ESTADOS, ESTADO_LABELS, ESTADOS_COMPRA, TAGS, TAG_LABELS,
 } from '../../lib/pedido'
 
 const ESTADO_COMPRA_LABELS = {
@@ -42,6 +42,16 @@ const ESTADO_COMPRA_COLOR = {
   pendiente: { bg: '#f8fafc', fg: '#64748b', bd: '#e2e8f0' },
   pedido:    { bg: '#dbeafe', fg: '#1e40af', bd: '#bfdbfe' },
   recibido:  { bg: '#dcfce7', fg: '#166534', bd: '#bbf7d0' },
+}
+
+// Tag por linea — categoriza el tipo de gasto (para analisis futuro)
+const TAG_COLOR = {
+  producto:   { bg: '#e0f2fe', fg: '#075985', bd: '#bae6fd' },
+  packaging:  { bg: '#ffedd5', fg: '#9a3412', bd: '#fed7aa' },
+  manoDeObra: { bg: '#fef3c7', fg: '#78350f', bd: '#fde68a' },
+  diseno:     { bg: '#ede9fe', fg: '#5b21b6', bd: '#ddd6fe' },
+  envio:      { bg: '#dbeafe', fg: '#1e3a8a', bd: '#bfdbfe' },
+  otro:       { bg: '#f1f5f9', fg: '#475569', bd: '#cbd5e1' },
 }
 
 // Iconos por bloque con color soft — le da identidad sin ruido
@@ -291,10 +301,11 @@ export default function PedidoNuevo() {
           <div style={{ ...lineaGrid, marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
                className="pedido-linea-header">
             <span>Descripción</span>
+            <span style={{ textAlign: 'center' }}>Tipo</span>
             <span style={{ textAlign: 'right' }}>Cant</span>
             <span style={{ textAlign: 'right' }}>Costo/u</span>
             <span style={{ textAlign: 'right' }}>Precio/u</span>
-            <span>Estado</span>
+            <span style={{ textAlign: 'center' }}>Compra</span>
             <span />
           </div>
 
@@ -351,9 +362,9 @@ export default function PedidoNuevo() {
             grid-template-columns: 1fr 1fr !important;
             grid-template-areas:
               'desc desc'
+              'tag estado'
               'cant costo'
-              'precio estado'
-              'remove remove' !important;
+              'precio remove' !important;
             padding: 12px !important;
             background: var(--surface, #fff);
             border: 1px solid var(--border, #e2e8f0);
@@ -361,6 +372,7 @@ export default function PedidoNuevo() {
             margin-bottom: 10px !important;
           }
           .pedido-linea-row > .l-desc   { grid-area: desc; }
+          .pedido-linea-row > .l-tag    { grid-area: tag; }
           .pedido-linea-row > .l-cant   { grid-area: cant; }
           .pedido-linea-row > .l-costo  { grid-area: costo; }
           .pedido-linea-row > .l-precio { grid-area: precio; }
@@ -392,6 +404,8 @@ function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
     <div className="pedido-linea-row" style={{ ...lineaGrid, marginBottom: 8, alignItems: 'center' }}>
       <DescripcionInput className="l-desc" value={linea.descripcion} products={products}
         onChange={patch => onChange(patch)} />
+      <TagChip className="l-tag" value={linea.tag || 'producto'}
+        onChange={v => onChange({ tag: v })} />
       <input className="l-cant" type="number" min={0} value={linea.cantidad}
         onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
         style={{ ...inputStyle, textAlign: 'right' }} />
@@ -584,6 +598,23 @@ function EstadoSelect({ value, onChange }) {
   )
 }
 
+function TagChip({ value, onChange, className }) {
+  const st = TAG_COLOR[value] || TAG_COLOR.otro
+  return (
+    <select className={className} value={value} onChange={e => onChange(e.target.value)}
+      title="Tipo de línea"
+      style={{
+        padding: '6px 10px', fontSize: 10, fontWeight: 700,
+        border: `1px solid ${st.bd}`, borderRadius: 999,
+        background: st.bg, color: st.fg,
+        fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
+        appearance: 'none', WebkitAppearance: 'none', textAlign: 'center',
+      }}>
+      {TAGS.map(k => <option key={k} value={k}>{TAG_LABELS[k]}</option>)}
+    </select>
+  )
+}
+
 function EstadoCompraChip({ value, onChange, className }) {
   const st = ESTADO_COMPRA_COLOR[value] || ESTADO_COMPRA_COLOR.pendiente
   return (
@@ -701,6 +732,6 @@ const dropdownItem = {
 
 const lineaGrid = {
   display: 'grid',
-  gridTemplateColumns: 'minmax(0, 2.2fr) 72px 96px 96px 116px 32px',
+  gridTemplateColumns: 'minmax(0, 2fr) 118px 68px 92px 92px 108px 30px',
   gap: 8,
 }

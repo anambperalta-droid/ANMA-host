@@ -54,7 +54,25 @@ const ESTADO_TO_STATUS = {
 }
 
 export const TAGS = ['producto', 'packaging', 'manoDeObra', 'diseno', 'envio', 'otro']
+export const TAG_LABELS = {
+  producto:   'Producto',
+  packaging:  'Packaging',
+  manoDeObra: 'Mano de obra',
+  diseno:     'Diseño',
+  envio:      'Envío',
+  otro:       'Otro',
+}
 export const ESTADOS_COMPRA = ['pendiente', 'pedido', 'recibido']
+
+/**
+ * Devuelve el estado nuevo de un budget legacy sin reconstruir todo el pedido.
+ * Preferimos budget.estado (poblado por budgetFromPedido en pedidos nuevos);
+ * si no existe, mapeamos desde budget.status (legacy).
+ */
+export function getEstado(budget) {
+  if (!budget) return 'consulta'
+  return budget.estado || STATUS_TO_ESTADO[budget.status] || 'consulta'
+}
 
 const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
 const uid = () => Date.now() + Math.floor(Math.random() * 1000)

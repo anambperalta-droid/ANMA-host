@@ -5,7 +5,20 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
+import { getEstado, ESTADOS, ESTADO_LABELS } from '../../lib/pedido'
 import { usePrivacy } from '../../context/PrivacyContext'
+
+// Color por estado nuevo — chip filtro
+const ESTADO_TAB_COLOR = {
+  consulta:      '#64748b',
+  presupuestado: '#1d4ed8',
+  pausado:       '#b45309',
+  confirmado:    '#15803d',
+  produccion:    '#6d28d9',
+  entregado:     '#065f46',
+  cerrado:       '#475569',
+  perdido:       '#b91c1c',
+}
 import GuideBanner from '../layout/GuideBanner'
 
 function Badge({ status }) {
@@ -836,7 +849,7 @@ export default function Historial() {
   const deliveryDays = (iso) => { if (!iso) return null; const t = new Date(); t.setHours(0,0,0,0); const d = new Date(iso + 'T00:00'); return Math.ceil((d - t) / 86400000) }
   const filteredBudgets = useMemo(() => {
     let list = periodBudgets
-    if (filter !== 'all') list = list.filter(b => b.status === filter)
+    if (filter !== 'all') list = list.filter(b => getEstado(b) === filter)
     if (search) {
       const sq = search.toLowerCase()
       list = list.filter(b =>
@@ -853,9 +866,9 @@ export default function Historial() {
       return (a.id - b.id) * dir
     })
     if (quickFilter === 'atrasados') {
-      list = list.filter(b => { const dd = deliveryDays(b.deliveryDate); return dd !== null && dd <= 0 && !['confirmed', 'lost'].includes(b.status) })
+      list = list.filter(b => { const dd = deliveryDays(b.deliveryDate); const e = getEstado(b); return dd !== null && dd <= 0 && !['confirmado', 'produccion', 'entregado', 'perdido', 'cerrado'].includes(e) })
     } else if (quickFilter === 'sin_cobrar') {
-      list = list.filter(b => b.status === 'confirmed' && (!b.payStatus || b.payStatus === 'pending'))
+      list = list.filter(b => ['confirmado', 'produccion'].includes(getEstado(b)) && (!b.payStatus || b.payStatus === 'pending'))
     } else if (quickFilter === 'alta_ganancia') {
       const gs = [...periodBudgets].filter(b => (b.totalGain || 0) > 0).sort((a, b) => (b.totalGain || 0) - (a.totalGain || 0))
       const cutoff = gs[Math.floor(gs.length / 3)]?.totalGain || 0
@@ -1661,13 +1674,17 @@ export default function Historial() {
               <i className="fa fa-magnifying-glass" />
               <input type="text" placeholder="Buscar cliente, empresa..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <div style={{ display: 'flex', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 2, gap: 1 }}>
-              {['all', 'draft', 'sent', 'negotiating', 'confirmed', 'lost'].map(f => (
-                <button key={f} onClick={() => setFilter(f)}
-                  style={{ padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: filter === f ? 600 : 400, background: filter === f ? 'var(--surface)' : 'transparent', color: filter === f ? 'var(--txt)' : 'var(--txt3)', boxShadow: filter === f ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
-                  {f === 'all' ? 'Todos' : STATUS_MAP[f]}
-                </button>
-              ))}
+            <div style={{ display: 'flex', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 2, gap: 1, flexWrap: 'wrap' }}>
+              {['all', ...ESTADOS].map(f => {
+                const isActive = filter === f
+                const color = f === 'all' ? 'var(--txt)' : ESTADO_TAB_COLOR[f]
+                return (
+                  <button key={f} onClick={() => setFilter(f)}
+                    style={{ padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: isActive ? 700 : 500, background: isActive ? 'var(--surface)' : 'transparent', color: isActive ? color : 'var(--txt3)', boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
+                    {f === 'all' ? 'Todos' : ESTADO_LABELS[f]}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
