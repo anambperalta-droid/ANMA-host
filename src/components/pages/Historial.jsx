@@ -38,6 +38,66 @@ function relTime(ts) {
   return `hace ${mo} mes${mo > 1 ? 'es' : ''}`
 }
 
+// Card de "Hoy importa" expandible — cerrada muestra número + subtitle,
+// abierta despliega mini-listado clickeable + link "Ver todos".
+function HoyImportaCard({ list, icon, color, label, subtitle, isExpanded, onToggle, onOpenBudget, onSeeAll, renderLine }) {
+  const bg = color.startsWith('var(') ? 'var(--brand-xlt)' : `${color}0F`
+  const bgHover = color.startsWith('var(') ? 'var(--brand-dim)' : `${color}18`
+  return (
+    <div style={{
+      background: bg, border: `1.5px solid ${color.startsWith('var(') ? color : `${color}40`}`,
+      borderRadius: 14, overflow: 'hidden', transition: 'box-shadow .2s',
+    }}>
+      <div onClick={onToggle}
+        style={{ cursor: 'pointer', padding: '14px 16px', transition: 'background .15s' }}
+        onMouseEnter={e => { e.currentTarget.style.background = bgHover }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <i className={`fa ${icon}`} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', lineHeight: 1.1 }}>
+              {list.length} <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 500 }}>{list.length === 1 ? 'pedido' : 'pedidos'}</span>
+            </div>
+          </div>
+          <i className={`fa fa-chevron-${isExpanded ? 'up' : 'down'}`} style={{ color, fontSize: 12, transition: 'transform .2s' }} />
+        </div>
+        <div style={{ fontSize: 11.5, color: 'var(--txt2)', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {subtitle}
+        </div>
+      </div>
+      {isExpanded && (
+        <div style={{ borderTop: `1px solid ${color.startsWith('var(') ? 'var(--border)' : `${color}25`}`, background: 'var(--surface)', maxHeight: 260, overflowY: 'auto' }}>
+          {list.slice(0, 8).map(b => (
+            <div key={b.id} onClick={() => onOpenBudget(b)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', cursor: 'pointer', fontSize: 12, borderBottom: '1px solid var(--border)', transition: 'background .12s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <span style={{ color: 'var(--txt3)', fontVariantNumeric: 'tabular-nums', fontWeight: 700, minWidth: 56 }}>{b.num || '—'}</span>
+              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{renderLine(b)}</span>
+              <i className="fa fa-arrow-right" style={{ color: 'var(--txt4)', fontSize: 10 }} />
+            </div>
+          ))}
+          {list.length > 8 && (
+            <div onClick={onSeeAll}
+              style={{ padding: '9px 14px', textAlign: 'center', fontSize: 11, fontWeight: 700, color, cursor: 'pointer', background: 'var(--surface2)' }}>
+              Ver los {list.length} pedidos <i className="fa fa-arrow-right" style={{ marginLeft: 4, fontSize: 10 }} />
+            </div>
+          )}
+          {list.length <= 8 && (
+            <div onClick={onSeeAll}
+              style={{ padding: '9px 14px', textAlign: 'center', fontSize: 11, fontWeight: 700, color, cursor: 'pointer', background: 'var(--surface2)' }}>
+              Ver en el listado <i className="fa fa-arrow-right" style={{ marginLeft: 4, fontSize: 10 }} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Badge({ b }) {
   // Reemplazo del badge legacy — misma fuente de verdad que DotBadge / tabs.
   const e = getEstado(b)
@@ -692,6 +752,7 @@ export default function Historial() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewBudget, setPreviewBudget] = useState(null)
   const [drawerBudget, setDrawerBudget]   = useState(null)
+  const [expandedHoy, setExpandedHoy]     = useState(null)
   const [paymentsBudget, setPaymentsBudget] = useState(null)
   const [todayCollapsed, setTodayCollapsed] = useState(() => db('todayCollapsed', false))
   const toggleTodayCollapsed = () => {
@@ -1317,7 +1378,7 @@ export default function Historial() {
       {/* ═══ RESUMEN / DASHBOARD ═══ */}
       {tab === 'resumen' && (
         <>
-          {/* ── MODO HOY: 3 acciones inmediatas ── */}
+          {/* ── MODO HOY: 3 acciones inmediatas, expandibles ── */}
           {!loading && !filterLoading && (cobrosVencidos.length + entregasHoy.length + aConfirmar.length) > 0 && (
             <div style={{ marginBottom: 22 }}>
               <div className="hoy-importa-header">
@@ -1334,62 +1395,65 @@ export default function Historial() {
                 </button>
               </div>
               {!todayCollapsed && (
-            <div className="modo-hoy-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
-              {cobrosVencidos.length > 0 && (
-                <div onClick={() => { setQuickFilter('sin_cobrar'); setTab('lista') }}
-                  style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(220,38,38,.06), rgba(220,38,38,.02))', border: '1.5px solid rgba(220,38,38,.25)', borderRadius: 14, padding: '14px 16px', transition: 'transform .15s, box-shadow .2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(220,38,38,.12)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 10, background: '#DC2626', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-hand-holding-dollar" /></div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '.06em' }}>Cobros vencidos</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', lineHeight: 1.1 }}>{cobrosVencidos.length} <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 500 }}>{cobrosVencidos.length === 1 ? 'pedido' : 'pedidos'}</span></div>
-                    </div>
-                    <i className="fa fa-arrow-right" style={{ color: '#DC2626', fontSize: 12 }} />
-                  </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--txt2)', lineHeight: 1.4 }}>
-                    <b style={{ color: '#DC2626', fontVariantNumeric: 'tabular-nums' }}>{money(cobrosVencidosMonto)}</b> sin cobrar · entrega ya pasó
-                  </div>
+                <div className="modo-hoy-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+                  {cobrosVencidos.length > 0 && (
+                    <HoyImportaCard
+                      list={cobrosVencidos}
+                      icon="fa-hand-holding-dollar"
+                      color="#DC2626"
+                      label="Cobros vencidos"
+                      subtitle={<><b style={{ color: '#DC2626', fontVariantNumeric: 'tabular-nums' }}>{money(cobrosVencidosMonto)}</b> sin cobrar · entrega ya pasó</>}
+                      isExpanded={expandedHoy === 'cobros'}
+                      onToggle={() => setExpandedHoy(prev => prev === 'cobros' ? null : 'cobros')}
+                      onOpenBudget={setDrawerBudget}
+                      onSeeAll={() => { setQuickFilter('sin_cobrar'); setTab('lista') }}
+                      renderLine={b => (
+                        <span>
+                          <b style={{ color: 'var(--txt)' }}>{b.company || b.contact || '—'}</b>
+                          <span style={{ color: 'var(--txt3)' }}> · {money((b.totalFinal || b.total || 0) - cobrado(b))}</span>
+                        </span>
+                      )}
+                    />
+                  )}
+                  {entregasHoy.length > 0 && (
+                    <HoyImportaCard
+                      list={entregasHoy}
+                      icon="fa-truck-fast"
+                      color="#D97706"
+                      label="Entregas hoy"
+                      subtitle={<>{entregasHoy.slice(0, 2).map(b => b.contact || b.company || b.num).filter(Boolean).join(', ') || '—'}{entregasHoy.length > 2 ? ` +${entregasHoy.length - 2}` : ''}</>}
+                      isExpanded={expandedHoy === 'entregas'}
+                      onToggle={() => setExpandedHoy(prev => prev === 'entregas' ? null : 'entregas')}
+                      onOpenBudget={setDrawerBudget}
+                      onSeeAll={() => setTab('lista')}
+                      renderLine={b => (
+                        <span>
+                          <b style={{ color: 'var(--txt)' }}>{b.company || b.contact || '—'}</b>
+                          <span style={{ color: 'var(--txt3)' }}> · {money(b.total || 0)}</span>
+                        </span>
+                      )}
+                    />
+                  )}
+                  {aConfirmar.length > 0 && (
+                    <HoyImportaCard
+                      list={aConfirmar}
+                      icon="fa-comments"
+                      color="var(--brand)"
+                      label="A confirmar"
+                      subtitle="Enviados hace 3+ días — recordales antes de que se enfríen"
+                      isExpanded={expandedHoy === 'confirmar'}
+                      onToggle={() => setExpandedHoy(prev => prev === 'confirmar' ? null : 'confirmar')}
+                      onOpenBudget={setDrawerBudget}
+                      onSeeAll={() => setTab('seguimiento')}
+                      renderLine={b => (
+                        <span>
+                          <b style={{ color: 'var(--txt)' }}>{b.company || b.contact || '—'}</b>
+                          <span style={{ color: 'var(--txt3)' }}> · {money(b.total || 0)}</span>
+                        </span>
+                      )}
+                    />
+                  )}
                 </div>
-              )}
-              {entregasHoy.length > 0 && (
-                <div onClick={() => setTab('lista')}
-                  style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(217,119,6,.07), rgba(217,119,6,.02))', border: '1.5px solid rgba(217,119,6,.25)', borderRadius: 14, padding: '14px 16px', transition: 'transform .15s, box-shadow .2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(217,119,6,.12)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 10, background: '#D97706', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-truck-fast" /></div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '.06em' }}>Entregas hoy</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', lineHeight: 1.1 }}>{entregasHoy.length} <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 500 }}>{entregasHoy.length === 1 ? 'pedido' : 'pedidos'}</span></div>
-                    </div>
-                    <i className="fa fa-arrow-right" style={{ color: '#D97706', fontSize: 12 }} />
-                  </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--txt2)', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {entregasHoy.slice(0, 2).map(b => b.contact || b.company || b.num).filter(Boolean).join(', ') || '—'}{entregasHoy.length > 2 ? ` +${entregasHoy.length - 2}` : ''}
-                  </div>
-                </div>
-              )}
-              {aConfirmar.length > 0 && (
-                <div onClick={() => setTab('seguimiento')}
-                  style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(219,39,119,.06), rgba(219,39,119,.02))', border: '1.5px solid var(--brand)', borderRadius: 14, padding: '14px 16px', transition: 'transform .15s, box-shadow .2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(219,39,119,.15)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><i className="fa fa-comments" /></div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.06em' }}>A confirmar</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', lineHeight: 1.1 }}>{aConfirmar.length} <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 500 }}>seguimientos</span></div>
-                    </div>
-                    <i className="fa fa-arrow-right" style={{ color: 'var(--brand)', fontSize: 12 }} />
-                  </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--txt2)', lineHeight: 1.4 }}>
-                    Enviados hace 3+ días — recordales antes de que se enfríen
-                  </div>
-                </div>
-              )}
-            </div>
               )}
             </div>
           )}

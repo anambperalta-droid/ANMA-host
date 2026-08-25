@@ -4,6 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { fmt, db, dbW } from '../../lib/storage'
+import { getEstado } from '../../lib/pedido'
 
 /* ═══════════════════════════════════════════════════════════════
    ACTION ENGINE — Mapeo dinámico de categoría → acción primaria.
@@ -200,12 +201,13 @@ function buildAlerts(budgets, products) {
   budgets.forEach(b => {
     const sinceDays = daysAgo(b.date)
     const delivDays = daysUntil(b.deliveryDate)
-    const active = !['cancelled', 'lost'].includes(b.status)
+    const e = getEstado(b)
+    const active = !['cerrado', 'perdido'].includes(e)
     const cliente = b.contact || b.company || 'el cliente'
     const meta = { wa: b.wa, clientName: cliente, budgetNum: b.num, amount: fmt(b.total) }
 
     // 🔴 CRÍTICO: entrega vencida → logística
-    if (b.deliveryDate && delivDays !== null && delivDays < 0 && active && b.status !== 'delivered') {
+    if (b.deliveryDate && delivDays !== null && delivDays < 0 && active && e !== 'entregado') {
       alerts.push({
         id: `overdue-${b.id}`,
         level: 'critical',
@@ -220,7 +222,7 @@ function buildAlerts(budgets, products) {
     }
 
     // 🔴 CRÍTICO: pago pendiente >21 días → pago
-    if (b.payStatus === 'pending' && b.status === 'confirmed' && sinceDays !== null && sinceDays > 21) {
+    if (b.payStatus === 'pending' && ['confirmado', 'produccion'].includes(e) && sinceDays !== null && sinceDays > 21) {
       alerts.push({
         id: `unpaid-${b.id}`,
         level: 'critical',
@@ -235,7 +237,7 @@ function buildAlerts(budgets, products) {
     }
 
     // 🟡 ALERTA: entrega próxima ≤3 días → logística
-    if (b.deliveryDate && delivDays !== null && delivDays >= 0 && delivDays <= 3 && active && b.status !== 'delivered') {
+    if (b.deliveryDate && delivDays !== null && delivDays >= 0 && delivDays <= 3 && active && e !== 'entregado') {
       const whenLabel = delivDays === 0 ? 'HOY' : delivDays === 1 ? 'mañana' : `en ${delivDays} días`
       alerts.push({
         id: `soon-${b.id}`,
@@ -253,7 +255,7 @@ function buildAlerts(budgets, products) {
     }
 
     // 🟡 ALERTA: confirmado sin seña 2-14 días → pago
-    if (b.status === 'confirmed' && b.payStatus === 'pending' && sinceDays !== null && sinceDays >= 2 && sinceDays <= 14) {
+    if (e === 'confirmado' && b.payStatus === 'pending' && sinceDays !== null && sinceDays >= 2 && sinceDays <= 14) {
       alerts.push({
         id: `nosena-${b.id}`,
         level: 'warning',
@@ -268,7 +270,7 @@ function buildAlerts(budgets, products) {
     }
 
     // 🟡 ALERTA: seguimiento >7 días sin respuesta → comercial
-    if (['sent', 'negotiating'].includes(b.status) && sinceDays !== null && sinceDays > 7) {
+    if (e === 'presupuestado' && sinceDays !== null && sinceDays > 7) {
       alerts.push({
         id: `followup-${b.id}`,
         level: 'warning',
