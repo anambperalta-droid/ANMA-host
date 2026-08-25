@@ -77,6 +77,31 @@ export function getEstado(budget) {
 const num = (v) => { const n = Number(v); return isNaN(n) ? 0 : n }
 const uid = () => Date.now() + Math.floor(Math.random() * 1000)
 
+// Detecta cuando un alternative fue armado como pseudo-kit unico y generico
+// (el envoltorio que budgetFromPedido crea para pedidos simples).
+function isGenericKitOnly(alt) {
+  if (!alt?.kits?.length) return true
+  if (alt.kits.length !== 1) return false
+  const k = alt.kits[0]
+  const name = k.name || ''
+  return name === 'Kit' || name === 'Pedido' || name === ''
+}
+
+/**
+ * Ganancia calculada on-the-fly desde un budget legacy — mismo motor que
+ * usa el editor y el drawer. Reemplaza el campo persistido `totalGain`
+ * (que se llenaba solo cuando se descontaba stock, ya obsoleto).
+ */
+export function gananciaBudget(budget) {
+  if (!budget) return 0
+  const p = pedidoFromBudget(budget)
+  return calcularTotales(p).ganancia
+}
+export function totalesBudget(budget) {
+  if (!budget) return { subtotal: 0, iva: 0, total: 0, costoTotal: 0, ganancia: 0, margen: 0 }
+  return calcularTotales(pedidoFromBudget(budget))
+}
+
 // ── Lectura: budget → pedido ───────────────────────────────────────
 
 /**
@@ -106,9 +131,18 @@ export function pedidoFromBudget(budget) {
     principalAlt.kits.forEach(kit => {
       const kitQty = num(kit.qty) || 1
       const kitName = kit.name || 'Kit'
+      // Solo prefixamos con el nombre del kit cuando es distintivo. Nombres
+      // genéricos (Kit/Pedido) los omitimos porque el adaptador siempre
+      // envuelve pedidos simples en un pseudo-kit y el prefijo seria ruido.
+      const isGeneric = !kit.name || kitName === 'Kit' || kitName === 'Pedido'
+      const nameOf = (compName, fallback) => {
+        const n = compName || fallback
+        return isGeneric ? n : `${kitName} · ${n}`
+      }
 
       // Línea principal del kit — precio por unidad × cantidad
-      if (num(kit.priceUnit) > 0 || num(kit.costUnit) > 0) {
+      // Solo si el kit tiene nombre distintivo (no el placeholder generico)
+      if (!isGeneric && (num(kit.priceUnit) > 0 || num(kit.costUnit) > 0)) {
         lineas.push({
           id: uid(),
           descripcion: kitName,
@@ -126,7 +160,7 @@ export function pedidoFromBudget(budget) {
         if (!comp.name && !comp.qty) return
         lineas.push({
           id: uid(),
-          descripcion: `${kitName} · ${comp.name || 'packaging'}`,
+          descripcion: nameOf(comp.name, 'packaging'),
           tag: 'packaging',
           cantidad: num(comp.qty) * kitQty,
           costoUnit: num(comp.costUnit),
@@ -142,11 +176,11 @@ export function pedidoFromBudget(budget) {
         if (!comp.name && !comp.qty) return
         lineas.push({
           id: uid(),
-          descripcion: `${kitName} · ${comp.name || 'producto'}`,
+          descripcion: nameOf(comp.name, 'producto'),
           tag: 'producto',
           cantidad: num(comp.qty) * kitQty,
           costoUnit: num(comp.costUnit),
-          precioUnit: 0,
+          precioUnit: num(comp.priceUnit || 0),
           esCostoUnico: false,
           productoId: comp.id || null,
           estadoCompra: 'pendiente',
@@ -158,7 +192,7 @@ export function pedidoFromBudget(budget) {
       if (num(pers.costUnit) > 0) {
         lineas.push({
           id: uid(),
-          descripcion: `${kitName} · personalización ${pers.desc || ''}`.trim(),
+          descripcion: nameOf(`personalización ${pers.desc || ''}`.trim(), 'personalización'),
           tag: 'diseno',
           cantidad: kitQty,
           costoUnit: num(pers.costUnit),
@@ -169,9 +203,10 @@ export function pedidoFromBudget(budget) {
       }
       ;['designCost', 'laborCost', 'printCost'].forEach(k => {
         if (num(pers[k]) > 0) {
+          const lbl = k === 'designCost' ? 'diseño' : k === 'laborCost' ? 'mano de obra' : 'impresión'
           lineas.push({
             id: uid(),
-            descripcion: `${kitName} · ${k === 'designCost' ? 'diseño' : k === 'laborCost' ? 'mano de obra' : 'impresión'}`,
+            descripcion: nameOf(lbl, lbl),
             tag: k === 'printCost' ? 'diseno' : (k === 'laborCost' ? 'manoDeObra' : 'diseno'),
             cantidad: 1,
             costoUnit: num(pers[k]),
@@ -182,6 +217,10 @@ export function pedidoFromBudget(budget) {
         }
       })
     })
+
+    // Si el kit era generico y no habia items reales, marcar esKit=false
+    // para que la UI no muestre el chip "Kit x N" en pedidos simples.
+    if (isGenericKitOnly(principalAlt)) esKit = false
   } else if (Array.isArray(budget.simplePack) && budget.simplePack.length) {
     // Modo simple viejo — simplePack + simplePers
     budget.simplePack.forEach(comp => {

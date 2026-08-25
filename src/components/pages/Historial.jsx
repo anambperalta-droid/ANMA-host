@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
-import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS } from '../../lib/pedido'
+import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, gananciaBudget } from '../../lib/pedido'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 
@@ -657,10 +657,11 @@ const cobradoEnRango = (b, fromISO, toISO) => {
   return (b.date >= fromISO && b.date <= toISO) ? cobrado(b) : 0
 }
 const ganCobrada = (b) => {
-  if (b.payStatus === 'paid') return b.totalGain || 0
+  const g = gananciaBudget(b)
+  if (b.payStatus === 'paid') return g
   if (b.payStatus === 'partial') {
     const pct = (b.depositAmt || 0) / ((b.total || 1))
-    return Math.round((b.totalGain || 0) * pct)
+    return Math.round(g * pct)
   }
   return 0
 }
@@ -910,7 +911,7 @@ export default function Historial() {
       const dir = sortDir === 'asc' ? 1 : -1
       if (sortKey === 'date') return ((a.date || '') > (b.date || '') ? 1 : -1) * dir
       if (sortKey === 'total') return ((a.total || 0) - (b.total || 0)) * dir
-      if (sortKey === 'gain') return ((a.totalGain || 0) - (b.totalGain || 0)) * dir
+      if (sortKey === 'gain') return (gananciaBudget(a) - gananciaBudget(b)) * dir
       return (a.id - b.id) * dir
     })
     if (quickFilter === 'atrasados') {
@@ -918,9 +919,9 @@ export default function Historial() {
     } else if (quickFilter === 'sin_cobrar') {
       list = list.filter(b => ['confirmado', 'produccion'].includes(getEstado(b)) && (!b.payStatus || b.payStatus === 'pending'))
     } else if (quickFilter === 'alta_ganancia') {
-      const gs = [...periodBudgets].filter(b => (b.totalGain || 0) > 0).sort((a, b) => (b.totalGain || 0) - (a.totalGain || 0))
-      const cutoff = gs[Math.floor(gs.length / 3)]?.totalGain || 0
-      if (cutoff > 0) list = list.filter(b => (b.totalGain || 0) >= cutoff)
+      const gs = [...periodBudgets].map(b => ({ b, g: gananciaBudget(b) })).filter(x => x.g > 0).sort((a, b) => b.g - a.g)
+      const cutoff = gs[Math.floor(gs.length / 3)]?.g || 0
+      if (cutoff > 0) list = list.filter(b => gananciaBudget(b) >= cutoff)
     }
     return list
   }, [periodBudgets, filter, search, sortKey, sortDir, quickFilter]) // eslint-disable-line
@@ -1105,7 +1106,7 @@ export default function Historial() {
     csvEsc(b.contact || ''), csvEsc(b.company || ''),
     csvEsc(ESTADO_LABELS[getEstado(b)] || getEstado(b) || ''),
     csvEsc(PAY_STATUS_MAP[b.payStatus] || b.payStatus || ''),
-    b.total ?? '', b.totalCost ?? '', b.totalGain ?? '',
+    b.total ?? '', b.totalCost ?? '', gananciaBudget(b),
     b.marginBudgeted != null ? `${b.marginBudgeted}%` : '',
     b.depositAmt ?? '',
     b.costSnapshot?.date || '',
@@ -1784,7 +1785,12 @@ export default function Historial() {
                         )}
                       </td>
                       <td data-cell="total" data-label="Total" style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(b.total)}</td>
-                      <td className="col-hide-mobile" data-cell="gan" data-label="Ganancia" style={{ color: hidden ? 'var(--txt4)' : (b.totalGain == null ? 'var(--txt4)' : b.totalGain < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontStyle: b.totalGain == null ? 'italic' : undefined }}>{b.totalGain == null ? 'Pendiente' : money(b.totalGain)}</td>
+                      {(() => {
+                        const gan = gananciaBudget(b)
+                        return (
+                          <td className="col-hide-mobile" data-cell="gan" data-label="Ganancia" style={{ color: hidden ? 'var(--txt4)' : (gan === 0 ? 'var(--txt4)' : gan < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(gan)}</td>
+                        )
+                      })()}
                       <td data-cell="estado" style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: ESTADO_DOT[getEstado(b)] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
