@@ -37,8 +37,20 @@ function relTime(ts) {
   return `hace ${mo} mes${mo > 1 ? 'es' : ''}`
 }
 
-function Badge({ status }) {
-  return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
+function Badge({ b }) {
+  // Reemplazo del badge legacy — misma fuente de verdad que DotBadge / tabs.
+  const e = getEstado(b)
+  const color = ESTADO_DOT[e] || '#94A3B8'
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '2px 9px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+      background: color + '15', color, border: `1px solid ${color}30`,
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
+      {ESTADO_LABELS[e] || 'Consulta'}
+    </span>
+  )
 }
 
 function Sparkline({ data, color = 'var(--brand)', height = 22 }) {
@@ -349,14 +361,28 @@ function LossReasonModal({ budget, onSave, onClose }) {
   )
 }
 
-const DOT_STATUS = { draft: '#94A3B8', sent: '#3B82F6', negotiating: '#D97706', confirmed: '#16A34A', lost: '#DC2626' }
+// Color por estado — mismo mapa que usan los tabs de filtros para consistencia
+const ESTADO_DOT = {
+  consulta:      '#94A3B8',
+  presupuestado: '#3B82F6',
+  pausado:       '#D97706',
+  confirmado:    '#16A34A',
+  produccion:    '#7C3AED',
+  entregado:     '#059669',
+  cerrado:       '#6B7280',
+  perdido:       '#DC2626',
+}
 const DOT_PAY = { pending: '#DC2626', partial: '#D97706', paid: '#16A34A' }
 
-function DotBadge({ status }) {
+// DotBadge — SIEMPRE recibe el budget para leer via getEstado y no mostrar
+// info desactualizada. Antes leia b.status directo y se desincronizaba con
+// los tabs de filtros que usan el enum nuevo.
+function DotBadge({ b }) {
+  const e = getEstado(b)
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--txt2)', fontSize: 12, whiteSpace: 'nowrap', fontWeight: 500 }}>
-      <span style={{ width: 8, height: 8, borderRadius: '50%', background: DOT_STATUS[status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
-      {STATUS_MAP[status] || 'Borrador'}
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: ESTADO_DOT[e] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
+      {ESTADO_LABELS[e] || 'Consulta'}
     </span>
   )
 }
@@ -460,7 +486,7 @@ function SeguimientoCard({ b, onEdit, onWA, onResend }) {
       <div className="seg-info">
         <div className="seg-top">
           <span className="seg-num">{b.num}</span>
-          <DotBadge status={b.status} />
+          <DotBadge b={b} />
           <span style={{ fontSize: 11, fontWeight: 600, color: urg.color, background: urg.color + '15', padding: '2px 8px', borderRadius: 12 }}>{urg.label}</span>
         </div>
         <div className="seg-cli"><b>{b.contact || 'Sin contacto'}</b> — {b.company || 'Sin empresa'}</div>
@@ -1075,7 +1101,7 @@ export default function Historial() {
   const budgetToRow = (b) => [
     b.num, b.date,
     csvEsc(b.contact || ''), csvEsc(b.company || ''),
-    csvEsc(STATUS_MAP[b.status] || b.status || ''),
+    csvEsc(ESTADO_LABELS[getEstado(b)] || getEstado(b) || ''),
     csvEsc(PAY_STATUS_MAP[b.payStatus] || b.payStatus || ''),
     b.total ?? '', b.totalCost ?? '', b.totalGain ?? '',
     b.marginBudgeted != null ? `${b.marginBudgeted}%` : '',
@@ -1437,7 +1463,7 @@ export default function Historial() {
                                 {firstDesc && <small>{firstDesc}</small>}
                               </td>
                               <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
-                              <td className="c-est"><DotBadge status={b.status} /></td>
+                              <td className="c-est"><DotBadge b={b} /></td>
                               <td className="c-fec">{relTime(b.updatedAt || (b.date ? new Date(b.date).getTime() : 0))}</td>
                               <td className="c-act" style={{ position: 'relative' }}>
                                 <button
@@ -1759,7 +1785,7 @@ export default function Historial() {
                       <td className="col-hide-mobile" data-cell="gan" data-label="Ganancia" style={{ color: hidden ? 'var(--txt4)' : (b.totalGain == null ? 'var(--txt4)' : b.totalGain < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontStyle: b.totalGain == null ? 'italic' : undefined }}>{b.totalGain == null ? 'Pendiente' : money(b.totalGain)}</td>
                       <td data-cell="estado" style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: ESTADO_DOT[getEstado(b)] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
                           <div>
                             <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: 'var(--txt2)', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
                               value={getEstado(b)} onChange={e => handleStatusChange(b.id, e.target.value)}>
@@ -1853,7 +1879,7 @@ export default function Historial() {
           </div>
           <div style={{ marginTop: 8, fontSize: 11, color: 'var(--txt3)', textAlign: 'right', letterSpacing: '.02em' }}>
             {filteredBudgets.length} resultado{filteredBudgets.length !== 1 ? 's' : ''}
-            {filter !== 'all' && <span style={{ marginLeft: 8, padding: '1px 7px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, fontWeight: 600, color: 'var(--txt3)' }}>{STATUS_MAP[filter]}</span>}
+            {filter !== 'all' && <span style={{ marginLeft: 8, padding: '1px 7px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, fontWeight: 600, color: 'var(--txt3)' }}>{ESTADO_LABELS[filter]}</span>}
           </div>
         </>
       )}
@@ -2121,7 +2147,7 @@ export default function Historial() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <i className="fa fa-file-invoice-dollar" style={{ color: brandColor }} />
                   <span style={{ fontWeight: 700 }}>{b.num || '—'}</span>
-                  <span className={`badge ${STATUS_CLS[b.status] || 'b-draft'}`}>{STATUS_MAP[b.status] || 'Borrador'}</span>
+                  <Badge b={b} />
                 </div>
                 <button className="mclose" onClick={() => setPreviewBudget(null)}><i className="fa fa-xmark" /></button>
               </div>
@@ -2279,7 +2305,7 @@ export default function Historial() {
                       >
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', minWidth: 40 }}>{b.num || '#—'}</span>
                         <span style={{ flex: 1, fontSize: 11, color: 'var(--txt3)' }}>{b.date || ''}</span>
-                        <DotBadge status={b.status} />
+                        <DotBadge b={b} />
                         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{money(b.total)}</span>
                       </div>
                     ))}
