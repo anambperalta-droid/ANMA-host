@@ -21,6 +21,22 @@ const ESTADO_TAB_COLOR = {
 }
 import GuideBanner from '../layout/GuideBanner'
 
+// Formato "hace X" para timestamps — se usa en la tabla de Actividad reciente
+function relTime(ts) {
+  if (!ts) return '—'
+  const diff = Date.now() - Number(ts)
+  if (diff < 0) return '—'
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return 'ahora'
+  if (min < 60) return `hace ${min}m`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `hace ${h}h`
+  const d = Math.floor(h / 24)
+  if (d < 30) return `hace ${d}d`
+  const mo = Math.floor(d / 30)
+  return `hace ${mo} mes${mo > 1 ? 'es' : ''}`
+}
+
 function Badge({ status }) {
   return <span className={`badge ${STATUS_CLS[status] || 'b-draft'}`}>{STATUS_MAP[status] || 'Borrador'}</span>
 }
@@ -1385,33 +1401,44 @@ export default function Historial() {
                       .resumen-tbl th.c-cli,.resumen-tbl td.c-cli{width:auto;min-width:160px}
                       .resumen-tbl th.c-tot,.resumen-tbl td.c-tot{width:110px;text-align:right;font-variant-numeric:tabular-nums}
                       .resumen-tbl th.c-est,.resumen-tbl td.c-est{width:120px}
+                      .resumen-tbl th.c-fec,.resumen-tbl td.c-fec{width:96px;font-size:11px;color:var(--txt3)}
                       .resumen-tbl th.c-act,.resumen-tbl td.c-act{width:40px}
+                      .resumen-tbl td.c-cli small{display:block;font-size:10.5px;color:var(--txt3);margin-top:1px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
                     `}</style>
                     <div className="card-header">
-                      <span className="card-title">Últimos presupuestos</span>
+                      <span className="card-title">Actividad reciente</span>
                       <span className="card-link" onClick={() => setTab('lista')}>Ver todos <i className="fa fa-arrow-right" /></span>
                     </div>
                     {budgets.length ? (
                       <table>
-                        <thead><tr><th className="c-num">N°</th><th className="c-cli">Cliente</th><th className="c-tot">Total</th><th className="c-est">Estado</th><th className="c-act"></th></tr></thead>
+                        <thead><tr><th className="c-num">N°</th><th className="c-cli">Cliente</th><th className="c-tot">Total</th><th className="c-est">Estado</th><th className="c-fec">Editado</th><th className="c-act"></th></tr></thead>
                         <tbody>
-                          {[...budgets].sort((a, b) => b.id - a.id).slice(0, 6).map(b => {
+                          {[...budgets].sort((a, b) => (b.updatedAt || b.id || 0) - (a.updatedAt || a.id || 0)).slice(0, 8).map(b => {
                             const cliName = b.company || b.contact || '—'
                             const matchedCli = (clients || []).find(c => (b.company && c.company === b.company) || (b.contact && c.contact === b.contact))
+                            // Preview de la primera línea con descripción — da contexto rápido de qué es el pedido
+                            const firstDesc = (() => {
+                              const it = (b.items || []).find(x => x?.name)
+                              if (it) return it.name
+                              const alt = (b.alternatives || []).find(a => a?.kits?.length)?.kits?.[0]
+                              return alt?.name || alt?.products?.[0]?.name || alt?.packaging?.[0]?.name || ''
+                            })()
                             return (
-                            <tr key={b.id} style={{ cursor: 'pointer' }} onClick={() => setPreviewBudget(b)}>
+                            <tr key={b.id} style={{ cursor: 'pointer' }} onClick={() => setPreviewBudget(b)} title={firstDesc || undefined}>
                               <td className="c-num"><b>{b.num || '—'}</b></td>
                               <td className="c-cli">
                                 {matchedCli ? (
                                   <span
-                                    onClick={() => { setSelectedCliente(matchedCli); setIsPreviewOpen(true) }}
+                                    onClick={e => { e.stopPropagation(); setSelectedCliente(matchedCli); setIsPreviewOpen(true) }}
                                     style={{ cursor: 'pointer', color: 'var(--brand)', fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: 3 }}
                                     title="Ver perfil del cliente"
                                   >{cliName}</span>
                                 ) : cliName}
+                                {firstDesc && <small>{firstDesc}</small>}
                               </td>
                               <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
                               <td className="c-est"><DotBadge status={b.status} /></td>
+                              <td className="c-fec">{relTime(b.updatedAt || (b.date ? new Date(b.date).getTime() : 0))}</td>
                               <td className="c-act" style={{ position: 'relative' }}>
                                 <button
                                   style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}
