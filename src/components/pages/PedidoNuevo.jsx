@@ -260,7 +260,7 @@ export default function PedidoNuevo() {
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
-        <section className="wiz-pane">
+        <section className="wiz-pane" style={{ position: 'relative', zIndex: showClientList ? 100 : 'auto' }}>
           <PaneHead meta={SECCION_META.cliente} />
           <div className="pedido-cliente-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
             <div ref={clientBoxRef} style={{ position: 'relative' }}>
@@ -415,8 +415,37 @@ export default function PedidoNuevo() {
         </section>
       </div>
 
-      {/* Reglas responsive: en mobile las líneas se apilan como cards */}
+      {/* Estilos de la tabla de productos — densidad Airtable-style */}
       <style>{`
+        /* Fila plana con divisor sutil abajo, sin bg propio */
+        .pedido-linea-row {
+          padding: 6px 8px;
+          border-bottom: 1px solid var(--border);
+          transition: background .12s ease;
+          border-radius: 6px;
+        }
+        .pedido-linea-row:last-child { border-bottom: none; }
+        .pedido-linea-row:hover { background: var(--brand-xlt); }
+        .pedido-linea-row:hover .pedido-remove-btn { opacity: 1 !important; }
+
+        /* Inputs "flat" — sin border, se resaltan solo al hover/focus */
+        .pedido-cell-input {
+          width: 100%;
+          padding: 6px 8px;
+          border: 1px solid transparent;
+          border-radius: 6px;
+          font-size: 13px;
+          font-family: inherit;
+          background: transparent;
+          color: var(--txt);
+          outline: none;
+          box-sizing: border-box;
+          transition: background .12s ease, border-color .12s ease;
+        }
+        .pedido-cell-input:hover  { background: var(--surface2); }
+        .pedido-cell-input:focus  { background: var(--surface); border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-xlt); }
+        .pedido-cell-input::placeholder { color: var(--txt4); font-weight: 400; }
+
         @media (max-width: 720px) {
           .pedido-linea-header { display: none !important; }
           .pedido-linea-row {
@@ -424,18 +453,22 @@ export default function PedidoNuevo() {
             grid-template-areas:
               'desc desc'
               'tag estado'
-              'cant costo'
-              'precio remove' !important;
-            padding: 14px !important;
-            gap: 10px !important;
+              'cant remove'
+              'costo precio' !important;
+            padding: 12px !important;
+            gap: 8px !important;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
           }
+          .pedido-linea-row:hover { background: var(--surface); }
           .pedido-linea-row > .l-desc   { grid-area: desc; }
           .pedido-linea-row > .l-tag    { grid-area: tag; }
           .pedido-linea-row > .l-cant   { grid-area: cant; }
           .pedido-linea-row > .l-costo  { grid-area: costo; }
           .pedido-linea-row > .l-precio { grid-area: precio; }
           .pedido-linea-row > .l-estado { grid-area: estado; }
-          .pedido-linea-row > .l-remove { grid-area: remove; justify-self: end; }
+          .pedido-linea-row > .l-remove { grid-area: remove; justify-self: end; opacity: 1 !important; }
           .pedido-cliente-grid { grid-template-columns: 1fr !important; }
           .pedido-entrega-grid { grid-template-columns: 1fr !important; }
           .pedido-precio-grid  { grid-template-columns: 1fr !important; }
@@ -465,38 +498,30 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
 
 function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
   return (
-    <div className="pedido-linea-row" style={{
-      ...lineaGrid, marginBottom: 8, alignItems: 'center',
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 10,
-      padding: '10px 12px',
-      transition: 'border-color .15s ease',
-    }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border2)' }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}>
+    <div className="pedido-linea-row" style={{ ...lineaGrid, alignItems: 'center' }}>
       <DescripcionInput className="l-desc" value={linea.descripcion} products={products}
-        onChange={patch => onChange(patch)} />
+        onChange={patch => onChange(patch)} flat />
       <TagChip className="l-tag" value={linea.tag || 'producto'}
-        onChange={v => onChange({ tag: v })} />
-      <input className="l-cant" type="number" min={0} value={linea.cantidad}
+        onChange={v => onChange({ tag: v })} mini />
+      <input className="l-cant pedido-cell-input" type="number" min={0} value={linea.cantidad}
         onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
-        style={{ ...inputStyle, textAlign: 'right' }} />
-      <input className="l-costo" type="number" min={0} value={linea.costoUnit}
+        style={{ textAlign: 'right' }} />
+      <input className="l-costo pedido-cell-input" type="number" min={0} value={linea.costoUnit}
         onChange={e => onChange({ costoUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
-        placeholder="0" style={{ ...inputStyle, textAlign: 'right' }} />
-      <input className="l-precio" type="number" min={0} value={linea.precioUnit}
+        placeholder="0" style={{ textAlign: 'right' }} />
+      <input className="l-precio pedido-cell-input" type="number" min={0} value={linea.precioUnit}
         onChange={e => onChange({ precioUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
-        placeholder="0" style={{ ...inputStyle, textAlign: 'right' }} />
+        placeholder="0" style={{ textAlign: 'right' }} />
       <EstadoCompraChip className="l-estado" value={linea.estadoCompra}
-        onChange={v => onChange({ estadoCompra: v })} />
+        onChange={v => onChange({ estadoCompra: v })} mini />
       <button onClick={onRemove} disabled={!canRemove}
         title={canRemove ? 'Eliminar línea' : 'Al menos una línea'}
-        className="l-remove"
+        className="l-remove pedido-remove-btn"
         style={{
           background: 'transparent', border: 'none', color: 'var(--txt3)',
-          cursor: canRemove ? 'pointer' : 'not-allowed', padding: 6,
-          fontSize: 14, opacity: canRemove ? 1 : 0.3,
+          cursor: canRemove ? 'pointer' : 'not-allowed', padding: 4,
+          fontSize: 12, opacity: canRemove ? 0 : 0.3,
+          transition: 'opacity .15s ease',
         }}>
         <i className="fa fa-times" />
       </button>
@@ -592,7 +617,7 @@ function Row({ label, value }) {
   )
 }
 
-function DescripcionInput({ value, products, onChange, className }) {
+function DescripcionInput({ value, products, onChange, className, flat }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -621,9 +646,10 @@ function DescripcionInput({ value, products, onChange, className }) {
       <input type="text" value={value}
         onChange={e => { onChange({ descripcion: e.target.value, productoId: null }); setOpen(true) }}
         onFocus={() => setOpen(true)}
-        placeholder="Descripción — escribí para buscar en el catálogo"
+        placeholder={flat ? 'Descripción' : 'Descripción — escribí para buscar en el catálogo'}
         autoComplete="off"
-        style={inputStyle} />
+        className={flat ? 'pedido-cell-input' : ''}
+        style={flat ? { fontWeight: 500 } : inputStyle} />
       {open && matches.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
@@ -682,13 +708,15 @@ function EstadoSelect({ value, onChange }) {
   )
 }
 
-function TagChip({ value, onChange, className }) {
+function TagChip({ value, onChange, className, mini }) {
   const st = TAG_COLOR[value] || TAG_COLOR.otro
+  const pad = mini ? '3px 8px' : '6px 10px'
+  const fs  = mini ? 10 : 11
   return (
     <select className={className} value={value} onChange={e => onChange(e.target.value)}
       title="Tipo de línea"
       style={{
-        padding: '6px 10px', fontSize: 10, fontWeight: 700,
+        padding: pad, fontSize: fs, fontWeight: 700,
         border: `1px solid ${st.bd}`, borderRadius: 999,
         background: st.bg, color: st.fg,
         fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
@@ -699,12 +727,14 @@ function TagChip({ value, onChange, className }) {
   )
 }
 
-function EstadoCompraChip({ value, onChange, className }) {
+function EstadoCompraChip({ value, onChange, className, mini }) {
   const st = ESTADO_COMPRA_COLOR[value] || ESTADO_COMPRA_COLOR.pendiente
+  const pad = mini ? '3px 8px' : '6px 10px'
+  const fs  = mini ? 10 : 11
   return (
     <select className={className} value={value} onChange={e => onChange(e.target.value)}
       style={{
-        padding: '6px 10px', fontSize: 11, fontWeight: 700,
+        padding: pad, fontSize: fs, fontWeight: 700,
         border: `1px solid ${st.bd}`, borderRadius: 999,
         background: st.bg, color: st.fg,
         fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
@@ -955,6 +985,6 @@ const dropdownItem = {
 
 const lineaGrid = {
   display: 'grid',
-  gridTemplateColumns: 'minmax(0, 2fr) 118px 68px 92px 92px 108px 30px',
+  gridTemplateColumns: 'minmax(0, 1.8fr) 92px 56px 84px 84px 96px 24px',
   gap: 8,
 }
