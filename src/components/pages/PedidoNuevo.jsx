@@ -16,7 +16,7 @@ import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
 import {
   pedidoFromBudget, budgetFromPedido, calcularTotales,
-  totalDesdeMargen, pedidoVacio, nuevaLinea,
+  totalDesdeMargen, pedidoVacio, nuevaLinea, snapshotAlt, aplicarAlt,
   ESTADOS, ESTADO_LABELS, ESTADOS_COMPRA, TAGS, TAG_LABELS,
 } from '../../lib/pedido'
 
@@ -209,6 +209,12 @@ export default function PedidoNuevo() {
           <EstadoSelect value={pedido.estado} onChange={v => update({ estado: v })} />
           <MenuMore
             pedido={pedido}
+            onSaveAlt={() => {
+              const label = `Alternativa ${(pedido.alternativas?.length || 0) + 1}`
+              const snap = snapshotAlt(pedido, label)
+              updateFn(p => ({ ...p, alternativas: [...(p.alternativas || []), snap] }))
+              toast(`${label} guardada`, 'ok')
+            }}
             onToggleKit={() => {
               if (pedido.esKit) update({ esKit: false, cantKits: 0 })
               else              update({ esKit: true,  cantKits: Math.max(1, Number(pedido.cantKits) || 10) })
@@ -310,6 +316,25 @@ export default function PedidoNuevo() {
               <i className="fa fa-plus" /> Agregar
             </button>
           </div>
+
+          {(pedido.alternativas?.length > 0) && (
+            <AlternativasBar
+              alternativas={pedido.alternativas}
+              onLoad={(alt) => updateFn(p => aplicarAlt(p, alt))}
+              onApprove={(id) => updateFn(p => ({
+                ...p,
+                alternativas: (p.alternativas || []).map(a => ({ ...a, aprobada: a.id === id })),
+              }))}
+              onDelete={(id) => updateFn(p => ({
+                ...p,
+                alternativas: (p.alternativas || []).filter(a => a.id !== id),
+              }))}
+              onRename={(id, label) => updateFn(p => ({
+                ...p,
+                alternativas: (p.alternativas || []).map(a => a.id === id ? { ...a, label } : a),
+              }))}
+            />
+          )}
 
           {/* Headers desktop */}
           <div style={{ ...lineaGrid, marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
@@ -722,7 +747,84 @@ function KitChip({ cantidad, onChange, onOff }) {
   )
 }
 
-function MenuMore({ pedido, onToggleKit, onDuplicate, onDelete }) {
+function AlternativasBar({ alternativas, onLoad, onApprove, onDelete, onRename }) {
+  const [openMenuId, setOpenMenuId] = useState(null)
+  useEffect(() => {
+    const close = () => setOpenMenuId(null)
+    if (openMenuId) {
+      document.addEventListener('mousedown', close)
+      return () => document.removeEventListener('mousedown', close)
+    }
+  }, [openMenuId])
+
+  return (
+    <div style={{
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8,
+      padding: '10px 12px', marginTop: 12, marginBottom: 4,
+      background: 'var(--brand-xlt)', border: '1.5px solid var(--brand)',
+      borderRadius: 10,
+    }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.06em', marginRight: 4 }}>
+        <i className="fa fa-layer-group" style={{ marginRight: 6 }} />
+        Alternativas guardadas
+      </span>
+      {alternativas.map(alt => (
+        <div key={alt.id} style={{ position: 'relative', display: 'inline-flex' }}>
+          <button
+            onClick={() => onLoad(alt)}
+            title="Cargar esta alternativa en el editor"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '5px 10px 5px 12px',
+              background: alt.aprobada ? '#dcfce7' : 'var(--surface)',
+              color: alt.aprobada ? '#15803d' : 'var(--txt)',
+              border: `1.5px solid ${alt.aprobada ? '#86efac' : 'var(--border2)'}`,
+              borderRadius: 999, fontSize: 12, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>
+            {alt.aprobada && <i className="fa fa-check" style={{ fontSize: 10 }} />}
+            {alt.label}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === alt.id ? null : alt.id) }}
+            title="Opciones"
+            style={{
+              padding: '5px 8px', marginLeft: -1,
+              background: 'var(--surface)', color: 'var(--txt3)',
+              border: `1.5px solid var(--border2)`, borderLeft: 'none',
+              borderRadius: '0 999px 999px 0', fontSize: 11, cursor: 'pointer',
+            }}>
+            <i className="fa fa-ellipsis-vertical" />
+          </button>
+          {openMenuId === alt.id && (
+            <div onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute', top: '100%', right: 0, marginTop: 4, zIndex: 200,
+                background: 'var(--surface)', border: '1px solid var(--border)',
+                borderRadius: 10, minWidth: 180, boxShadow: '0 10px 30px rgba(0,0,0,.12)',
+                overflow: 'hidden',
+              }}>
+              <MenuItem icon={alt.aprobada ? 'fa-check-double' : 'fa-check'}
+                label={alt.aprobada ? 'Quitar aprobación' : 'Marcar como aprobada'}
+                onClick={() => { setOpenMenuId(null); onApprove(alt.aprobada ? null : alt.id) }} />
+              <MenuItem icon="fa-pen" label="Renombrar"
+                onClick={() => {
+                  const nuevo = prompt('Nombre de la alternativa:', alt.label)
+                  setOpenMenuId(null)
+                  if (nuevo && nuevo.trim()) onRename(alt.id, nuevo.trim())
+                }} />
+              <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+              <MenuItem icon="fa-trash" label="Eliminar" color="#dc2626"
+                onClick={() => { setOpenMenuId(null); onDelete(alt.id) }} />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MenuMore({ pedido, onSaveAlt, onToggleKit, onDuplicate, onDelete }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -746,6 +848,11 @@ function MenuMore({ pedido, onToggleKit, onDuplicate, onDelete }) {
           boxShadow: '0 10px 30px rgba(0,0,0,.12)',
           overflow: 'hidden',
         }}>
+          <MenuItem icon="fa-layer-group"
+            label={pedido.alternativas?.length > 0
+              ? `Guardar como alternativa (${pedido.alternativas.length})`
+              : 'Guardar como alternativa'}
+            onClick={() => { setOpen(false); onSaveAlt() }} />
           <MenuItem
             icon={pedido.esKit ? 'fa-list-ul' : 'fa-gift'}
             label={pedido.esKit ? 'Salir de modo kit' : 'Convertir en kit'}

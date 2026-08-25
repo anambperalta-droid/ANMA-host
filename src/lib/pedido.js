@@ -525,6 +525,45 @@ export function totalDesdeMargen(pedido, margenObjetivo) {
 
 // ── Helpers de línea ───────────────────────────────────────────────
 
+/**
+ * Devuelve un snapshot del estado editable del pedido — lo que se guarda
+ * como alternativa. NO incluye alternativas ni metadatos de identidad
+ * (num, cliente, entrega) — solo el contenido comparable.
+ */
+export function snapshotAlt(pedido, label) {
+  return {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    label: label || `Alternativa ${Date.now() % 10000}`,
+    aprobada: false,
+    esKit: !!pedido.esKit,
+    cantKits: num(pedido.cantKits),
+    aplicaIva: !!pedido.aplicaIva,
+    precioFinalManual: pedido.precioFinalManual ?? null,
+    seniaMonto: num(pedido.seniaMonto),
+    // Copiamos las líneas con IDs nuevos para que no colisionen si el user
+    // carga la alt en el editor y edita ambas.
+    lineas: (pedido.lineas || []).map(l => ({ ...l, id: Date.now() + Math.floor(Math.random() * 1e6) })),
+  }
+}
+
+/**
+ * Aplica un snapshot de alternativa sobre el pedido — reemplaza el
+ * contenido editable pero preserva la identidad (id, num, cliente,
+ * fecha, notas, entrega, logística, estado).
+ */
+export function aplicarAlt(pedido, alt) {
+  if (!alt) return pedido
+  return {
+    ...pedido,
+    esKit: !!alt.esKit,
+    cantKits: num(alt.cantKits),
+    aplicaIva: !!alt.aplicaIva,
+    precioFinalManual: alt.precioFinalManual ?? null,
+    seniaMonto: num(alt.seniaMonto),
+    lineas: (alt.lineas || []).map(l => ({ ...l, id: Date.now() + Math.floor(Math.random() * 1e6) })),
+  }
+}
+
 export function nuevaLinea(overrides = {}) {
   return {
     id: uid(),
