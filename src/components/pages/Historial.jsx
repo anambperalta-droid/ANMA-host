@@ -2416,6 +2416,7 @@ export default function Historial() {
           if (cli) { setSelectedCliente(cli); setIsPreviewOpen(true); setDrawerBudget(null) }
           else { nav('/clientes'); setDrawerBudget(null) }
         }}
+        onRegistrarPago={(b) => { setDrawerBudget(null); setPaymentsBudget(b) }}
       />
     </div>
   )

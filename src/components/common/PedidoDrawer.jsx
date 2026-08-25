@@ -42,7 +42,7 @@ const fmtFecha = (iso) => {
   return `${d}/${m}/${y}`
 }
 
-export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerCliente }) {
+export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerCliente, onRegistrarPago }) {
   useEffect(() => {
     if (!budget) return
     const onEsc = (e) => { if (e.key === 'Escape') onClose() }
@@ -191,6 +191,17 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
             {pedido.seniaMonto > 0 && <MoneyRow label="Seña" value={fmt(pedido.seniaMonto)} />}
             {cobrado > 0 && <MoneyRow label={`Cobrado (${pagos.length} pago${pagos.length > 1 ? 's' : ''})`} value={fmt(cobrado)} />}
             <MoneyRow label="Saldo pendiente" value={fmt(saldo)} strong={saldo > 0} />
+            {onRegistrarPago && payStatus !== 'paid' && (
+              <button onClick={() => onRegistrarPago(budget)}
+                style={{
+                  width: '100%', marginTop: 10, padding: '9px 12px',
+                  background: '#F0FDF4', color: '#15803D', border: '1px solid #86EFAC',
+                  borderRadius: 9, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                  fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                }}>
+                <i className="fa fa-hand-holding-dollar" /> Registrar pago
+              </button>
+            )}
           </div>
 
           {/* ── ENTREGA ── */}
