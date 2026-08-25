@@ -8,7 +8,8 @@ import { prefetchRoute } from '../../lib/routes'
 const NAV = [
   { section: 'Gestión' },
   { path: '/', icon: 'fa-chart-line', label: 'Dashboard', chipKey: 'budgets', perm: 'dashboard.view' },
-  { path: '/pedido', icon: 'fa-clipboard-list', label: 'Nuevo pedido', perm: 'pedido.create' },
+  { path: '/pedido', icon: 'fa-clipboard-list', label: 'Pedido nuevo', perm: 'pedido.create' },
+  { path: '/presupuesto', icon: 'fa-file-invoice-dollar', label: 'Presupuesto', perm: 'pedido.create' },
   { path: '/clientes', icon: 'fa-users', label: 'Clientes', chipKey: 'clients', perm: 'cliente.view' },
   { section: 'Catálogo' },
   { path: '/catalogo', icon: 'fa-box-open', label: 'Productos', chipKey: 'products', perm: 'catalogo.view' },
@@ -63,7 +64,8 @@ export default function Sidebar({ open, onClose, collapsed }) {
           }
           if (item.section) return <div key={i} className="sb-sec">{item.section}</div>
           const active = loc.pathname === item.path
-            || (item.path === '/pedido' && (loc.pathname.startsWith('/pedido') || loc.pathname.startsWith('/presupuesto')))
+            || (item.path === '/presupuesto' && loc.pathname.startsWith('/presupuesto'))
+            || (item.path === '/pedido' && loc.pathname.startsWith('/pedido'))
           return (
             <div
               key={item.path}

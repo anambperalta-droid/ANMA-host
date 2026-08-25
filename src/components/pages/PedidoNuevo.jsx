@@ -260,7 +260,7 @@ export default function PedidoNuevo() {
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
-        <section className="wiz-pane" style={{ position: 'relative', zIndex: showClientList ? 100 : 'auto' }}>
+        <section className="wiz-pane">
           <PaneHead meta={SECCION_META.cliente} />
           <div className="pedido-cliente-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
             <div ref={clientBoxRef} style={{ position: 'relative' }}>

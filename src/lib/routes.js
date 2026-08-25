@@ -16,6 +16,7 @@ import { lazy } from 'react'
 // kind: 'table' | 'form' | 'cards' | 'dashboard' — determina el skeleton contextual
 const REGISTRY = {
   dashboard:   { loader: () => import('../components/pages/Historial'),    kind: 'dashboard' },
+  presupuesto: { loader: () => import('../components/pages/Presupuesto'),  kind: 'form' },
   pedido:      { loader: () => import('../components/pages/PedidoNuevo'),  kind: 'form' },
   clientes:    { loader: () => import('../components/pages/Clientes'),     kind: 'table' },
   catalogo:    { loader: () => import('../components/pages/Catalogo'),     kind: 'table' },
@@ -44,6 +45,7 @@ function cachedLoad(key) {
 
 // Lazy components — usar como <Historial /> directamente en Routes
 export const Historial   = lazy(() => cachedLoad('dashboard'))
+export const Presupuesto = lazy(() => cachedLoad('presupuesto'))
 export const PedidoNuevo = lazy(() => cachedLoad('pedido'))
 export const Clientes    = lazy(() => cachedLoad('clientes'))
 export const Catalogo    = lazy(() => cachedLoad('catalogo'))

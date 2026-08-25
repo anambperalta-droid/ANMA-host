@@ -37,7 +37,7 @@ const ACTION_MAP = {
 
   /* ──────────────────────────────────────────────────────────────
      🚚 LOGÍSTICA — Navega al pedido específico con react-router.
-     Extrae: budgetNum, route → /pedido/:id
+     Extrae: budgetNum, route → /presupuesto/:id
   ────────────────────────────────────────────────────────────── */
   logistica: {
     label: 'Cambiar Estado',
@@ -213,7 +213,7 @@ function buildAlerts(budgets, products) {
         icon: 'fa-fire',
         title: `Entrega vencida — ${b.num}`,
         body: `${cliente} · ${Math.abs(delivDays)}d de retraso · ${fmt(b.total)}`,
-        route: `/pedido/${b.id}`,
+        route: `/presupuesto/${b.id}`,
         ts: b.id,
         ...meta,
       })
@@ -228,7 +228,7 @@ function buildAlerts(budgets, products) {
         icon: 'fa-circle-dollar-to-slot',
         title: `Cobro pendiente — ${b.num}`,
         body: `${cliente} · ${sinceDays}d sin cobrar · ${fmt(b.total)}`,
-        route: `/pedido/${b.id}`,
+        route: `/presupuesto/${b.id}`,
         ts: b.id,
         ...meta,
       })
@@ -246,7 +246,7 @@ function buildAlerts(budgets, products) {
           ? `Debés entregar ${whenLabel} a ${cliente}`
           : `Entregá el pedido de ${cliente} ${whenLabel}`,
         body: `${b.num} · ${fmt(b.total)}`,
-        route: `/pedido/${b.id}`,
+        route: `/presupuesto/${b.id}`,
         ts: b.id,
         ...meta,
       })
@@ -261,7 +261,7 @@ function buildAlerts(budgets, products) {
         icon: 'fa-clock-rotate-left',
         title: `${b.num} lleva ${sinceDays}d sin la seña`,
         body: `${cliente} — pedido confirmado pero sin cobrar depósito · ${fmt(b.total)}`,
-        route: `/pedido/${b.id}`,
+        route: `/presupuesto/${b.id}`,
         ts: b.id,
         ...meta,
       })

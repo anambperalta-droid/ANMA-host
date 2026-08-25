@@ -1586,7 +1586,7 @@ export default function Clientes() {
           budget={previewBudget}
           config={config()}
           onClose={() => setPreviewBudget(null)}
-          onEdit={() => { setPreviewBudget(null); setDetailClient(null); nav(`/pedido/${previewBudget.id}`) }}
+          onEdit={() => { setPreviewBudget(null); setDetailClient(null); nav(`/presupuesto/${previewBudget.id}`) }}
         />
       )}
 

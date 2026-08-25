@@ -14,7 +14,7 @@ export default function CommandPalette({ onClose }) {
 
   const pages = [
     { type: 'nav', icon: 'fa-clock-rotate-left', label: 'Historial', sub: 'Dashboard y análisis', path: '/' },
-    { type: 'nav', icon: 'fa-clipboard-list', label: 'Nuevo pedido', sub: 'Crear pedido', path: '/pedido' },
+    { type: 'nav', icon: 'fa-file-invoice-dollar', label: 'Nuevo presupuesto', sub: 'Crear presupuesto', path: '/presupuesto' },
     { type: 'nav', icon: 'fa-users', label: 'Clientes', sub: 'Base de contactos', path: '/clientes' },
     { type: 'nav', icon: 'fa-box-open', label: 'Catálogo', sub: 'Productos y categorías', path: '/catalogo' },
     { type: 'nav', icon: 'fa-industry', label: 'Proveedores', sub: 'Directorio', path: '/proveedores' },
@@ -39,7 +39,7 @@ export default function CommandPalette({ onClose }) {
   const budgets = get('budgets').map(b => ({
     type: 'bud', icon: 'fa-file-invoice', label: `${b.num || '—'} — ${b.company || b.contact || 'Sin cliente'}`,
     sub: `${STATUS_MAP[b.status] || 'Borrador'} · ${b.date || '—'} · ${fmt(b.total)}`,
-    path: `/pedido/${b.id}`,
+    path: `/presupuesto/${b.id}`,
   }))
 
   const all = [...pages, ...clients, ...prods, ...budgets]
