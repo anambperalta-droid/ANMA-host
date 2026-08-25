@@ -22,6 +22,35 @@ const ESTADO_TAB_COLOR = {
 }
 import GuideBanner from '../layout/GuideBanner'
 
+// Texto indexable de un pedido para la búsqueda — cliente, N°, ocasión,
+// descripciones de las líneas (items + kits) y nota interna. Cacheado por
+// budget para no recomputar en cada tecla (WeakMap con invalidación por
+// updatedAt).
+const _searchCache = new WeakMap()
+function budgetSearchText(b) {
+  if (!b) return ''
+  const cached = _searchCache.get(b)
+  if (cached && cached.ts === b.updatedAt) return cached.text
+
+  const parts = [b.company, b.contact, b.num, b.ocasion, b.noteInt]
+
+  // items[] (proyección plana que lee Mensajes) — nombres de producto
+  ;(b.items || []).forEach(it => { if (it?.name) parts.push(it.name) })
+
+  // kits de la alternativa (por si items no está poblado)
+  ;(b.alternatives || []).forEach(alt => {
+    ;(alt.kits || []).forEach(k => {
+      if (k?.name) parts.push(k.name)
+      ;(k.products || []).forEach(p => p?.name && parts.push(p.name))
+      ;(k.packaging || []).forEach(p => p?.name && parts.push(p.name))
+    })
+  })
+
+  const text = parts.filter(Boolean).join(' ').toLowerCase()
+  _searchCache.set(b, { ts: b.updatedAt, text })
+  return text
+}
+
 // Formato "hace X" para timestamps — se usa en la tabla de Actividad reciente
 function relTime(ts) {
   if (!ts) return '—'
@@ -962,11 +991,7 @@ export default function Historial() {
     if (filter !== 'all') list = list.filter(b => getEstado(b) === filter)
     if (search) {
       const sq = search.toLowerCase()
-      list = list.filter(b =>
-        (b.company || '').toLowerCase().includes(sq) ||
-        (b.contact || '').toLowerCase().includes(sq) ||
-        (b.num || '').toLowerCase().includes(sq)
-      )
+      list = list.filter(b => budgetSearchText(b).includes(sq))
     }
     list = [...list].sort((a, b) => {
       const dir = sortDir === 'asc' ? 1 : -1
@@ -1751,7 +1776,7 @@ export default function Historial() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
             <div className="search-row" style={{ maxWidth: 300, flex: '0 0 auto' }}>
               <i className="fa fa-magnifying-glass" />
-              <input type="text" placeholder="Buscar cliente, empresa..." value={search} onChange={e => setSearch(e.target.value)} />
+              <input type="text" placeholder="Buscar cliente, N°, producto, nota…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <div style={{ display: 'flex', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 2, gap: 1, flexWrap: 'wrap' }}>
               {['all', ...ESTADOS].map(f => {
