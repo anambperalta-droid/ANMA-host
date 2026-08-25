@@ -260,7 +260,7 @@ export default function PedidoNuevo() {
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
-        <section className="wiz-pane" style={{ position: 'relative', zIndex: showClientList ? 100 : 'auto' }}>
+        <section className="wiz-pane">
           <PaneHead meta={SECCION_META.cliente} />
           <div className="pedido-cliente-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
             <div ref={clientBoxRef} style={{ position: 'relative' }}>
@@ -417,6 +417,13 @@ export default function PedidoNuevo() {
 
       {/* Estilos de la tabla de productos — densidad Airtable-style */}
       <style>{`
+        /* Fix stacking: cualquier wiz-pane con foco activo sube z-index para
+           que sus dropdowns (Cliente / Descripción / etc) no queden tapados
+           por los siguientes wiz-pane (que crean stacking context por la
+           animación pgIn). */
+        .wiz-pane { position: relative; }
+        .wiz-pane:focus-within { z-index: 100; }
+
         /* Fila plana con divisor sutil abajo, sin bg propio */
         .pedido-linea-row {
           padding: 6px 8px;
