@@ -8,7 +8,7 @@ import { prefetchRoute } from '../../lib/routes'
 const NAV = [
   { section: 'Gestión' },
   { path: '/', icon: 'fa-chart-line', label: 'Dashboard', chipKey: 'budgets', perm: 'dashboard.view' },
-  { path: '/pedido', icon: 'fa-bolt', label: 'Pedido nuevo', perm: 'pedido.create' },
+  { path: '/pedido', icon: 'fa-clipboard-list', label: 'Pedido nuevo', perm: 'pedido.create' },
   { path: '/presupuesto', icon: 'fa-file-invoice-dollar', label: 'Presupuesto', perm: 'pedido.create' },
   { path: '/clientes', icon: 'fa-users', label: 'Clientes', chipKey: 'clients', perm: 'cliente.view' },
   { section: 'Catálogo' },

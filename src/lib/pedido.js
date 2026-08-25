@@ -473,16 +473,20 @@ export function calcularTotales(pedido, ivaRate = 0.21) {
     return { subtotal: 0, iva: 0, total: num(pedido?.precioFinalManual), costoTotal: 0, ganancia: 0, margen: 0 }
   }
 
+  // En modo kit cada linea representa 1 componente por unidad de kit.
+  // Se multiplica x cantKits salvo que sea costo unico (diseño, molde, etc).
+  const multi = pedido.esKit && num(pedido.cantKits) > 0 ? num(pedido.cantKits) : 1
+
   const subtotal = pedido.lineas.reduce((s, l) => {
     const p = num(l.precioUnit)
     if (p <= 0) return s
-    return s + (l.esCostoUnico ? p : p * num(l.cantidad))
+    return s + (l.esCostoUnico ? p : p * num(l.cantidad) * multi)
   }, 0)
 
   const costoTotal = pedido.lineas.reduce((s, l) => {
     const c = num(l.costoUnit)
     if (c <= 0) return s
-    return s + (l.esCostoUnico ? c : c * num(l.cantidad))
+    return s + (l.esCostoUnico ? c : c * num(l.cantidad) * multi)
   }, 0)
 
   const ivaAmt = pedido.aplicaIva ? Math.round(subtotal * ivaRate) : 0

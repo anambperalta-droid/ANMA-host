@@ -63,6 +63,8 @@ const SECCION_META = {
   nota:     { icon: 'fa-pen-to-square', color: '#64748b' },
 }
 
+const TAG_ACCENT = TAG_COLOR // reutilizado para el borde izquierdo del mini-card
+
 const hasMinimum = (p) =>
   !!(p.clienteNombre || p.contact || p.company) &&
   p.lineas.some(l => l.descripcion && l.descripcion.trim().length > 0)
@@ -208,6 +210,10 @@ export default function PedidoNuevo() {
           <EstadoSelect value={pedido.estado} onChange={v => update({ estado: v })} />
           <MenuMore
             pedido={pedido}
+            onToggleKit={() => {
+              if (pedido.esKit) update({ esKit: false, cantKits: 0 })
+              else              update({ esKit: true,  cantKits: Math.max(1, Number(pedido.cantKits) || 10) })
+            }}
             onDuplicate={() => {
               const clone = { ...pedido, id: null, numero: '', createdAt: new Date().toISOString().slice(0, 10) }
               clone.lineas = clone.lineas.map(l => ({ ...l, id: Date.now() + Math.random() }))
@@ -237,6 +243,15 @@ export default function PedidoNuevo() {
           </button>
         </div>
       </div>
+
+      {/* Kit chip — aparece cuando esKit está activo */}
+      {pedido.esKit && (
+        <KitChip
+          cantidad={pedido.cantKits}
+          onChange={v => update({ cantKits: Math.max(1, Number(v) || 1) })}
+          onOff={() => update({ esKit: false, cantKits: 0 })}
+        />
+      )}
 
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
@@ -387,11 +402,8 @@ export default function PedidoNuevo() {
               'tag estado'
               'cant costo'
               'precio remove' !important;
-            padding: 12px !important;
-            background: var(--surface, #fff);
-            border: 1px solid var(--border, #e2e8f0);
-            border-radius: 10px;
-            margin-bottom: 10px !important;
+            padding: 14px !important;
+            gap: 10px !important;
           }
           .pedido-linea-row > .l-desc   { grid-area: desc; }
           .pedido-linea-row > .l-tag    { grid-area: tag; }
@@ -400,6 +412,7 @@ export default function PedidoNuevo() {
           .pedido-linea-row > .l-precio { grid-area: precio; }
           .pedido-linea-row > .l-estado { grid-area: estado; }
           .pedido-linea-row > .l-remove { grid-area: remove; justify-self: end; }
+          .pedido-entrega-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
@@ -422,8 +435,20 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
 }
 
 function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
+  const accent = TAG_ACCENT[linea.tag || 'producto']?.fg || '#64748b'
   return (
-    <div className="pedido-linea-row" style={{ ...lineaGrid, marginBottom: 8, alignItems: 'center' }}>
+    <div className="pedido-linea-row" style={{
+      ...lineaGrid, marginBottom: 8, alignItems: 'center',
+      background: 'var(--surface, #fff)',
+      border: '1px solid var(--border, #e2e8f0)',
+      borderLeft: `3px solid ${accent}`,
+      borderRadius: 10,
+      padding: '10px 12px',
+      boxShadow: '0 1px 2px rgba(15,23,42,.03)',
+      transition: 'box-shadow .15s ease, border-color .15s ease',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 3px 8px rgba(15,23,42,.06)' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 2px rgba(15,23,42,.03)' }}>
       <DescripcionInput className="l-desc" value={linea.descripcion} products={products}
         onChange={patch => onChange(patch)} />
       <TagChip className="l-tag" value={linea.tag || 'producto'}
@@ -454,59 +479,78 @@ function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
 }
 
 function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChange, onSeniaChange }) {
+  const gananciaOk = totales.ganancia >= 0
   return (
-    <div style={{ display: 'grid', gap: 10 }}>
-      <Row label="Subtotal" value={fmt(totales.subtotal)} />
+    <div style={{ display: 'grid', gap: 14 }}>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--txt3)' }}>
-          <input type="checkbox" checked={pedido.aplicaIva} onChange={onIvaChange} />
-          IVA 21%
-        </label>
-        <span style={{ fontWeight: 600, color: pedido.aplicaIva ? 'var(--txt)' : 'var(--txt3)' }}>{fmt(totales.iva)}</span>
+      {/* ── Cálculo ── */}
+      <div style={precioGroup}>
+        <div style={precioGroupLabel}>Cálculo</div>
+        <Row label="Subtotal" value={fmt(totales.subtotal)} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--txt3)' }}>
+            <input type="checkbox" checked={pedido.aplicaIva} onChange={onIvaChange} />
+            IVA 21%
+          </label>
+          <span style={{ fontWeight: 600, color: pedido.aplicaIva ? 'var(--txt)' : 'var(--txt3)' }}>{fmt(totales.iva)}</span>
+        </div>
       </div>
 
+      {/* ── TOTAL destacado ── */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 14px',
-        background: totales.total > 0 ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : 'transparent',
-        border: totales.total > 0 ? '1px solid #bbf7d0' : '1px solid var(--border)',
-        borderRadius: 10,
-        marginTop: 6, marginBottom: 6,
+        padding: '14px 16px',
+        background: totales.total > 0 ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : '#f8fafc',
+        border: `1.5px solid ${totales.total > 0 ? '#86efac' : 'var(--border)'}`,
+        borderRadius: 12,
       }}>
-        <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.05em', color: totales.total > 0 ? '#065f46' : 'var(--txt)' }}>TOTAL</span>
+        <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.08em', color: totales.total > 0 ? '#065f46' : 'var(--txt3)' }}>TOTAL</span>
         <input type="number" min={0}
           value={totales.total || ''}
           onChange={e => onTotalChange(e.target.value)}
           style={{
-            ...inputStyle, textAlign: 'right', fontWeight: 800, fontSize: 17,
-            maxWidth: 180,
+            ...inputStyle, textAlign: 'right', fontWeight: 800, fontSize: 18,
+            maxWidth: 190, padding: '9px 14px',
             borderColor: totales.total > 0 ? '#86efac' : 'var(--brand, #7c3aed)',
             color: totales.total > 0 ? '#065f46' : 'var(--txt)',
             background: '#fff',
           }} />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ display: 'flex', gap: 14, color: 'var(--txt3)' }}>
-          <span>Costo <b style={{ color: 'var(--txt)' }}>{fmt(totales.costoTotal)}</b></span>
-          <span>Ganancia <b style={{ color: totales.ganancia >= 0 ? 'var(--txt)' : '#dc2626' }}>{fmt(totales.ganancia)}</b></span>
+      {/* ── Detalle: costo/ganancia/margen ── */}
+      <div style={precioGroup}>
+        <div style={precioGroupLabel}>Margen</div>
+        <Row label="Costo total" value={fmt(totales.costoTotal)} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+          <span style={{ color: 'var(--txt3)' }}>Ganancia</span>
+          <b style={{ color: gananciaOk ? '#15803d' : '#dc2626' }}>{fmt(totales.ganancia)}</b>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ color: 'var(--txt3)' }}>Margen</span>
-          <input type="number" min={0} max={99} value={totales.margen}
-            onChange={e => onMargenChange(e.target.value)}
-            style={{ ...inputStyle, width: 62, textAlign: 'right', padding: '4px 8px', fontSize: 12 }} />
-          <span style={{ color: 'var(--txt3)' }}>%</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--txt3)' }}>Margen %</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="number" min={0} max={99} value={totales.margen}
+              onChange={e => onMargenChange(e.target.value)}
+              style={{ ...inputStyle, width: 68, textAlign: 'right', padding: '5px 10px', fontSize: 13, fontWeight: 700 }} />
+            <span style={{ color: 'var(--txt3)', fontSize: 12 }}>%</span>
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginTop: 6 }}>
-        <label style={{ color: 'var(--txt3)' }}>Seña</label>
-        <input type="number" min={0}
-          value={pedido.seniaMonto || ''}
-          onChange={e => onSeniaChange(e.target.value)}
-          placeholder="0" style={{ ...inputStyle, textAlign: 'right', maxWidth: 160 }} />
+      {/* ── Seña ── */}
+      <div style={precioGroup}>
+        <div style={precioGroupLabel}>Cobro</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+          <span style={{ color: 'var(--txt3)' }}>Seña</span>
+          <input type="number" min={0}
+            value={pedido.seniaMonto || ''}
+            onChange={e => onSeniaChange(e.target.value)}
+            placeholder="0" style={{ ...inputStyle, textAlign: 'right', maxWidth: 170 }} />
+        </div>
+        {pedido.seniaMonto > 0 && totales.total > 0 && (
+          <div style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'right' }}>
+            Saldo contra entrega: <b style={{ color: 'var(--txt)' }}>{fmt(Math.max(0, totales.total - pedido.seniaMonto))}</b>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -653,7 +697,39 @@ function EstadoCompraChip({ value, onChange, className }) {
   )
 }
 
-function MenuMore({ pedido, onDuplicate, onDelete }) {
+function KitChip({ cantidad, onChange, onOff }) {
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 10,
+      padding: '10px 14px', marginBottom: 14,
+      background: 'linear-gradient(90deg, #fdf4ff 0%, #fae8ff 100%)',
+      border: '1.5px solid #e9d5ff', borderRadius: 12,
+      fontSize: 13, fontWeight: 600, color: '#6b21a8',
+      boxShadow: '0 1px 2px rgba(107,33,168,.06)',
+    }}>
+      <i className="fa fa-gift" style={{ color: '#9333ea' }} />
+      <span>Modo kit — cada línea es <b>1 componente por unidad</b>, se multiplica ×</span>
+      <input type="number" min={1} value={cantidad}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          width: 66, textAlign: 'center', fontWeight: 800, fontSize: 14,
+          padding: '4px 8px', border: '1.5px solid #d8b4fe', borderRadius: 8,
+          background: '#fff', color: '#6b21a8', fontFamily: 'inherit', outline: 'none',
+        }} />
+      <span>unidades</span>
+      <button onClick={onOff}
+        title="Salir de modo kit"
+        style={{
+          marginLeft: 4, background: 'transparent', border: 'none', color: '#9333ea',
+          cursor: 'pointer', padding: 4, fontSize: 13,
+        }}>
+        <i className="fa fa-xmark" />
+      </button>
+    </div>
+  )
+}
+
+function MenuMore({ pedido, onToggleKit, onDuplicate, onDelete }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -677,6 +753,11 @@ function MenuMore({ pedido, onDuplicate, onDelete }) {
           boxShadow: '0 10px 30px rgba(0,0,0,.12)',
           overflow: 'hidden',
         }}>
+          <MenuItem
+            icon={pedido.esKit ? 'fa-list-ul' : 'fa-gift'}
+            label={pedido.esKit ? 'Salir de modo kit' : 'Convertir en kit'}
+            onClick={() => { setOpen(false); onToggleKit() }} />
+          <div style={{ height: 1, background: 'var(--border, #e2e8f0)', margin: '4px 0' }} />
           <MenuItem icon="fa-copy" label="Duplicar pedido"
             onClick={() => { setOpen(false); onDuplicate() }}
             disabled={!pedido.id} />
@@ -722,6 +803,19 @@ function cardStyleFor(sectionKey) {
     boxShadow: '0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.03)',
   }
 }
+// Subgrupo interno para PrecioBlock — le da estructura visual a la seccion
+const precioGroup = {
+  display: 'grid', gap: 6,
+  padding: '10px 12px',
+  background: '#fafafa',
+  border: '1px solid #eef1f5',
+  borderRadius: 10,
+}
+const precioGroupLabel = {
+  fontSize: 10, fontWeight: 700, color: 'var(--txt3, #64748b)',
+  textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2,
+}
+
 const labelStyle = {
   display: 'block',
   fontSize: 11,
