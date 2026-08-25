@@ -58,7 +58,7 @@ const TAG_COLOR = {
 // (tema-aware, misma que /presupuesto). El icono se pinta con var(--grad).
 const SECCION_META = {
   cliente:  { icon: 'fa-user-tie',      title: 'Cliente' },
-  lineas:   { icon: 'fa-list-check',    title: 'Líneas' },
+  lineas:   { icon: 'fa-list-check',    title: 'Productos' },
   precio:   { icon: 'fa-coins',         title: 'Precio' },
   entrega:  { icon: 'fa-truck-fast',    title: 'Entrega' },
   nota:     { icon: 'fa-pen-to-square', title: 'Nota interna' },
@@ -833,15 +833,17 @@ const inputStyle = {
 const dropdownStyle = {
   position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
   background: 'var(--surface)',
-  border: '1.5px solid var(--brand)',
-  borderRadius: 8, maxHeight: 240, overflowY: 'auto', marginTop: 4,
-  boxShadow: '0 8px 24px rgba(0,0,0,.1)',
+  border: '2px solid var(--brand)',
+  borderRadius: 10, maxHeight: 280, overflowY: 'auto', marginTop: 6,
+  boxShadow: '0 12px 32px rgba(0,0,0,.14)',
+  overflow: 'hidden',
 }
 
 const dropdownItem = {
-  padding: '10px 14px', cursor: 'pointer',
+  padding: '12px 16px', cursor: 'pointer',
   borderBottom: '1px solid var(--border)',
   transition: 'background .1s',
+  background: 'var(--surface)',
 }
 
 const lineaGrid = {

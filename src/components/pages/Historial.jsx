@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
-import { getEstado, ESTADOS, ESTADO_LABELS } from '../../lib/pedido'
+import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS } from '../../lib/pedido'
 import { usePrivacy } from '../../context/PrivacyContext'
 
 // Color por estado nuevo — chip filtro
@@ -534,7 +534,7 @@ function StatusDonut({ statuses, budgets, onSegmentClick }) {
   const total = budgets.length || 1
   let cumulative = 0
   const segments = statuses.map(s => {
-    const n = budgets.filter(b => b.status === s.k).length
+    const n = budgets.filter(b => getEstado(b) === s.k).length
     const pct = n / total * 100
     const start = cumulative
     cumulative += pct
@@ -565,7 +565,7 @@ function StatusDonut({ statuses, budgets, onSegmentClick }) {
         {statuses.filter(s => budgets.filter(b => b.status === s.k).length > 0).length === 0 ? (
           <div style={{ fontSize: 12, color: 'var(--txt4)', textAlign: 'center', padding: 8 }}>Sin presupuestos aún</div>
         ) : statuses.filter(s => budgets.filter(b => b.status === s.k).length > 0).map(s => {
-          const n = budgets.filter(b => b.status === s.k).length
+          const n = budgets.filter(b => getEstado(b) === s.k).length
           const pct = Math.round(n / total * 100)
           return (
             <div key={s.k}
@@ -708,11 +708,11 @@ export default function Historial() {
     const n = now
     const prevYM = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
     const totBudgeted = periodBudgets.reduce((s, b) => s + (b.total || 0), 0)
-    const confirmed   = periodBudgets.filter(b => b.status === 'confirmed')
+    const confirmed   = periodBudgets.filter(b => ['confirmado', 'produccion', 'entregado'].includes(getEstado(b)))
     // Excluimos 'lost' — pedidos perdidos no cuentan como ingreso del período
     // Incluye perdidos donde te quedaste con la seña (keptDeposit:true)
     const pagados     = periodBudgets.filter(b => {
-      if (b.status === 'lost' && !b.keptDeposit) return false
+      if (getEstado(b) === 'perdido' && !b.keptDeposit) return false
       return b.payStatus === 'paid' || b.payStatus === 'partial'
     })
     const totCobrado  = pagados.reduce((s, b) => s + cobrado(b), 0)
@@ -748,10 +748,10 @@ export default function Historial() {
       const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0)
       const ds = d.toISOString().slice(0, 10)
       // Ventas brutas: presupuestos creados ese día (excluye perdidos)
-      const dayBs = budgets.filter(b => b.date === ds && b.status !== 'lost')
+      const dayBs = budgets.filter(b => b.date === ds && getEstado(b) !== 'perdido')
       brutas.push(dayBs.reduce((s, b) => s + (b.total || 0), 0))
       // Caja: pagos recibidos. Excluye perdidos sin seña preservada.
-      caja.push(budgets.filter(b => !(b.status === 'lost' && !b.keptDeposit)).reduce((s, b) => s + cobradoEnFecha(b, ds), 0))
+      caja.push(budgets.filter(b => !(getEstado(b) === 'perdido' && !b.keptDeposit)).reduce((s, b) => s + cobradoEnFecha(b, ds), 0))
       ticket.push(dayBs.length ? dayBs.reduce((s, b) => s + (b.total || 0), 0) / dayBs.length : 0)
     }
     return { sparkBrutas: brutas, sparkCaja: caja, sparkTicket: ticket }
@@ -762,16 +762,16 @@ export default function Historial() {
     const today = new Date(); today.setHours(0,0,0,0)
     const todayStr = today.toISOString().slice(0, 10)
     const cobrosVencidos = budgets.filter(b => {
-      if (b.status !== 'confirmed') return false
+      if (!['confirmado', 'produccion', 'entregado'].includes(getEstado(b))) return false
       if (b.payStatus === 'paid') return false
       if (!b.deliveryDate) return false
       return new Date(b.deliveryDate + 'T00:00') <= today
     })
     // Usa totalFinal (con IVA) si está disponible — refleja el monto real adeudado
     const cobrosVencidosMonto = cobrosVencidos.reduce((s, b) => s + ((b.totalFinal || b.total || 0) - cobrado(b)), 0)
-    const entregasHoy = budgets.filter(b => b.deliveryDate === todayStr && !['lost'].includes(b.status))
+    const entregasHoy = budgets.filter(b => b.deliveryDate === todayStr && getEstado(b) !== 'perdido')
     const aConfirmar = budgets.filter(b => {
-      if (!['sent', 'negotiating'].includes(b.status)) return false
+      if (getEstado(b) !== 'presupuestado') return false
       const days = b.date ? Math.floor((today - new Date(b.date + 'T00:00')) / 86400000) : 0
       return days >= 3
     })
@@ -837,12 +837,16 @@ export default function Historial() {
   }, [budgets, period]) // eslint-disable-line
 
   // Status
+  // Estados nuevos con color por etapa — usado por StatusDonut
   const statuses = [
-    { k: 'draft', l: 'Borrador', c: '#94A3B8' },
-    { k: 'sent', l: 'Enviado', c: 'var(--blue)' },
-    { k: 'negotiating', l: 'Negociando', c: 'var(--amber)' },
-    { k: 'confirmed', l: 'Confirmado', c: 'var(--green)' },
-    { k: 'lost', l: 'Perdido', c: 'var(--red)' },
+    { k: 'consulta',      l: 'Consulta',      c: '#94A3B8' },
+    { k: 'presupuestado', l: 'Presupuestado', c: 'var(--blue)' },
+    { k: 'pausado',       l: 'Pausado',       c: 'var(--amber)' },
+    { k: 'confirmado',    l: 'Confirmado',    c: 'var(--green)' },
+    { k: 'produccion',    l: 'En producción', c: 'var(--brand)' },
+    { k: 'entregado',     l: 'Entregado',     c: '#065f46' },
+    { k: 'cerrado',       l: 'Cerrado',       c: '#64748b' },
+    { k: 'perdido',       l: 'Perdido',       c: 'var(--red)' },
   ]
 
   // ── Filtered + sorted budget list (memoized) ──
@@ -866,7 +870,7 @@ export default function Historial() {
       return (a.id - b.id) * dir
     })
     if (quickFilter === 'atrasados') {
-      list = list.filter(b => { const dd = deliveryDays(b.deliveryDate); const e = getEstado(b); return dd !== null && dd <= 0 && !['confirmado', 'produccion', 'entregado', 'perdido', 'cerrado'].includes(e) })
+      list = list.filter(b => { const dd = deliveryDays(b.deliveryDate); const e = getEstado(b); return dd !== null && dd <= 0 && !['entregado', 'perdido', 'cerrado'].includes(e) })
     } else if (quickFilter === 'sin_cobrar') {
       list = list.filter(b => ['confirmado', 'produccion'].includes(getEstado(b)) && (!b.payStatus || b.payStatus === 'pending'))
     } else if (quickFilter === 'alta_ganancia') {
@@ -886,7 +890,7 @@ export default function Historial() {
   // Seguimiento: ALL pending budgets (sent/negotiating), grouped by tier
   const seguimiento = useMemo(() => {
     return budgets
-      .filter(b => ['sent', 'negotiating'].includes(b.status))
+      .filter(b => getEstado(b) === 'presupuestado')
       .map(b => ({ ...b, days: b.date ? Math.floor((now - new Date(b.date)) / 86400000) : 0 }))
       .sort((a, b) => b.days - a.days)
   }, [budgets])
@@ -907,7 +911,7 @@ export default function Historial() {
   const upcomingDeliveries = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0)
     return budgets
-      .filter(b => b.deliveryDate && !['lost', 'cancelled', 'delivered'].includes(b.status))
+      .filter(b => b.deliveryDate && !['perdido', 'cerrado', 'entregado'].includes(getEstado(b)))
       .map(b => {
         const d = new Date(b.deliveryDate + 'T00:00')
         const diff = Math.ceil((d - today) / 86400000)
@@ -996,9 +1000,12 @@ export default function Historial() {
     saveBudget({ ...b, payStatus })
     toast('Pago actualizado', 'ok')
   }
-  const handleStatusChange = (id, status) => {
-    if (status === 'lost') { setPendingLossId(id); return }
-    updateBudgetStatus(id, status)
+  const handleStatusChange = (id, estadoNuevo) => {
+    if (estadoNuevo === 'perdido') { setPendingLossId(id); return }
+    const b = budgets.find(x => x.id === id)
+    if (!b) return
+    const statusLegacy = ESTADO_TO_STATUS[estadoNuevo] || 'draft'
+    saveBudget({ ...b, status: statusLegacy, estado: estadoNuevo })
     toast('Estado actualizado', 'ok')
   }
   const confirmLoss = ({ reason, keptDeposit }) => {
@@ -1029,12 +1036,17 @@ export default function Historial() {
   })
   const applyBulkStatus = () => {
     if (!bulkStatus || !selectedIds.size) return
-    if (bulkStatus === 'lost') {
-      toast('Marcá los presupuestos como "Perdido" uno a uno para registrar el motivo', 'in')
+    if (bulkStatus === 'perdido') {
+      toast('Marcá los pedidos como "Perdido" uno a uno para registrar el motivo', 'in')
       return
     }
-    selectedIds.forEach(id => updateBudgetStatus(id, bulkStatus))
-    toast(`${selectedIds.size} presupuestos actualizados`, 'ok')
+    const statusLegacy = ESTADO_TO_STATUS[bulkStatus] || 'draft'
+    selectedIds.forEach(id => {
+      const b = budgets.find(x => x.id === id)
+      if (!b) return
+      saveBudget({ ...b, status: statusLegacy, estado: bulkStatus })
+    })
+    toast(`${selectedIds.size} pedidos actualizados`, 'ok')
     setSelectedIds(new Set()); setBulkStatus('')
   }
   // CSV escape + protección contra CSV injection (Excel/Sheets ejecutan fórmulas si la celda empieza con = + - @ \t \r).
@@ -1118,7 +1130,7 @@ export default function Historial() {
         out.push({ tone: 'warning', icon: 'fa-funnel-dollar', label: 'Conversión baja', value: `${cr}%`, title: `Conversión baja: ${cr}%`, desc: `Cerrás solo ${cr}% de los presupuestos. Considerá: precio competitivo, tiempos de respuesta, calidad del seguimiento.` })
       }
     }
-    const lostWithReason = budgets.filter(b => b.status === 'lost' && b.lossReason)
+    const lostWithReason = budgets.filter(b => getEstado(b) === 'perdido' && b.lossReason)
     if (lostWithReason.length >= 3) {
       const reasonCount = {}
       lostWithReason.forEach(b => { reasonCount[b.lossReason] = (reasonCount[b.lossReason] || 0) + 1 })
@@ -1659,7 +1671,7 @@ export default function Historial() {
               <b style={{ color: 'var(--brand)', fontSize: 12 }}>{selectedIds.size} seleccionados</b>
               <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} style={{ fontSize: 12, padding: '5px 8px' }}>
                 <option value="">Cambiar estado a...</option>
-                {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                {ESTADOS.map(k => <option key={k} value={k}>{ESTADO_LABELS[k]}</option>)}
               </select>
               <button className="btn btn-primary btn-sm" onClick={applyBulkStatus} disabled={!bulkStatus}><i className="fa fa-check" /> Aplicar</button>
               <button className="btn btn-secondary btn-sm" onClick={bulkExportCSV}><i className="fa fa-download" /> Exportar CSV</button>
@@ -1686,7 +1698,7 @@ export default function Historial() {
               <tbody>
                 {filteredBudgets.length ? filteredBudgets.map(b => {
                   const dDays = deliveryDays(b.deliveryDate)
-                  const overdue = dDays !== null && dDays <= 0 && !['confirmed', 'lost'].includes(b.status)
+                  const overdue = dDays !== null && dDays <= 0 && !['entregado', 'perdido', 'cerrado'].includes(getEstado(b))
                   return (
                     <tr key={b.id} className={selectedIds.has(b.id) ? 'selected' : ''} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
                       <td data-cell="sel"><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
@@ -1710,7 +1722,7 @@ export default function Historial() {
                       </td>
                       <td className="col-hide-mobile">
                         <div style={{ fontSize: 11 }}>{fmtDate(b.deliveryDate) || '—'}</div>
-                        {dDays !== null && !['confirmed','lost'].includes(b.status) && (
+                        {dDays !== null && !['entregado','perdido','cerrado'].includes(getEstado(b)) && (
                           <div style={{ fontSize: 10, fontWeight: 700, color: overdue ? 'var(--red)' : dDays <= 2 ? 'var(--amber)' : 'var(--green)', marginTop: 1 }}>
                             {overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd atrás'}` : `${dDays}d`}
                           </div>
@@ -1723,10 +1735,10 @@ export default function Historial() {
                           <span style={{ width: 7, height: 7, borderRadius: '50%', background: DOT_STATUS[b.status] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
                           <div>
                             <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: 'var(--txt2)', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
-                              value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}>
-                              {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                              value={getEstado(b)} onChange={e => handleStatusChange(b.id, e.target.value)}>
+                              {ESTADOS.map(k => <option key={k} value={k}>{ESTADO_LABELS[k]}</option>)}
                             </select>
-                            {showLossReason && b.status === 'lost' && b.lossReason && (
+                            {showLossReason && getEstado(b) === 'perdido' && b.lossReason && (
                               <div style={{ fontSize: 9, color: '#DC2626', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: 6, padding: '1px 6px', marginTop: 3, display: 'inline-block', fontWeight: 700, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.lossReason}>
                                 {b.lossReason}
                               </div>
@@ -1899,7 +1911,7 @@ export default function Historial() {
 
           {/* ── Análisis de pedidos perdidos ── */}
           {(() => {
-            const lostBudgets = budgets.filter(b => b.status === 'lost')
+            const lostBudgets = budgets.filter(b => getEstado(b) === 'perdido')
             const lostWithReason = lostBudgets.filter(b => b.lossReason)
             const lostValue = lostBudgets.reduce((s, b) => s + (b.total || 0), 0)
             const reasonCount = {}

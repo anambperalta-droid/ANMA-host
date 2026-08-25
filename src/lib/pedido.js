@@ -42,7 +42,7 @@ const STATUS_TO_ESTADO = {
 
 // Escritura: pedido.estado → budget.status. Colapsan pausado/perdido.
 // La distinción vive en el campo nuevo `estado`, que se persiste junto.
-const ESTADO_TO_STATUS = {
+export const ESTADO_TO_STATUS = {
   consulta:      'draft',
   presupuestado: 'sent',
   pausado:       'sent',
