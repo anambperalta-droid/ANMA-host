@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
 import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS } from '../../lib/pedido'
+import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 
 // Color por estado nuevo — chip filtro
@@ -689,6 +690,7 @@ export default function Historial() {
   const [selectedCliente, setSelectedCliente] = useState(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewBudget, setPreviewBudget] = useState(null)
+  const [drawerBudget, setDrawerBudget]   = useState(null)
   const [paymentsBudget, setPaymentsBudget] = useState(null)
   const [todayCollapsed, setTodayCollapsed] = useState(() => db('todayCollapsed', false))
   const toggleTodayCollapsed = () => {
@@ -1450,7 +1452,7 @@ export default function Historial() {
                               return alt?.name || alt?.products?.[0]?.name || alt?.packaging?.[0]?.name || ''
                             })()
                             return (
-                            <tr key={b.id} style={{ cursor: 'pointer' }} onClick={() => setPreviewBudget(b)} title={firstDesc || undefined}>
+                            <tr key={b.id} style={{ cursor: 'pointer' }} onClick={() => setDrawerBudget(b)} title={firstDesc || undefined}>
                               <td className="c-num"><b>{b.num || '—'}</b></td>
                               <td className="c-cli">
                                 {matchedCli ? (
@@ -1760,7 +1762,7 @@ export default function Historial() {
                       <td data-cell="cli" style={{ maxWidth: 200 }}>
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); setPreviewBudget(b) }}
+                          onClick={(e) => { e.stopPropagation(); setDrawerBudget(b) }}
                           title="Ver detalle del pedido"
                           style={{
                             background: 'none', border: 'none', padding: 0, textAlign: 'left',
@@ -1859,6 +1861,8 @@ export default function Historial() {
                       </td>
                       <td data-cell="acc">
                         <div className="acts" style={{ gap: 2 }}>
+                          <button className="hist-act" onClick={() => setDrawerBudget(b)} title="Ver detalle"
+                            onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--txt3)'}><i className="fa fa-eye" /></button>
                           <button className="hist-act" onClick={() => editB(b.id)} title="Editar"
                             onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-pen" /></button>
                           <button className="hist-act" onClick={() => duplicateBudget(b)} title="Duplicar como nuevo pedido"
@@ -2323,6 +2327,26 @@ export default function Historial() {
           </>
         )
       })()}
+
+      {/* PedidoDrawer — side sheet estilo Notion/Linear para vista rápida de lectura */}
+      <PedidoDrawer
+        budget={drawerBudget}
+        onClose={() => setDrawerBudget(null)}
+        onEdit={() => { const b = drawerBudget; setDrawerBudget(null); if (b) nav(pedidoRoute(b)) }}
+        onWA={() => {
+          const b = drawerBudget
+          if (!b?.wa) return
+          const num = b.wa.replace(/\D/g, '')
+          const msg = `Hola ${b.contact || ''}! Te escribo por el pedido ${b.num || ''}.`
+          window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
+        }}
+        onVerCliente={() => {
+          const b = drawerBudget
+          const cli = (clients || []).find(c => (b?.company && c.company === b.company) || (b?.contact && c.contact === b.contact))
+          if (cli) { setSelectedCliente(cli); setIsPreviewOpen(true); setDrawerBudget(null) }
+          else { nav('/clientes'); setDrawerBudget(null) }
+        }}
+      />
     </div>
   )
 }
