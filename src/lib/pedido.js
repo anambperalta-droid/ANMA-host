@@ -97,6 +97,49 @@ export function gananciaBudget(budget) {
   const p = pedidoFromBudget(budget)
   return calcularTotales(p).ganancia
 }
+
+// ── Historial de eventos del pedido (timeline) ─────────────────────
+
+/**
+ * Devuelve un nuevo array de eventos con `evento` agregado al final.
+ * Se persiste en budget.events[]. Cada evento: { type, at, ...detalle }.
+ *   type 'estado' → { estado }
+ *   type 'pago'   → { detail }
+ */
+export function registrarEvento(budget, evento) {
+  const events = Array.isArray(budget?.events) ? [...budget.events] : []
+  events.push({ at: Date.now(), ...evento })
+  return events
+}
+
+/**
+ * Construye el timeline visible del pedido a partir de events[]. Siempre
+ * antepone "Creado". Para pedidos viejos sin events, sintetiza el estado
+ * actual como único hito (usando updatedAt como aproximación).
+ */
+export function eventosPedido(budget) {
+  if (!budget) return []
+  const out = []
+  const created = budget.date ? new Date(budget.date + 'T00:00').getTime() : (Number(budget.id) || Date.now())
+  out.push({ type: 'creado', label: 'Creado', at: created })
+
+  const recorded = Array.isArray(budget.events) ? budget.events : []
+  recorded.forEach(e => {
+    if (e.type === 'estado') out.push({ type: 'estado', label: ESTADO_LABELS[e.estado] || e.estado, estado: e.estado, at: e.at })
+    else if (e.type === 'pago') out.push({ type: 'pago', label: e.detail || 'Pago registrado', at: e.at })
+  })
+
+  // Fallback: pedido viejo sin eventos → sintetizar el estado actual
+  const hasStateEvent = recorded.some(e => e.type === 'estado')
+  if (!hasStateEvent) {
+    const est = getEstado(budget)
+    if (est !== 'consulta') {
+      out.push({ type: 'estado', label: ESTADO_LABELS[est], estado: est, at: budget.updatedAt || created })
+    }
+  }
+
+  return out.sort((a, b) => a.at - b.at)
+}
 export function totalesBudget(budget) {
   if (!budget) return { subtotal: 0, iva: 0, total: 0, costoTotal: 0, ganancia: 0, margen: 0 }
   return calcularTotales(pedidoFromBudget(budget))

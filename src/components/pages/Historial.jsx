@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
-import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, gananciaBudget } from '../../lib/pedido'
+import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, gananciaBudget, registrarEvento } from '../../lib/pedido'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 
@@ -1144,8 +1144,10 @@ export default function Historial() {
     if (estadoNuevo === 'perdido') { setPendingLossId(id); return }
     const b = budgets.find(x => x.id === id)
     if (!b) return
+    if (getEstado(b) === estadoNuevo) return   // sin cambio real, no registrar evento
     const statusLegacy = ESTADO_TO_STATUS[estadoNuevo] || 'draft'
-    saveBudget({ ...b, status: statusLegacy, estado: estadoNuevo })
+    const events = registrarEvento(b, { type: 'estado', estado: estadoNuevo })
+    saveBudget({ ...b, status: statusLegacy, estado: estadoNuevo, events })
     toast('Estado actualizado', 'ok')
   }
   const confirmLoss = ({ reason, keptDeposit }) => {
@@ -1156,11 +1158,13 @@ export default function Historial() {
       const payStatus = keptDeposit === false ? 'pending' : b.payStatus
       const patch = {
         status: 'lost',
+        estado: 'perdido',
         lossReason: reason,
         lossDate: new Date().toISOString().slice(0, 10),
         keptDeposit: keptDeposit === true,
         payments,
         payStatus,
+        events: registrarEvento(b, { type: 'estado', estado: 'perdido' }),
       }
       saveBudget({ ...b, ...patch })
       const extra = keptDeposit === true ? ' · seña preservada' : keptDeposit === false ? ' · seña devuelta' : ''
@@ -1183,8 +1187,9 @@ export default function Historial() {
     const statusLegacy = ESTADO_TO_STATUS[bulkStatus] || 'draft'
     selectedIds.forEach(id => {
       const b = budgets.find(x => x.id === id)
-      if (!b) return
-      saveBudget({ ...b, status: statusLegacy, estado: bulkStatus })
+      if (!b || getEstado(b) === bulkStatus) return
+      const events = registrarEvento(b, { type: 'estado', estado: bulkStatus })
+      saveBudget({ ...b, status: statusLegacy, estado: bulkStatus, events })
     })
     toast(`${selectedIds.size} pedidos actualizados`, 'ok')
     setSelectedIds(new Set()); setBulkStatus('')

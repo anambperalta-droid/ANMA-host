@@ -13,7 +13,7 @@
 import { useEffect } from 'react'
 import { fmt } from '../../lib/storage'
 import {
-  pedidoFromBudget, calcularTotales,
+  pedidoFromBudget, calcularTotales, eventosPedido,
   ESTADO_LABELS, TAG_LABELS,
 } from '../../lib/pedido'
 import { getEstado } from '../../lib/pedido'
@@ -42,6 +42,17 @@ const fmtFecha = (iso) => {
   return `${d}/${m}/${y}`
 }
 
+// Fecha + hora relativa para los hitos del timeline
+const fmtEvento = (ts) => {
+  if (!ts) return '—'
+  const d = new Date(Number(ts))
+  const fecha = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+  const diff = Date.now() - Number(ts)
+  const dias = Math.floor(diff / 86400000)
+  const rel = dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias}d`
+  return `${fecha} · ${rel}`
+}
+
 export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerCliente, onRegistrarPago }) {
   useEffect(() => {
     if (!budget) return
@@ -64,6 +75,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
   const eColor   = ESTADO_COLOR[estado] || '#94A3B8'
   const productos = pedido.lineas.filter(l => TAGS_PROD.has(l.tag || 'producto'))
   const costos    = pedido.lineas.filter(l => TAGS_COSTO.has(l.tag))
+  const timeline  = eventosPedido(budget)
   const payStatus = budget.payStatus || 'pending'
   const pagos     = Array.isArray(budget.payments) ? budget.payments : []
   const cobrado   = pagos.reduce((s, p) => s + (Number(p.amount) || 0), 0)
@@ -226,6 +238,39 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
               </div>
             </>
           )}
+
+          {/* ── TIMELINE ── */}
+          <SectionHead icon="fa-clock-rotate-left" title="Historial" />
+          <div style={{ padding: '4px 4px 14px 6px', marginBottom: 14 }}>
+            {timeline.map((ev, i) => {
+              const color = ev.type === 'estado' ? (ESTADO_COLOR[ev.estado] || 'var(--brand)')
+                          : ev.type === 'pago' ? '#16A34A' : 'var(--txt3)'
+              const icon = ev.type === 'creado' ? 'fa-plus'
+                         : ev.type === 'pago' ? 'fa-hand-holding-dollar' : 'fa-circle'
+              const isLast = i === timeline.length - 1
+              return (
+                <div key={i} style={{ display: 'flex', gap: 12, position: 'relative' }}>
+                  {/* Línea vertical conectora */}
+                  {!isLast && (
+                    <div style={{ position: 'absolute', left: 9, top: 20, bottom: -6, width: 2, background: 'var(--border)' }} />
+                  )}
+                  {/* Punto */}
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%', flexShrink: 0, zIndex: 1,
+                    background: color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 9,
+                  }}>
+                    <i className={`fa ${icon}`} />
+                  </div>
+                  {/* Texto */}
+                  <div style={{ paddingBottom: isLast ? 0 : 14, flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--txt)' }}>{ev.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{fmtEvento(ev.at)}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
 
           {/* Link al perfil del cliente */}
           {onVerCliente && (budget.company || budget.contact) && (

@@ -17,6 +17,7 @@ import { fmt } from '../../lib/storage'
 import {
   pedidoFromBudget, budgetFromPedido, calcularTotales,
   totalDesdeMargen, pedidoVacio, nuevaLinea, snapshotAlt, aplicarAlt,
+  getEstado, registrarEvento,
   ESTADOS, ESTADO_LABELS, ESTADOS_COMPRA, TAGS, TAG_LABELS,
 } from '../../lib/pedido'
 
@@ -130,6 +131,13 @@ export default function PedidoNuevo() {
         const wasNew = !pedido.id
         const prev  = pedido.id ? get('budgets', []).find(x => x.id === pedido.id) : {}
         const budget = budgetFromPedido(pedido, prev)
+        // Timeline: si el estado cambió respecto al guardado previo, lo
+        // registramos como evento. En un pedido nuevo con estado != consulta
+        // también queda el hito.
+        const estadoPrevio = pedido.id ? getEstado(prev) : 'consulta'
+        if (pedido.estado !== estadoPrevio) {
+          budget.events = registrarEvento(prev, { type: 'estado', estado: pedido.estado })
+        }
         const saved  = saveBudget(budget)
         skipNextRef.current = true
         setPedido(p => ({ ...p, id: saved.id, numero: saved.num, updatedAt: saved.updatedAt }))
