@@ -57,11 +57,11 @@ const TAG_COLOR = {
 // Icono y subtítulo pregunta por sección — la estética base viene de .wiz-pane
 // (tema-aware, misma que /presupuesto). El icono se pinta con var(--grad).
 const SECCION_META = {
-  cliente:  { icon: 'fa-user-tie',      title: 'Cliente',       sub: '¿A quién le estás haciendo el pedido?' },
-  lineas:   { icon: 'fa-list-check',    title: 'Líneas',        sub: '¿Qué lleva el pedido?' },
-  precio:   { icon: 'fa-coins',         title: 'Precio',        sub: 'Subtotal, IVA, margen y seña' },
-  entrega:  { icon: 'fa-truck-fast',    title: 'Entrega',       sub: 'Cuándo, dónde y con quién coordinar' },
-  nota:     { icon: 'fa-pen-to-square', title: 'Nota interna',  sub: 'Solo para vos — no se comparte' },
+  cliente:  { icon: 'fa-user-tie',      title: 'Cliente' },
+  lineas:   { icon: 'fa-list-check',    title: 'Líneas' },
+  precio:   { icon: 'fa-coins',         title: 'Precio' },
+  entrega:  { icon: 'fa-truck-fast',    title: 'Entrega' },
+  nota:     { icon: 'fa-pen-to-square', title: 'Nota interna' },
 }
 
 const hasMinimum = (p) =>
@@ -256,35 +256,37 @@ export default function PedidoNuevo() {
         {/* ── CLIENTE ── */}
         <section className="wiz-pane">
           <PaneHead meta={SECCION_META.cliente} />
-          <div ref={clientBoxRef} style={{ position: 'relative' }}>
-            <input
-              type="text"
-              value={pedido.clienteNombre}
-              onChange={e => { update({ clienteNombre: e.target.value, clienteId: null, company: e.target.value }); setShowClientList(true) }}
-              onFocus={() => setShowClientList(true)}
-              placeholder="Empresa o persona"
-              autoComplete="off"
-              style={{ ...inputStyle, fontSize: 15, fontWeight: 500 }}
-            />
-            {showClientList && clientMatches.length > 0 && (
-              <div style={dropdownStyle}>
-                {clientMatches.map(cl => (
-                  <div key={cl.id} onClick={() => pickCliente(cl)} style={dropdownItem}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-xlt, #f5f3ff)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>
-                      {cl.contact || cl.company || '—'}
+          <div className="pedido-cliente-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
+            <div ref={clientBoxRef} style={{ position: 'relative' }}>
+              <label style={labelStyle}>Empresa o persona</label>
+              <input
+                type="text"
+                value={pedido.clienteNombre}
+                onChange={e => { update({ clienteNombre: e.target.value, clienteId: null, company: e.target.value }); setShowClientList(true) }}
+                onFocus={() => setShowClientList(true)}
+                placeholder="Buscá o escribí uno nuevo"
+                autoComplete="off"
+                style={inputStyle}
+              />
+              {showClientList && clientMatches.length > 0 && (
+                <div style={dropdownStyle}>
+                  {clientMatches.map(cl => (
+                    <div key={cl.id} onClick={() => pickCliente(cl)} style={dropdownItem}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-xlt)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)' }}>
+                        {cl.contact || cl.company || '—'}
+                      </div>
+                      {(cl.company || cl.wa) && (
+                        <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2 }}>
+                          {cl.company}{cl.wa ? ` · ${cl.wa}` : ''}
+                        </div>
+                      )}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 2 }}>
-                      {cl.company}{cl.wa ? ` · ${cl.wa}` : ''}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+                  ))}
+                </div>
+              )}
+            </div>
             <div>
               <label style={labelStyle}>Ocasión</label>
               <input type="text" value={pedido.ocasion}
@@ -345,7 +347,7 @@ export default function PedidoNuevo() {
         {/* ── ENTREGA ── */}
         <section className="wiz-pane">
           <PaneHead meta={SECCION_META.entrega} />
-          <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12 }} className="pedido-entrega-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 12 }} className="pedido-entrega-grid">
             <div>
               <label style={labelStyle}>Fecha</label>
               <input type="date" value={pedido.fechaEntrega || ''}
@@ -353,10 +355,16 @@ export default function PedidoNuevo() {
                 style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Horario / preferencia</label>
+              <label style={labelStyle}>Horario</label>
               <input type="text" value={pedido.horarioEntrega || ''}
                 onChange={e => update({ horarioEntrega: e.target.value })}
                 placeholder="Ej: mañana antes de las 12" style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Contacto para coordinar</label>
+              <input type="text" value={pedido.contactoEntrega || ''}
+                onChange={e => update({ contactoEntrega: e.target.value })}
+                placeholder="Nombre y teléfono" style={inputStyle} />
             </div>
           </div>
           <div style={{ marginTop: 12 }}>
@@ -365,15 +373,9 @@ export default function PedidoNuevo() {
               onChange={e => update({ direccionEntrega: e.target.value })}
               placeholder="Calle, número, piso, ciudad" style={inputStyle} />
           </div>
-          <div style={{ marginTop: 12 }}>
-            <label style={labelStyle}>Contacto para coordinar</label>
-            <input type="text" value={pedido.contactoEntrega || ''}
-              onChange={e => update({ contactoEntrega: e.target.value })}
-              placeholder="Nombre y teléfono de quien recibe" style={inputStyle} />
-          </div>
           <div style={hintYellow}>
-            <i className="fa fa-lightbulb" style={{ marginRight: 8, color: '#B45309' }} />
-            Los envíos con comisionista se cargan en <b>Logística</b> y se enlazan por número de pedido.
+            <i className="fa fa-lightbulb" style={{ marginRight: 8, color: '#B45309', marginTop: 2 }} />
+            <span>Los envíos con comisionista se cargan en <b>Logística</b> y se enlazan por número de pedido.</span>
           </div>
         </section>
 
@@ -409,7 +411,12 @@ export default function PedidoNuevo() {
           .pedido-linea-row > .l-precio { grid-area: precio; }
           .pedido-linea-row > .l-estado { grid-area: estado; }
           .pedido-linea-row > .l-remove { grid-area: remove; justify-self: end; }
+          .pedido-cliente-grid { grid-template-columns: 1fr !important; }
           .pedido-entrega-grid { grid-template-columns: 1fr !important; }
+          .pedido-precio-grid  { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 960px) and (min-width: 721px) {
+          .pedido-precio-grid { grid-template-columns: 1fr 1fr !important; }
         }
       `}</style>
     </div>
@@ -474,27 +481,15 @@ function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
 
 function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChange, onSeniaChange }) {
   const gananciaOk = totales.ganancia >= 0
+  const saldo = pedido.seniaMonto > 0 && totales.total > 0 ? Math.max(0, totales.total - pedido.seniaMonto) : null
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gap: 12 }}>
 
-      {/* ── Cálculo ── */}
-      <div style={precioGroup}>
-        <div style={precioGroupLabel}>Cálculo</div>
-        <Row label="Subtotal" value={fmt(totales.subtotal)} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--txt3)' }}>
-            <input type="checkbox" checked={pedido.aplicaIva} onChange={onIvaChange} />
-            IVA 21%
-          </label>
-          <span style={{ fontWeight: 600, color: pedido.aplicaIva ? 'var(--txt)' : 'var(--txt3)' }}>{fmt(totales.iva)}</span>
-        </div>
-      </div>
-
-      {/* ── TOTAL destacado ── */}
+      {/* ── TOTAL destacado — protagonista arriba ── */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '14px 16px',
-        background: totales.total > 0 ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : '#f8fafc',
+        padding: '14px 18px',
+        background: totales.total > 0 ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : 'var(--surface2)',
         border: `1.5px solid ${totales.total > 0 ? '#86efac' : 'var(--border)'}`,
         borderRadius: 12,
       }}>
@@ -505,46 +500,59 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
           style={{
             ...inputStyle, textAlign: 'right', fontWeight: 800, fontSize: 18,
             maxWidth: 190, padding: '9px 14px',
-            borderColor: totales.total > 0 ? '#86efac' : 'var(--brand, #7c3aed)',
+            borderColor: totales.total > 0 ? '#86efac' : 'var(--brand)',
             color: totales.total > 0 ? '#065f46' : 'var(--txt)',
-            background: '#fff',
+            background: 'var(--surface)',
           }} />
       </div>
 
-      {/* ── Detalle: costo/ganancia/margen ── */}
-      <div style={precioGroup}>
-        <div style={precioGroupLabel}>Margen</div>
-        <Row label="Costo total" value={fmt(totales.costoTotal)} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-          <span style={{ color: 'var(--txt3)' }}>Ganancia</span>
-          <b style={{ color: gananciaOk ? '#15803d' : '#dc2626' }}>{fmt(totales.ganancia)}</b>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-          <span style={{ color: 'var(--txt3)' }}>Margen %</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <input type="number" min={0} max={99} value={totales.margen}
-              onChange={e => onMargenChange(e.target.value)}
-              style={{ ...inputStyle, width: 68, textAlign: 'right', padding: '5px 10px', fontSize: 13, fontWeight: 700 }} />
-            <span style={{ color: 'var(--txt3)', fontSize: 12 }}>%</span>
-          </div>
-        </div>
-      </div>
+      {/* ── 3 columnas: Cálculo | Margen | Cobro ── */}
+      <div className="pedido-precio-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
 
-      {/* ── Seña ── */}
-      <div style={precioGroup}>
-        <div style={precioGroupLabel}>Cobro</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-          <span style={{ color: 'var(--txt3)' }}>Seña</span>
-          <input type="number" min={0}
-            value={pedido.seniaMonto || ''}
-            onChange={e => onSeniaChange(e.target.value)}
-            placeholder="0" style={{ ...inputStyle, textAlign: 'right', maxWidth: 170 }} />
-        </div>
-        {pedido.seniaMonto > 0 && totales.total > 0 && (
-          <div style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'right' }}>
-            Saldo contra entrega: <b style={{ color: 'var(--txt)' }}>{fmt(Math.max(0, totales.total - pedido.seniaMonto))}</b>
+        <div style={precioGroup}>
+          <div style={precioGroupLabel}>Cálculo</div>
+          <Row label="Subtotal" value={fmt(totales.subtotal)} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: 'var(--txt3)' }}>
+              <input type="checkbox" checked={pedido.aplicaIva} onChange={onIvaChange} />
+              IVA 21%
+            </label>
+            <span style={{ fontWeight: 600, color: pedido.aplicaIva ? 'var(--txt)' : 'var(--txt3)' }}>{fmt(totales.iva)}</span>
           </div>
-        )}
+        </div>
+
+        <div style={precioGroup}>
+          <div style={precioGroupLabel}>Margen</div>
+          <Row label="Costo" value={fmt(totales.costoTotal)} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+            <span style={{ color: 'var(--txt3)' }}>Ganancia</span>
+            <b style={{ color: gananciaOk ? '#15803d' : '#dc2626' }}>{fmt(totales.ganancia)}</b>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+            <span style={{ color: 'var(--txt3)' }}>Margen</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <input type="number" min={0} max={99} value={totales.margen}
+                onChange={e => onMargenChange(e.target.value)}
+                style={{ ...inputStyle, width: 60, textAlign: 'right', padding: '4px 8px', fontSize: 12, fontWeight: 700 }} />
+              <span style={{ color: 'var(--txt3)', fontSize: 11 }}>%</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={precioGroup}>
+          <div style={precioGroupLabel}>Cobro</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+            <span style={{ color: 'var(--txt3)' }}>Seña</span>
+            <input type="number" min={0}
+              value={pedido.seniaMonto || ''}
+              onChange={e => onSeniaChange(e.target.value)}
+              placeholder="0" style={{ ...inputStyle, width: 96, textAlign: 'right', padding: '4px 8px', fontSize: 12, fontWeight: 700 }} />
+          </div>
+          {saldo != null && (
+            <Row label="Saldo" value={fmt(saldo)} />
+          )}
+        </div>
+
       </div>
     </div>
   )
@@ -552,7 +560,7 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
 
 function Row({ label, value }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
       <span style={{ color: 'var(--txt3)' }}>{label}</span>
       <span style={{ fontWeight: 600, color: 'var(--txt)' }}>{value}</span>
     </div>
