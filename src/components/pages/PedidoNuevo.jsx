@@ -457,29 +457,55 @@ export default function PedidoNuevo() {
         .pedido-cell-input:focus  { background: var(--surface); border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-xlt); }
         .pedido-cell-input::placeholder { color: var(--txt4); font-weight: 400; }
 
+        /* Chips (Tipo / Estado compra) centrados bajo su header en desktop */
+        .pedido-linea-row > .l-tag,
+        .pedido-linea-row > .l-estado { display: flex; flex-direction: column; align-items: center; }
+        .pedido-linea-row > .l-tag > select,
+        .pedido-linea-row > .l-estado > select { max-width: 100%; }
+
+        /* Label por campo — solo visible en mobile (card apilada) */
+        .l-mob-label { display: none; }
+
         @media (max-width: 720px) {
           .pedido-linea-header { display: none !important; }
           .pedido-linea-row {
             grid-template-columns: 1fr 1fr !important;
             grid-template-areas:
-              'desc desc'
-              'tag estado'
-              'cant remove'
-              'costo precio' !important;
-            padding: 12px !important;
-            gap: 8px !important;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            margin-bottom: 8px;
+              'desc  desc'
+              'tag   remove'
+              'cant  costo'
+              'precio estado' !important;
+            padding: 14px !important;
+            gap: 12px 10px !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 12px !important;
+            margin-bottom: 10px !important;
           }
-          .pedido-linea-row:hover { background: var(--surface); }
+          .pedido-linea-row:hover { background: var(--surface) !important; }
           .pedido-linea-row > .l-desc   { grid-area: desc; }
-          .pedido-linea-row > .l-tag    { grid-area: tag; }
+          .pedido-linea-row > .l-tag    { grid-area: tag; justify-content: flex-start; }
           .pedido-linea-row > .l-cant   { grid-area: cant; }
           .pedido-linea-row > .l-costo  { grid-area: costo; }
           .pedido-linea-row > .l-precio { grid-area: precio; }
-          .pedido-linea-row > .l-estado { grid-area: estado; }
-          .pedido-linea-row > .l-remove { grid-area: remove; justify-self: end; opacity: 1 !important; }
+          .pedido-linea-row > .l-estado { grid-area: estado; justify-content: flex-start; }
+          .pedido-linea-row > .l-remove {
+            grid-area: remove; justify-self: end; opacity: 1 !important;
+            width: 30px; height: 30px; border-radius: 8px !important;
+            background: var(--surface2) !important; color: var(--red) !important;
+          }
+          /* Inputs mobile: border visible para que se lean como campos */
+          .pedido-linea-row .pedido-cell-input {
+            border: 1px solid var(--border) !important;
+            background: var(--surface) !important;
+            padding: 9px 10px !important;
+            text-align: left !important;
+            font-size: 14px !important;
+          }
+          .l-mob-label {
+            display: block; font-size: 9px; font-weight: 700;
+            color: var(--txt3); text-transform: uppercase; letter-spacing: .05em;
+            margin-bottom: 4px;
+          }
           .pedido-cliente-grid { grid-template-columns: 1fr !important; }
           .pedido-entrega-grid { grid-template-columns: 1fr !important; }
           .pedido-precio-grid  { grid-template-columns: 1fr !important; }
@@ -508,8 +534,12 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
 }
 
 function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, totalLineas, extras, emptyHint }) {
+  // Estado elevado: cuando cualquier fila abre su dropdown de catálogo, la
+  // sección sube z-index para que no la tape la siguiente. Solución robusta
+  // (el :focus-within CSS no alcanza por los stacking context de pgIn).
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   return (
-    <section className="wiz-pane">
+    <section className="wiz-pane" style={{ position: 'relative', zIndex: dropdownOpen ? 200 : undefined }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <PaneHead meta={meta} />
         <button onClick={onAdd} className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>
@@ -540,7 +570,8 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
           onChange={patch => onChange(linea.id, patch)}
           onRemove={() => onRemove(linea.id)}
           canRemove={totalLineas > 1 || !!linea.descripcion}
-          onPickProduct={onPickProduct} />
+          onPickProduct={onPickProduct}
+          onDropdownOpen={setDropdownOpen} />
       ))}
 
       {lineas.length === 0 && (
@@ -552,24 +583,43 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
   )
 }
 
-function LineaRow({ linea, products, tags, onChange, onRemove, canRemove, onPickProduct }) {
+function LineaRow({ linea, products, tags, onChange, onRemove, canRemove, onPickProduct, onDropdownOpen }) {
   return (
     <div className="pedido-linea-row" style={{ ...lineaGrid, alignItems: 'center' }}>
-      <DescripcionInput className="l-desc" value={linea.descripcion} products={products}
-        onChange={patch => onChange(patch)} onPick={onPickProduct} flat />
-      <TagChip className="l-tag" value={linea.tag || 'producto'} tags={tags}
-        onChange={v => onChange({ tag: v })} mini />
-      <input className="l-cant pedido-cell-input" type="number" min={0} value={linea.cantidad}
-        onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
-        style={{ textAlign: 'right' }} />
-      <input className="l-costo pedido-cell-input" type="number" min={0} value={linea.costoUnit}
-        onChange={e => onChange({ costoUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
-        placeholder="0" style={{ textAlign: 'right' }} />
-      <input className="l-precio pedido-cell-input" type="number" min={0} value={linea.precioUnit}
-        onChange={e => onChange({ precioUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
-        placeholder="0" style={{ textAlign: 'right' }} />
-      <EstadoCompraChip className="l-estado" value={linea.estadoCompra}
-        onChange={v => onChange({ estadoCompra: v })} mini />
+      <div className="l-desc" style={{ minWidth: 0 }}>
+        <span className="l-mob-label">Descripción</span>
+        <DescripcionInput value={linea.descripcion} products={products}
+          onChange={patch => onChange(patch)} onPick={onPickProduct}
+          onDropdownOpen={onDropdownOpen} flat />
+      </div>
+      <div className="l-tag">
+        <span className="l-mob-label">Tipo</span>
+        <TagChip value={linea.tag || 'producto'} tags={tags}
+          onChange={v => onChange({ tag: v })} mini />
+      </div>
+      <div className="l-cant">
+        <span className="l-mob-label">Cantidad</span>
+        <input className="pedido-cell-input" type="number" min={0} value={linea.cantidad}
+          onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
+          style={{ textAlign: 'right' }} />
+      </div>
+      <div className="l-costo">
+        <span className="l-mob-label">Costo/u</span>
+        <input className="pedido-cell-input" type="number" min={0} value={linea.costoUnit}
+          onChange={e => onChange({ costoUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
+          placeholder="0" style={{ textAlign: 'right' }} />
+      </div>
+      <div className="l-precio">
+        <span className="l-mob-label">Precio/u</span>
+        <input className="pedido-cell-input" type="number" min={0} value={linea.precioUnit}
+          onChange={e => onChange({ precioUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
+          placeholder="0" style={{ textAlign: 'right' }} />
+      </div>
+      <div className="l-estado">
+        <span className="l-mob-label">Estado compra</span>
+        <EstadoCompraChip value={linea.estadoCompra}
+          onChange={v => onChange({ estadoCompra: v })} mini />
+      </div>
       <button onClick={onRemove} disabled={!canRemove}
         title={canRemove ? 'Eliminar línea' : 'Al menos una línea'}
         className="l-remove pedido-remove-btn"
@@ -673,7 +723,7 @@ function Row({ label, value }) {
   )
 }
 
-function DescripcionInput({ value, products, onChange, onPick, className, flat }) {
+function DescripcionInput({ value, products, onChange, onPick, onDropdownOpen, className, flat }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -686,6 +736,11 @@ function DescripcionInput({ value, products, onChange, onPick, className, flat }
   const matches = q
     ? products.filter(p => (p.name || '').toLowerCase().includes(q)).slice(0, 8)
     : []
+  const showDropdown = open && matches.length > 0
+
+  // Reporta al padre (LineasSection) cuando el dropdown está visible, para
+  // que suba el z-index de la sección.
+  useEffect(() => { onDropdownOpen?.(showDropdown) }, [showDropdown]) // eslint-disable-line
 
   const pick = (p) => {
     onChange({
@@ -707,7 +762,7 @@ function DescripcionInput({ value, products, onChange, onPick, className, flat }
         autoComplete="off"
         className={flat ? 'pedido-cell-input' : ''}
         style={flat ? { fontWeight: 500 } : inputStyle} />
-      {open && matches.length > 0 && (
+      {showDropdown && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
           background: 'var(--surface, #fff)',
