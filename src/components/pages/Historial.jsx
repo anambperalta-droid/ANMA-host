@@ -1072,8 +1072,17 @@ export default function Historial() {
     nav('/presupuesto')
   }
   const copyWA = (b) => {
-    const text = `Hola ${b.contact || ''}! Te envío el presupuesto ${b.num} por ${fmt(b.total)}. Quedamos a disposición!`
-    navigator.clipboard.writeText(text).then(() => toast('Mensaje WA copiado', 'ok'))
+    const text = `Hola ${b.contact || ''}! Te escribo por el pedido ${b.num || ''}${b.total ? ` por ${fmt(b.total)}` : ''}. Quedamos a disposición!`
+    const num = (b.wa || '').replace(/\D/g, '')
+    if (num) {
+      // Redirige directo al chat del cliente con el mensaje precargado.
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
+      return
+    }
+    // Sin número guardado → no hay a quién abrir; copiamos como respaldo.
+    navigator.clipboard.writeText(text).then(() =>
+      toast('Este cliente no tiene WhatsApp cargado — mensaje copiado', 'in')
+    )
   }
   const handleDelete = (b) => {
     const label = b.num || `#${b.id}`
