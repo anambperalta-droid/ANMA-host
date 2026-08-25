@@ -54,16 +54,15 @@ const TAG_COLOR = {
   otro:       { bg: '#f1f5f9', fg: '#475569', bd: '#cbd5e1' },
 }
 
-// Iconos por bloque con color soft — le da identidad sin ruido
+// Icono y subtítulo pregunta por sección — la estética base viene de .wiz-pane
+// (tema-aware, misma que /presupuesto). El icono se pinta con var(--grad).
 const SECCION_META = {
-  cliente:  { icon: 'fa-user-tie',    color: '#7c3aed' },
-  lineas:   { icon: 'fa-list-check',  color: '#0891b2' },
-  precio:   { icon: 'fa-coins',       color: '#16a34a' },
-  entrega:  { icon: 'fa-truck-fast',  color: '#ea580c' },
-  nota:     { icon: 'fa-pen-to-square', color: '#64748b' },
+  cliente:  { icon: 'fa-user-tie',      title: 'Cliente',       sub: '¿A quién le estás haciendo el pedido?' },
+  lineas:   { icon: 'fa-list-check',    title: 'Líneas',        sub: '¿Qué lleva el pedido?' },
+  precio:   { icon: 'fa-coins',         title: 'Precio',        sub: 'Subtotal, IVA, margen y seña' },
+  entrega:  { icon: 'fa-truck-fast',    title: 'Entrega',       sub: 'Cuándo, dónde y con quién coordinar' },
+  nota:     { icon: 'fa-pen-to-square', title: 'Nota interna',  sub: 'Solo para vos — no se comparte' },
 }
-
-const TAG_ACCENT = TAG_COLOR // reutilizado para el borde izquierdo del mini-card
 
 const hasMinimum = (p) =>
   !!(p.clienteNombre || p.contact || p.company) &&
@@ -232,9 +231,8 @@ export default function PedidoNuevo() {
             }}
           />
           {pedido.id && (
-            <button onClick={() => nav('/pedido')} className="btn btn-sm"
-              title="Empezar otro pedido"
-              style={{ borderRadius: 10, background: 'var(--brand, #7c3aed)', color: '#fff', border: 'none' }}>
+            <button onClick={() => nav('/pedido')} className="btn btn-primary btn-sm"
+              title="Empezar otro pedido">
               <i className="fa fa-plus" /> Nuevo
             </button>
           )}
@@ -256,8 +254,8 @@ export default function PedidoNuevo() {
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
-        <section style={cardStyleFor('cliente')}>
-          <SectionTitle meta={SECCION_META.cliente} label="Cliente" />
+        <section className="wiz-pane">
+          <PaneHead meta={SECCION_META.cliente} />
           <div ref={clientBoxRef} style={{ position: 'relative' }}>
             <input
               type="text"
@@ -303,11 +301,10 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── LÍNEAS ── */}
-        <section style={cardStyleFor('lineas')}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <SectionTitle meta={SECCION_META.lineas} label="Líneas" />
-            <button onClick={addLinea} className="btn btn-sm"
-              style={{ background: 'var(--brand, #7c3aed)', color: '#fff', border: 'none', borderRadius: 10, padding: '6px 12px' }}>
+        <section className="wiz-pane">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+            <PaneHead meta={SECCION_META.lineas} />
+            <button onClick={addLinea} className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>
               <i className="fa fa-plus" /> Agregar
             </button>
           </div>
@@ -335,8 +332,8 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── PRECIO ── */}
-        <section style={cardStyleFor('precio')}>
-          <SectionTitle meta={SECCION_META.precio} label="Precio" />
+        <section className="wiz-pane">
+          <PaneHead meta={SECCION_META.precio} />
           <PrecioBlock pedido={pedido} totales={totales}
             onTotalChange={setPrecioFinal}
             onMargenChange={setMargen}
@@ -346,8 +343,8 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── ENTREGA ── */}
-        <section style={cardStyleFor('entrega')}>
-          <SectionTitle meta={SECCION_META.entrega} label="Entrega" />
+        <section className="wiz-pane">
+          <PaneHead meta={SECCION_META.entrega} />
           <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 12 }} className="pedido-entrega-grid">
             <div>
               <label style={labelStyle}>Fecha</label>
@@ -374,15 +371,15 @@ export default function PedidoNuevo() {
               onChange={e => update({ contactoEntrega: e.target.value })}
               placeholder="Nombre y teléfono de quien recibe" style={inputStyle} />
           </div>
-          <div style={{ marginTop: 10, fontSize: 11, color: 'var(--txt3)' }}>
-            <i className="fa fa-info-circle" style={{ marginRight: 6 }} />
+          <div style={hintYellow}>
+            <i className="fa fa-lightbulb" style={{ marginRight: 8, color: '#B45309' }} />
             Los envíos con comisionista se cargan en <b>Logística</b> y se enlazan por número de pedido.
           </div>
         </section>
 
         {/* ── NOTA INTERNA ── */}
-        <section style={cardStyleFor('nota')}>
-          <SectionTitle meta={SECCION_META.nota} label="Nota interna" />
+        <section className="wiz-pane">
+          <PaneHead meta={SECCION_META.nota} />
           <textarea value={pedido.notaInterna}
             onChange={e => update({ notaInterna: e.target.value })}
             rows={4}
@@ -435,20 +432,17 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
 }
 
 function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
-  const accent = TAG_ACCENT[linea.tag || 'producto']?.fg || '#64748b'
   return (
     <div className="pedido-linea-row" style={{
       ...lineaGrid, marginBottom: 8, alignItems: 'center',
-      background: 'var(--surface, #fff)',
-      border: '1px solid var(--border, #e2e8f0)',
-      borderLeft: `3px solid ${accent}`,
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
       borderRadius: 10,
       padding: '10px 12px',
-      boxShadow: '0 1px 2px rgba(15,23,42,.03)',
-      transition: 'box-shadow .15s ease, border-color .15s ease',
+      transition: 'border-color .15s ease',
     }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 3px 8px rgba(15,23,42,.06)' }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 2px rgba(15,23,42,.03)' }}>
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border2)' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}>
       <DescripcionInput className="l-desc" value={linea.descripcion} products={products}
         onChange={patch => onChange(patch)} />
       <TagChip className="l-tag" value={linea.tag || 'producto'}
@@ -626,24 +620,15 @@ function DescripcionInput({ value, products, onChange, className }) {
   )
 }
 
-function SectionTitle({ meta, label }) {
+function PaneHead({ meta }) {
   return (
-    <h3 style={{
-      display: 'flex', alignItems: 'center', gap: 8,
-      fontSize: 12, fontWeight: 700,
-      color: 'var(--txt3, #64748b)',
-      textTransform: 'uppercase', letterSpacing: '.06em',
-      margin: '0 0 12px',
-    }}>
-      <span style={{
-        width: 24, height: 24, borderRadius: 7,
-        background: meta.color + '18', color: meta.color,
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
-      }}>
-        <i className={`fa ${meta.icon}`} />
-      </span>
-      {label}
-    </h3>
+    <div className="wiz-pane-head">
+      <div className="wiz-pane-ico"><i className={`fa ${meta.icon}`} /></div>
+      <div style={{ minWidth: 0 }}>
+        <div className="wiz-pane-title">{meta.title}</div>
+        {meta.sub && <div className="wiz-pane-sub">{meta.sub}</div>}
+      </div>
+    </div>
   )
 }
 
@@ -700,27 +685,27 @@ function EstadoCompraChip({ value, onChange, className }) {
 function KitChip({ cantidad, onChange, onOff }) {
   return (
     <div style={{
-      display: 'inline-flex', alignItems: 'center', gap: 10,
+      display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
       padding: '10px 14px', marginBottom: 14,
-      background: 'linear-gradient(90deg, #fdf4ff 0%, #fae8ff 100%)',
-      border: '1.5px solid #e9d5ff', borderRadius: 12,
-      fontSize: 13, fontWeight: 600, color: '#6b21a8',
-      boxShadow: '0 1px 2px rgba(107,33,168,.06)',
+      background: 'var(--brand-xlt)',
+      border: '1.5px solid var(--brand)',
+      borderRadius: 12,
+      fontSize: 13, fontWeight: 600, color: 'var(--brand)',
     }}>
-      <i className="fa fa-gift" style={{ color: '#9333ea' }} />
+      <i className="fa fa-gift" />
       <span>Modo kit — cada línea es <b>1 componente por unidad</b>, se multiplica ×</span>
       <input type="number" min={1} value={cantidad}
         onChange={e => onChange(e.target.value)}
         style={{
-          width: 66, textAlign: 'center', fontWeight: 800, fontSize: 14,
-          padding: '4px 8px', border: '1.5px solid #d8b4fe', borderRadius: 8,
-          background: '#fff', color: '#6b21a8', fontFamily: 'inherit', outline: 'none',
+          width: 70, textAlign: 'center', fontWeight: 800, fontSize: 14,
+          padding: '5px 8px', border: '1.5px solid var(--brand)', borderRadius: 8,
+          background: 'var(--surface)', color: 'var(--brand)', fontFamily: 'inherit', outline: 'none',
         }} />
       <span>unidades</span>
       <button onClick={onOff}
         title="Salir de modo kit"
         style={{
-          marginLeft: 4, background: 'transparent', border: 'none', color: '#9333ea',
+          marginLeft: 4, background: 'transparent', border: 'none', color: 'var(--brand)',
           cursor: 'pointer', padding: 4, fontSize: 13,
         }}>
         <i className="fa fa-xmark" />
@@ -791,63 +776,63 @@ function MenuItem({ icon, label, onClick, color, disabled }) {
 
 // ── Styles ─────────────────────────────────────────────────────────
 
-// Card con banda superior del color del bloque + sombra suave
-function cardStyleFor(sectionKey) {
-  const color = SECCION_META[sectionKey]?.color || '#7c3aed'
-  return {
-    background: 'var(--surface, #fff)',
-    border: '1px solid var(--border, #e2e8f0)',
-    borderRadius: 14,
-    padding: 18,
-    borderTop: `3px solid ${color}`,
-    boxShadow: '0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.03)',
-  }
-}
 // Subgrupo interno para PrecioBlock — le da estructura visual a la seccion
 const precioGroup = {
   display: 'grid', gap: 6,
-  padding: '10px 12px',
-  background: '#fafafa',
-  border: '1px solid #eef1f5',
+  padding: '12px 14px',
+  background: 'var(--surface2)',
+  border: '1px solid var(--border)',
   borderRadius: 10,
 }
 const precioGroupLabel = {
-  fontSize: 10, fontWeight: 700, color: 'var(--txt3, #64748b)',
-  textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2,
+  fontSize: 10, fontWeight: 700, color: 'var(--txt2)',
+  textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4,
 }
 
+// Label uppercase — misma escala que .f-lbl (login/config)
 const labelStyle = {
   display: 'block',
-  fontSize: 11,
-  color: 'var(--txt3, #64748b)',
+  fontSize: 10,
+  color: 'var(--txt2)',
   marginBottom: 5,
-  fontWeight: 500,
+  fontWeight: 700,
+  letterSpacing: '.06em',
+  textTransform: 'uppercase',
+}
+
+// Nota inline estilo dorado — matchea el hint del wizard viejo
+const hintYellow = {
+  marginTop: 12, padding: '10px 14px',
+  background: '#FEF3C7', border: '1px solid #FDE68A',
+  borderRadius: 10, fontSize: 12, color: '#78350F',
+  display: 'flex', alignItems: 'flex-start', lineHeight: 1.5,
 }
 
 const inputStyle = {
   width: '100%',
-  padding: '8px 12px',
-  border: '1px solid var(--border, #e2e8f0)',
+  padding: '10px 12px',
+  border: '1.5px solid var(--border)',
   borderRadius: 8,
   fontSize: 13,
   fontFamily: 'inherit',
-  background: 'var(--surface, #fff)',
-  color: 'var(--txt, #0f172a)',
+  background: 'var(--surface)',
+  color: 'var(--txt)',
   outline: 'none',
   boxSizing: 'border-box',
+  transition: 'border-color .15s ease',
 }
 
 const dropdownStyle = {
   position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
-  background: 'var(--surface, #fff)',
-  border: '1px solid var(--brand, #7c3aed)',
+  background: 'var(--surface)',
+  border: '1.5px solid var(--brand)',
   borderRadius: 8, maxHeight: 240, overflowY: 'auto', marginTop: 4,
   boxShadow: '0 8px 24px rgba(0,0,0,.1)',
 }
 
 const dropdownItem = {
   padding: '10px 14px', cursor: 'pointer',
-  borderBottom: '1px solid var(--border, #e2e8f0)',
+  borderBottom: '1px solid var(--border)',
   transition: 'background .1s',
 }
 
