@@ -59,10 +59,15 @@ const TAG_COLOR = {
 const SECCION_META = {
   cliente:  { icon: 'fa-user-tie',      title: 'Cliente' },
   lineas:   { icon: 'fa-list-check',    title: 'Productos' },
+  costos:   { icon: 'fa-briefcase',     title: 'Costos operativos' },
   precio:   { icon: 'fa-coins',         title: 'Precio' },
   entrega:  { icon: 'fa-truck-fast',    title: 'Entrega' },
   nota:     { icon: 'fa-pen-to-square', title: 'Nota interna' },
 }
+
+// Sub-conjuntos del enum TAGS por sección visible
+const TAGS_PRODUCTOS = ['producto', 'packaging']
+const TAGS_COSTOS    = ['manoDeObra', 'diseno', 'envio', 'otro']
 
 const hasMinimum = (p) =>
   !!(p.clienteNombre || p.contact || p.company) &&
@@ -147,11 +152,12 @@ export default function PedidoNuevo() {
   const update   = (patch) => { dirtyRef.current = true; setPedido(p => ({ ...p, ...patch })) }
   const updateFn = (fn)    => { dirtyRef.current = true; setPedido(fn) }
 
-  const setLinea    = (idx, patch) => updateFn(p => ({ ...p, lineas: p.lineas.map((l, i) => i === idx ? { ...l, ...patch } : l) }))
-  const addLinea    = ()           => updateFn(p => ({ ...p, lineas: [...p.lineas, nuevaLinea()] }))
-  const removeLinea = (idx)        => updateFn(p => ({
-    ...p, lineas: p.lineas.length > 1 ? p.lineas.filter((_, i) => i !== idx) : [nuevaLinea()],
-  }))
+  const setLineaById    = (id, patch) => updateFn(p => ({ ...p, lineas: p.lineas.map(l => l.id === id ? { ...l, ...patch } : l) }))
+  const addLinea        = (tag = 'producto') => updateFn(p => ({ ...p, lineas: [...p.lineas, nuevaLinea({ tag })] }))
+  const removeLineaById = (id) => updateFn(p => {
+    const filtered = p.lineas.filter(l => l.id !== id)
+    return { ...p, lineas: filtered.length ? filtered : [nuevaLinea()] }
+  })
 
   const totales = calcularTotales(pedido, (c.ivaRate || 21) / 100)
 
@@ -192,6 +198,7 @@ export default function PedidoNuevo() {
       clientEmail:  cl.email || '',
     }))
     setShowClientList(false)
+    toast(`Cliente cargado: ${cl.company || cl.contact || '—'}`, 'ok')
   }
 
   return (
@@ -308,16 +315,19 @@ export default function PedidoNuevo() {
           </div>
         </section>
 
-        {/* ── LÍNEAS ── */}
-        <section className="wiz-pane">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-            <PaneHead meta={SECCION_META.lineas} />
-            <button onClick={addLinea} className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>
-              <i className="fa fa-plus" /> Agregar
-            </button>
-          </div>
-
-          {(pedido.alternativas?.length > 0) && (
+        {/* ── PRODUCTOS (Producto + Packaging) ── */}
+        <LineasSection
+          meta={SECCION_META.lineas}
+          tags={TAGS_PRODUCTOS}
+          defaultTag="producto"
+          lineas={pedido.lineas.filter(l => TAGS_PRODUCTOS.includes(l.tag || 'producto'))}
+          products={products}
+          onAdd={() => addLinea('producto')}
+          onChange={setLineaById}
+          onRemove={removeLineaById}
+          onPickProduct={(name) => toast(`${name} cargado del catálogo`, 'ok')}
+          totalLineas={pedido.lineas.length}
+          extras={(pedido.alternativas?.length > 0) && (
             <AlternativasBar
               alternativas={pedido.alternativas}
               onLoad={(alt) => updateFn(p => aplicarAlt(p, alt))}
@@ -335,28 +345,22 @@ export default function PedidoNuevo() {
               }))}
             />
           )}
+        />
 
-          {/* Headers desktop */}
-          <div style={{ ...lineaGrid, marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
-               className="pedido-linea-header">
-            <span>Descripción</span>
-            <span style={{ textAlign: 'center' }}>Tipo</span>
-            <span style={{ textAlign: 'right' }}>Cant</span>
-            <span style={{ textAlign: 'right' }}>Costo/u</span>
-            <span style={{ textAlign: 'right' }}>Precio/u</span>
-            <span style={{ textAlign: 'center' }}>Compra</span>
-            <span />
-          </div>
-
-          {pedido.lineas.map((linea, idx) => (
-            <LineaRow key={linea.id}
-              linea={linea}
-              products={products}
-              onChange={patch => setLinea(idx, patch)}
-              onRemove={() => removeLinea(idx)}
-              canRemove={pedido.lineas.length > 1 || !!linea.descripcion} />
-          ))}
-        </section>
+        {/* ── COSTOS OPERATIVOS (Mano de obra + Diseño + Envío + Otro) ── */}
+        <LineasSection
+          meta={SECCION_META.costos}
+          tags={TAGS_COSTOS}
+          defaultTag="manoDeObra"
+          lineas={pedido.lineas.filter(l => TAGS_COSTOS.includes(l.tag))}
+          products={products}
+          onAdd={() => addLinea('manoDeObra')}
+          onChange={setLineaById}
+          onRemove={removeLineaById}
+          onPickProduct={(name) => toast(`${name} cargado del catálogo`, 'ok')}
+          totalLineas={pedido.lineas.length}
+          emptyHint="Diseño, mano de obra, envío u otros costos que se suman al pedido."
+        />
 
         {/* ── PRECIO ── */}
         <section className="wiz-pane">
@@ -503,12 +507,57 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
   )
 }
 
-function LineaRow({ linea, products, onChange, onRemove, canRemove }) {
+function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, totalLineas, extras, emptyHint }) {
+  return (
+    <section className="wiz-pane">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+        <PaneHead meta={meta} />
+        <button onClick={onAdd} className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>
+          <i className="fa fa-plus" /> Agregar
+        </button>
+      </div>
+
+      {extras}
+
+      {lineas.length > 0 && (
+        <div style={{ ...lineaGrid, marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
+             className="pedido-linea-header">
+          <span>Descripción</span>
+          <span style={{ textAlign: 'center' }}>Tipo</span>
+          <span style={{ textAlign: 'right' }}>Cant</span>
+          <span style={{ textAlign: 'right' }}>Costo/u</span>
+          <span style={{ textAlign: 'right' }}>Precio/u</span>
+          <span style={{ textAlign: 'center' }}>Compra</span>
+          <span />
+        </div>
+      )}
+
+      {lineas.map(linea => (
+        <LineaRow key={linea.id}
+          linea={linea}
+          products={products}
+          tags={tags}
+          onChange={patch => onChange(linea.id, patch)}
+          onRemove={() => onRemove(linea.id)}
+          canRemove={totalLineas > 1 || !!linea.descripcion}
+          onPickProduct={onPickProduct} />
+      ))}
+
+      {lineas.length === 0 && (
+        <div style={{ padding: '18px 4px 6px', fontSize: 12, color: 'var(--txt3)', lineHeight: 1.5 }}>
+          {emptyHint || `Todavía no cargaste ${meta.title.toLowerCase()}. Tocá "+ Agregar" para sumar una línea.`}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function LineaRow({ linea, products, tags, onChange, onRemove, canRemove, onPickProduct }) {
   return (
     <div className="pedido-linea-row" style={{ ...lineaGrid, alignItems: 'center' }}>
       <DescripcionInput className="l-desc" value={linea.descripcion} products={products}
-        onChange={patch => onChange(patch)} flat />
-      <TagChip className="l-tag" value={linea.tag || 'producto'}
+        onChange={patch => onChange(patch)} onPick={onPickProduct} flat />
+      <TagChip className="l-tag" value={linea.tag || 'producto'} tags={tags}
         onChange={v => onChange({ tag: v })} mini />
       <input className="l-cant pedido-cell-input" type="number" min={0} value={linea.cantidad}
         onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
@@ -624,7 +673,7 @@ function Row({ label, value }) {
   )
 }
 
-function DescripcionInput({ value, products, onChange, className, flat }) {
+function DescripcionInput({ value, products, onChange, onPick, className, flat }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -646,6 +695,7 @@ function DescripcionInput({ value, products, onChange, className, flat }) {
       productoId: p.id,
     })
     setOpen(false)
+    if (onPick) onPick(p.name || 'Producto')
   }
 
   return (
@@ -715,10 +765,11 @@ function EstadoSelect({ value, onChange }) {
   )
 }
 
-function TagChip({ value, onChange, className, mini }) {
+function TagChip({ value, onChange, className, mini, tags }) {
   const st = TAG_COLOR[value] || TAG_COLOR.otro
   const pad = mini ? '3px 8px' : '6px 10px'
   const fs  = mini ? 10 : 11
+  const options = tags || TAGS
   return (
     <select className={className} value={value} onChange={e => onChange(e.target.value)}
       title="Tipo de línea"
@@ -729,7 +780,7 @@ function TagChip({ value, onChange, className, mini }) {
         fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
         appearance: 'none', WebkitAppearance: 'none', textAlign: 'center',
       }}>
-      {TAGS.map(k => <option key={k} value={k}>{TAG_LABELS[k]}</option>)}
+      {options.map(k => <option key={k} value={k}>{TAG_LABELS[k]}</option>)}
     </select>
   )
 }
