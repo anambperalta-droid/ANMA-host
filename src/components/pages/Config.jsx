@@ -492,9 +492,9 @@ export default function Config() {
 
   const FEATURE_FLAGS = [
     { key: 'costoInterno',      icon: 'fa-eye-slash',    color: '#7C3AED', label: 'Costo interno visible',           desc: 'Muestra la columna de costo en la tabla de productos' },
-    { key: 'margenTabla',       icon: 'fa-percent',      color: '#059669', label: 'Margen % en presupuestos',        desc: 'Muestra el margen de ganancia en cada ítem del presupuesto' },
+    { key: 'margenTabla',       icon: 'fa-percent',      color: '#059669', label: 'Margen % en pedidos',             desc: 'Muestra el margen de ganancia en cada ítem del pedido' },
     { key: 'descuentoCliente',  icon: 'fa-tag',          color: '#D97706', label: 'Descuento fijo por cliente',      desc: 'Permite asignar un % de descuento personalizado a cada cliente' },
-    { key: 'notasInternas',     icon: 'fa-note-sticky',  color: '#2563EB', label: 'Notas internas en pedidos',       desc: 'Campo privado de notas en cada presupuesto (no aparece en el PDF)' },
+    { key: 'notasInternas',     icon: 'fa-note-sticky',  color: '#2563EB', label: 'Notas internas en pedidos',       desc: 'Campo privado de notas en cada pedido, solo para vos' },
   ]
 
   const allTabs = [
@@ -845,10 +845,6 @@ export default function Config() {
 
       {tab === 'modulos' && (
         <div style={{ maxWidth: 900 }}>
-          <div style={{ padding: '12px 16px', background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)', fontSize: 12.5, color: 'var(--txt3)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <i className="fa fa-circle-info" style={{ color: 'var(--brand)', fontSize: 15 }} />
-            Activá o desactivá funciones opcionales. Los cambios aplican <b>solo a tu cuenta</b>, no afectan a otros usuarios.
-          </div>
           <div className="feat-grid">
           {FEATURE_FLAGS.map(f => {
             const active = !!(c.features?.[f.key])
@@ -972,7 +968,7 @@ export default function Config() {
               <div className="pay-card-body">
                 <div style={{ background: 'rgba(16,185,129,.08)', border: '1.5px solid rgba(16,185,129,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 11, color: 'var(--acento)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                   <i className="fa fa-circle-info" style={{ marginTop: 2 }} />
-                  <div>Estos datos se mostrarán en el presupuesto enviado al cliente. Podés copiarlos desde el panel de "Cobrar" en cada presupuesto.</div>
+                  <div>Se incluyen automáticamente cuando pedís el pago por WhatsApp desde cada pedido.</div>
                 </div>
                 <div className="grid2">
                   <div className="fg"><label>Titular</label><input type="text" value={bankHolder} onChange={e => setBankHolder(e.target.value)} placeholder="Juan Pérez / Empresa SA" /></div>
@@ -1045,7 +1041,7 @@ export default function Config() {
             <div className="pay-card-body">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 10, marginBottom: 14 }}>
                 {[
-                  { icon: 'fa-paper-plane', color: '#25D366', title: 'Enviar presupuesto', desc: 'Botón directo en cada presupuesto para compartirlo por WA' },
+                  { icon: 'fa-paper-plane', color: '#25D366', title: 'Recontacto y cobro', desc: 'Botón directo en cada pedido para escribirle al cliente por WhatsApp' },
                   { icon: 'fa-rotate',      color: '#128C7E', title: 'Re-orden a proveedor', desc: 'Mensaje automático de reposición con lista de productos' },
                   { icon: 'fa-share-nodes', color: '#25D366', title: 'Portal de proveedor', desc: 'Compartir el portal de catálogo y precios acordados' },
                   { icon: 'fa-link',        color: '#128C7E', title: 'Click-to-chat',      desc: 'Cada contacto tiene su botón de WA para abrir la conversación' },

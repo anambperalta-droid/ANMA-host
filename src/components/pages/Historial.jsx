@@ -231,7 +231,6 @@ function PaymentsModal({ budget, onSave, onClose }) {
     date: today,
     amount: initialRemaining > 0 ? String(initialRemaining) : '',
     method: 'transferencia',
-    comprobante: '',
     notes: '',
   })
   const fmtMoney = (v) => '$' + Number(v || 0).toLocaleString('es-AR')
@@ -245,7 +244,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
   const addPayment = () => {
     const amt = Number(draft.amount)
     if (!amt || amt <= 0) return
-    const newPayments = [...payments, { id: Date.now(), date: draft.date, amount: amt, method: draft.method, comprobante: draft.comprobante.trim(), notes: draft.notes.trim() }]
+    const newPayments = [...payments, { id: Date.now(), date: draft.date, amount: amt, method: draft.method, notes: draft.notes.trim() }]
     setPayments(newPayments)
     onSave(newPayments)
     const newRemaining = Math.max(0, totalDue - (totalPaid + amt))
@@ -253,7 +252,6 @@ function PaymentsModal({ budget, onSave, onClose }) {
       date: today,
       amount: newRemaining > 0 ? String(newRemaining) : '',
       method: draft.method,
-      comprobante: '',
       notes: '',
     })
   }
@@ -307,12 +305,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: 700, color: 'var(--txt)' }}>{fmtMoney(p.amount)}</span>
                   <span style={{ color: 'var(--txt2)' }}>{methodLbl(p.method)}</span>
-                  {p.comprobante && (
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#15803D', background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 6, padding: '1px 6px' }}>
-                      <i className="fa fa-receipt" style={{ marginRight: 3 }} />{p.comprobante}
-                    </span>
-                  )}
-                  <span style={{ fontSize: 10.5, color: 'var(--txt3)' }}>{p.date}{p.notes ? ` · ${p.notes}` : ''}</span>
+                  <span style={{ fontSize: 10.5, color: 'var(--txt3)' }}>{p.date}{(p.comprobante || p.notes) ? ` · ${p.comprobante || p.notes}` : ''}</span>
                 </div>
                 <button onClick={() => delPayment(p.id)} title="Eliminar" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: 4, borderRadius: 5, fontSize: 11 }}>
                   <i className="fa fa-trash" />
@@ -355,13 +348,9 @@ function PaymentsModal({ budget, onSave, onClose }) {
               style={{ padding: '8px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit', background: '#fff' }}>
               {PAY_METHODS.map(m => <option key={m.val} value={m.val}>{m.lbl}</option>)}
             </select>
-            <input type="text" value={draft.comprobante} onChange={e => setDraft({ ...draft, comprobante: e.target.value })}
-              placeholder="N° operación / comprobante (opcional)"
+            <input type="text" value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })}
+              placeholder="N° de operación o nota (opcional)"
               style={{ padding: '8px 12px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
-          </div>
-          <input type="text" value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })}
-            placeholder="Notas (opcional)"
-            style={{ width: '100%', padding: '8px 12px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit', marginBottom: 8, boxSizing: 'border-box' }} />
           <button type="button" onClick={addPayment} disabled={!Number(draft.amount)}
             style={{ width: '100%', padding: '10px 14px', background: Number(draft.amount) ? '#15803D' : 'var(--border)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: Number(draft.amount) ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
             <i className="fa fa-floppy-disk" /> Agregar y guardar pago
