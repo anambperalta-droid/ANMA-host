@@ -1886,13 +1886,14 @@ export default function Historial() {
               <i className="fa fa-magnifying-glass" />
               <input type="text" placeholder="Buscar cliente, N°, producto, nota…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <div style={{ display: 'flex', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 2, gap: 1, flexWrap: 'wrap' }}>
+            <div className="hist-estado-tabs" style={{ display: 'flex', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 2, gap: 1, flexWrap: 'wrap' }}>
               {['all', ...ESTADOS].map(f => {
                 const isActive = filter === f
                 const color = f === 'all' ? 'var(--txt)' : ESTADO_TAB_COLOR[f]
                 return (
                   <button key={f} onClick={() => setFilter(f)}
-                    style={{ padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: isActive ? 700 : 500, background: isActive ? 'var(--surface)' : 'transparent', color: isActive ? color : 'var(--txt3)', boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: isActive ? 700 : 500, background: isActive ? 'var(--surface)' : 'transparent', color: isActive ? color : 'var(--txt3)', boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
+                    {f !== 'all' && <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, opacity: isActive ? 1 : 0.6 }} />}
                     {f === 'all' ? 'Todos' : ESTADO_LABELS[f]}
                   </button>
                 )

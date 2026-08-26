@@ -1331,6 +1331,9 @@ td b{color:var(--txt);font-weight:600}
   .resumen-tbl table{min-width:0!important;table-layout:fixed!important}
   .resumen-tbl .c-num{display:none!important}
   .resumen-tbl .c-fec{display:none!important}
+  /* Filtros de estado: una sola fila con scroll horizontal (no 2 filas) */
+  .hist-estado-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .hist-estado-tabs::-webkit-scrollbar{display:none}
   .resumen-tbl .c-act{width:32px!important}
   .resumen-tbl .c-est{width:70px!important}
   .resumen-tbl .c-cli{width:auto!important;min-width:0!important}

@@ -328,7 +328,7 @@ export default function PedidoNuevo() {
         />
       )}
 
-      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0,1fr)' }}>
+      <div className="pedido-form" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
         <section className="wiz-pane">
@@ -490,6 +490,17 @@ export default function PedidoNuevo() {
 
       {/* Estilos de la tabla de productos — densidad Airtable-style */}
       <style>{`
+        /* ── Compactación del form de pedido — menos aire, menos scroll ── */
+        .pedido-form .wiz-pane { padding: 14px 16px 14px; }
+        .pedido-form .wiz-pane-head { margin-bottom: 12px; padding-bottom: 10px; }
+        .pedido-form .wiz-pane-ico { width: 34px; height: 34px; border-radius: 9px; font-size: 14px; box-shadow: none; }
+        .pedido-form .wiz-pane-title { font-size: 14px; }
+        .pedido-form label { margin-bottom: 3px !important; }
+        @media (max-width: 720px) {
+          .pedido-form .wiz-pane { padding: 12px 13px; }
+          .pedido-form .wiz-pane-head { margin-bottom: 10px; padding-bottom: 8px; }
+        }
+
         /* Fix stacking: cualquier wiz-pane con foco activo sube z-index para
            que sus dropdowns (Cliente / Descripción / etc) no queden tapados
            por los siguientes wiz-pane (que crean stacking context por la
