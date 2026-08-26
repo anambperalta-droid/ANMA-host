@@ -51,6 +51,31 @@ function budgetSearchText(b) {
   return text
 }
 
+// Mensaje de RECONTACTO — comercial: cálido, con CTA claro y urgencia por
+// fecha de entrega. Reemplaza el pasivo "quedamos a disposición". El fin es
+// conseguir respuesta y avanzar a confirmación, NO cobrar (eso va aparte).
+function buildReengageMsg(b) {
+  const nombre = b.contact || ''
+  const monto  = b.total ? ` por ${fmt(b.total)}` : ''
+  const lines = [
+    `Hola ${nombre}! ¿Cómo estás?`,
+    ``,
+    `Te escribo por el presupuesto ${b.num || ''}${monto} que te pasamos${b.date ? ` el ${fmtDate(b.date)}` : ''}.`,
+    `¿Pudiste verlo? Si querés ajustar algo —cantidades, opciones o presupuesto— lo vemos sin problema.`,
+  ]
+  if (b.deliveryDate) {
+    const dd = Math.ceil((new Date(b.deliveryDate + 'T00:00') - new Date()) / 86400000)
+    lines.push('')
+    lines.push(dd > 0
+      ? `Para llegar a la entrega del ${fmtDate(b.deliveryDate)} lo ideal sería confirmar esta semana. ¿Avanzamos?`
+      : `¿Avanzamos con el pedido?`)
+  } else {
+    lines.push('')
+    lines.push(`¿Avanzamos?`)
+  }
+  return lines.join('\n')
+}
+
 // Formato "hace X" para timestamps — se usa en la tabla de Actividad reciente
 function relTime(ts) {
   if (!ts) return '—'
@@ -563,41 +588,75 @@ const PERIODS = [
   { key: 'custom', label: 'Personalizado' },
 ]
 
-/* ── Seguimiento card with Re-enviar button ── */
-function SeguimientoCard({ b, onEdit, onWA, onResend }) {
+/* ── Seguimiento card — rediseño limpio y accionable ──
+   Fila horizontal: acento de urgencia · cliente + monto · una línea de
+   contexto · botón primario "Recontactar" (WhatsApp directo). Menos datos
+   chicos, foco en la acción que mueve el trato. */
+function SeguimientoCard({ b, onView, onWA, hasWA }) {
   const { money } = usePrivacy()
   const now = new Date()
   const days = b.date ? Math.floor((now - new Date(b.date)) / 86400000) : 0
   const urg = urgency(days)
+  const dd = b.deliveryDate ? Math.ceil((new Date(b.deliveryDate + 'T00:00') - now) / 86400000) : null
 
   return (
-    <div className={`seg-card urg-${urg.cls}`}>
-      <div className={`seg-light ${urg.cls}`}><i className={`fa ${urg.icon}`} /></div>
-      <div className="seg-info">
-        <div className="seg-top">
-          <span className="seg-num">{b.num}</span>
-          <DotBadge b={b} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: urg.color, background: urg.color + '15', padding: '2px 8px', borderRadius: 12 }}>{urg.label}</span>
+    <div
+      onClick={() => onView(b)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14,
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderLeft: `4px solid ${urg.color}`, borderRadius: 12,
+        padding: '13px 16px', cursor: 'pointer', transition: 'box-shadow .15s ease, transform .1s ease',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(15,23,42,.07)' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}>
+
+      {/* Ícono de urgencia */}
+      <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: urg.color + '15', color: urg.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+        <i className={`fa ${urg.icon}`} />
+      </div>
+
+      {/* Cliente + contexto */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>
+            {b.company || b.contact || 'Sin cliente'}
+          </span>
+          {b.company && b.contact && <span style={{ fontSize: 12, color: 'var(--txt3)' }}>· {b.contact}</span>}
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>{b.num}</span>
         </div>
-        <div className="seg-cli"><b>{b.contact || 'Sin contacto'}</b> — {b.company || 'Sin empresa'}</div>
-        <div className="seg-co">
-          {b.ocasion && <><i className="fa fa-calendar-day" style={{ marginRight: 4 }} />{b.ocasion}  ·  </>}
-          <i className="fa fa-calendar" style={{ marginRight: 4 }} />Enviado: {fmtDate(b.date)}
-          {b.deliveryDate && ` · Entrega: ${fmtDate(b.deliveryDate)}`}
+        <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <b style={{ color: urg.color, fontWeight: 700 }}>{days} días sin respuesta</b>
+          {dd != null && dd >= 0 && (
+            <><span style={{ color: 'var(--txt4)' }}>·</span>
+              <span style={{ color: dd <= 3 ? 'var(--red)' : dd <= 7 ? 'var(--amber)' : 'var(--txt3)', fontWeight: dd <= 7 ? 700 : 500 }}>
+                <i className="fa fa-truck-fast" style={{ marginRight: 4, fontSize: 10 }} />
+                entrega {dd === 0 ? 'hoy' : `en ${dd}d`}
+              </span></>
+          )}
         </div>
       </div>
-      <div className="seg-meta">
-        <div className="seg-days">
-          <div className="num" style={{ color: urg.color }}>{days}</div>
-          <div className="lbl" style={{ color: urg.color }}>días</div>
-        </div>
-        <div className="seg-total">{money(b.total)}</div>
-        <div className="seg-actions" style={{ display:'flex',gap:4 }}>
-          <button onClick={() => onEdit(b.id)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}><i className="fa fa-pen" /></button>
-          <button onClick={() => onWA(b)} title="WhatsApp" style={{ width:28,height:28,borderRadius:'50%',border:'none',background:'#DCFCE7',color:'#16A34A',cursor:'pointer',fontSize:13,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}><i className="fa-brands fa-whatsapp" /></button>
-          <button onClick={() => onResend(b)} title="Re-enviar presupuesto" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0 }}><i className="fa fa-paper-plane" /></button>
-        </div>
+
+      {/* Monto */}
+      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--money)', flexShrink: 0, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        {money(b.total)}
       </div>
+
+      {/* Acción primaria: Recontactar */}
+      <button
+        onClick={e => { e.stopPropagation(); onWA(b) }}
+        title={hasWA ? 'Recontactar por WhatsApp' : 'Sin WhatsApp — copiar mensaje'}
+        style={{
+          flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 7,
+          padding: '9px 14px', borderRadius: 10, border: 'none',
+          background: '#25D366', color: '#fff', cursor: 'pointer',
+          fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = '#1DA851'}
+        onMouseLeave={e => e.currentTarget.style.background = '#25D366'}>
+        <i className="fa-brands fa-whatsapp" style={{ fontSize: 15 }} />
+        <span className="seg-recontactar-lbl">Recontactar</span>
+      </button>
     </div>
   )
 }
@@ -1102,10 +1161,10 @@ export default function Historial() {
     nav('/presupuesto')
   }
   const copyWA = (b) => {
-    const text = `Hola ${b.contact || ''}! Te escribo por el pedido ${b.num || ''}${b.total ? ` por ${fmt(b.total)}` : ''}. Quedamos a disposición!`
+    const text = buildReengageMsg(b)
     const num = (b.wa || '').replace(/\D/g, '')
     if (num) {
-      // Redirige directo al chat del cliente con el mensaje precargado.
+      // Redirige directo al chat del cliente con el mensaje de recontacto.
       window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
       return
     }
@@ -1310,8 +1369,7 @@ export default function Historial() {
   const openWADirect = (b) => {
     if (!b.wa) { copyWA(b); return }
     const num = b.wa.replace(/\D/g, '')
-    const text = `Hola ${b.contact || ''}! Te escribo por el presupuesto ${b.num} por ${fmt(b.total)}. ¿Pudiste revisarlo? Quedamos a disposición!`
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(buildReengageMsg(b))}`, '_blank')
   }
 
   return (
@@ -2189,6 +2247,7 @@ export default function Historial() {
       {/* ═══ SEGUIMIENTO ACTIVO — Grouped by urgency tier ═══ */}
       {tab === 'seguimiento' && (
         <>
+          <style>{`@media(max-width:560px){.seg-recontactar-lbl{display:none}}`}</style>
           <div className="seg-legend">
             <div className="seg-legend-item"><div className="seg-legend-dot" style={{ background: 'var(--red)' }} />15+ días — Crítico</div>
             <div className="seg-legend-item"><div className="seg-legend-dot" style={{ background: '#EA580C' }} />8–14 días — Urgente</div>
@@ -2206,9 +2265,11 @@ export default function Historial() {
                     <span style={{ color: tier.color, fontWeight: 700 }}>{tier.label}</span>
                     <span className="seg-tier-count" style={{ background: tier.color + '18', color: tier.color }}>{tier.items.length}</span>
                   </div>
-                  {tier.items.map(b => (
-                    <SeguimientoCard key={b.id} b={b} onEdit={editB} onWA={copyWA} onResend={handleResend} />
-                  ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {tier.items.map(b => (
+                      <SeguimientoCard key={b.id} b={b} onView={setDrawerBudget} onWA={copyWA} hasWA={!!b.wa} />
+                    ))}
+                  </div>
                 </div>
               )
             })
