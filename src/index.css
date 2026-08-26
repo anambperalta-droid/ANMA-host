@@ -961,13 +961,14 @@ td b{color:var(--txt);font-weight:600}
     display:grid!important;
     grid-template-columns:auto 1fr auto;
     grid-template-areas:
-      'sel cli acc'
-      'sel num total'
-      'sel estado pago';
+      'sel cli    total'
+      'sel num    total'
+      'estado estado pago'
+      'acc acc acc';
     align-items:center;column-gap:10px;row-gap:6px;
     background:var(--surface);border:1px solid var(--border);border-radius:14px;
     padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(15,23,42,.04);
-    position:relative;left:auto!important;
+    position:relative;left:auto!important;overflow:hidden;
   }
   .hist-tbl tbody tr:active{background:var(--surface2)}
   .hist-tbl tbody td{display:none!important}
@@ -979,15 +980,15 @@ td b{color:var(--txt);font-weight:600}
   .hist-tbl td[data-cell="sel"]{grid-area:sel;align-self:start;padding-top:2px!important}
   .hist-tbl td[data-cell="cli"]{grid-area:cli;max-width:none!important;align-self:center;min-width:0}
   .hist-tbl td[data-cell="cli"] [data-cli]{font-size:15px!important;font-weight:800!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-decoration:none!important;line-height:1.2!important;color:var(--txt)!important}
-  .hist-tbl td[data-cell="acc"]{grid-area:acc;justify-self:end;align-self:center}
-  .hist-tbl td[data-cell="acc"]>div{gap:2px!important}
-  .hist-tbl td[data-cell="acc"] .hist-act{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;padding:0!important}
+  .hist-tbl td[data-cell="acc"]{grid-area:acc;justify-self:stretch;align-self:center;margin-top:4px;padding-top:8px!important;border-top:1px solid var(--border)!important}
+  .hist-tbl td[data-cell="acc"]>div{gap:4px!important;justify-content:space-around!important;width:100%}
+  .hist-tbl td[data-cell="acc"] .hist-act{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;padding:0!important;font-size:15px!important;border-radius:10px!important;background:var(--surface2)!important}
   .hist-tbl td[data-cell="num"]{grid-area:num;font-size:11.5px!important;color:var(--txt3)!important;font-weight:600!important;letter-spacing:0;align-self:center;line-height:1.3}
   .hist-tbl td[data-cell="total"]{grid-area:total;text-align:right!important;font-size:16px!important;font-weight:800!important;align-self:center;line-height:1.1;color:var(--txt)!important}
   .hist-tbl td[data-cell="total"]::before{content:'Total';display:block;font-size:8.5px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.05em;text-align:right;margin-bottom:1px}
-  .hist-tbl td[data-cell="estado"]{grid-area:estado;white-space:normal!important;align-self:center;display:flex!important;align-items:center;gap:6px;padding-top:6px!important;border-top:1px solid var(--border)!important}
+  .hist-tbl td[data-cell="estado"]{grid-area:estado;white-space:normal!important;align-self:center;display:flex!important;align-items:center;gap:6px;padding-top:4px!important}
   .hist-tbl td[data-cell="estado"] > div{width:100%!important}
-  .hist-tbl td[data-cell="pago"]{grid-area:pago;white-space:normal!important;align-self:center;display:flex!important;align-items:center;justify-content:flex-end;gap:6px;padding-top:6px!important;border-top:1px solid var(--border)!important}
+  .hist-tbl td[data-cell="pago"]{grid-area:pago;white-space:normal!important;align-self:center;display:flex!important;align-items:center;justify-content:flex-end;gap:6px;padding-top:4px!important}
   .hist-tbl td[data-cell="pago"]>div{min-width:0!important;max-width:none!important;align-items:flex-end!important;gap:4px!important}
   /* Budget detail modal header */
   .dm-head{flex-wrap:wrap;gap:8px}
@@ -1329,6 +1330,7 @@ td b{color:var(--txt);font-weight:600}
   .resumen-tbl{border-radius:12px!important;overflow:hidden!important}
   .resumen-tbl table{min-width:0!important;table-layout:fixed!important}
   .resumen-tbl .c-num{display:none!important}
+  .resumen-tbl .c-fec{display:none!important}
   .resumen-tbl .c-act{width:32px!important}
   .resumen-tbl .c-est{width:70px!important}
   .resumen-tbl .c-cli{width:auto!important;min-width:0!important}
