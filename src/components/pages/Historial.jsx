@@ -8,6 +8,7 @@ import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATU
 import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, gananciaBudget, registrarEvento } from '../../lib/pedido'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
+import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
 
 // Color por estado nuevo — chip filtro
 const ESTADO_TAB_COLOR = {
@@ -1172,6 +1173,52 @@ export default function Historial() {
     navigator.clipboard.writeText(text).then(() =>
       toast('Este cliente no tiene WhatsApp cargado — mensaje copiado', 'in')
     )
+  }
+
+  // ── COBRO por WhatsApp ──────────────────────────────────────────
+  // Complementa al recontacto: acá el pedido YA está confirmado y el fin es
+  // cobrar. Arma un mensaje cálido + la forma de pago (link MP si está
+  // configurado, o datos de transferencia). El link de pago va SOLO acá, no
+  // en el recontacto — para no presionar antes de que el cliente confirme.
+  const cobrarPorWA = async (b) => {
+    const phone   = (b.wa || '').replace(/\D/g, '')
+    const nombre  = b.contact || ''
+    const totalDue = b.totalFinal || b.total || 0
+    const paid    = cobrado(b)
+    const remaining = Math.max(0, totalDue - paid)
+    const sena    = b.depositAmt || Math.round(totalDue * (b.deposit || 50) / 100)
+    const askSena = paid <= 0 && sena > 0 && sena < totalDue
+    const amount  = askSena ? sena : (remaining > 0 ? remaining : totalDue)
+
+    const intro = askSena
+      ? `¡Genial ${nombre}! Reservamos tu pedido ${b.num || ''}. 🙌\nPara dejarlo en producción, la seña es *${fmt(amount)}*.`
+      : `Hola ${nombre}! Te paso para completar el pago del pedido ${b.num || ''}: queda pendiente *${fmt(amount)}*.`
+
+    const openWith = (extra) => {
+      const text = extra ? `${intro}\n\n${extra}` : `${intro}\n\n¿Cómo preferís abonar? Te paso los datos.`
+      if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank')
+      else navigator.clipboard.writeText(text).then(() => toast('Sin WhatsApp — mensaje copiado', 'in'))
+    }
+
+    const mp = getMPConfig()
+    if (mp.enabled && mp.token) {
+      toast('Generando link de pago…', 'in')
+      try {
+        const budgetLite = { num: b.num, contact: b.contact, company: b.company, items: b.items || [], shipCost: b.shipCost, total: amount }
+        const result = await createPaymentLink({ budget: budgetLite, mp: { ...mp, useSena: false }, depositPct: 100 })
+        if (result.ok) { openWith(`Podés pagar con tarjeta o Mercado Pago acá 👇\n${result.link}`); return }
+      } catch { /* cae a transferencia */ }
+      toast('No pude crear el link — te paso transferencia', 'in')
+    }
+
+    const bank = getBankConfig()
+    if (bank.enabled && (bank.cbu || bank.alias)) {
+      openWith(`${buildBankInfoText(bank, config().businessName || 'ANMA')}\n\nCuando lo hagas, mandame el comprobante y arrancamos 🙌`)
+      return
+    }
+
+    openWith(null)
+    if (!mp.enabled && !bank.enabled) toast('Configurá Mercado Pago o transferencia en Config → Pagos para incluir el pago', 'in')
   }
   const handleDelete = (b) => {
     const label = b.num || `#${b.id}`
@@ -2551,13 +2598,8 @@ export default function Historial() {
         budget={drawerBudget}
         onClose={() => setDrawerBudget(null)}
         onEdit={() => { const b = drawerBudget; setDrawerBudget(null); if (b) nav(pedidoRoute(b)) }}
-        onWA={() => {
-          const b = drawerBudget
-          if (!b?.wa) return
-          const num = b.wa.replace(/\D/g, '')
-          const msg = `Hola ${b.contact || ''}! Te escribo por el pedido ${b.num || ''}.`
-          window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
-        }}
+        onWA={() => { if (drawerBudget) copyWA(drawerBudget) }}
+        onCobrarWA={() => { if (drawerBudget) cobrarPorWA(drawerBudget) }}
         onVerCliente={() => {
           const b = drawerBudget
           const cli = (clients || []).find(c => (b?.company && c.company === b.company) || (b?.contact && c.contact === b.contact))
