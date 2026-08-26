@@ -2002,7 +2002,15 @@ export default function Historial() {
         <>
           {insights.length > 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
-              <style>{`.ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:900px){.ins-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.ins-grid{grid-template-columns:1fr}}`}</style>
+              <style>{`
+                .ins-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+                @media(max-width:760px){.ins-grid{grid-template-columns:1fr}}
+                .ins-card{display:flex;gap:12px;padding:13px 15px;border-radius:12px;box-sizing:border-box;border:1px solid transparent}
+                .ins-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:14px}
+                .ins-label{font-size:12.5px;font-weight:600;color:var(--txt2);line-height:1.25}
+                .ins-val{font-size:20px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;flex-shrink:0}
+                .ins-desc{font-size:12.5px;color:var(--txt3);line-height:1.4;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+              `}</style>
               <div className="card-header" style={{ marginBottom: 10 }}>
                 <span className="card-title"><i className="fa fa-lightbulb" style={{ color: '#F59E0B', marginRight: 7 }} />Insights del período</span>
                 <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt4)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 10, marginLeft: 'auto' }}>{insights.length}</span>
@@ -2015,15 +2023,17 @@ export default function Historial() {
                       ? { bg: 'rgba(220,38,38,.04)', border: 'rgba(220,38,38,.18)', icon: '#DC2626', val: '#DC2626' }
                       : { bg: 'var(--brand-xlt)', border: 'var(--brand-dim)', icon: 'var(--brand)', val: 'var(--brand)' }
                   return (
-                    <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', background: palette.bg, border: `1px solid ${palette.border}`, borderRadius: 10, boxSizing: 'border-box' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 5, background: palette.icon, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9 }}>
-                          <i className={`fa ${ins.icon}`} />
-                        </div>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt2)', lineHeight: 1.3, flex: 1 }}>{ins.label}</span>
+                    <div key={i} className="ins-card" style={{ background: palette.bg, borderColor: palette.border }}>
+                      <div className="ins-ico" style={{ background: palette.icon }}>
+                        <i className={`fa ${ins.icon}`} />
                       </div>
-                      <div style={{ fontSize: 17, fontWeight: 800, color: palette.val, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{ins.value}</div>
-                      <div style={{ fontSize: 11, color: 'var(--txt3)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ins.desc}</div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                          <span className="ins-label">{ins.label}</span>
+                          <span className="ins-val" style={{ color: palette.val }}>{ins.value}</span>
+                        </div>
+                        <div className="ins-desc" title={ins.desc}>{ins.desc}</div>
+                      </div>
                     </div>
                   )
                 })}
