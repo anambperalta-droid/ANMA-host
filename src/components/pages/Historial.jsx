@@ -351,6 +351,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
             <input type="text" value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })}
               placeholder="N° de operación o nota (opcional)"
               style={{ padding: '8px 12px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }} />
+          </div>
           <button type="button" onClick={addPayment} disabled={!Number(draft.amount)}
             style={{ width: '100%', padding: '10px 14px', background: Number(draft.amount) ? '#15803D' : 'var(--border)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: Number(draft.amount) ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
             <i className="fa fa-floppy-disk" /> Agregar y guardar pago
