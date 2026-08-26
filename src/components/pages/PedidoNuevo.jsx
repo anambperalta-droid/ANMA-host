@@ -331,7 +331,7 @@ export default function PedidoNuevo() {
       <div className="pedido-form" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
-        <section className="wiz-pane">
+        <section className="pedido-pane">
           <PaneHead meta={SECCION_META.cliente} />
           <div className="pedido-cliente-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
             <div ref={clientBoxRef} style={{ position: 'relative' }}>
@@ -429,7 +429,7 @@ export default function PedidoNuevo() {
         />
 
         {/* ── PRECIO ── */}
-        <section className="wiz-pane">
+        <section className="pedido-pane">
           <PaneHead meta={SECCION_META.precio} />
           <PrecioBlock pedido={pedido} totales={totales}
             onTotalChange={setPrecioFinal}
@@ -440,7 +440,7 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── ENTREGA ── */}
-        <section className="wiz-pane">
+        <section className="pedido-pane">
           <PaneHead meta={SECCION_META.entrega} />
           <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 12 }} className="pedido-entrega-grid">
             <div>
@@ -475,7 +475,7 @@ export default function PedidoNuevo() {
         </section>
 
         {/* ── NOTA INTERNA (compacta) ── */}
-        <section className="wiz-pane">
+        <section className="pedido-pane">
           <PaneHead meta={SECCION_META.nota} />
           <textarea value={pedido.notaInterna}
             onChange={e => update({ notaInterna: e.target.value })}
@@ -488,25 +488,32 @@ export default function PedidoNuevo() {
         <FinalizarBar pedido={pedido} saving={saving} lastSaved={lastSaved} onFinish={() => nav('/')} />
       </div>
 
-      {/* Estilos de la tabla de productos — densidad Airtable-style */}
+      {/* Estilos propios del form — clase pedido-pane (NO reusa .wiz-pane
+          para no arrastrar las reglas mobile !important del wizard viejo). */}
       <style>{`
-        /* ── Compactación del form de pedido — menos aire, menos scroll ── */
-        .pedido-form .wiz-pane { padding: 14px 16px 14px; }
-        .pedido-form .wiz-pane-head { margin-bottom: 12px; padding-bottom: 10px; }
-        .pedido-form .wiz-pane-ico { width: 34px; height: 34px; border-radius: 9px; font-size: 14px; box-shadow: none; }
-        .pedido-form .wiz-pane-title { font-size: 14px; }
-        .pedido-form label { margin-bottom: 3px !important; }
-        @media (max-width: 720px) {
-          .pedido-form .wiz-pane { padding: 12px 13px; }
-          .pedido-form .wiz-pane-head { margin-bottom: 10px; padding-bottom: 8px; }
-        }
+        .pedido-form { align-content: start; }
 
-        /* Fix stacking: cualquier wiz-pane con foco activo sube z-index para
-           que sus dropdowns (Cliente / Descripción / etc) no queden tapados
-           por los siguientes wiz-pane (que crean stacking context por la
-           animación pgIn). */
-        .wiz-pane { position: relative; }
-        .wiz-pane:focus-within { z-index: 100; }
+        /* ── Card de sección: compacta, moderna, sin divisor grande ── */
+        .pedido-pane {
+          position: relative;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 15px 16px;
+          box-shadow: 0 1px 2px rgba(15,23,42,.04);
+        }
+        .pedido-pane:focus-within { z-index: 100; }
+        .pedido-pane-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .pedido-pane-ico {
+          width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+          background: var(--grad); color: #fff;
+          display: flex; align-items: center; justify-content: center; font-size: 13px;
+        }
+        .pedido-pane-title { font-size: 14px; font-weight: 800; color: var(--txt); letter-spacing: -.01em; }
+        @media (max-width: 720px) {
+          .pedido-pane { padding: 13px 13px; border-radius: 12px; }
+          .pedido-pane-head { margin-bottom: 10px; }
+        }
 
         /* Fila plana con divisor sutil abajo, sin bg propio */
         .pedido-linea-row {
@@ -659,7 +666,7 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
   // (el :focus-within CSS no alcanza por los stacking context de pgIn).
   const [dropdownOpen, setDropdownOpen] = useState(false)
   return (
-    <section className="wiz-pane" style={{ position: 'relative', zIndex: dropdownOpen ? 200 : undefined }}>
+    <section className="pedido-pane" style={{ position: 'relative', zIndex: dropdownOpen ? 200 : undefined }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <PaneHead meta={meta} />
         <button onClick={onAdd} className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>
@@ -971,12 +978,9 @@ function DescripcionInput({ value, products, onChange, onPick, onCreatePreset, i
 
 function PaneHead({ meta }) {
   return (
-    <div className="wiz-pane-head">
-      <div className="wiz-pane-ico"><i className={`fa ${meta.icon}`} /></div>
-      <div style={{ minWidth: 0 }}>
-        <div className="wiz-pane-title">{meta.title}</div>
-        {meta.sub && <div className="wiz-pane-sub">{meta.sub}</div>}
-      </div>
+    <div className="pedido-pane-head">
+      <div className="pedido-pane-ico"><i className={`fa ${meta.icon}`} /></div>
+      <div className="pedido-pane-title">{meta.title}</div>
     </div>
   )
 }

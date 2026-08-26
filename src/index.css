@@ -973,7 +973,7 @@ td b{color:var(--txt);font-weight:600}
   .hist-tbl tbody tr:active{background:var(--surface2)}
   .hist-tbl tbody td{display:none!important}
   .hist-tbl tbody td[data-cell]{display:block!important;border:none!important;padding:0!important;position:static!important;box-shadow:none!important}
-  .hist-tbl td[data-cell="gan"]{display:none!important}
+  .hist-tbl tbody td[data-cell="gan"]{display:none!important}
   .hist-tbl tbody td:nth-child(1),
   .hist-tbl tbody td:nth-child(2),
   .hist-tbl tbody td:last-child{position:static!important;left:auto!important;right:auto!important;box-shadow:none!important}
