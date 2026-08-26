@@ -1073,10 +1073,15 @@ export default function Historial() {
     return () => clearInterval(t)
   }, [])
 
-  // Top clients
+  // Top clients — total facturado + cantidad de pedidos confirmados
   const byClient = {}
-  confirmed.forEach(b => { const k = b.company || b.contact || '—'; byClient[k] = (byClient[k] || 0) + (b.total || 0) })
-  const topClients = Object.entries(byClient).sort((a, b) => b[1] - a[1]).slice(0, 3)
+  confirmed.forEach(b => {
+    const k = b.company || b.contact || '—'
+    if (!byClient[k]) byClient[k] = { total: 0, count: 0 }
+    byClient[k].total += (b.total || 0)
+    byClient[k].count += 1
+  })
+  const topClients = Object.entries(byClient).sort((a, b) => b[1].total - a[1].total).slice(0, 3)
 
   // Analysis metrics
   const totGain = pagados.reduce((s, b) => s + ganCobrada(b), 0)
@@ -1253,7 +1258,7 @@ export default function Historial() {
   const insights = useMemo(() => {
     const out = []
     if (topClients.length > 0 && totBudgeted > 0) {
-      const topPct = Math.round((topClients[0][1] / Math.max(1, confirmed.reduce((s, b) => s + (b.total || 0), 0))) * 100)
+      const topPct = Math.round((topClients[0][1].total / Math.max(1, confirmed.reduce((s, b) => s + (b.total || 0), 0))) * 100)
       if (topPct >= 60) {
         out.push({ tone: 'warning', icon: 'fa-triangle-exclamation', label: 'Concentración de ventas', value: `${topPct}%`, title: `Riesgo de concentración: ${topPct}% en una sola clienta`, desc: `${topClients[0][0]} concentra el ${topPct}% de tus ventas confirmadas. Si se va, te golpea fuerte. Pensá en diversificar.` })
       } else if (topPct >= 40) {
@@ -2044,37 +2049,70 @@ export default function Historial() {
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-chart-pie" style={{ color: 'var(--brand)', marginRight: 6 }} />Métricas globales</span></div>
             {[
-              ['Total presupuestado', money(totBudgeted), null],
-              ['Total cobrado', money(totCobrado), 'Suma de pagos recibidos (totales + señas)'],
-              ['Ganancia cobrada', money(totGain), 'Margen cobrado — no descuenta costos de insumos ni logística'],
-              ['Ticket promedio', money(avgTicket), null],
-              ['Tasa de conversión', convRate, null],
-              ['N° de presupuestos', periodBudgets.length, null],
-            ].map(([l, v, tip], i) => (
+              { l: 'Total presupuestado', v: money(totBudgeted), delta: deltaBrutas },
+              { l: 'Total cobrado', v: money(totCobrado), tip: 'Suma de pagos recibidos (totales + señas)', delta: deltaCaja },
+              { l: 'Ganancia cobrada', v: money(totGain), tip: 'Ganancia proporcional a lo cobrado — precio menos el costo de los productos y tareas cargados en cada pedido', neg: totGain < 0 },
+              { l: 'Ticket promedio', v: money(avgTicket) },
+              { l: 'Tasa de conversión', v: convRate },
+              { l: 'N° de presupuestos', v: periodBudgets.length },
+            ].map((m, i) => (
               <div key={i} className="metric-row">
                 <span className="mr-label">
-                  {l}
-                  {tip && <i className="fa fa-circle-info" title={tip} style={{ marginLeft: 5, color: 'var(--txt4)', fontSize: 10, cursor: 'help' }} />}
+                  {m.l}
+                  {m.tip && <i className="fa fa-circle-info" title={m.tip} style={{ marginLeft: 5, color: 'var(--txt4)', fontSize: 10, cursor: 'help' }} />}
                 </span>
-                <span className="mr-val">{v}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                  {m.delta != null && !hidden && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+                      color: m.delta >= 0 ? '#16A34A' : '#DC2626',
+                      background: m.delta >= 0 ? 'rgba(22,163,74,.1)' : 'rgba(220,38,38,.1)',
+                      display: 'inline-flex', alignItems: 'center', gap: 3,
+                    }} title="vs. período anterior">
+                      <i className={`fa fa-arrow-${m.delta >= 0 ? 'up' : 'down'}`} style={{ fontSize: 8 }} />
+                      {Math.abs(m.delta)}%
+                    </span>
+                  )}
+                  <span className="mr-val" style={m.neg ? { color: '#DC2626' } : undefined}>{m.v}</span>
+                </span>
               </div>
             ))}
           </div>
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-trophy" style={{ color: 'var(--amber)', marginRight: 6 }} />Clientes top</span></div>
             {topClients.length ? (() => {
-              const totalTopSales = topClients.reduce((s, [, v]) => s + v, 0) || 1
-              return topClients.map(([n, v], i) => (
-                <div key={i} className="metric-row" style={{ alignItems: 'center', padding: '5px 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800 }}>{i + 1}</div>
-                    <span className="mr-label" style={{ flex: 1, marginBottom: 0 }}>{n}</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-xlt)', padding: '1px 6px', borderRadius: 10, flexShrink: 0 }}>{Math.round(v / totalTopSales * 100)}%</span>
-                  </div>
-                  <span className="mr-val" style={{ color: 'var(--money)' }}>{money(v)}</span>
+              const maxSales = topClients[0][1].total || 1
+              const totalTopSales = topClients.reduce((s, [, d]) => s + d.total, 0) || 1
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
+                  {topClients.map(([n, d], i) => {
+                    const share = Math.round(d.total / totalTopSales * 100)
+                    const barPct = Math.round(d.total / maxSales * 100)
+                    return (
+                      <div key={i}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                          <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: i === 0 ? 'var(--amber)' : 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800 }}>{i + 1}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n}</div>
+                            <div style={{ fontSize: 10.5, color: 'var(--txt3)' }}>{d.count} pedido{d.count !== 1 ? 's' : ''} · {share}% del total</div>
+                          </div>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--money)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{money(d.total)}</span>
+                        </div>
+                        <div style={{ height: 6, borderRadius: 3, background: 'var(--surface2)', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${barPct}%`, borderRadius: 3, background: i === 0 ? 'var(--amber)' : 'var(--brand)', transition: 'width .5s ease' }} />
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              ))
-            })() : <div className="empty" style={{ padding: 20 }}><p>Sin datos</p></div>}
+              )
+            })() : (
+              <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--txt3)' }}>
+                <i className="fa fa-trophy" style={{ fontSize: 24, opacity: .25, marginBottom: 8, display: 'block' }} />
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--txt2)' }}>Todavía sin ventas confirmadas</div>
+                <div style={{ fontSize: 11, marginTop: 3 }}>Cuando confirmes pedidos, vas a ver tu ranking de clientes acá.</div>
+              </div>
+            )}
           </div>
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-funnel" style={{ color: 'var(--green)', marginRight: 6 }} />Conversión por estado</span></div>
