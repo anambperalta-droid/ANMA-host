@@ -191,11 +191,37 @@ export default function PedidoNuevo() {
   const updateFn = (fn)    => { dirtyRef.current = true; setPedido(fn) }
 
   const setLineaById    = (id, patch) => updateFn(p => ({ ...p, lineas: p.lineas.map(l => l.id === id ? { ...l, ...patch } : l) }))
-  const addLinea        = (tag = 'producto') => updateFn(p => ({ ...p, lineas: [...p.lineas, nuevaLinea({ tag })] }))
+  // Costos operativos son montos fijos (esCostoUnico) — no se multiplican por cantidad.
+  const addLinea        = (tag = 'producto') => {
+    const esCostos = TAGS_COSTOS.includes(tag)
+    updateFn(p => ({ ...p, lineas: [...p.lineas, nuevaLinea({ tag, esCostoUnico: esCostos, cantidad: 1 })] }))
+  }
   const removeLineaById = (id) => updateFn(p => {
     const filtered = p.lineas.filter(l => l.id !== id)
     return { ...p, lineas: filtered.length ? filtered : [nuevaLinea()] }
   })
+
+  // Recordar el monto de una tarea operativa: al editar el costo de una línea
+  // cuya descripción coincide con una tarea guardada, actualiza su preset para
+  // que la próxima vez se autocomplete con ese valor.
+  const syncPresetCost = (name, cost) => {
+    const nm = (name || '').trim().toLowerCase()
+    if (!nm) return
+    const list = get('costosPresets', [])
+    const idx = list.findIndex(pp => (pp.name || '').toLowerCase() === nm)
+    if (idx > -1 && Number(list[idx].cost) !== Number(cost)) {
+      const next = [...list]; next[idx] = { ...next[idx], cost: Number(cost) || 0 }
+      set('costosPresets', next)
+    }
+  }
+  const setCostoLinea = (id, patch) => {
+    setLineaById(id, patch)
+    if ('costoUnit' in patch) {
+      const linea = pedido.lineas.find(l => l.id === id)
+      const nombre = patch.descripcion ?? linea?.descripcion
+      if (nombre) syncPresetCost(nombre, patch.costoUnit)
+    }
+  }
 
   const totales = calcularTotales(pedido, (c.ivaRate || 21) / 100)
 
@@ -394,7 +420,7 @@ export default function PedidoNuevo() {
           products={costosPresets}
           isCostos
           onAdd={() => addLinea('manoDeObra')}
-          onChange={setLineaById}
+          onChange={setCostoLinea}
           onRemove={removeLineaById}
           onPickProduct={(name) => toast(`${name} agregada`, 'ok')}
           onCreatePreset={savePresetCosto}
@@ -448,15 +474,18 @@ export default function PedidoNuevo() {
           </div>
         </section>
 
-        {/* ── NOTA INTERNA ── */}
+        {/* ── NOTA INTERNA (compacta) ── */}
         <section className="wiz-pane">
           <PaneHead meta={SECCION_META.nota} />
           <textarea value={pedido.notaInterna}
             onChange={e => update({ notaInterna: e.target.value })}
-            rows={4}
-            placeholder="Texto libre. Todo lo que quieras recordar de este pedido."
-            style={{ ...inputStyle, minHeight: 88, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} />
+            rows={2}
+            placeholder="Recordatorio, detalle de coordinación, lo que quieras."
+            style={{ ...inputStyle, minHeight: 48, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} />
         </section>
+
+        {/* ── CIERRE: confirmación de carga ── */}
+        <FinalizarBar pedido={pedido} saving={saving} lastSaved={lastSaved} onFinish={() => nav('/')} />
       </div>
 
       {/* Estilos de la tabla de productos — densidad Airtable-style */}
@@ -497,11 +526,9 @@ export default function PedidoNuevo() {
         .pedido-cell-input:focus  { background: var(--surface); border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-xlt); }
         .pedido-cell-input::placeholder { color: var(--txt4); font-weight: 400; }
 
-        /* Chips (Tipo / Estado compra) centrados bajo su header en desktop */
-        .pedido-linea-row > .l-tag,
-        .pedido-linea-row > .l-estado { display: flex; flex-direction: column; align-items: center; }
-        .pedido-linea-row > .l-tag > select,
-        .pedido-linea-row > .l-estado > select { max-width: 100%; }
+        /* Chip Tipo centrado bajo su header en desktop */
+        .pedido-linea-row > .l-tag { display: flex; flex-direction: column; align-items: center; }
+        .pedido-linea-row > .l-tag > select { max-width: 100%; }
 
         /* Label por campo — solo visible en mobile (card apilada) */
         .l-mob-label { display: none; }
@@ -514,12 +541,18 @@ export default function PedidoNuevo() {
               'desc  desc'
               'tag   remove'
               'cant  costo'
-              'precio estado' !important;
+              'precio precio' !important;
             padding: 14px !important;
             gap: 12px 10px !important;
             border: 1px solid var(--border) !important;
             border-radius: 12px !important;
             margin-bottom: 10px !important;
+          }
+          .pedido-linea-row.is-costos {
+            grid-template-areas:
+              'desc  desc'
+              'tag   remove'
+              'costo costo' !important;
           }
           .pedido-linea-row:hover { background: var(--surface) !important; }
           .pedido-linea-row > .l-desc   { grid-area: desc; }
@@ -527,7 +560,6 @@ export default function PedidoNuevo() {
           .pedido-linea-row > .l-cant   { grid-area: cant; }
           .pedido-linea-row > .l-costo  { grid-area: costo; }
           .pedido-linea-row > .l-precio { grid-area: precio; }
-          .pedido-linea-row > .l-estado { grid-area: estado; justify-content: flex-start; }
           .pedido-linea-row > .l-remove {
             grid-area: remove; justify-self: end; opacity: 1 !important;
             width: 30px; height: 30px; border-radius: 8px !important;
@@ -573,6 +605,43 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
   )
 }
 
+// Barra de cierre — confirma que todo quedó guardado y ofrece "salir al tablero".
+// El pedido ya se guarda solo; esto le da al usuario la certeza de haber terminado.
+function FinalizarBar({ pedido, saving, lastSaved, onFinish }) {
+  const ready = hasMinimum(pedido)
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+      padding: '14px 18px', marginTop: 2,
+      background: ready ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : 'var(--surface2)',
+      border: `1px solid ${ready ? '#bbf7d0' : 'var(--border)'}`, borderRadius: 14,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          background: ready ? '#16a34a' : 'var(--border2)', color: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+        }}>
+          <i className={`fa ${saving ? 'fa-arrows-rotate fa-spin' : ready ? 'fa-check' : 'fa-pen'}`} />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: ready ? '#065f46' : 'var(--txt2)' }}>
+            {saving ? 'Guardando…' : ready ? 'Pedido guardado' : 'Falta cliente + una descripción'}
+          </div>
+          <div style={{ fontSize: 11.5, color: 'var(--txt3)', marginTop: 1 }}>
+            {ready ? 'Se guarda solo con cada cambio. Podés cerrar tranquila.' : 'Con eso ya se empieza a guardar automáticamente.'}
+          </div>
+        </div>
+      </div>
+      <button onClick={onFinish} className="btn btn-primary"
+        disabled={!lastSaved && !ready}
+        style={{ flexShrink: 0, opacity: (!lastSaved && !ready) ? 0.5 : 1 }}>
+        <i className="fa fa-check-double" /> Listo — ir al tablero
+      </button>
+    </div>
+  )
+}
+
 function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint }) {
   // Estado elevado: cuando cualquier fila abre su dropdown de catálogo, la
   // sección sube z-index para que no la tape la siguiente. Solución robusta
@@ -590,14 +659,19 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
       {extras}
 
       {lineas.length > 0 && (
-        <div style={{ ...lineaGrid, marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
+        <div style={{ ...(isCostos ? gridCostos : gridProd), marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
              className="pedido-linea-header">
           <span>Descripción</span>
           <span style={{ textAlign: 'center' }}>Tipo</span>
-          <span style={{ textAlign: 'right' }}>Cant</span>
-          <span style={{ textAlign: 'right' }}>Costo/u</span>
-          <span style={{ textAlign: 'right' }}>Precio/u</span>
-          <span style={{ textAlign: 'center' }}>Compra</span>
+          {isCostos ? (
+            <span style={{ textAlign: 'right' }}>Monto</span>
+          ) : (
+            <>
+              <span style={{ textAlign: 'right' }}>Cant</span>
+              <span style={{ textAlign: 'right' }}>Costo/u</span>
+              <span style={{ textAlign: 'right' }}>Precio/u</span>
+            </>
+          )}
           <span />
         </div>
       )}
@@ -627,7 +701,7 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
 
 function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemove, onPickProduct, onCreatePreset, onDropdownOpen }) {
   return (
-    <div className="pedido-linea-row" style={{ ...lineaGrid, alignItems: 'center' }}>
+    <div className={`pedido-linea-row ${isCostos ? 'is-costos' : ''}`} style={{ ...(isCostos ? gridCostos : gridProd), alignItems: 'center' }}>
       <div className="l-desc" style={{ minWidth: 0 }}>
         <span className="l-mob-label">Descripción</span>
         <DescripcionInput value={linea.descripcion} products={products}
@@ -641,29 +715,38 @@ function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemo
         <TagChip value={linea.tag || 'producto'} tags={tags}
           onChange={v => onChange({ tag: v })} mini />
       </div>
-      <div className="l-cant">
-        <span className="l-mob-label">Cantidad</span>
-        <input className="pedido-cell-input" type="number" min={0} value={linea.cantidad}
-          onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
-          style={{ textAlign: 'right' }} />
-      </div>
-      <div className="l-costo">
-        <span className="l-mob-label">Costo/u</span>
-        <input className="pedido-cell-input" type="number" min={0} value={linea.costoUnit}
-          onChange={e => onChange({ costoUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
-          placeholder="0" style={{ textAlign: 'right' }} />
-      </div>
-      <div className="l-precio">
-        <span className="l-mob-label">Precio/u</span>
-        <input className="pedido-cell-input" type="number" min={0} value={linea.precioUnit}
-          onChange={e => onChange({ precioUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
-          placeholder="0" style={{ textAlign: 'right' }} />
-      </div>
-      <div className="l-estado">
-        <span className="l-mob-label">Estado compra</span>
-        <EstadoCompraChip value={linea.estadoCompra}
-          onChange={v => onChange({ estadoCompra: v })} mini />
-      </div>
+
+      {isCostos ? (
+        /* Costos operativos: un solo campo Monto (costo fijo, no se multiplica) */
+        <div className="l-costo">
+          <span className="l-mob-label">Monto</span>
+          <input className="pedido-cell-input" type="number" min={0} value={linea.costoUnit}
+            onChange={e => onChange({ costoUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
+            placeholder="0" style={{ textAlign: 'right' }} />
+        </div>
+      ) : (
+        <>
+          <div className="l-cant">
+            <span className="l-mob-label">Cantidad</span>
+            <input className="pedido-cell-input" type="number" min={0} value={linea.cantidad}
+              onChange={e => onChange({ cantidad: e.target.value === '' ? 0 : Number(e.target.value) })}
+              style={{ textAlign: 'right' }} />
+          </div>
+          <div className="l-costo">
+            <span className="l-mob-label">Costo/u</span>
+            <input className="pedido-cell-input" type="number" min={0} value={linea.costoUnit}
+              onChange={e => onChange({ costoUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
+              placeholder="0" style={{ textAlign: 'right' }} />
+          </div>
+          <div className="l-precio">
+            <span className="l-mob-label">Precio/u</span>
+            <input className="pedido-cell-input" type="number" min={0} value={linea.precioUnit}
+              onChange={e => onChange({ precioUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
+              placeholder="0" style={{ textAlign: 'right' }} />
+          </div>
+        </>
+      )}
+
       <button onClick={onRemove} disabled={!canRemove}
         title={canRemove ? 'Eliminar línea' : 'Al menos una línea'}
         className="l-remove pedido-remove-btn"
@@ -1158,8 +1241,15 @@ const dropdownItem = {
   background: 'var(--surface)',
 }
 
-const lineaGrid = {
+// Productos: Descripción · Tipo · Cant · Costo/u · Precio/u · (x)
+const gridProd = {
   display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1.8fr) 92px 56px 84px 84px 96px 24px',
+  gridTemplateColumns: 'minmax(0, 2fr) 104px 58px 90px 90px 24px',
+  gap: 8,
+}
+// Costos operativos: Descripción · Tipo · Monto · (x) — sin cant/precio/compra
+const gridCostos = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 2.4fr) 128px 120px 24px',
   gap: 8,
 }
