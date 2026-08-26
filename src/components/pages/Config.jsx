@@ -11,6 +11,15 @@ import { getSheetsConfig, setSheetsConfig, testSheetsConnection, pushAllBudgets,
 import { SITES, CURRENT_SITE, sendInvite } from '../../lib/invites'
 import { flushSync } from '../../lib/sync'
 
+// Convierte un hex (#RRGGBB) a rgba con alpha — para tints suaves en la preview.
+function hexToRgba(hex, a = 1) {
+  const h = (hex || '#000000').replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16) || 0
+  const g = parseInt(h.substring(2, 4), 16) || 0
+  const b = parseInt(h.substring(4, 6), 16) || 0
+  return `rgba(${r},${g},${b},${a})`
+}
+
 /* ── Modal de confirmación destructiva ── */
 function DeleteConfirmModal({ title, message, onConfirm, onClose }) {
   return (
@@ -602,23 +611,43 @@ export default function Config() {
                   </div>
                 </div>
               </div>
-              {/* Vista previa en vivo */}
-              <div style={{ borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-                <div style={{ padding: '8px 12px', fontSize: 10, fontWeight: 700, color: 'var(--txt3)', letterSpacing: '.6px', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>
-                  Vista previa en vivo
-                </div>
-                <div style={{ padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: bcolor }} />
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: acolor }} />
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg,${bcolor},${acolor})` }} />
+              {/* Vista previa en vivo — muestra AMBOS colores en roles reales */}
+              {(() => {
+                const aTint = hexToRgba(acolor, 0.13)
+                const bTint = hexToRgba(bcolor, 0.10)
+                return (
+                  <div style={{ borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                    <div style={{ padding: '8px 12px', fontSize: 10, fontWeight: 700, color: 'var(--txt3)', letterSpacing: '.6px', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>
+                      Vista previa en vivo
+                    </div>
+                    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {/* Fila 1: botón principal + estado (acento) */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <span style={{ padding: '7px 14px', borderRadius: 9, background: bcolor, color: '#fff', fontSize: 12, fontWeight: 700 }}>
+                          <i className="fa fa-plus" style={{ marginRight: 6 }} />Nuevo pedido
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 11px', borderRadius: 999, background: aTint, color: acolor, fontSize: 11, fontWeight: 700 }}>
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: acolor }} />
+                          Confirmado
+                        </span>
+                      </div>
+                      {/* Fila 2: ganancia (acento) + badge principal */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: acolor }}>
+                          Ganancia +$12.500
+                        </span>
+                        <span style={{ padding: '3px 10px', borderRadius: 999, background: bTint, color: bcolor, fontSize: 10.5, fontWeight: 700 }}>
+                          Producto
+                        </span>
+                      </div>
+                      {/* Fila 3: barra de avance (degradé de ambos) */}
+                      <div style={{ height: 7, borderRadius: 4, background: 'var(--surface2)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: '72%', borderRadius: 4, background: `linear-gradient(90deg, ${bcolor}, ${acolor})` }} />
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ width: '60%', height: 8, borderRadius: 4, background: bcolor, marginBottom: 6, opacity: .9 }} />
-                    <div style={{ width: '40%', height: 6, borderRadius: 4, background: acolor, opacity: .7 }} />
-                  </div>
-                </div>
-              </div>
+                )
+              })()}
               <button className="btn btn-ghost btn-xs" onClick={resetColors} style={{ marginTop: 12, width: '100%' }}>
                 <i className="fa fa-rotate-left" /> Restaurar colores originales
               </button>
