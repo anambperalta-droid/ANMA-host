@@ -18,7 +18,7 @@ import {
   pedidoFromBudget, budgetFromPedido, calcularTotales,
   totalDesdeMargen, pedidoVacio, nuevaLinea, snapshotAlt, aplicarAlt,
   getEstado, registrarEvento,
-  ESTADOS, ESTADO_LABELS, ESTADOS_COMPRA, TAGS, TAG_LABELS,
+  ESTADOS, ESTADO_LABELS, estadoOptions, ESTADOS_COMPRA, TAGS, TAG_LABELS,
 } from '../../lib/pedido'
 
 const ESTADO_COMPRA_LABELS = {
@@ -764,7 +764,6 @@ function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemo
 
 function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChange, onSeniaChange }) {
   const gananciaOk = totales.ganancia >= 0
-  const saldo = pedido.seniaMonto > 0 && totales.total > 0 ? Math.max(0, totales.total - pedido.seniaMonto) : null
   return (
     <div style={{ display: 'grid', gap: 12 }}>
 
@@ -823,17 +822,40 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
         </div>
 
         <div style={precioGroup}>
-          <div style={precioGroupLabel}>Cobro</div>
+          <div style={precioGroupLabel}>Anticipo / Seña</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
             <span style={{ color: 'var(--txt3)' }}>Seña</span>
             <input type="number" min={0}
               value={pedido.seniaMonto || ''}
               onChange={e => onSeniaChange(e.target.value)}
-              placeholder="0" style={{ ...inputStyle, width: 96, textAlign: 'right', padding: '4px 8px', fontSize: 12, fontWeight: 700 }} />
+              placeholder="$0" style={{ ...inputStyle, width: 100, textAlign: 'right', padding: '4px 8px', fontSize: 12, fontWeight: 700 }} />
           </div>
-          {saldo != null && (
-            <Row label="Saldo" value={fmt(saldo)} />
+          {/* Chips de % rápidos — calculan la seña sobre el total */}
+          {totales.total > 0 && (
+            <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
+              {[30, 50, 100].map(pct => {
+                const monto = Math.round(totales.total * pct / 100)
+                const active = pedido.seniaMonto === monto
+                return (
+                  <button key={pct} type="button"
+                    onClick={() => onSeniaChange(monto)}
+                    style={{
+                      flex: 1, padding: '4px 0', fontSize: 10.5, fontWeight: 700,
+                      border: `1px solid ${active ? 'var(--brand)' : 'var(--border)'}`,
+                      background: active ? 'var(--brand-xlt)' : 'var(--surface)',
+                      color: active ? 'var(--brand)' : 'var(--txt3)',
+                      borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit',
+                    }}>
+                    {pct}%
+                  </button>
+                )
+              })}
+            </div>
           )}
+          {pedido.seniaMonto > 0 && totales.total > 0
+            ? <Row label="Saldo contra entrega" value={fmt(Math.max(0, totales.total - pedido.seniaMonto))} />
+            : <div style={{ fontSize: 10.5, color: 'var(--txt4)', marginTop: 2 }}>Cuánto pedís de anticipo (opcional)</div>
+          }
         </div>
 
       </div>
@@ -960,7 +982,7 @@ function EstadoSelect({ value, onChange }) {
         fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
         letterSpacing: '.02em',
       }}>
-      {ESTADOS.map(k => <option key={k} value={k}>{ESTADO_LABELS[k]}</option>)}
+      {estadoOptions(value).map(k => <option key={k} value={k}>{ESTADO_LABELS[k] || k}</option>)}
     </select>
   )
 }

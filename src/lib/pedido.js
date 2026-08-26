@@ -11,21 +11,33 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 // ── Estados ────────────────────────────────────────────────────────
-
+// Pipeline limpio de 6 etapas: el camino comercial + estado perdido.
+// 'pausado' y 'cerrado' quedan como LEGACY (se siguen renderizando en
+// pedidos viejos que los tengan, pero no se ofrecen como opción nueva).
 export const ESTADOS = [
-  'consulta', 'presupuestado', 'pausado', 'confirmado',
-  'produccion', 'entregado', 'cerrado', 'perdido',
+  'consulta', 'presupuestado', 'confirmado',
+  'produccion', 'entregado', 'perdido',
 ]
 
 export const ESTADO_LABELS = {
   consulta:      'Consulta',
   presupuestado: 'Presupuestado',
-  pausado:       'Pausado',
+  pausado:       'Pausado',        // legacy
   confirmado:    'Confirmado',
   produccion:    'En producción',
   entregado:     'Entregado',
-  cerrado:       'Cerrado',
+  cerrado:       'Cerrado',        // legacy
   perdido:       'Perdido',
+}
+
+/**
+ * Opciones para un <select> de estado: el pipeline de 6 + el valor actual
+ * si es legacy (pausado/cerrado), para que un pedido viejo no muestre el
+ * select vacío. El legacy queda al final, marcado.
+ */
+export function estadoOptions(current) {
+  if (current && !ESTADOS.includes(current)) return [...ESTADOS, current]
+  return ESTADOS
 }
 
 // Lectura: budget.status → pedido.estado. Incluye legacy negotiating/lost.

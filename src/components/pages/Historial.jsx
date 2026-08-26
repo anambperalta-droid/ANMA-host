@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
-import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, gananciaBudget, registrarEvento } from '../../lib/pedido'
+import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, registrarEvento } from '../../lib/pedido'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
@@ -2010,7 +2010,7 @@ export default function Historial() {
                           <div>
                             <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: 'var(--txt2)', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
                               value={getEstado(b)} onChange={e => handleStatusChange(b.id, e.target.value)}>
-                              {ESTADOS.map(k => <option key={k} value={k}>{ESTADO_LABELS[k]}</option>)}
+                              {estadoOptions(getEstado(b)).map(k => <option key={k} value={k}>{ESTADO_LABELS[k] || k}</option>)}
                             </select>
                             {showLossReason && getEstado(b) === 'perdido' && b.lossReason && (
                               <div style={{ fontSize: 9, color: '#DC2626', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: 6, padding: '1px 6px', marginTop: 3, display: 'inline-block', fontWeight: 700, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={b.lossReason}>
