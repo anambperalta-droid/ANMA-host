@@ -1930,15 +1930,15 @@ export default function Historial() {
             </button>
           </div>
           {selectedIds.size > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--brand-xlt)', border: '1.5px solid var(--brand)', borderRadius: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-              <b style={{ color: 'var(--brand)', fontSize: 12 }}>{selectedIds.size} seleccionados</b>
-              <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} style={{ fontSize: 12, padding: '5px 8px' }}>
-                <option value="">Cambiar estado a...</option>
+            <div className="hist-bulk-bar" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--brand-xlt)', border: '1.5px solid var(--brand)', borderRadius: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+              <b style={{ color: 'var(--brand)', fontSize: 12, whiteSpace: 'nowrap' }}>{selectedIds.size} sel.</b>
+              <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} style={{ fontSize: 12, padding: '5px 8px', flex: '1 1 130px', minWidth: 0 }}>
+                <option value="">Cambiar estado a…</option>
                 {ESTADOS.map(k => <option key={k} value={k}>{ESTADO_LABELS[k]}</option>)}
               </select>
-              <button className="btn btn-primary btn-sm" onClick={applyBulkStatus} disabled={!bulkStatus}><i className="fa fa-check" /> Aplicar</button>
-              <button className="btn btn-secondary btn-sm" onClick={bulkExportCSV}><i className="fa fa-download" /> Exportar CSV</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())}><i className="fa fa-xmark" /> Quitar selección</button>
+              <button className="btn btn-primary btn-sm" onClick={applyBulkStatus} disabled={!bulkStatus} title="Aplicar"><i className="fa fa-check" /><span className="hist-bulk-lbl"> Aplicar</span></button>
+              <button className="btn btn-secondary btn-sm" onClick={bulkExportCSV} title="Exportar CSV"><i className="fa fa-download" /><span className="hist-bulk-lbl"> CSV</span></button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())} title="Quitar selección"><i className="fa fa-xmark" /><span className="hist-bulk-lbl"> Quitar</span></button>
             </div>
           )}
           <div className="tbl-card hist-tbl" style={{ overflowX: 'auto' }}>

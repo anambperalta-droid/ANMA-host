@@ -986,9 +986,9 @@ td b{color:var(--txt);font-weight:600}
   .hist-tbl td[data-cell="num"]{grid-area:num;font-size:11.5px!important;color:var(--txt3)!important;font-weight:600!important;letter-spacing:0;align-self:center;line-height:1.3}
   .hist-tbl td[data-cell="total"]{grid-area:total;text-align:right!important;font-size:16px!important;font-weight:800!important;align-self:center;line-height:1.1;color:var(--txt)!important}
   .hist-tbl td[data-cell="total"]::before{content:'Total';display:block;font-size:8.5px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.05em;text-align:right;margin-bottom:1px}
-  .hist-tbl td[data-cell="estado"]{grid-area:estado;white-space:normal!important;align-self:center;display:flex!important;align-items:center;gap:6px;padding-top:4px!important}
+  .hist-tbl td[data-cell="estado"]{grid-area:estado;white-space:normal!important;align-self:start;display:flex!important;align-items:flex-start;gap:6px;padding-top:6px!important}
   .hist-tbl td[data-cell="estado"] > div{width:100%!important}
-  .hist-tbl td[data-cell="pago"]{grid-area:pago;white-space:normal!important;align-self:center;display:flex!important;align-items:center;justify-content:flex-end;gap:6px;padding-top:4px!important}
+  .hist-tbl td[data-cell="pago"]{grid-area:pago;white-space:normal!important;align-self:start;display:flex!important;align-items:flex-start;justify-content:flex-end;gap:6px;padding-top:6px!important}
   .hist-tbl td[data-cell="pago"]>div{min-width:0!important;max-width:none!important;align-items:flex-end!important;gap:4px!important}
   /* Budget detail modal header */
   .dm-head{flex-wrap:wrap;gap:8px}
@@ -1334,6 +1334,11 @@ td b{color:var(--txt);font-weight:600}
   /* Filtros de estado: una sola fila con scroll horizontal (no 2 filas) */
   .hist-estado-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .hist-estado-tabs::-webkit-scrollbar{display:none}
+  /* Bulk bar compacto: botones solo icono, entra en 1 fila */
+  .hist-bulk-bar{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}
+  .hist-bulk-bar::-webkit-scrollbar{display:none}
+  .hist-bulk-lbl{display:none}
+  .hist-bulk-bar .btn{padding:6px 10px!important;min-height:34px}
   .resumen-tbl .c-act{width:32px!important}
   .resumen-tbl .c-est{width:70px!important}
   .resumen-tbl .c-cli{width:auto!important;min-width:0!important}
@@ -1348,11 +1353,9 @@ td b{color:var(--txt);font-weight:600}
   .mini-seg-item{padding:8px 10px!important;margin-bottom:6px!important;border-radius:10px!important}
   .mini-seg-more{font-size:11px!important;padding:8px!important}
 
-  /* Modo Hoy — single col, tight */
+  /* Modo Hoy — single col (la card HoyImportaCard maneja su propio estilo;
+     NO selectores estructurales por posicion: se rompen si cambia el DOM) */
   .modo-hoy-grid{grid-template-columns:1fr!important;gap:8px!important}
-  .modo-hoy-grid > div{padding:10px 12px!important;border-radius:12px!important}
-  .modo-hoy-grid > div > div:first-child > div:first-child{width:28px!important;height:28px!important;border-radius:8px!important;font-size:12px!important}
-  .modo-hoy-grid > div > div:first-child .fa-arrow-right{display:none}
 
   /* Tab bar horizontal scroll */
   .tab-bar{margin-top:6px!important;margin-bottom:10px!important;width:100%!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px!important}
