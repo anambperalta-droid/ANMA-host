@@ -8,7 +8,7 @@ const SITE_KEY = 'anma-regalos'
 // solo vivían en el localStorage del navegador donde se crearon.
 const DATA_KEYS = [
   'budgets', 'clients', 'suppliers', 'products', 'insumos', 'stockMoves',
-  'shipments', 'viajes', 'tariffs', 'tasks', 'waTemplates',
+  'shipments', 'viajes', 'tariffs', 'tasks', 'waTemplates', 'costosPresets',
   'despCuit', 'despDir', 'sheetsCfg',
   'notifRead', 'notifDismissed', 'provAlertsDismissed',
   'productViewMode', 'todayCollapsed',
@@ -16,7 +16,7 @@ const DATA_KEYS = [
 ]
 // Claves que son arrays de objetos con `id` → merge inteligente por item.
 // El resto (escalares, arrays de strings) usa cloud-gana directo.
-const MERGE_BY_ID = new Set(['budgets', 'clients', 'suppliers', 'products', 'insumos', 'stockMoves', 'shipments', 'viajes', 'tariffs', 'tasks', 'waTemplates'])
+const MERGE_BY_ID = new Set(['budgets', 'clients', 'suppliers', 'products', 'insumos', 'stockMoves', 'shipments', 'viajes', 'tariffs', 'tasks', 'waTemplates', 'costosPresets'])
 
 function collectData() {
   const out = {}

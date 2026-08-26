@@ -74,13 +74,43 @@ const hasMinimum = (p) =>
   !!(p.clienteNombre || p.contact || p.company) &&
   p.lineas.some(l => l.descripcion && l.descripcion.trim().length > 0)
 
+// Tareas operativas iniciales — se siembran una sola vez en localStorage.
+// A partir de ahí Ana puede agregar las suyas y quedan guardadas.
+const DEFAULT_COSTOS_PRESETS = [
+  { name: 'Diseño',                tag: 'diseno' },
+  { name: 'Mano de obra',          tag: 'manoDeObra' },
+  { name: 'Armado de kit',         tag: 'manoDeObra' },
+  { name: 'Impresión / Estampado', tag: 'diseno' },
+  { name: 'Embalaje especial',     tag: 'otro' },
+  { name: 'Envío',                 tag: 'envio' },
+]
+
 export default function PedidoNuevo() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { get, saveBudget, deleteBudget, config } = useData()
+  const { get, set, saveBudget, deleteBudget, config } = useData()
   const toast = useToast()
   const confirm = useConfirm()
   const c = config()
+
+  // Presets de tareas operativas — siembra en el primer uso.
+  const costosPresets = (() => {
+    const stored = get('costosPresets', [])
+    if (stored.length) return stored
+    const seeded = DEFAULT_COSTOS_PRESETS.map((p, i) => ({ id: Date.now() + i, cost: 0, ...p }))
+    set('costosPresets', seeded)
+    return seeded
+  })()
+
+  // Guarda una tarea operativa nueva para reusar en el futuro (dedup por nombre).
+  const savePresetCosto = (name, tag, cost) => {
+    const nombre = (name || '').trim()
+    if (!nombre) return
+    const list = get('costosPresets', [])
+    if (list.some(p => (p.name || '').toLowerCase() === nombre.toLowerCase())) return
+    set('costosPresets', [...list, { id: Date.now(), name: nombre, tag: tag || 'otro', cost: Number(cost) || 0 }])
+    toast(`"${nombre}" guardada en tus tareas`, 'ok')
+  }
 
   const [pedido, setPedido] = useState(() => {
     if (id) {
@@ -355,17 +385,19 @@ export default function PedidoNuevo() {
           )}
         />
 
-        {/* ── COSTOS OPERATIVOS (Mano de obra + Diseño + Envío + Otro) ── */}
+        {/* ── COSTOS OPERATIVOS (tareas guardables, NO catálogo de productos) ── */}
         <LineasSection
           meta={SECCION_META.costos}
           tags={TAGS_COSTOS}
           defaultTag="manoDeObra"
           lineas={pedido.lineas.filter(l => TAGS_COSTOS.includes(l.tag))}
-          products={products}
+          products={costosPresets}
+          isCostos
           onAdd={() => addLinea('manoDeObra')}
           onChange={setLineaById}
           onRemove={removeLineaById}
-          onPickProduct={(name) => toast(`${name} cargado del catálogo`, 'ok')}
+          onPickProduct={(name) => toast(`${name} agregada`, 'ok')}
+          onCreatePreset={savePresetCosto}
           totalLineas={pedido.lineas.length}
           emptyHint="Diseño, mano de obra, envío u otros costos que se suman al pedido."
         />
@@ -541,7 +573,7 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
   )
 }
 
-function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, totalLineas, extras, emptyHint }) {
+function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint }) {
   // Estado elevado: cuando cualquier fila abre su dropdown de catálogo, la
   // sección sube z-index para que no la tape la siguiente. Solución robusta
   // (el :focus-within CSS no alcanza por los stacking context de pgIn).
@@ -575,10 +607,12 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
           linea={linea}
           products={products}
           tags={tags}
+          isCostos={isCostos}
           onChange={patch => onChange(linea.id, patch)}
           onRemove={() => onRemove(linea.id)}
           canRemove={totalLineas > 1 || !!linea.descripcion}
           onPickProduct={onPickProduct}
+          onCreatePreset={onCreatePreset}
           onDropdownOpen={setDropdownOpen} />
       ))}
 
@@ -591,13 +625,15 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
   )
 }
 
-function LineaRow({ linea, products, tags, onChange, onRemove, canRemove, onPickProduct, onDropdownOpen }) {
+function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemove, onPickProduct, onCreatePreset, onDropdownOpen }) {
   return (
     <div className="pedido-linea-row" style={{ ...lineaGrid, alignItems: 'center' }}>
       <div className="l-desc" style={{ minWidth: 0 }}>
         <span className="l-mob-label">Descripción</span>
         <DescripcionInput value={linea.descripcion} products={products}
           onChange={patch => onChange(patch)} onPick={onPickProduct}
+          isCostos={isCostos}
+          onCreatePreset={onCreatePreset ? (name) => onCreatePreset(name, linea.tag, linea.costoUnit) : null}
           onDropdownOpen={onDropdownOpen} flat />
       </div>
       <div className="l-tag">
@@ -731,7 +767,7 @@ function Row({ label, value }) {
   )
 }
 
-function DescripcionInput({ value, products, onChange, onPick, onDropdownOpen, className, flat }) {
+function DescripcionInput({ value, products, onChange, onPick, onCreatePreset, isCostos, onDropdownOpen, className, flat }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -743,8 +779,11 @@ function DescripcionInput({ value, products, onChange, onPick, onDropdownOpen, c
   const q = (value || '').toLowerCase().trim()
   const matches = q
     ? products.filter(p => (p.name || '').toLowerCase().includes(q)).slice(0, 8)
-    : []
-  const showDropdown = open && matches.length > 0
+    : (isCostos ? products.slice(0, 8) : [])   // costos: mostrar tareas al enfocar
+  // Ofrecer "guardar" cuando hay texto que no coincide exactamente con una tarea
+  const exactMatch = q && products.some(p => (p.name || '').toLowerCase() === q)
+  const canCreate = !!onCreatePreset && q.length > 1 && !exactMatch
+  const showDropdown = open && (matches.length > 0 || canCreate)
 
   // Reporta al padre (LineasSection) cuando el dropdown está visible, para
   // que suba el z-index de la sección.
@@ -756,9 +795,15 @@ function DescripcionInput({ value, products, onChange, onPick, onDropdownOpen, c
       costoUnit: Number(p.cost) || 0,
       precioUnit: Number(p.price) || 0,
       productoId: p.id,
+      ...(isCostos && p.tag ? { tag: p.tag } : {}),
     })
     setOpen(false)
-    if (onPick) onPick(p.name || 'Producto')
+    if (onPick) onPick(p.name || (isCostos ? 'Tarea' : 'Producto'))
+  }
+
+  const create = () => {
+    onCreatePreset?.(value)
+    setOpen(false)
   }
 
   return (
@@ -766,7 +811,7 @@ function DescripcionInput({ value, products, onChange, onPick, onDropdownOpen, c
       <input type="text" value={value}
         onChange={e => { onChange({ descripcion: e.target.value, productoId: null }); setOpen(true) }}
         onFocus={() => setOpen(true)}
-        placeholder={flat ? 'Descripción' : 'Descripción — escribí para buscar en el catálogo'}
+        placeholder={flat ? (isCostos ? 'Tarea o costo' : 'Descripción') : 'Descripción — escribí para buscar en el catálogo'}
         autoComplete="off"
         className={flat ? 'pedido-cell-input' : ''}
         style={flat ? { fontWeight: 500 } : inputStyle} />
@@ -785,14 +830,23 @@ function DescripcionInput({ value, products, onChange, onPick, onDropdownOpen, c
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                {p.cat && <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{p.cat}</div>}
+                {(p.cat || (isCostos && p.tag)) && <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{p.cat || TAG_LABELS[p.tag]}</div>}
               </div>
               <div style={{ fontSize: 11, color: 'var(--txt3)', flexShrink: 0, textAlign: 'right' }}>
-                <div>Costo <b style={{ color: 'var(--txt)' }}>{fmt(Number(p.cost) || 0)}</b></div>
+                {Number(p.cost) > 0 && <div>Costo <b style={{ color: 'var(--txt)' }}>{fmt(Number(p.cost))}</b></div>}
                 {Number(p.price) > 0 && <div>Precio <b style={{ color: '#16a34a' }}>{fmt(Number(p.price))}</b></div>}
               </div>
             </div>
           ))}
+          {canCreate && (
+            <div onClick={create}
+              style={{ padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--brand-xlt)', color: 'var(--brand)', fontWeight: 700, fontSize: 12 }}
+              onMouseEnter={e => e.currentTarget.style.filter = 'brightness(.97)'}
+              onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
+              <i className="fa fa-bookmark" />
+              Guardar "{value}" como tarea
+            </div>
+          )}
         </div>
       )}
     </div>
