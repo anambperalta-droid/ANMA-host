@@ -606,7 +606,7 @@ export default function Config() {
                       style={{ width: 48, height: 48, border: '2px solid var(--border)', borderRadius: 12, cursor: 'pointer', padding: 3, background: 'var(--surface)' }} />
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: acolor, fontFamily: 'monospace' }}>{acolor.toUpperCase()}</div>
-                      <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 2 }}>Detalles · ganancias · estados</div>
+                      <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 2 }}>Ganancias · ingresos · detalles</div>
                     </div>
                   </div>
                 </div>

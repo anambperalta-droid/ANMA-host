@@ -808,7 +808,7 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
           <Row label="Costo" value={fmt(totales.costoTotal)} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
             <span style={{ color: 'var(--txt3)' }}>Ganancia</span>
-            <b style={{ color: gananciaOk ? '#15803d' : '#dc2626' }}>{fmt(totales.ganancia)}</b>
+            <b style={{ color: gananciaOk ? 'var(--green)' : '#dc2626' }}>{fmt(totales.ganancia)}</b>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
             <span style={{ color: 'var(--txt3)' }}>Margen</span>

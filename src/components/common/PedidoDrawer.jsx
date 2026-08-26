@@ -180,7 +180,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
             <MoneyRow label="TOTAL" value={fmt(totales.total)} strong big />
             <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 11, color: 'var(--txt3)' }}>
               <span>Costo <b style={{ color: 'var(--txt2)' }}>{fmt(totales.costoTotal)}</b></span>
-              <span>Ganancia <b style={{ color: totales.ganancia >= 0 ? '#15803d' : '#dc2626' }}>{fmt(totales.ganancia)}</b></span>
+              <span>Ganancia <b style={{ color: totales.ganancia >= 0 ? 'var(--green)' : '#dc2626' }}>{fmt(totales.ganancia)}</b></span>
               <span>Margen <b style={{ color: 'var(--txt2)' }}>{totales.margen}%</b></span>
             </div>
           </div>

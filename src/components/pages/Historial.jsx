@@ -2004,7 +2004,7 @@ export default function Historial() {
                       {(() => {
                         const gan = gananciaBudget(b)
                         return (
-                          <td className="col-hide-mobile" data-cell="gan" data-label="Ganancia" style={{ color: hidden ? 'var(--txt4)' : (gan === 0 ? 'var(--txt4)' : gan < 0 ? 'var(--red)' : '#16A34A'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(gan)}</td>
+                          <td className="col-hide-mobile" data-cell="gan" data-label="Ganancia" style={{ color: hidden ? 'var(--txt4)' : (gan === 0 ? 'var(--txt4)' : gan < 0 ? 'var(--red)' : 'var(--green)'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(gan)}</td>
                         )
                       })()}
                       <td data-cell="estado" style={{ whiteSpace: 'nowrap' }}>
@@ -2131,7 +2131,7 @@ export default function Historial() {
               <div className="ins-grid">
                 {insights.map((ins, i) => {
                   const palette = ins.tone === 'success'
-                    ? { bg: 'rgba(22,163,74,.05)', border: 'rgba(22,163,74,.18)', icon: '#16A34A', val: '#16A34A' }
+                    ? { bg: 'var(--green-lt)', border: 'var(--green-dim)', icon: 'var(--green)', val: 'var(--green)' }
                     : ins.tone === 'warning'
                       ? { bg: 'rgba(220,38,38,.04)', border: 'rgba(220,38,38,.18)', icon: '#DC2626', val: '#DC2626' }
                       : { bg: 'var(--brand-xlt)', border: 'var(--brand-dim)', icon: 'var(--brand)', val: 'var(--brand)' }
@@ -2159,7 +2159,7 @@ export default function Historial() {
             {[
               { l: 'Total presupuestado', v: money(totBudgeted), delta: deltaBrutas },
               { l: 'Total cobrado', v: money(totCobrado), tip: 'Suma de pagos recibidos (totales + señas)', delta: deltaCaja },
-              { l: 'Ganancia cobrada', v: money(totGain), tip: 'Ganancia proporcional a lo cobrado — precio menos el costo de los productos y tareas cargados en cada pedido', neg: totGain < 0 },
+              { l: 'Ganancia cobrada', v: money(totGain), tip: 'Ganancia proporcional a lo cobrado — precio menos el costo de los productos y tareas cargados en cada pedido', neg: totGain < 0, accent: totGain > 0 },
               { l: 'Ticket promedio', v: money(avgTicket) },
               { l: 'Tasa de conversión', v: convRate },
               { l: 'N° de presupuestos', v: periodBudgets.length },
@@ -2173,15 +2173,15 @@ export default function Historial() {
                   {m.delta != null && !hidden && (
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
-                      color: m.delta >= 0 ? '#16A34A' : '#DC2626',
-                      background: m.delta >= 0 ? 'rgba(22,163,74,.1)' : 'rgba(220,38,38,.1)',
+                      color: m.delta >= 0 ? 'var(--green)' : '#DC2626',
+                      background: m.delta >= 0 ? 'var(--green-lt)' : 'rgba(220,38,38,.1)',
                       display: 'inline-flex', alignItems: 'center', gap: 3,
                     }} title="vs. período anterior">
                       <i className={`fa fa-arrow-${m.delta >= 0 ? 'up' : 'down'}`} style={{ fontSize: 8 }} />
                       {Math.abs(m.delta)}%
                     </span>
                   )}
-                  <span className="mr-val" style={m.neg ? { color: '#DC2626' } : undefined}>{m.v}</span>
+                  <span className="mr-val" style={m.neg ? { color: '#DC2626' } : m.accent ? { color: 'var(--green)' } : undefined}>{m.v}</span>
                 </span>
               </div>
             ))}
