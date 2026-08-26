@@ -1158,18 +1158,15 @@ export default function Historial() {
 
   // Ruta según el origen del pedido: los creados con /pedido tienen el
   // campo `estado` (nuevo modelo); los viejos solo tienen `status`.
-  const pedidoRoute = (b) => b?.estado ? `/pedido/${b.id}` : `/presupuesto/${b.id}`
-  const editB = (id) => {
-    const b = budgets.find(x => x.id === id)
-    nav(pedidoRoute(b))
-  }
+  // Post-corte Fase 3: todo se edita en /pedido (el redirect cubre pedidos
+  // viejos que hayan quedado con links a /presupuesto).
+  const pedidoRoute = (b) => `/pedido/${b.id}`
+  const editB = (id) => nav(`/pedido/${id}`)
 
-  // ── Duplicar pedido — abre /presupuesto o /pedido según el source ──
-  // Presupuesto viejo detecta `presupDuplicate` en localStorage al montar.
-  // Para /pedido nuevo todavía no está implementado — cae al viejo por ahora.
+  // ── Duplicar pedido → nuevo pedido con los datos precargados ──
   const duplicateBudget = (b) => {
     dbW('presupDuplicate', { source: b, at: Date.now() })
-    nav('/presupuesto')
+    nav('/pedido')
   }
   const copyWA = (b) => {
     const text = buildReengageMsg(b)
@@ -1511,11 +1508,7 @@ export default function Historial() {
             </div>
           )}
           <button className="btn btn-ghost ph-export-btn" onClick={exportCSV} style={{minHeight:44}}><i className="fa fa-download" /><span>Exportar</span></button>
-          <button className="btn btn-ghost" onClick={() => nav('/pedido')} title="Probar la nueva vista de carga (en construcción)"
-            style={{ minHeight:44, borderColor: '#c4b5fd', color: '#6d28d9', background: '#f5f3ff' }}>
-            <i className="fa fa-flask" /><span>Probar carga nueva</span>
-          </button>
-          <button className="btn btn-primary ph-fab" onClick={() => nav('/presupuesto')} style={{ minHeight:44, background: '#16A34A', borderColor: '#16A34A' }}><i className="fa fa-plus" /><span>Nuevo presupuesto</span></button>
+          <button className="btn btn-primary ph-fab" onClick={() => nav('/pedido')} style={{ minHeight:44 }}><i className="fa fa-plus" /><span>Nuevo pedido</span></button>
         </div>
       </div>
 
@@ -1801,8 +1794,8 @@ export default function Historial() {
                       <div style={{ textAlign: 'center', padding: '18px 0' }}>
                         <i className="fa fa-circle-check" style={{ fontSize: 24, display: 'block', color: 'var(--green)', marginBottom: 8 }} />
                         <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--txt3)' }}>Sin pendientes activos</div>
-                        <button className="btn btn-primary btn-sm" style={{ marginTop: 14, fontSize: 12 }} onClick={() => nav('/presupuesto')}>
-                          <i className="fa fa-plus" /> Nuevo presupuesto
+                        <button className="btn btn-primary btn-sm" style={{ marginTop: 14, fontSize: 12 }} onClick={() => nav('/pedido')}>
+                          <i className="fa fa-plus" /> Nuevo pedido
                         </button>
                       </div>
                     ))}

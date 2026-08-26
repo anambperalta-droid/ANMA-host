@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense } from 'react'
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { applyThemeColors } from '../../lib/theme'
@@ -20,9 +20,18 @@ import RouteFallback from './RouteFallback'
 
 // Code splitting + prefetch caching centralizados en lib/routes.js
 import {
-  Historial, Presupuesto, PedidoNuevo, Clientes, Catalogo, Proveedores, Logistica,
+  Historial, PedidoNuevo, Clientes, Catalogo, Proveedores, Logistica,
   Mensajes, Insumos, Config, Admin, Importador, MiCuenta, NotFound, Guia,
 } from '../../lib/routes'
+
+// Corte de Fase 3: /presupuesto redirige a /pedido. El wizard viejo
+// (Presupuesto.jsx) sigue en el repo pero ya no se rutea — el adaptador de
+// lib/pedido reconstruye cualquier pedido legacy en la vista nueva. Para
+// revertir: restaurar estas dos rutas al componente <Presupuesto />.
+function PresupuestoRedirect() {
+  const { id } = useParams()
+  return <Navigate to={id ? `/pedido/${id}` : '/pedido'} replace />
+}
 
 const PRIORITIES = [
   { key: 'today',    label: 'Urgente hoy',  color: '#DC2626', bg: '#FEF2F2' },
@@ -331,8 +340,8 @@ function AppShellInner() {
             <div key={loc.pathname.split('/')[1] || 'root'} className="route-enter">
             <Routes>
               <Route path="/" element={<Guard perm="dashboard.view"><Historial /></Guard>} />
-              <Route path="/presupuesto" element={<Guard perm="pedido.create"><Presupuesto /></Guard>} />
-              <Route path="/presupuesto/:id" element={<Guard perm="pedido.edit"><Presupuesto /></Guard>} />
+              <Route path="/presupuesto" element={<PresupuestoRedirect />} />
+              <Route path="/presupuesto/:id" element={<PresupuestoRedirect />} />
               <Route path="/pedido" element={<Guard perm="pedido.create"><PedidoNuevo /></Guard>} />
               <Route path="/pedido/:id" element={<Guard perm="pedido.edit"><PedidoNuevo /></Guard>} />
               <Route path="/clientes" element={<Guard perm="cliente.view"><Clientes /></Guard>} />
