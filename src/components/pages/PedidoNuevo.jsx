@@ -557,7 +557,6 @@ export default function PedidoNuevo() {
             grid-template-columns: 1fr 1fr 1fr !important;
             grid-template-areas:
               'desc desc remove'
-              'tag  tag  tag'
               'cant costo precio' !important;
             padding: 14px !important;
             gap: 12px 8px !important;
@@ -679,9 +678,11 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
         <div style={{ ...(isCostos ? gridCostos : gridProd), marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
              className="pedido-linea-header">
           <span>Descripción</span>
-          <span style={{ textAlign: 'center' }}>Tipo</span>
           {isCostos ? (
-            <span style={{ textAlign: 'right' }}>Monto</span>
+            <>
+              <span style={{ textAlign: 'center' }}>Tipo</span>
+              <span style={{ textAlign: 'right' }}>Monto</span>
+            </>
           ) : (
             <>
               <span style={{ textAlign: 'right' }}>Cant</span>
@@ -727,20 +728,21 @@ function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemo
           onCreatePreset={onCreatePreset ? (name) => onCreatePreset(name, linea.tag, linea.costoUnit) : null}
           onDropdownOpen={onDropdownOpen} flat />
       </div>
-      <div className="l-tag">
-        <span className="l-mob-label">Tipo</span>
-        <TagChip value={linea.tag || 'producto'} tags={tags}
-          onChange={v => onChange({ tag: v })} mini />
-      </div>
-
       {isCostos ? (
-        /* Costos operativos: un solo campo Monto (costo fijo, no se multiplica) */
+        /* Costos operativos: Tipo + Monto (costo fijo, no se multiplica) */
+        <>
+        <div className="l-tag">
+          <span className="l-mob-label">Tipo</span>
+          <TagChip value={linea.tag || 'otro'} tags={tags}
+            onChange={v => onChange({ tag: v })} mini />
+        </div>
         <div className="l-costo">
           <span className="l-mob-label">Monto</span>
           <input className="pedido-cell-input" type="number" min={0} value={linea.costoUnit}
             onChange={e => onChange({ costoUnit: e.target.value === '' ? 0 : Number(e.target.value) })}
             placeholder="0" style={{ textAlign: 'right' }} />
         </div>
+        </>
       ) : (
         <>
           <div className="l-cant">
@@ -1275,10 +1277,10 @@ const dropdownItem = {
   background: 'var(--surface)',
 }
 
-// Productos: Descripción · Tipo · Cant · Costo/u · Precio/u · (x)
+// Productos: Descripción · Cant · Costo/u · Precio/u · (x)  — sin "Tipo" (packaging = producto del catálogo)
 const gridProd = {
   display: 'grid',
-  gridTemplateColumns: 'minmax(0, 2fr) 104px 58px 90px 90px 24px',
+  gridTemplateColumns: 'minmax(0, 2.4fr) 64px 100px 100px 24px',
   gap: 8,
 }
 // Costos operativos: Descripción · Tipo · Monto · (x) — sin cant/precio/compra
