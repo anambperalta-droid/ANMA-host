@@ -936,9 +936,7 @@ export default function Catalogo() {
               </>
             )}
           </div>
-          <button className="cat-gestionar" onClick={() => setCatMgmtModal(true)} title="Gestionar categorías">
-            <i className="fa fa-sliders" /> Gestionar
-          </button>
+          {/* Gestión de categorías movida a Configuración → Categorías de productos */}
           {/* Agrupar toggle */}
           <button
             onClick={() => setGroupByType(v => !v)}
