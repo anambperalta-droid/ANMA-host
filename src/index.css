@@ -1674,10 +1674,11 @@ td b{color:var(--txt);font-weight:600}
 .mob-act-btn-add:hover{background:var(--brand-dark,var(--brand));opacity:.9;color:#fff;border-color:transparent}
 .mob-act-btn-add:active{transform:scale(0.88);opacity:.8}
 .mob-act-sep{width:1px;height:28px;background:var(--border);flex-shrink:0;margin:0 2px}
-/* ─ Pill row (mobile): buscador y filtros comparten fila y envuelven ─ */
-.cat-pill-row{flex-direction:row!important;align-items:center!important;flex-wrap:wrap;gap:6px!important}
-.cat-pill-row .search-row{flex:2 1 190px;min-width:0;max-width:none!important;width:auto!important}
-.cat-pill-row .cat-scroll-row{flex:1 1 200px}
+/* ─ Pill row (mobile): buscador y filtro comparten la MISMA fila (no full-width) ─ */
+.cat-pill-row{flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important;gap:6px!important}
+.cat-pill-row .search-row{flex:1.3 1 0;min-width:0;max-width:none!important;width:auto!important}
+.cat-pill-row .search-row input{min-width:0}
+.cat-pill-row .cat-scroll-row{flex:1 1 0;min-width:0}
 /* ─ Category scroll row ─ */
 /* overflow:visible para que Gestionar y Agrupar no se corten en pantallas chicas */
 .cat-scroll-row{display:flex;align-items:center;gap:6px;min-width:0;position:relative;flex-wrap:wrap}

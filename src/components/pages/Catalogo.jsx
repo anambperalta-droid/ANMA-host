@@ -865,8 +865,8 @@ export default function Catalogo() {
             <button className="cli-pill icon-compact" title="Importar" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}>
               <i className="fa fa-file-import" /><span>Importar</span>
             </button>
-            {/* ── View mode toggle ── */}
-            <div style={{ display: 'inline-flex', border: '1.5px solid var(--border)', borderRadius: 9999, overflow: 'hidden', background: 'var(--surface)' }}>
+            {/* ── View mode toggle (solo desktop: mobile siempre muestra cards) ── */}
+            <div className="cat-view-toggle" style={{ display: 'inline-flex', border: '1.5px solid var(--border)', borderRadius: 9999, overflow: 'hidden', background: 'var(--surface)' }}>
               <button title="Vista cuadrícula" onClick={() => switchView('grid')}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, border: 'none', cursor: 'pointer', fontSize: 13, transition: 'all .15s', background: viewMode === 'grid' ? 'var(--brand)' : 'transparent', color: viewMode === 'grid' ? '#fff' : 'var(--txt3)' }}>
                 <i className="fa fa-border-all" />
@@ -904,7 +904,16 @@ export default function Catalogo() {
         .cli-pill-new:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 10px 26px var(--brand-dim)}
         .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
-        @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}.cat-ph{display:none!important}.modal-3col{grid-template-columns:1fr!important}}
+        @media(max-width:640px){
+          /* Barra de acciones compacta en mobile: íconos, sin texto, sin toggle de vista */
+          .cat-ph{display:block!important;margin-bottom:8px!important}
+          .cat-ph .ph-right{flex-wrap:wrap;justify-content:flex-start;gap:6px}
+          .cat-view-toggle{display:none!important}
+          .cat-ph .cli-pill,.cat-ph .cli-pill-new{width:40px;height:40px;padding:0!important;justify-content:center}
+          .cat-ph .cli-pill span,.cat-ph .cli-pill-new span{display:none}
+          .cat-ph .cli-pill i,.cat-ph .cli-pill-new i{font-size:14px}
+          .modal-3col{grid-template-columns:1fr!important}
+        }
         @media(max-width:480px){.cat-price-calc{grid-template-columns:1fr!important}.cat-price-arrow{display:none!important}}
         .comp-row{display:grid;grid-template-columns:1fr 56px 80px 30px;gap:6px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:5px}
         .comp-row input{padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--txt);background:var(--surface);outline:none;width:100%;box-sizing:border-box}
