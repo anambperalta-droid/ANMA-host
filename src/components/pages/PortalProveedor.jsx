@@ -209,6 +209,22 @@ export default function PortalProveedor() {
           </div>
         </div>
 
+        {/* ── RESUMEN DEL PEDIDO (scope de un vistazo) ── */}
+        {products.length > 0 && (
+          <div className="pc" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 12 }}>
+            {[
+              { label: 'Ítems', value: String(products.length) },
+              { label: 'Unidades', value: String(totalUnits) },
+              { label: 'Valor estimado', value: fmt(totalValue) },
+            ].map((t, i) => (
+              <div key={i} style={{ background: '#fff', border: `1px solid ${brandLine}`, borderRadius: 12, padding: '13px 10px', textAlign: 'center', minWidth: 0 }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', fontFamily: "'Space Grotesk','Inter',sans-serif", letterSpacing: '-.4px', fontVariantNumeric: 'tabular-nums', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.value}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.5px', marginTop: 5 }}>{t.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── URGENTE re-orden ── */}
         {reorder.length > 0 && (
           <div className="pc" style={S.urgentCard}>
@@ -292,7 +308,7 @@ export default function PortalProveedor() {
                         <td style={{ ...S.td, textAlign: 'right', color: '#374151', fontVariantNumeric: 'tabular-nums', fontSize: 13 }}>
                           {fmt(p.cost)}
                         </td>
-                        <td style={{ ...S.td, textAlign: 'right', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums', fontSize: 13.5 }}>
+                        <td style={{ ...S.td, textAlign: 'right', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums', fontSize: 13.5, fontFamily: "'Space Grotesk','Inter',sans-serif" }}>
                           {fmt(p.cost * qty)}
                         </td>
                       </tr>
@@ -304,7 +320,7 @@ export default function PortalProveedor() {
                     <td colSpan={2} style={{ padding: '10px 14px', fontSize: 11.5, color: brandDark, fontWeight: 600 }}>
                       {products.length} producto{products.length !== 1 ? 's' : ''} · {totalUnits} u. · ARS
                     </td>
-                    <td colSpan={2} style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, fontSize: 16, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
+                    <td colSpan={2} style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, fontSize: 16, color: '#111827', fontVariantNumeric: 'tabular-nums', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>
                       {fmt(totalValue)}
                     </td>
                   </tr>
