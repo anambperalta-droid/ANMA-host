@@ -1745,10 +1745,10 @@ td b{color:var(--txt);font-weight:600}
 .ins-mob-card.low{border-color:#FECACA;border-left:4px solid #DC2626}
 .ins-mob-card-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;align-self:flex-start;margin-top:3px}
 .ins-mob-card-body{flex:1;min-width:0}
-.ins-mob-card-name{font-size:13px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ins-mob-card-name{font-size:13px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Space Grotesk','Inter',sans-serif}
 .ins-mob-card-meta{font-size:11px;color:var(--txt3);margin-top:3px}
 .ins-mob-card-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.ins-mob-card-price{font-size:13px;font-weight:800;color:var(--money);white-space:nowrap;text-align:right}
+.ins-mob-card-price{font-size:13px;font-weight:700;color:var(--money);white-space:nowrap;text-align:right;font-family:'Space Grotesk','Inter',sans-serif;font-variant-numeric:tabular-nums}
 .ins-mob-card-unit{font-size:9px;color:var(--txt4);text-align:right}
 .ins-mob-card-acts{display:flex;gap:5px}
 .ins-mob-card-btn{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface2);color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:opacity .1s,transform .1s}
@@ -1886,10 +1886,10 @@ td b{color:var(--txt);font-weight:600}
   .ins-mob-card.v2.warn{border-color:#FDE68A}
   .ins-mob-card-head{display:flex;align-items:flex-start;gap:12px}
   .ins-mob-card-name-wrap{flex:1;min-width:0}
-  .ins-mob-card-name{font-size:14.5px;font-weight:800;color:var(--txt);letter-spacing:-.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ins-mob-card-name{font-size:14.5px;font-weight:700;color:var(--txt);letter-spacing:-.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Space Grotesk','Inter',sans-serif}
   .ins-mob-card-cat{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
   .ins-mob-card-sub{font-size:10.5px;color:var(--txt3);font-weight:600}
-  .ins-mob-card-stock{flex-shrink:0;text-align:right}
+  .ins-mob-card-stock{flex-shrink:0;text-align:right;font-family:'Space Grotesk','Inter',sans-serif;font-variant-numeric:tabular-nums}
   .ins-mob-card-stock .stk-num{font-size:26px;font-weight:900;line-height:1;letter-spacing:-.03em}
   .ins-mob-card-stock .stk-unit{font-size:10px;color:var(--txt4);font-weight:600;margin-top:2px}
   .ins-mob-card-bar{position:relative;height:5px;background:var(--surface3,#E2E8F0);border-radius:6px;overflow:visible}
@@ -1898,7 +1898,7 @@ td b{color:var(--txt);font-weight:600}
   .ins-mob-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .ins-mob-card-foot-info{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--txt3);flex-wrap:wrap}
   .ins-mob-card-min{font-weight:600;color:var(--txt3)}
-  .ins-mob-card-price{font-size:12px;font-weight:700;color:var(--money)}
+  .ins-mob-card-price{font-size:12px;font-weight:700;color:var(--money);font-family:'Space Grotesk','Inter',sans-serif;font-variant-numeric:tabular-nums}
   .ins-mob-card-unit{font-size:10px;color:var(--txt4);font-weight:500;margin-left:1px}
   .ins-mob-card-acts{display:flex;gap:4px}
   .ins-mob-card-btn{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--txt2);display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:transform .1s,opacity .1s;-webkit-tap-highlight-color:transparent;position:relative}
