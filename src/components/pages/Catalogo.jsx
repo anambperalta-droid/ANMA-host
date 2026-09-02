@@ -890,8 +890,8 @@ export default function Catalogo() {
         .cli-pill:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
         .cli-pill:active{transform:scale(.95)}
         .cli-pill i{font-size:12px}
-        .cli-pill-new{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 20px;border-radius:9999px;border:none;background:var(--color-principal);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .18s;box-shadow:0 4px 14px var(--brand-dim)}
-        .cli-pill-new:hover{filter:brightness(1.08);transform:translateY(-1px)}
+        .cli-pill-new{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 20px;border-radius:9999px;border:none;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light,#8B5CF6) 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-.1px;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .18s;box-shadow:0 6px 18px var(--brand-dim)}
+        .cli-pill-new:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 10px 26px var(--brand-dim)}
         .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
         @media(max-width:640px){.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}.cat-ph{display:none!important}.modal-3col{grid-template-columns:1fr!important}}
@@ -997,9 +997,9 @@ export default function Catalogo() {
                 </div>
                 <span className="cat-mob-item-price">{fmt(p.cost)}</span>
               </div>
-              <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5,alignItems:'center',flexShrink:0 }}>
-                <button onClick={() => open(p)} title="Editar" style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
-                <button onClick={() => del(p.id)} title="Eliminar" style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-trash" /></button>
+              <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:1,alignItems:'center',flexShrink:0 }}>
+                <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
+                <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'#F87171',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-trash" /></button>
               </div>
             </div>
           )
