@@ -603,8 +603,8 @@ export default function Proveedores() {
         .cli-pill:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
         .cli-pill:active{transform:scale(.95)}
         .cli-pill i{font-size:12px}
-        .cli-pill-new{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 20px;border-radius:9999px;border:none;background:var(--color-principal);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .18s;box-shadow:0 4px 14px var(--brand-dim)}
-        .cli-pill-new:hover{filter:brightness(1.08);transform:translateY(-1px)}
+        .cli-pill-new{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 20px;border-radius:9999px;border:none;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light,#8B5CF6) 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-.1px;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .18s;box-shadow:0 6px 18px var(--brand-dim)}
+        .cli-pill-new:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 10px 26px var(--brand-dim)}
         .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
         /* ── TARJETAS MÓVILES PROVEEDORES ── */
@@ -615,7 +615,7 @@ export default function Proveedores() {
         .prov-mob-id{flex:1;min-width:0;display:flex;align-items:center;gap:7px}
         .prov-mob-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
         .prov-mob-id-text{min-width:0;flex:1}
-        .prov-mob-name{font-weight:700;font-size:13px;color:var(--txt);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .prov-mob-name{font-weight:700;font-size:13.5px;color:var(--txt);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-.2px}
         .prov-mob-contact{font-size:11px;color:#6B7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .prov-mob-mid{flex-shrink:0;width:76px;display:flex;flex-direction:column;align-items:center;gap:4px}
         .prov-mob-cicons{display:flex;gap:5px}
@@ -720,7 +720,7 @@ export default function Proveedores() {
                     <input type="checkbox" className="zt-chk" checked={selectedIds.has(s.id)} onChange={() => toggleSelect(s.id)} />
                   </td>
                   <td>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--txt)', lineHeight: 1.3 }}>{s.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', lineHeight: 1.3, fontFamily: "'Space Grotesk','Inter',sans-serif", letterSpacing: '-.2px' }}>{s.name}</div>
                     {s.contact && <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>{s.contact}</div>}
                   </td>
                   <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
