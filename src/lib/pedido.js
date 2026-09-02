@@ -389,8 +389,16 @@ export function pedidoFromBudget(budget) {
 
     // Al reabrir un pedido no sabemos qué precios fueron tipeados a mano vs
     // autocompletados: tratamos todo precio > 0 como manual para NO pisarlo si
-    // luego se cambia el margen. Los que quedaron en 0 con costo se autocompletan.
-    lineas: lineas.map(l => ({ ...l, precioManual: num(l.precioUnit) > 0 })),
+    // luego se cambia el margen. En pedidos simples (no kit), las líneas de
+    // producto con costo pero sin precio se autocompletan con el margen objetivo
+    // — así al reabrir ya se ven los precios sugeridos (NO se toca el total guardado).
+    lineas: lineas.map(l => {
+      const precioManual = num(l.precioUnit) > 0
+      const precioUnit = (!esKit && l.tag === 'producto' && num(l.costoUnit) > 0 && num(l.precioUnit) <= 0)
+        ? precioConMargen(num(l.costoUnit), num(budget.margenObjetivo) || 50)
+        : l.precioUnit
+      return { ...l, precioUnit, precioManual }
+    }),
 
     margenObjetivo: num(budget.margenObjetivo) || 50,
 
