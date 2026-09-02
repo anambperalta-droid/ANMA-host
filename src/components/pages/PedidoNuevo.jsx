@@ -509,7 +509,7 @@ export default function PedidoNuevo() {
           background: var(--grad); color: #fff;
           display: flex; align-items: center; justify-content: center; font-size: 13px;
         }
-        .pedido-pane-title { font-size: 14px; font-weight: 800; color: var(--txt); letter-spacing: -.01em; }
+        .pedido-pane-title { font-size: 14.5px; font-weight: 700; color: var(--txt); letter-spacing: -.2px; font-family: 'Space Grotesk','Inter',sans-serif; }
         @media (max-width: 720px) {
           .pedido-pane { padding: 13px 13px; border-radius: 12px; }
           .pedido-pane-head { margin-bottom: 10px; }
