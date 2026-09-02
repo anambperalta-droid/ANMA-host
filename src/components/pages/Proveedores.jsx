@@ -619,7 +619,7 @@ export default function Proveedores() {
         .prov-mob-contact{font-size:11px;color:#6B7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .prov-mob-mid{flex-shrink:0;width:76px;display:flex;flex-direction:column;align-items:center;gap:4px}
         .prov-mob-cicons{display:flex;gap:5px}
-        .prov-mob-ci{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-size:14px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+        .prov-mob-ci{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;font-size:15px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
         .prov-mob-ci:active{opacity:.7}
         .prov-mob-ci-wa{background:#DCFCE7;color:#16A34A}
         .prov-mob-ci-mail{background:#EFF6FF;color:#2563EB}
@@ -629,7 +629,7 @@ export default function Proveedores() {
         .prov-mob-act{width:34px;height:34px;border-radius:9px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-family:inherit;background:var(--surface2);color:var(--txt2);-webkit-tap-highlight-color:transparent;transition:transform .1s,background .12s}
         .prov-mob-act:active{transform:scale(0.88)}
         .prov-mob-act-del{background:#FEF2F2!important;color:#DC2626!important}
-        @media(max-width:640px){.prov-desk-only{display:none!important}.prov-mob-list{display:flex}.prov-ph-title{display:none!important}.cli-pill{padding:7px 9px}.cli-pill-new{padding:7px 12px}}
+        @media(max-width:640px){.prov-desk-only{display:none!important}.prov-mob-list{display:flex}.prov-ph-title{display:none!important}.cli-pill{width:40px;height:40px;padding:0;justify-content:center}.cli-pill span{display:none}.cli-pill i{font-size:15px}.cli-pill-new{height:40px;padding:0 16px}.cli-pill-group{gap:8px}}
         @media(min-width:641px){.prov-mob-list{display:none!important}}
       `}</style>
       {/* LISTA MÓVIL */}
@@ -679,9 +679,9 @@ export default function Proveedores() {
                 </div>
                 <div className="prov-mob-prods">{np} prod{np !== 1 ? 's.' : '.'}</div>
               </div>
-              <div className="prov-mob-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5,alignItems:'center',flexShrink:0 }}>
-                <button title="Editar" onClick={() => openEdit(s)} style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
-                <button title="Eliminar" onClick={() => del(s.id)} style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-trash" /></button>
+              <div className="prov-mob-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:1,alignItems:'center',flexShrink:0 }}>
+                <button title="Editar" onClick={() => openEdit(s)} style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
+                <button title="Eliminar" onClick={() => del(s.id)} style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'#F87171',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-trash" /></button>
               </div>
             </div>
           )
