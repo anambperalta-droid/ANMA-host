@@ -1384,8 +1384,8 @@ td b{color:var(--txt);font-weight:600}
   .insight-card{border-radius:12px!important;padding:12px!important}
   .analysis-grid{gap:8px!important}
 
-  /* Lista tab filters compact */
-  .search-row{max-width:100%!important;flex:1 1 100%!important}
+  /* Lista tab filters compact — search flexible pero deja lugar al toggle al lado */
+  .search-row{flex:1 1 auto!important;min-width:0!important}
   .hist-tbl{border-radius:12px!important}
 
   /* Bento seg (status donut panel) */
