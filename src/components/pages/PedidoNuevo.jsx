@@ -1013,7 +1013,7 @@ function TagChip({ value, onChange, className, mini, tags }) {
   return (
     <select className={`pedido-cell-input tag-select ${className || ''}`} value={value} onChange={e => onChange(e.target.value)}
       title="Tipo de línea"
-      style={{ fontWeight: 700, color: st.fg, cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}>
+      style={{ fontWeight: 600, color: 'var(--txt)', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}>
       {options.map(k => <option key={k} value={k} style={{ color: 'var(--txt)' }}>{TAG_LABELS[k]}</option>)}
     </select>
   )
