@@ -512,23 +512,23 @@ export default function Logistica() {
           {viajes.length > 0 && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 14 }} className="viaje-stats-grid">
               {[
-                { key: 'Insumos',        icon: '📦', color: '#D97706', bg: '#FFFBEB' },
-                { key: 'Mercadería',     icon: '🛒', color: '#2563EB', bg: '#EFF6FF' },
-                { key: 'Entrega Pedido', icon: '🚚', color: '#7C3AED', bg: '#F5F3FF' },
+                { key: 'Insumos',        icon: 'fa-box',          color: '#D97706', bg: '#FFFBEB' },
+                { key: 'Mercadería',     icon: 'fa-cart-shopping', color: '#2563EB', bg: '#EFF6FF' },
+                { key: 'Entrega Pedido', icon: 'fa-truck-fast',   color: '#7C3AED', bg: '#F5F3FF' },
               ].map(c => {
                 const st = categoryStats[c.key] || { count: 0, total: 0 }
                 return (
                   <div key={c.key} style={{ background: c.bg, borderRadius: 14, padding: '10px 12px', border: `1px solid ${c.color}22` }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: c.color, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.icon} {c.key}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', lineHeight: 1 }}>{st.count}<span style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', marginLeft: 3 }}>veces</span></div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: c.color, marginTop: 2 }}>{fmt(st.total)}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: c.color, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><i className={`fa ${c.icon}`} style={{ marginRight: 5 }} />{c.key}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--txt)', lineHeight: 1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{st.count}<span style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', marginLeft: 3, fontFamily: "'Inter',sans-serif" }}>veces</span></div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: c.color, marginTop: 2, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{fmt(st.total)}</div>
                   </div>
                 )
               })}
               {/* Gasto total */}
               <div style={{ background: 'var(--panel-grad, #1E1B4B)', borderRadius: 14, padding: '10px 12px', color: '#fff' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.6)', marginBottom: 3, whiteSpace: 'nowrap' }}>💰 Gasto total</div>
-                <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1 }}>{fmt(gastoLogisticoTotal)}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.6)', marginBottom: 3, whiteSpace: 'nowrap' }}><i className="fa fa-wallet" style={{ marginRight: 5 }} />Gasto total</div>
+                <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{fmt(gastoLogisticoTotal)}</div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', marginTop: 4 }}>{viajes.length} viaje{viajes.length !== 1 ? 's' : ''}</div>
               </div>
             </div>
@@ -537,7 +537,7 @@ export default function Logistica() {
           {/* ── Empty state ── */}
           {viajes.length === 0 && (
             <div style={{ textAlign: 'center', padding: '56px 20px', borderRadius: 20, border: '1.5px dashed var(--border)', background: 'var(--surface2)' }}>
-              <div style={{ fontSize: 44, marginBottom: 12 }}>🚗</div>
+              <div style={{ fontSize: 40, marginBottom: 12, color: 'var(--brand)' }}><i className="fa fa-route" /></div>
               <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', marginBottom: 6 }}>Sin viajes registrados</div>
               <div style={{ fontSize: 13, color: 'var(--txt3)', marginBottom: 20, lineHeight: 1.6, maxWidth: 300, margin: '0 auto 20px' }}>
                 Registrá el viaje del día para organizar el recorrido del comisionista
@@ -659,9 +659,9 @@ export default function Logistica() {
                             value={task.category}
                             onChange={e => patchTask(viaje.id, task.id, { category: e.target.value })}
                             style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: task.category === 'Insumos' ? '#D97706' : task.category === 'Mercadería' ? '#2563EB' : '#7C3AED', cursor: 'pointer', fontFamily: 'inherit', minWidth: 120 }}>
-                            <option value="Insumos">📦 Insumos</option>
-                            <option value="Mercadería">🛒 Mercadería</option>
-                            <option value="Entrega Pedido">🚚 Entrega Pedido</option>
+                            <option value="Insumos">Insumos</option>
+                            <option value="Mercadería">Mercadería</option>
+                            <option value="Entrega Pedido">Entrega Pedido</option>
                           </select>
                           {/* Campo de detalle */}
                           <input
@@ -715,7 +715,7 @@ export default function Logistica() {
                     {tasks.length > 0 && (() => {
                       const cats = ['Insumos', 'Mercadería', 'Entrega Pedido']
                       const catColors = { 'Insumos': '#D97706', 'Mercadería': '#2563EB', 'Entrega Pedido': '#7C3AED' }
-                      const catIcons = { 'Insumos': '📦', 'Mercadería': '🛒', 'Entrega Pedido': '🚚' }
+                      const catIcons = { 'Insumos': 'fa-box', 'Mercadería': 'fa-cart-shopping', 'Entrega Pedido': 'fa-truck-fast' }
                       const byCat = cats.map(c => {
                         const items = tasks.filter(t => t.category === c)
                         return { cat: c, count: items.length, total: items.reduce((s, t) => s + (Number(t.cost) || 0), 0) }
@@ -731,7 +731,7 @@ export default function Logistica() {
                             {byCat.map(c => (
                               <div key={c.cat} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
                                 <span style={{ color: 'var(--txt2)', fontWeight: 600 }}>
-                                  {catIcons[c.cat]} {c.cat}
+                                  <i className={`fa ${catIcons[c.cat]}`} style={{ color: catColors[c.cat], marginRight: 5, fontSize: 11 }} />{c.cat}
                                   <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: catColors[c.cat], background: 'var(--surface)', padding: '1px 7px', borderRadius: 10 }}>×{c.count}</span>
                                 </span>
                                 <span style={{ fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{fmt(c.total)}</span>
@@ -741,7 +741,7 @@ export default function Logistica() {
                           {/* Total del viaje */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1.5px dashed var(--border2)' }}>
                             <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)' }}>Costo total del viaje</span>
-                            <span style={{ fontSize: 18, fontWeight: 800, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>{fmt(viajeTotal(viaje))}</span>
+                            <span style={{ fontSize: 18, fontWeight: 700, color: '#059669', fontVariantNumeric: 'tabular-nums', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>{fmt(viajeTotal(viaje))}</span>
                           </div>
                           {/* Costo logístico de 1 pedido */}
                           {assocBudget && (
