@@ -799,15 +799,6 @@ export default function Catalogo() {
             ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
           </td>
         )}
-        <td className="col-hide-mobile">
-          {p.stock != null
-            ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
-                <i className="fa fa-cubes-stacked" style={{ fontSize: 9 }} />
-                {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
-              </span>
-            : <span style={{ color: 'var(--txt4)', fontSize: 12 }}>—</span>
-          }
-        </td>
         {/* Columna Precio sugerido removida — se calcula al armar el presupuesto */}
         <td><div className="acts" style={{ display:'flex',gap:5 }}>
           <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
@@ -849,13 +840,13 @@ export default function Catalogo() {
       <div className="ph cat-ph" style={{ marginBottom: 6 }}>
         <div className="ph-right" style={{ gap: 6 }}>
           <div className="cli-pill-group">
-            <button className="cli-pill" onClick={() => setPriceUpdateModal(true)}>
+            <button className="cli-pill icon-compact" title="Actualizar precios" onClick={() => setPriceUpdateModal(true)}>
               <i className="fa fa-percent" /><span>Precios</span>
             </button>
-            <button className="cli-pill" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}>
+            <button className="cli-pill icon-compact" title="Exportar CSV" onClick={() => { setCsvCat(cats[0] || ''); setCsvModal(true) }}>
               <i className="fa fa-file-csv" /><span>Exportar</span>
             </button>
-            <button className="cli-pill" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}>
+            <button className="cli-pill icon-compact" title="Importar" onClick={() => { setBulkCat(cats[0] || ''); setBulkModal(true) }}>
               <i className="fa fa-file-import" /><span>Importar</span>
             </button>
             {/* ── View mode toggle ── */}
@@ -890,6 +881,9 @@ export default function Catalogo() {
         .cli-pill:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
         .cli-pill:active{transform:scale(.95)}
         .cli-pill i{font-size:12px}
+        .cli-pill.icon-compact{width:44px;padding:0;justify-content:center}
+        .cli-pill.icon-compact span{display:none}
+        .cli-pill.icon-compact i{font-size:14px}
         .cli-pill-new{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 20px;border-radius:9999px;border:none;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light,#8B5CF6) 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-.1px;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .18s;box-shadow:0 6px 18px var(--brand-dim)}
         .cli-pill-new:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 10px 26px var(--brand-dim)}
         .cli-pill-new:active{transform:scale(.95)}
@@ -1039,18 +1033,17 @@ export default function Catalogo() {
                 </th>}
                 {/* % Margen y Precio sugerido removidos — el margen se aplica al armar el presupuesto */}
                 {showCostInfo && <th className="col-hide-mobile">Últ. actualización</th>}
-                <th className="col-hide-mobile">Stock</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? [1,2,3,4].map(i => (
-                <tr key={i}><td colSpan={showCostInfo ? 8 : 7}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
+                <tr key={i}><td colSpan={showCostInfo ? 7 : 6}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
               )) : filtered.length ? (groupByType
                 ? [
                     ...(prodsFiltered.length > 0 ? [
                       <tr key="__hd_prod" style={{ background: 'var(--surface)' }}>
-                        <td colSpan={showCostInfo ? 8 : 7} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                        <td colSpan={showCostInfo ? 7 : 6} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
                           <div className="grp-section-hd" style={{ marginTop: 0 }} onClick={() => toggleGrp('prods')}>
                             <i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />
                             Productos
@@ -1063,7 +1056,7 @@ export default function Catalogo() {
                     ] : []),
                     ...(kitsFiltered.length > 0 ? [
                       <tr key="__hd_kit" style={{ background: 'var(--surface)' }}>
-                        <td colSpan={showCostInfo ? 8 : 7} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                        <td colSpan={showCostInfo ? 7 : 6} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
                           <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
                             <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />
                             Kits & Boxes
@@ -1075,7 +1068,7 @@ export default function Catalogo() {
                       ...(collapsedGrps.kits ? [] : kitsFiltered.map(p => renderTableRow(p)))
                     ] : []),
                   ]
-                : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={showCostInfo ? 8 : 7}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+                : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={showCostInfo ? 7 : 6}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
             </tbody>
           </table>
         </div>
