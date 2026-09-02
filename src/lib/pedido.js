@@ -387,7 +387,12 @@ export function pedidoFromBudget(budget) {
     esKit,
     cantKits,
 
-    lineas,
+    // Al reabrir un pedido no sabemos qué precios fueron tipeados a mano vs
+    // autocompletados: tratamos todo precio > 0 como manual para NO pisarlo si
+    // luego se cambia el margen. Los que quedaron en 0 con costo se autocompletan.
+    lineas: lineas.map(l => ({ ...l, precioManual: num(l.precioUnit) > 0 })),
+
+    margenObjetivo: num(budget.margenObjetivo) || 50,
 
     precioFinalManual: num(budget.total) > 0 ? num(budget.total) : null,
     aplicaIva:    !!budget.aplicaIva,
@@ -513,6 +518,7 @@ export function budgetFromPedido(pedido, prevBudget = {}) {
     depositAmt: num(pedido.seniaMonto),
     deposit:    totales.total > 0 ? Math.round((num(pedido.seniaMonto) / totales.total) * 100) : 0,
     margin:     totales.margen,
+    margenObjetivo: num(pedido.margenObjetivo) || 0,   // target elegido (para round-trip)
     discount:   0,
     logoCost:   0,
     aplicaIva:  !!pedido.aplicaIva,
@@ -617,6 +623,21 @@ export function totalDesdeMargen(pedido, margenObjetivo) {
   return costoTotal > 0 ? Math.round(costoTotal / (1 - m)) : 0
 }
 
+/**
+ * Precio de venta sugerido para UNA línea, dado su costo unitario y el
+ * margen objetivo (%). Mismo criterio que el margen del pedido: margen
+ * sobre el precio final, no markup sobre costo.
+ *   costo 100, margen 50%  → 200   (ganancia = 100 = 50% de 200)
+ *   costo 100, margen 40%  → 167
+ * Sirve para autocompletar Precio/u en cuanto se conoce el costo.
+ */
+export function precioConMargen(costo, margenPct) {
+  const c = num(costo)
+  if (c <= 0) return 0
+  const m = Math.min(99, Math.max(0, num(margenPct))) / 100
+  return m >= 1 ? c * 100 : Math.round(c / (1 - m))
+}
+
 // ── Helpers de línea ───────────────────────────────────────────────
 
 /**
@@ -666,6 +687,7 @@ export function nuevaLinea(overrides = {}) {
     cantidad: 1,
     costoUnit: 0,
     precioUnit: 0,
+    precioManual: false,   // true = precio tipeado a mano (no se re-deriva del margen)
     esCostoUnico: false,
     estadoCompra: 'pendiente',
     ...overrides,
@@ -686,6 +708,7 @@ export function pedidoVacio(overrides = {}) {
     esKit: false,
     cantKits: 0,
     lineas: [nuevaLinea()],
+    margenObjetivo: 50,        // % de margen deseado — autocompleta Precio/u
     precioFinalManual: null,
     aplicaIva: false,
     fechaEntrega: '',

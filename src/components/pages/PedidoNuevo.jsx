@@ -16,7 +16,7 @@ import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
 import {
   pedidoFromBudget, budgetFromPedido, calcularTotales,
-  totalDesdeMargen, pedidoVacio, nuevaLinea, snapshotAlt, aplicarAlt,
+  precioConMargen, pedidoVacio, nuevaLinea, snapshotAlt, aplicarAlt,
   getEstado, registrarEvento,
   ESTADOS, ESTADO_LABELS, estadoOptions, ESTADOS_COMPRA, TAGS, TAG_LABELS,
 } from '../../lib/pedido'
@@ -229,10 +229,46 @@ export default function PedidoNuevo() {
     const nv = v === '' || v == null ? null : Number(v)
     update({ precioFinalManual: nv })
   }
+  // Cambiar el margen objetivo re-deriva el Precio/u de cada línea de producto
+  // que no fue tipeada a mano, y suelta el total manual para que el Total siga
+  // la suma de las líneas.
   const setMargen = (v) => {
-    const t = totalDesdeMargen(pedido, v)
-    update({ precioFinalManual: t })
+    const m = Math.min(99, Math.max(0, Number(v) || 0))
+    updateFn(p => ({
+      ...p,
+      margenObjetivo: m,
+      precioFinalManual: null,
+      lineas: p.lineas.map(l =>
+        (TAGS_PRODUCTOS.includes(l.tag || 'producto') && !l.precioManual)
+          ? { ...l, precioUnit: precioConMargen(l.costoUnit, m) }
+          : l
+      ),
+    }))
   }
+
+  // Handler de líneas de PRODUCTO/PACKAGING: además de aplicar el patch,
+  // autocompleta el Precio/u desde el Costo/u + margen objetivo.
+  //  · Al elegir del catálogo con precio propio → se respeta ese precio (manual).
+  //  · Al elegir sin precio o tipear el costo → se sugiere costo/(1-margen).
+  //  · Al tipear un precio > 0 → queda fijo (manual). Vaciarlo lo vuelve a auto.
+  const setProductoLinea = (id, patch) => updateFn(p => ({
+    ...p,
+    lineas: p.lineas.map(l => {
+      if (l.id !== id) return l
+      const next = { ...l, ...patch }
+      const esProducto = TAGS_PRODUCTOS.includes(next.tag || 'producto')
+      // Pick del catálogo: trae un productoId real (no null) + precioUnit.
+      const esPick = patch.productoId != null && ('precioUnit' in patch)
+      // Edición manual del Precio/u: patch trae SOLO precioUnit.
+      const soloPrecio = ('precioUnit' in patch) && !('descripcion' in patch) && !('productoId' in patch)
+      if (esPick || soloPrecio) next.precioManual = Number(patch.precioUnit) > 0
+      // Auto-sugerir Precio/u para productos sin precio fijo tipeado.
+      if (esProducto && !next.precioManual) {
+        next.precioUnit = precioConMargen(next.costoUnit, p.margenObjetivo)
+      }
+      return next
+    }),
+  }))
 
   // ── Client picker inline ──
   const [showClientList, setShowClientList] = useState(false)
@@ -387,7 +423,7 @@ export default function PedidoNuevo() {
           lineas={pedido.lineas.filter(l => TAGS_PRODUCTOS.includes(l.tag || 'producto'))}
           products={products}
           onAdd={() => addLinea('producto')}
-          onChange={setLineaById}
+          onChange={setProductoLinea}
           onRemove={removeLineaById}
           onPickProduct={(name) => toast(`${name} cargado del catálogo`, 'ok')}
           totalLineas={pedido.lineas.length}
@@ -783,8 +819,9 @@ function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemo
 
 function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChange, onSeniaChange }) {
   const gananciaOk = totales.ganancia >= 0
+  const margenTarget = Number(pedido.margenObjetivo) || 0
   const margenReal = totales.total > 0 ? Math.round((totales.ganancia / totales.total) * 100) : 0
-  const margenBajo = totales.total > 0 && margenReal < (Number(totales.margen) || 0)
+  const margenBajo = totales.total > 0 && margenReal < margenTarget
   const saldo = Math.max(0, totales.total - (pedido.seniaMonto || 0))
   const sg = { fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }
   const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', fontSize: 12.5 }
@@ -812,10 +849,13 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
       <div style={rowStyle}>
         <span style={lbl}><i className="fa fa-bullseye" style={{ marginRight: 6, opacity: .7 }} />Margen objetivo</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <input type="number" min={0} max={99} value={totales.margen} onChange={e => onMargenChange(e.target.value)}
+          <input type="number" min={0} max={99} value={margenTarget} onChange={e => onMargenChange(e.target.value)}
             style={{ width: 54, textAlign: 'right', padding: '4px 8px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.08)', color: '#fff', ...sg }} />
           <span style={{ color: 'rgba(255,255,255,.6)' }}>%</span>
         </span>
+      </div>
+      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.5)', marginTop: -2, marginBottom: 2, lineHeight: 1.4 }}>
+        El Precio/u de cada producto se calcula solo con el costo y este margen. Podés pisarlo a mano en la línea.
       </div>
 
       {/* Margen real */}
