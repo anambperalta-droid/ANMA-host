@@ -2076,17 +2076,32 @@ export default function Historial() {
                         })()}
                       </td>
                       <td data-cell="acc">
-                        <div className="acts" style={{ gap: 2 }}>
-                          <button className="hist-act" onClick={() => setDrawerBudget(b)} title="Ver detalle"
-                            onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--txt3)'}><i className="fa fa-eye" /></button>
-                          <button className="hist-act" onClick={() => editB(b.id)} title="Editar"
-                            onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-pen" /></button>
-                          <button className="hist-act" onClick={() => duplicateBudget(b)} title="Duplicar como nuevo pedido"
-                            onMouseEnter={e => e.currentTarget.style.color = '#7C3AED'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-copy" /></button>
+                        <div className="acts" style={{ gap: 6, position: 'relative' }}>
                           <button className="hist-act" onClick={() => copyWA(b)} title="WhatsApp"
-                            onMouseEnter={e => e.currentTarget.style.color = '#25D366'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa-brands fa-whatsapp" /></button>
-                          <button className="hist-act" onClick={() => handleDelete(b)} title="Eliminar"
-                            onMouseEnter={e => e.currentTarget.style.color = '#DC2626'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa fa-trash" /></button>
+                            onMouseEnter={e => e.currentTarget.style.color = '#25D366'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa-brands fa-whatsapp" style={{ fontSize: 14 }} /></button>
+                          <button className="hist-act" onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === b.id ? null : b.id) }} title="Más acciones"><i className="fa fa-ellipsis-vertical" style={{ fontSize: 14 }} /></button>
+                          {openMenuId === b.id && (
+                            <div
+                              style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, zIndex: 200, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 12, padding: 6, minWidth: 184, boxShadow: '0 12px 30px rgba(0,0,0,.16)' }}
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {[
+                                { icon: 'fa-eye', label: 'Ver detalle', action: () => { setDrawerBudget(b); setOpenMenuId(null) } },
+                                { icon: 'fa-pen', label: 'Editar', action: () => { editB(b.id); setOpenMenuId(null) } },
+                                { icon: 'fa-copy', label: 'Duplicar', action: () => { duplicateBudget(b); setOpenMenuId(null) } },
+                                { icon: 'fa-trash', label: 'Eliminar', danger: true, action: () => { handleDelete(b); setOpenMenuId(null) } },
+                              ].map((item, idx) => (
+                                <button key={idx} onClick={item.action}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 11px', border: 'none', background: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12.5, fontFamily: 'inherit', color: item.danger ? 'var(--red)' : 'var(--txt)', textAlign: 'left' }}
+                                  onMouseEnter={e => e.currentTarget.style.background = item.danger ? 'rgba(239,68,68,.09)' : 'var(--surface2)'}
+                                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                >
+                                  <i className={`fa ${item.icon}`} style={{ width: 15, textAlign: 'center', color: item.danger ? 'var(--red)' : 'var(--brand)' }} />
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
