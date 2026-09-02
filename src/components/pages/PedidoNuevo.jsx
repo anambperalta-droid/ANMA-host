@@ -783,100 +783,80 @@ function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemo
 
 function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChange, onSeniaChange }) {
   const gananciaOk = totales.ganancia >= 0
+  const margenReal = totales.total > 0 ? Math.round((totales.ganancia / totales.total) * 100) : 0
+  const margenBajo = totales.total > 0 && margenReal < (Number(totales.margen) || 0)
+  const saldo = Math.max(0, totales.total - (pedido.seniaMonto || 0))
+  const sg = { fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }
+  const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', fontSize: 12.5 }
+  const lbl = { color: 'rgba(255,255,255,.72)' }
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
-
-      {/* ── TOTAL destacado — protagonista arriba ── */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '14px 18px',
-        background: totales.total > 0 ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : 'var(--surface2)',
-        border: `1.5px solid ${totales.total > 0 ? '#86efac' : 'var(--border)'}`,
-        borderRadius: 12,
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '.08em', color: totales.total > 0 ? '#065f46' : 'var(--txt3)' }}>TOTAL</span>
-        <input type="number" min={0}
-          value={totales.total || ''}
-          onChange={e => onTotalChange(e.target.value)}
-          style={{
-            ...inputStyle, textAlign: 'right', fontWeight: 800, fontSize: 18,
-            maxWidth: 190, padding: '9px 14px',
-            borderColor: totales.total > 0 ? '#86efac' : 'var(--brand)',
-            color: totales.total > 0 ? '#065f46' : 'var(--txt)',
-            background: 'var(--surface)',
-          }} />
+    <div style={{ background: 'var(--panel-grad, linear-gradient(160deg,#1E1B4B 0%,#312E81 55%,#4C1D95 100%))', borderRadius: 16, padding: '18px 20px', color: '#fff', boxShadow: '0 12px 36px rgba(30,27,75,.28)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+        <i className="fa fa-receipt" style={{ color: '#c4b5fd' }} />
+        <span style={{ fontWeight: 700, fontSize: 15, fontFamily: "'Space Grotesk','Inter',sans-serif" }}>Resumen</span>
       </div>
 
-      {/* ── 3 columnas: Cálculo | Margen | Cobro ── */}
-      <div className="pedido-precio-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+      {/* Costo real (interno, pre-margen) — destacado */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 11px', borderRadius: 10, background: 'rgba(251,191,36,.14)', border: '1px solid rgba(251,191,36,.3)', marginBottom: 10 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#FCD34D' }}><i className="fa fa-lock" style={{ marginRight: 6, fontSize: 10 }} />Costo real <span style={{ fontWeight: 500, opacity: .85 }}>(interno · pre-margen)</span></span>
+        <b style={{ ...sg, fontSize: 14, color: '#FCD34D' }}>{fmt(totales.costoTotal)}</b>
+      </div>
 
-        <div style={precioGroup}>
-          <div style={precioGroupLabel}>Cálculo</div>
-          <Row label="Subtotal" value={fmt(totales.subtotal)} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: 'var(--txt3)' }}>
-              <input type="checkbox" checked={pedido.aplicaIva} onChange={onIvaChange} />
-              IVA 21%
-            </label>
-            <span style={{ fontWeight: 600, color: pedido.aplicaIva ? 'var(--txt)' : 'var(--txt3)' }}>{fmt(totales.iva)}</span>
-          </div>
+      {/* Ganancia */}
+      <div style={rowStyle}>
+        <span style={lbl}>Ganancia</span>
+        <b style={{ ...sg, color: gananciaOk ? '#6ee7b7' : '#fca5a5' }}>{fmt(totales.ganancia)}</b>
+      </div>
+
+      {/* Margen objetivo (editable) */}
+      <div style={rowStyle}>
+        <span style={lbl}><i className="fa fa-bullseye" style={{ marginRight: 6, opacity: .7 }} />Margen objetivo</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input type="number" min={0} max={99} value={totales.margen} onChange={e => onMargenChange(e.target.value)}
+            style={{ width: 54, textAlign: 'right', padding: '4px 8px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.08)', color: '#fff', ...sg }} />
+          <span style={{ color: 'rgba(255,255,255,.6)' }}>%</span>
+        </span>
+      </div>
+
+      {/* Margen real */}
+      <div style={rowStyle}>
+        <span style={lbl}>Margen real</span>
+        <b style={{ ...sg, color: margenBajo ? '#fca5a5' : '#6ee7b7' }}>{margenReal}%{margenBajo && <i className="fa fa-triangle-exclamation" style={{ marginLeft: 5, fontSize: 10 }} />}</b>
+      </div>
+
+      {/* IVA */}
+      <label style={{ ...rowStyle, cursor: 'pointer' }}>
+        <span style={lbl}><input type="checkbox" checked={pedido.aplicaIva} onChange={onIvaChange} style={{ marginRight: 7, verticalAlign: 'middle' }} />IVA 21%</span>
+        <span style={{ ...sg, color: pedido.aplicaIva ? '#fff' : 'rgba(255,255,255,.5)' }}>{fmt(totales.iva)}</span>
+      </label>
+
+      {/* Total + saldo */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: 10, paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', fontWeight: 700, letterSpacing: '.06em' }}>TOTAL</div>
+          {pedido.seniaMonto > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 2 }}>Seña {fmt(pedido.seniaMonto)} · Saldo {fmt(saldo)}</div>}
         </div>
+        <input type="number" min={0} value={totales.total || ''} onChange={e => onTotalChange(e.target.value)}
+          style={{ width: 150, textAlign: 'right', padding: '8px 12px', fontSize: 22, fontWeight: 700, borderRadius: 10, border: '1px solid rgba(196,181,253,.45)', background: 'rgba(255,255,255,.1)', color: '#fff', ...sg }} />
+      </div>
 
-        <div style={precioGroup}>
-          <div style={precioGroupLabel}>Margen</div>
-          <Row label="Costo" value={fmt(totales.costoTotal)} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-            <span style={{ color: 'var(--txt3)' }}>Ganancia</span>
-            <b style={{ color: gananciaOk ? 'var(--green)' : '#dc2626' }}>{fmt(totales.ganancia)}</b>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
-            <span style={{ color: 'var(--txt3)' }}>Margen</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <input type="number" min={0} max={99} value={totales.margen}
-                onChange={e => onMargenChange(e.target.value)}
-                style={{ ...inputStyle, width: 60, textAlign: 'right', padding: '4px 8px', fontSize: 12, fontWeight: 700 }} />
-              <span style={{ color: 'var(--txt3)', fontSize: 11 }}>%</span>
-            </div>
-          </div>
+      {/* Anticipo / Seña */}
+      <div style={{ marginTop: 14 }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', marginBottom: 6, fontWeight: 700, letterSpacing: '.04em' }}>ANTICIPO / SEÑA</div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input type="number" min={0} value={pedido.seniaMonto || ''} onChange={e => onSeniaChange(e.target.value)} placeholder="$0"
+            style={{ flex: 1, minWidth: 0, padding: '8px 10px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.08)', color: '#fff', ...sg }} />
+          {totales.total > 0 && [30, 50, 100].map(pct => {
+            const monto = Math.round(totales.total * pct / 100)
+            const active = pedido.seniaMonto === monto
+            return (
+              <button key={pct} type="button" onClick={() => onSeniaChange(monto)}
+                style={{ padding: '8px 11px', fontSize: 11, fontWeight: 700, borderRadius: 8, border: `1px solid ${active ? '#c4b5fd' : 'rgba(255,255,255,.2)'}`, background: active ? 'rgba(196,181,253,.28)' : 'rgba(255,255,255,.06)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                {pct}%
+              </button>
+            )
+          })}
         </div>
-
-        <div style={precioGroup}>
-          <div style={precioGroupLabel}>Anticipo / Seña</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
-            <span style={{ color: 'var(--txt3)' }}>Seña</span>
-            <input type="number" min={0}
-              value={pedido.seniaMonto || ''}
-              onChange={e => onSeniaChange(e.target.value)}
-              placeholder="$0" style={{ ...inputStyle, width: 100, textAlign: 'right', padding: '4px 8px', fontSize: 12, fontWeight: 700 }} />
-          </div>
-          {/* Chips de % rápidos — calculan la seña sobre el total */}
-          {totales.total > 0 && (
-            <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
-              {[30, 50, 100].map(pct => {
-                const monto = Math.round(totales.total * pct / 100)
-                const active = pedido.seniaMonto === monto
-                return (
-                  <button key={pct} type="button"
-                    onClick={() => onSeniaChange(monto)}
-                    style={{
-                      flex: 1, padding: '4px 0', fontSize: 10.5, fontWeight: 700,
-                      border: `1px solid ${active ? 'var(--brand)' : 'var(--border)'}`,
-                      background: active ? 'var(--brand-xlt)' : 'var(--surface)',
-                      color: active ? 'var(--brand)' : 'var(--txt3)',
-                      borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit',
-                    }}>
-                    {pct}%
-                  </button>
-                )
-              })}
-            </div>
-          )}
-          {pedido.seniaMonto > 0 && totales.total > 0
-            ? <Row label="Saldo contra entrega" value={fmt(Math.max(0, totales.total - pedido.seniaMonto))} />
-            : <div style={{ fontSize: 10.5, color: 'var(--txt4)', marginTop: 2 }}>Cuánto pedís de anticipo (opcional)</div>
-          }
-        </div>
-
       </div>
     </div>
   )
