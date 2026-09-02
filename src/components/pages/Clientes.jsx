@@ -708,7 +708,7 @@ export default function Clientes() {
         .cli-mob-contact{font-size:11px;color:#6B7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .cli-mob-mid{flex-shrink:0;display:flex;align-items:center;gap:6px}
         .cli-mob-cicons{display:flex;gap:5px}
-        .cli-mob-ci{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-size:14px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+        .cli-mob-ci{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;font-size:15px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
         .cli-mob-ci:active{opacity:.7}
         .cli-mob-ci-wa{background:#DCFCE7;color:#16A34A}
         .cli-mob-ci-mail{background:#EFF6FF;color:#2563EB}
@@ -724,8 +724,11 @@ export default function Clientes() {
           .cli-mob-list{display:flex}
           .cli-ph-title{display:none!important}
           .cli-view-toggle{display:none!important}
-          .cli-pill{padding:7px 9px}
-          .cli-pill-new{padding:7px 12px}
+          .cli-pill{width:40px;height:40px;padding:0;justify-content:center}
+          .cli-pill span{display:none}
+          .cli-pill i{font-size:15px}
+          .cli-pill-new{height:40px;padding:0 16px}
+          .cli-pill-group{gap:8px}
         }
         @media(min-width:641px){
           .cli-mob-list{display:none!important}
@@ -961,23 +964,23 @@ export default function Clientes() {
               </div>
 
               {/* SECTOR DERECHO: action bar */}
-              <div className="cli-mob-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:5,alignItems:'center',flexShrink:0 }}>
+              <div className="cli-mob-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:1,alignItems:'center',flexShrink:0 }}>
                 {c.wa && (
                   <button
                     title={isCold ? 'Recontactar — sin actividad >30d' : 'Re-vincular por WhatsApp'}
-                    style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:isCold?'#FEF9C3':'var(--surface2)',color:isCold?'#EAB308':'var(--txt3)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}
+                    style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:isCold?'#D97706':'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}
                     onClick={e => openRevincul(c, e)}>
                     <i className="fa fa-bolt" />
                   </button>
                 )}
                 <button
                   title="Editar" onClick={() => openEdit(c)}
-                  style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
+                  style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
                   <i className="fa fa-pen" />
                 </button>
                 <button
                   title="Eliminar" onClick={() => del(c.id)}
-                  style={{ width:30,height:30,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
+                  style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'#F87171',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
                   <i className="fa fa-trash" />
                 </button>
               </div>
