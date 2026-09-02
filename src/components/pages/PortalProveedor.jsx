@@ -82,6 +82,11 @@ export default function PortalProveedor() {
     setError('Link inválido o vencido.')
   }, [loc.search])
 
+  // Título de pestaña profesional al compartir el link
+  useEffect(() => {
+    if (data) document.title = `Pedido · ${data.ownerName || 'ANMA'}`
+  }, [data])
+
   const fmt = n => '$ ' + Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
   const products = data?.products || []
@@ -445,8 +450,9 @@ const S = {
     border: '1px solid rgba(255,255,255,.14)',
   },
   heroTitle: {
-    margin: '0 0 10px', fontSize: 26, fontWeight: 800,
+    margin: '0 0 10px', fontSize: 26, fontWeight: 700,
     color: '#fff', letterSpacing: '-.5px', lineHeight: 1.2,
+    fontFamily: "'Space Grotesk','Inter',sans-serif",
   },
   heroSub: {
     margin: '0 0 18px', fontSize: 14, color: 'rgba(255,255,255,.78)',
@@ -501,7 +507,7 @@ const S = {
     marginBottom: 12,
     boxShadow: '0 1px 3px rgba(0,0,0,.03)',
   },
-  cardTitle: { fontSize: 15, fontWeight: 800, color: '#111827', letterSpacing: '-.2px', marginBottom: 3 },
+  cardTitle: { fontSize: 15, fontWeight: 700, color: '#111827', letterSpacing: '-.2px', marginBottom: 3, fontFamily: "'Space Grotesk','Inter',sans-serif" },
   cardSub:   { fontSize: 12, color: '#9CA3AF', marginBottom: 0 },
 
   /* copy btn */
@@ -544,7 +550,7 @@ const S = {
     flexShrink: 0,
   },
   condLabel: { fontSize: 10.5, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 },
-  condValue: { fontSize: 16, fontWeight: 700, color: '#374151', lineHeight: 1.3 },
+  condValue: { fontSize: 16, fontWeight: 700, color: '#374151', lineHeight: 1.3, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' },
 
   /* CTA */
   ctaCard: {
@@ -553,7 +559,7 @@ const S = {
     borderRadius: 14, padding: '24px 22px',
     marginBottom: 12,
   },
-  ctaTitle: { fontSize: 18, fontWeight: 800, color: '#111827', letterSpacing: '-.3px', marginBottom: 8 },
+  ctaTitle: { fontSize: 18, fontWeight: 700, color: '#111827', letterSpacing: '-.3px', marginBottom: 8, fontFamily: "'Space Grotesk','Inter',sans-serif" },
   ctaSub:   { fontSize: 13.5, color: '#6B7280', lineHeight: 1.6, marginBottom: 0 },
   ctaRow:   { display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 },
   btnConfirm: {
