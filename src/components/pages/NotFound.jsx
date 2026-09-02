@@ -15,9 +15,9 @@ export default function NotFound() {
         width: 96, height: 96, borderRadius: '50%',
         background: 'linear-gradient(135deg, var(--brand-xlt), rgba(124,58,237,.18))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 20, fontSize: 40,
+        marginBottom: 20, fontSize: 38,
       }}>
-        🎁
+        <i className="fa fa-compass" style={{ color: 'var(--brand)' }} />
       </div>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--txt)', margin: '0 0 8px', letterSpacing: '-.4px' }}>
         Esta página no existe

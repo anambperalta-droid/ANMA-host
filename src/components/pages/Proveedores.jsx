@@ -1232,7 +1232,7 @@ export default function Proveedores() {
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.label}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{t.action ? '⬇ Descargar plantilla' : t.sub}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{t.action ? 'Descargar plantilla' : t.sub}</div>
                         </div>
                       </div>
                     ))}

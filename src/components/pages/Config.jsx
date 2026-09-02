@@ -1184,7 +1184,7 @@ export default function Config() {
                     <div key={s.n} style={{ display:'flex', gap:12, marginBottom:10, alignItems:'flex-start' }}>
                       <div style={{ width:24, height:24, borderRadius:'50%', background: s.warn ? '#D97706' : '#0F9D58', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, flexShrink:0, marginTop:1 }}>{s.n}</div>
                       <div style={{ fontSize:12, color:'var(--txt2)', lineHeight:1.6 }}>
-                        <b style={{ color: s.warn ? '#92400E' : 'var(--txt)', display:'block', marginBottom:2 }}>{s.warn && '⚠️ '}{s.title}</b>
+                        <b style={{ color: s.warn ? '#92400E' : 'var(--txt)', display:'block', marginBottom:2 }}>{s.warn && <i className="fa fa-triangle-exclamation" style={{ marginRight: 5 }} />}{s.title}</b>
                         {s.desc}
                         {s.warn && <div style={{ marginTop:4, padding:'6px 10px', borderRadius:8, background:'rgba(245,158,11,.1)', border:'1px solid rgba(245,158,11,.3)', fontSize:11, color:'#92400E' }}>
                           Si ves "Google no verificó esta app" → <b>Configuración avanzada → Ir al proyecto → Permitir</b>. Tu script, tu cuenta — es seguro.
@@ -1296,7 +1296,7 @@ export default function Config() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 16, alignItems: 'start' }}>
           {/* Cómo funciona */}
           <div style={{ padding: '14px 18px', borderRadius: 14, background: 'var(--surface2)', border: '1.5px solid var(--border)', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-            <div style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>💡</div>
+            <div style={{ fontSize: 20, flexShrink: 0, marginTop: 2, color: 'var(--brand)' }}><i className="fa fa-lightbulb" /></div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 4 }}>¿Cómo funciona?</div>
               <div style={{ fontSize: 12, color: 'var(--txt3)', lineHeight: 1.7 }}>

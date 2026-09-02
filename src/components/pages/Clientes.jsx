@@ -311,7 +311,7 @@ export default function Clientes() {
       setForm(f => ({ ...f, contact: cn, company: co || cn, wa: cw, email: ce }))
       setModal(true)
       nav('/clientes', { replace: true })
-      toast('📥 Nuevo contacto recibido — revisá los datos y guardá', 'ok')
+      toast('Nuevo contacto recibido — revisá los datos y guardá', 'ok')
     }
   }, []) // eslint-disable-line
 
@@ -1110,10 +1110,10 @@ export default function Clientes() {
                         <div style={{ marginTop: 6, display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
                           {found ? (
                             <>
-                              {r.contact && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#15803D', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>👤 {r.contact}</span>}
-                              {r.company && <span style={{ fontSize: 10, background: 'var(--brand-xlt)', color: 'var(--brand)', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>🏢 {r.company}</span>}
-                              {r.wa && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#059669', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>📱 {r.wa}</span>}
-                              {r.email && <span style={{ fontSize: 10, background: '#DBEAFE', color: '#2563EB', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}>✉️ {r.email}</span>}
+                              {r.contact && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#15803D', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}><i className="fa fa-user" style={{ marginRight: 4 }} />{r.contact}</span>}
+                              {r.company && <span style={{ fontSize: 10, background: 'var(--brand-xlt)', color: 'var(--brand)', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}><i className="fa fa-building" style={{ marginRight: 4 }} />{r.company}</span>}
+                              {r.wa && <span style={{ fontSize: 10, background: '#DCFCE7', color: '#059669', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}><i className="fa-brands fa-whatsapp" style={{ marginRight: 4 }} />{r.wa}</span>}
+                              {r.email && <span style={{ fontSize: 10, background: '#DBEAFE', color: '#2563EB', padding: '2px 9px', borderRadius: 20, fontWeight: 600 }}><i className="fa fa-envelope" style={{ marginRight: 4 }} />{r.email}</span>}
                               <button
                                 className="btn btn-primary btn-xs"
                                 style={{ marginLeft: 'auto' }}
@@ -1423,7 +1423,7 @@ export default function Clientes() {
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.label}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{t.action ? '⬇ Descargar plantilla' : t.sub}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{t.action ? 'Descargar plantilla' : t.sub}</div>
                         </div>
                       </div>
                     ))}
