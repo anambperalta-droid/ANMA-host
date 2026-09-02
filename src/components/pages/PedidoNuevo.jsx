@@ -723,7 +723,7 @@ function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemo
         <span className="l-mob-label">Descripción</span>
         <DescripcionInput value={linea.descripcion} products={products}
           onChange={patch => onChange(patch)} onPick={onPickProduct}
-          isCostos={isCostos}
+          isCostos={isCostos} tag={linea.tag || 'producto'}
           onCreatePreset={onCreatePreset ? (name) => onCreatePreset(name, linea.tag, linea.costoUnit) : null}
           onDropdownOpen={onDropdownOpen} flat />
       </div>
@@ -889,7 +889,7 @@ function Row({ label, value }) {
   )
 }
 
-function DescripcionInput({ value, products, onChange, onPick, onCreatePreset, isCostos, onDropdownOpen, className, flat }) {
+function DescripcionInput({ value, products, onChange, onPick, onCreatePreset, isCostos, onDropdownOpen, className, flat, tag }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -899,7 +899,11 @@ function DescripcionInput({ value, products, onChange, onPick, onCreatePreset, i
   }, [])
 
   const q = (value || '').toLowerCase().trim()
-  const matches = q
+  // Solo sugerir del catálogo cuando la línea es "Producto" (o en Costos operativos).
+  // Para Packaging / mano de obra / otros, la descripción es texto libre — no productos.
+  const allowCatalog = isCostos || !tag || tag === 'producto'
+  const matches = !allowCatalog ? []
+    : q
     ? products.filter(p => (p.name || '').toLowerCase().includes(q)).slice(0, 8)
     : (isCostos ? products.slice(0, 8) : [])   // costos: mostrar tareas al enfocar
   // Ofrecer "guardar" cuando hay texto que no coincide exactamente con una tarea
@@ -1003,20 +1007,14 @@ function EstadoSelect({ value, onChange }) {
 
 function TagChip({ value, onChange, className, mini, tags }) {
   const st = TAG_COLOR[value] || TAG_COLOR.otro
-  const pad = mini ? '3px 8px' : '6px 10px'
-  const fs  = mini ? 10 : 11
   const options = tags || TAGS
+  // Alineado al resto del form: usa el mismo campo rectangular (pedido-cell-input),
+  // con el color del tipo como acento sutil en el texto + un puntito a la izquierda.
   return (
-    <select className={className} value={value} onChange={e => onChange(e.target.value)}
+    <select className={`pedido-cell-input tag-select ${className || ''}`} value={value} onChange={e => onChange(e.target.value)}
       title="Tipo de línea"
-      style={{
-        padding: pad, fontSize: fs, fontWeight: 700,
-        border: `1px solid ${st.bd}`, borderRadius: 999,
-        background: st.bg, color: st.fg,
-        fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
-        appearance: 'none', WebkitAppearance: 'none', textAlign: 'center',
-      }}>
-      {options.map(k => <option key={k} value={k}>{TAG_LABELS[k]}</option>)}
+      style={{ fontWeight: 700, color: st.fg, cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}>
+      {options.map(k => <option key={k} value={k} style={{ color: 'var(--txt)' }}>{TAG_LABELS[k]}</option>)}
     </select>
   )
 }
