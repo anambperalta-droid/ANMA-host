@@ -958,7 +958,8 @@ export default function Catalogo() {
           <div key={i} className="cat-mob-item">
             <div className="cat-mob-item-l" style={{ flex: 1 }}><div className="sk-line" style={{ height: 16, width: '55%' }} /></div>
           </div>
-        )) : filtered.length ? filtered.map(p => {
+        )) : filtered.length ? (() => {
+          const mobItem = (p) => {
           const cc = catColor(p.cat)
           const isKit = p.tipo === 'kit'
           return (
@@ -1001,7 +1002,29 @@ export default function Catalogo() {
               </div>
             </div>
           )
-        }) : (
+          }
+          if (!groupByType) return filtered.map(mobItem)
+          return (
+            <>
+              {prodsFiltered.length > 0 && (
+                <div className="grp-section-hd" style={{ marginTop: 0 }} onClick={() => toggleGrp('prods')}>
+                  <i className="fa fa-box-open" style={{ color: 'var(--brand)' }} /> Productos
+                  <span className="grp-badge">{prodsFiltered.length}</span>
+                  <i className={`fa fa-chevron-${collapsedGrps.prods ? 'down' : 'up'} grp-chevron`} />
+                </div>
+              )}
+              {!collapsedGrps.prods && prodsFiltered.map(mobItem)}
+              {kitsFiltered.length > 0 && (
+                <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
+                  <i className="fa fa-gift" style={{ color: '#8B5CF6' }} /> Kits
+                  <span className="grp-badge">{kitsFiltered.length}</span>
+                  <i className={`fa fa-chevron-${collapsedGrps.kits ? 'down' : 'up'} grp-chevron`} />
+                </div>
+              )}
+              {!collapsedGrps.kits && kitsFiltered.map(mobItem)}
+            </>
+          )
+        })() : (
           <div className="empty-native">
             <div className="ico"><i className="fa fa-box-open" /></div>
             <h4>Sin productos</h4>
