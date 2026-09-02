@@ -1357,7 +1357,7 @@ export default function Catalogo() {
                 <div style={{ background: 'rgba(255,255,255,.85)', borderRadius: 10, border: '1px solid #DDD6FE', marginBottom: 10, overflow: 'hidden' }}>
                   {/* Headers de columnas */}
                   <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, padding: '8px 10px 6px', fontSize: 9, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.5, background: 'rgba(139,92,246,.05)', borderBottom: '1px solid #EDE9FE' }}>
-                    <span title="Tipo: 🎁 contenido / 📦 packaging">Tipo</span>
+                    <span title="Tipo: contenido / packaging">Tipo</span>
                     <span>Item</span>
                     <span style={{ textAlign: 'center' }}>Cant.</span>
                     <span style={{ textAlign: 'right' }}>Costo u.</span>
@@ -2320,7 +2320,7 @@ export default function Catalogo() {
                 border: `1px solid ${Number(pricePct) > 0 ? '#FCD34D' : '#93C5FD'}`,
                 borderRadius: 10, padding: '12px 16px', marginBottom: 8, fontSize: 13,
               }}>
-                <b>{Number(pricePct) > 0 ? '📈' : '📉'} Se actualizarán {priceUpdatePreview.length} producto{priceUpdatePreview.length !== 1 ? 's' : ''}</b>
+                <b><i className={`fa ${Number(pricePct) > 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}`} style={{ marginRight: 6 }} />Se actualizarán {priceUpdatePreview.length} producto{priceUpdatePreview.length !== 1 ? 's' : ''}</b>
                 <div style={{ marginTop: 4, color: 'var(--txt2)' }}>
                   Los costos se ajustarán un <b>{Number(pricePct) > 0 ? '+' : ''}{pricePct}%</b>. El precio sugerido se recalculará automáticamente.
                 </div>
