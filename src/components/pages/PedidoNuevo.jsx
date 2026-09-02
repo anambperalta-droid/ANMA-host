@@ -554,32 +554,31 @@ export default function PedidoNuevo() {
         @media (max-width: 720px) {
           .pedido-linea-header { display: none !important; }
           .pedido-linea-row {
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
             grid-template-areas:
-              'desc  desc'
-              'tag   remove'
-              'cant  costo'
-              'precio precio' !important;
+              'desc desc remove'
+              'tag  tag  tag'
+              'cant costo precio' !important;
             padding: 14px !important;
-            gap: 12px 10px !important;
+            gap: 12px 8px !important;
             border: 1px solid var(--border) !important;
-            border-radius: 12px !important;
+            border-radius: 14px !important;
             margin-bottom: 10px !important;
+            box-shadow: 0 1px 2px rgba(15,23,42,.04) !important;
           }
           .pedido-linea-row.is-costos {
             grid-template-areas:
-              'desc  desc'
-              'tag   remove'
-              'costo costo' !important;
+              'desc desc remove'
+              'tag  costo costo' !important;
           }
           .pedido-linea-row:hover { background: var(--surface) !important; }
           .pedido-linea-row > .l-desc   { grid-area: desc; }
-          .pedido-linea-row > .l-tag    { grid-area: tag; justify-content: flex-start; }
+          .pedido-linea-row > .l-tag    { grid-area: tag; justify-content: flex-start !important; align-items: flex-start !important; }
           .pedido-linea-row > .l-cant   { grid-area: cant; }
           .pedido-linea-row > .l-costo  { grid-area: costo; }
           .pedido-linea-row > .l-precio { grid-area: precio; }
           .pedido-linea-row > .l-remove {
-            grid-area: remove; justify-self: end; opacity: 1 !important;
+            grid-area: remove; justify-self: end; align-self: start; opacity: 1 !important;
             width: 30px; height: 30px; border-radius: 8px !important;
             background: var(--surface2) !important; color: var(--red) !important;
           }
