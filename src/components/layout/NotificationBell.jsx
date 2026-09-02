@@ -383,20 +383,12 @@ export default function NotificationBell() {
   return (
     <>
       <button
-        className={`tb-btn notif-bell${hasCritical ? ' pulse-critical' : ''}`}
+        className={`tb-btn notif-bell${hasCritical ? ' is-alert pulse-critical' : ''}`}
         onClick={() => setOpen(o => !o)}
         aria-label="Notificaciones"
         title="Notificaciones"
-        style={{
-          position: 'relative',
-          background: unreadCount > 0 ? (hasCritical ? '#FEE2E2' : '#FEF3C7') : '#FFF7ED',
-          color: hasCritical ? '#DC2626' : '#D97706',
-          borderRadius: 10, width: 36, height: 36, fontSize: 15, border: 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'background .2s', flexShrink: 0,
-        }}
       >
-        <i className="fa fa-bell" />
+        <i className="fa fa-bell" style={!hasCritical && unreadCount > 0 ? { color: '#D97706' } : undefined} />
         {unreadCount > 0 && (
           <span
             className="notif-badge"

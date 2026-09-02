@@ -217,8 +217,11 @@ input,select,textarea{font-family:inherit}
 .tb-search:hover{border-color:var(--acento)}
 .tb-search input{background:transparent;border:none;outline:none;font-size:12px;color:var(--txt);width:100%;font-family:inherit;cursor:pointer}
 .tb-search i{color:var(--txt3);font-size:12px;flex-shrink:0}
-.tb-btn{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);color:var(--txt2);font-size:13px;display:flex;align-items:center;justify-content:center;transition:all var(--tr);cursor:pointer}
+.tb-btn{width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);color:var(--txt2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all var(--tr);cursor:pointer;flex-shrink:0;position:relative}
 .tb-btn:hover{background:var(--acento-xlt);border-color:var(--acento);color:var(--acento)}
+/* Estados (color = significado, no decoración) */
+.tb-btn.is-on{background:var(--acento-xlt);border-color:var(--acento);color:var(--acento)}
+.tb-btn.is-alert{background:#FEE2E2;border-color:#FCA5A5;color:#DC2626}
 .content{padding:14px 16px;flex:1;overflow-y:auto;overflow-x:hidden}
 
 /* ─── COMMON COMPONENTS ─── */

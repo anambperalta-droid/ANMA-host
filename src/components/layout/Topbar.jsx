@@ -73,49 +73,34 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
       <span className="tb-page-title">{title}</span>
       <div style={{ flex: 1 }} />
 
-      {/* Ocultar datos financieros */}
+      {/* Ocultar datos financieros — rojo solo cuando está ocultando (estado activo) */}
       <button
-        className="tb-btn"
+        className={`tb-btn${hidden ? ' is-alert' : ''}`}
         onClick={toggle}
         title={hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
-        style={{
-          background: hidden ? '#FEE2E2' : 'var(--surface2)',
-          color: hidden ? '#DC2626' : 'var(--txt3)',
-          borderRadius: 10, width: 36, height: 36, fontSize: 14, border: 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0, transition: 'background .2s, color .2s',
-        }}
       >
         <i className={`fa ${hidden ? 'fa-eye-slash' : 'fa-eye'}`} />
       </button>
 
       <NotificationBell />
 
-      {/* Tareas / Modo Enfoque — un solo botón */}
+      {/* Tareas / Modo Enfoque — neutro en reposo; tinte solo cuando está activo */}
       <button
-        className="tb-btn"
+        className={`tb-btn${focusMode || panelOpen ? ' is-on' : ''}`}
         onClick={() => {
           if (focusMode) { setFocusMode(false); return }
           setPanelOpen(o => !o)
         }}
         aria-label="Tareas y Modo Enfoque"
         title={focusMode ? 'Salir del Modo Enfoque' : panelOpen ? 'Cerrar tareas' : 'Ver tareas'}
-        style={{
-          position: 'relative',
-          background: focusMode ? '#312e81' : panelOpen ? '#7C3AED' : '#EDE9FE',
-          color: focusMode ? '#A5B4FC' : panelOpen ? '#fff' : '#7C3AED',
-          borderRadius: 10, width: 36, height: 36, fontSize: 15,
-          transition: 'background .2s, color .2s', border: 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
       >
         <i className={`fa ${focusMode ? 'fa-xmark' : 'fa-brain'}`} />
         {!focusMode && activeTasks.length > 0 && (
           <span style={{
-            position: 'absolute', top: 4, right: 4,
+            position: 'absolute', top: -3, right: -3,
             background: activeTasks.some(t => t.priority === 'today') ? '#DC2626' : '#D97706',
-            color: '#fff', fontSize: 8, fontWeight: 800,
-            width: 14, height: 14, borderRadius: '50%',
+            color: '#fff', fontSize: 9, fontWeight: 800,
+            minWidth: 15, height: 15, padding: '0 3px', borderRadius: 999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: '1.5px solid var(--surface)', pointerEvents: 'none',
           }}>
