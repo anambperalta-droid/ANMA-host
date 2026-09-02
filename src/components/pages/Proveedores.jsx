@@ -695,25 +695,23 @@ export default function Proveedores() {
           <table>
             <colgroup>
               <col style={{ width: 36 }} />
-              <col style={{ width: 240 }} />
-              <col style={{ width: 40 }} />
-              <col style={{ width: 40 }} />
-              <col style={{ width: 160 }} />
+              <col />
+              <col style={{ width: 56 }} />
+              <col style={{ width: 56 }} />
+              <col style={{ width: 92 }} />
               <col style={{ width: 120 }} />
-              <col style={{ width: 110 }} />
             </colgroup>
             <thead><tr>
               <th onClick={e => e.stopPropagation()} style={{ cursor:'default' }}><input type="checkbox" className="zt-chk" checked={isAllSelected} onChange={toggleSelectAll} /></th>
               <th style={{ textAlign: 'left' }}>Proveedor / Contacto</th>
               <th style={{ textAlign: 'center' }} title="WhatsApp"><i className="fa-brands fa-whatsapp" style={{ color: '#6B7280', fontSize: 13 }} /></th>
               <th style={{ textAlign: 'center' }} title="Email"><i className="fa fa-envelope" style={{ color: '#6B7280', fontSize: 12 }} /></th>
-              <th style={{ textAlign: 'left' }} className="col-hide-mobile">Rubro</th>
               <th style={{ textAlign: 'left' }}>Prods.</th>
               <th style={{ textAlign: 'right' }}>Acciones</th>
             </tr></thead>
             <tbody>
               {loading ? [1,2,3,4,5].map(i => (
-                <tr key={i}><td colSpan={7}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
+                <tr key={i}><td colSpan={6}><div className="sk sk-text" style={{ height: 16, width: `${55 + Math.random() * 35}%` }} /></td></tr>
               )) : filtered.length ? filtered.map(s => (
                 <tr key={s.id} onClick={() => openDetail(s)} style={{ background: selectedIds.has(s.id) ? 'rgba(124,58,237,.06)' : undefined }}>
                   <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
@@ -739,11 +737,6 @@ export default function Proveedores() {
                       </a>
                     ) : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
                   </td>
-                  <td className="col-hide-mobile" style={{ textAlign: 'left' }}>
-                    {s.rubro
-                      ? <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--txt2)' }}>{s.rubro}</span>
-                      : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
-                  </td>
                   <td style={{ textAlign: 'left' }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)', fontVariantNumeric: 'tabular-nums' }}>{supplierProducts(s).length}</span>
                   </td>
@@ -758,7 +751,7 @@ export default function Proveedores() {
                     </div>
                   </td>
                 </tr>
-              )) : <tr><td colSpan={7}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
+              )) : <tr><td colSpan={6}><div className="empty"><div className="ico"><i className="fa fa-industry" /></div><h4>Sin proveedores</h4><p>Agregá tu primer proveedor</p></div></td></tr>}
             </tbody>
           </table>
         </div>
