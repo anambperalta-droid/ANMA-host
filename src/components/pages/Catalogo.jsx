@@ -721,7 +721,9 @@ export default function Catalogo() {
             </div>
           )}
           {/* Precio sugerido y % margen removidos — se calculan al armar el presupuesto */}
-          {!opHideCosts && <div className="prod-card-cost" style={{ fontWeight: 800, fontSize: 14, color: 'var(--money)' }}>{fmt(p.cost)}</div>}
+          {!opHideCosts && (Number(p.cost) > 0
+            ? <div className="prod-card-cost" style={{ fontWeight: 800, fontSize: 14, color: 'var(--money)' }}>{fmt(p.cost)}</div>
+            : <div className="prod-card-cost" title="Sin costo cargado" style={{ fontWeight: 700, fontSize: 11, color: '#B45309' }}><i className="fa fa-triangle-exclamation" style={{ fontSize: 9, marginRight: 4 }} />Sin costo</div>)}
           {p.stock != null && (
             <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
               <i className="fa fa-cubes-stacked" style={{ fontSize: 8 }} />
@@ -784,7 +786,9 @@ export default function Catalogo() {
         </td>
         <td className="col-hide-mobile">{supplierName(p.supplierId)}</td>
         {!opHideCosts && <td>
-          <span>{fmt(p.cost)}</span>
+          {Number(p.cost) > 0
+            ? <span style={{ fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{fmt(p.cost)}</span>
+            : <span title="Sin costo cargado — no vas a poder fijar bien el precio" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: '#B45309', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 20, padding: '2px 9px', whiteSpace: 'nowrap' }}><i className="fa fa-triangle-exclamation" style={{ fontSize: 9 }} />Sin costo</span>}
           {isKit && p.componentes?.length > 0 && (
             <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 4 }}>({p.componentes.length} comp.)</span>
           )}
@@ -987,7 +991,9 @@ export default function Catalogo() {
                     )}
                   </div>
                 </div>
-                <span className="cat-mob-item-price">{fmt(p.cost)}</span>
+                {Number(p.cost) > 0
+                  ? <span className="cat-mob-item-price">{fmt(p.cost)}</span>
+                  : <span className="cat-mob-item-price" title="Sin costo cargado" style={{ fontSize: 10.5, fontWeight: 700, color: '#B45309', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 20, padding: '2px 9px' }}><i className="fa fa-triangle-exclamation" style={{ fontSize: 9, marginRight: 3 }} />Sin costo</span>}
               </div>
               <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:1,alignItems:'center',flexShrink:0 }}>
                 <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
