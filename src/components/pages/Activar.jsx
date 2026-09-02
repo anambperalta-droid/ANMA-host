@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
 import { supabase } from '../../lib/supabase'
+import { ANMA_BANK, anmaBankReady, anmaBankText } from '../../lib/anmaBank'
 
 /**
  * /activar — Página de activación de plan ANMA Regalos.
@@ -29,6 +30,52 @@ export default function Activar() {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
   const [workspaceId, setWorkspaceId] = useState(null)
+  const [showTransfer, setShowTransfer] = useState(false)
+  const [copied, setCopied] = useState('')
+  const [transferSending, setTransferSending] = useState(false)
+  const [transferSent, setTransferSent] = useState(false)
+  const [transferErr, setTransferErr] = useState('')
+
+  const bankReady = anmaBankReady()
+
+  const copyToClipboard = (value, key) => {
+    try {
+      navigator.clipboard?.writeText(value)
+      setCopied(key)
+      setTimeout(() => setCopied(''), 1600)
+    } catch { /* clipboard no disponible: el cliente copia a mano */ }
+  }
+
+  const notifyTransfer = async () => {
+    const msg =
+      `¡Hola! Ya hice la transferencia para activar mi plan de ANMA Regalos.%0A` +
+      `Cuenta/Workspace: ${user?.email || workspaceId || ''}%0A` +
+      `Adjunto el comprobante.`
+    const openWA = () => window.open(`https://api.whatsapp.com/send?phone=${ANMA_BANK.whatsapp}&text=${msg}`, '_blank', 'noopener')
+
+    setTransferSending(true); setTransferErr('')
+    try {
+      // Registro instantáneo del aviso en la app (queda como pendiente para Ana)
+      const { data: { session } } = await supabase.auth.getSession()
+      const tk = session?.access_token
+      if (tk && workspaceId) {
+        const resp = await fetch('/api/transfer-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` },
+          body: JSON.stringify({ workspaceId, kind: 'onboarding' }),
+        })
+        const data = await resp.json().catch(() => ({}))
+        if (!data.ok) throw new Error(data.message || 'No se pudo registrar el aviso')
+      }
+      setTransferSent(true)
+    } catch {
+      // No bloqueamos al cliente: igual lo mandamos a WhatsApp con el comprobante
+      setTransferErr('Te llevamos a WhatsApp para enviar el comprobante. Lo registramos apenas lo recibamos.')
+    } finally {
+      setTransferSending(false)
+      openWA()
+    }
+  }
 
   // Si no está logueado, redirigir a registro
   useEffect(() => {
@@ -254,6 +301,125 @@ export default function Activar() {
             </>
           )}
         </button>
+
+        {/* ─── Opción B: pagar por transferencia (sin comisión) ─── */}
+        {bankReady && (
+          <div style={{ marginTop: 14 }}>
+            {!showTransfer ? (
+              <button
+                onClick={() => setShowTransfer(true)}
+                style={{
+                  width: '100%', padding: '13px 20px',
+                  background: '#fff', color: 'var(--txt)',
+                  border: '1.5px solid var(--border)', borderRadius: 14,
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <i className="fa fa-building-columns" style={{ color: '#059669' }} />
+                O pagá por transferencia bancaria
+              </button>
+            ) : (
+              <div style={{
+                background: '#fff', border: '1.5px solid var(--border)',
+                borderRadius: 16, padding: '20px 22px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <i className="fa fa-building-columns" style={{ color: '#059669' }} />
+                    Pago por transferencia
+                  </h3>
+                  <button onClick={() => setShowTransfer(false)} style={{ background: 'none', border: 'none', color: 'var(--txt3)', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+                    <i className="fa fa-xmark" />
+                  </button>
+                </div>
+
+                {[
+                  { label: 'Titular', value: ANMA_BANK.holder, key: 'holder' },
+                  { label: 'Banco', value: ANMA_BANK.bankName, key: 'bank' },
+                  { label: 'Tipo', value: ANMA_BANK.accountType, key: 'type' },
+                  { label: 'CBU', value: ANMA_BANK.cbu, key: 'cbu' },
+                  { label: 'Alias', value: ANMA_BANK.alias, key: 'alias' },
+                  { label: 'CUIT/CUIL', value: ANMA_BANK.cuit, key: 'cuit' },
+                ]
+                  .filter(r => r.value && !String(r.value).startsWith('COMPLETAR'))
+                  .map((r, i, arr) => (
+                    <div key={r.key} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                      padding: '9px 0',
+                      borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
+                    }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{r.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt)', wordBreak: 'break-all' }}>{r.value}</div>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(r.value, r.key)}
+                        style={{
+                          flexShrink: 0, padding: '7px 12px', borderRadius: 9,
+                          background: copied === r.key ? '#ECFDF5' : 'var(--surface2, #F3F4F6)',
+                          border: '1px solid var(--border)',
+                          color: copied === r.key ? '#059669' : 'var(--txt2)',
+                          fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                          display: 'flex', alignItems: 'center', gap: 6,
+                        }}
+                      >
+                        <i className={`fa ${copied === r.key ? 'fa-check' : 'fa-copy'}`} />
+                        {copied === r.key ? 'Copiado' : 'Copiar'}
+                      </button>
+                    </div>
+                  ))}
+
+                <div style={{
+                  marginTop: 14, padding: '10px 12px', background: '#F0FDF4',
+                  border: '1px solid #BBF7D0', borderRadius: 10,
+                  fontSize: 12, color: '#166534', lineHeight: 1.5,
+                }}>
+                  <i className="fa fa-circle-info" style={{ marginRight: 6 }} />
+                  Transferí <strong>$120.000</strong> y avisanos con el comprobante. Activamos tu cuenta apenas lo recibimos.
+                </div>
+
+                {transferSent ? (
+                  <div style={{
+                    marginTop: 14, padding: '14px 16px', background: '#ECFDF5',
+                    border: '1.5px solid #6EE7B7', borderRadius: 12,
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                  }}>
+                    <i className="fa fa-circle-check" style={{ color: '#059669', fontSize: 18, marginTop: 1 }} />
+                    <div style={{ fontSize: 13, color: '#065F46', lineHeight: 1.5 }}>
+                      <strong>¡Aviso registrado!</strong> Quedó anotado en tu cuenta. Activamos tu plan apenas confirmemos la transferencia. Si no se abrió WhatsApp, <button onClick={notifyTransfer} style={{ background: 'none', border: 'none', color: '#059669', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontSize: 13 }}>reenviá el comprobante</button>.
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={notifyTransfer}
+                    disabled={transferSending}
+                    style={{
+                      width: '100%', marginTop: 14, padding: '14px 20px',
+                      background: '#25D366', color: '#fff', border: 'none', borderRadius: 12,
+                      fontSize: 14.5, fontWeight: 800, cursor: transferSending ? 'wait' : 'pointer', fontFamily: 'inherit',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+                      opacity: transferSending ? .75 : 1,
+                    }}
+                  >
+                    {transferSending ? (
+                      <><i className="fa fa-spinner fa-spin" /> Registrando aviso…</>
+                    ) : (
+                      <><i className="fa-brands fa-whatsapp" style={{ fontSize: 17 }} /> Ya transferí — enviar comprobante</>
+                    )}
+                  </button>
+                )}
+                {transferErr && (
+                  <p style={{ margin: '8px 2px 0', fontSize: 12, color: 'var(--txt3)', lineHeight: 1.5 }}>
+                    <i className="fa fa-circle-info" style={{ marginRight: 5 }} />{transferErr}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Trust line */}
         <div style={{ textAlign: 'center', marginTop: 18, display: 'flex', justifyContent: 'center', gap: 18, flexWrap: 'wrap', fontSize: 11.5, color: 'var(--txt3)' }}>
