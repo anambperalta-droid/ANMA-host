@@ -225,42 +225,36 @@ export default function PortalProveedor() {
           </div>
         )}
 
-        {/* ── URGENTE re-orden ── */}
+        {/* ── Reposición prioritaria (tono de marca, no alarma) ── */}
         {reorder.length > 0 && (
-          <div className="pc" style={S.urgentCard}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-              <div style={S.urgentBadge}>RE-ORDEN</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#7C2D12', lineHeight: 1.3 }}>
-                  {reorder.length} producto{reorder.length !== 1 ? 's' : ''} requieren reposición
-                </div>
-                <div style={{ fontSize: 12, color: '#9A3412', marginTop: 3, lineHeight: 1.5 }}>
-                  Stock por debajo del mínimo. Confirmá disponibilidad y plazo.
-                </div>
+          <div className="pc" style={{ ...S.urgentCard, background: brandSoft, borderColor: brandLine }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ ...S.urgentBadge, background: brand }}>PRIORITARIO</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: brandDark, lineHeight: 1.3 }}>
+                {reorder.length} producto{reorder.length !== 1 ? 's' : ''} para reponer
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-              {reorder.map((p, i) => (
-                <div key={i} style={S.urgentRow}>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
-                    <span style={{ fontSize: 11, color: '#9A3412', marginLeft: 8 }}>
-                      Stock {p.stock || 0} u · mínimo {p.minStock} u · faltan {Math.max(1, (p.minStock || 0) - (p.stock || 0))} u
-                    </span>
+              {reorder.map((p, i) => {
+                const need = Math.max(1, (p.minStock || 0) - (p.stock || 0))
+                return (
+                  <div key={i} style={{ ...S.urgentRow, background: '#fff', border: `1px solid ${brandLine}`, color: '#111827', gap: 10 }}>
+                    <span style={{ fontWeight: 600, fontSize: 13, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: brandDark, whiteSpace: 'nowrap', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>{need} u.</span>
+                    <span style={{ fontSize: 12.5, color: '#6B7280', whiteSpace: 'nowrap' }}>{fmt(p.cost)}/u</span>
                   </div>
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#B91C1C', whiteSpace: 'nowrap' }}>{fmt(p.cost)}/u</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
             {reorderTotal > 0 && (
-              <div style={S.urgentTotal}>
-                <span style={{ fontSize: 12, color: '#78716C' }}>Estimado mínimo de reposición</span>
-                <b style={{ fontSize: 16, color: '#1C1917' }}>{fmt(reorderTotal)}</b>
+              <div style={{ ...S.urgentTotal, borderColor: brandLine }}>
+                <span style={{ fontSize: 12, color: '#6B7280' }}>Total estimado de reposición</span>
+                <b style={{ fontSize: 16, color: '#111827', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>{fmt(reorderTotal)}</b>
               </div>
             )}
             {wa('urgent') && (
-              <a href={wa('urgent')} target="_blank" rel="noopener noreferrer" className="wa-confirm" style={S.btnUrgent}>
-                <WaIcon /> Confirmar re-orden por WhatsApp
+              <a href={wa('urgent')} target="_blank" rel="noopener noreferrer" className="wa-confirm" style={{ ...S.btnUrgent, background: 'linear-gradient(135deg,#16A34A,#15803D)', boxShadow: '0 6px 18px rgba(22,163,74,.28)' }}>
+                <WaIcon size={18} /> Confirmar reposición por WhatsApp
               </a>
             )}
           </div>
