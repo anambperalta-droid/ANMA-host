@@ -876,6 +876,13 @@ export default function Catalogo() {
                 <i className="fa fa-list" />
               </button>
             </div>
+            {/* Agrupar: control de vista → junto a las demás acciones (antes estaba
+                pegado al filtro de categoría y en mobile lo aplastaba). */}
+            <button className="cli-pill" onClick={() => setGroupByType(v => !v)}
+              title={groupByType ? 'Ver todos mezclados' : 'Separar Productos y Kits'}
+              style={groupByType ? { borderColor: 'var(--brand)', background: 'var(--brand-xlt)', color: 'var(--brand)' } : undefined}>
+              <i className={`fa fa-${groupByType ? 'layer-group' : 'bars'}`} /><span>{groupByType ? 'Agrupado' : 'Agrupar'}</span>
+            </button>
           </div>
           <button
             className="cli-pill"
@@ -905,13 +912,16 @@ export default function Catalogo() {
         .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
         @media(max-width:640px){
-          /* Barra de acciones compacta en mobile: íconos, sin texto, sin toggle de vista */
+          /* Barra de acciones (mobile): alineada a la derecha; utilitarios como íconos,
+             "Nuevo" mantiene su texto como CTA principal. Sin toggle grilla/lista. */
           .cat-ph{display:block!important;margin-bottom:8px!important}
-          .cat-ph .ph-right{flex-wrap:wrap;justify-content:flex-start;gap:6px}
+          .cat-ph .ph-right{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px}
+          .cat-ph .cli-pill-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
           .cat-view-toggle{display:none!important}
-          .cat-ph .cli-pill,.cat-ph .cli-pill-new{width:40px;height:40px;padding:0!important;justify-content:center}
-          .cat-ph .cli-pill span,.cat-ph .cli-pill-new span{display:none}
-          .cat-ph .cli-pill i,.cat-ph .cli-pill-new i{font-size:14px}
+          .cat-ph .cli-pill{width:40px;height:40px;padding:0!important;justify-content:center}
+          .cat-ph .cli-pill span{display:none}
+          .cat-ph .cli-pill i{font-size:14px}
+          .cat-ph .cli-pill-new{height:40px;padding:0 16px!important}
           .modal-3col{grid-template-columns:1fr!important}
         }
         @media(max-width:480px){.cat-price-calc{grid-template-columns:1fr!important}.cat-price-arrow{display:none!important}}
@@ -961,15 +971,8 @@ export default function Catalogo() {
               </>
             )}
           </div>
-          {/* Gestión de categorías movida a Configuración → Categorías de productos */}
-          {/* Agrupar toggle */}
-          <button
-            onClick={() => setGroupByType(v => !v)}
-            title={groupByType ? 'Ver todos mezclados' : 'Separar Productos y Kits'}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 40, padding: '0 13px', borderRadius: 10, border: `1.5px solid ${groupByType ? 'var(--brand)' : 'var(--border)'}`, background: groupByType ? 'var(--brand-xlt)' : 'var(--surface)', color: groupByType ? 'var(--brand)' : 'var(--txt3)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', whiteSpace: 'nowrap', flexShrink: 0, WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}>
-            <i className={`fa fa-${groupByType ? 'layer-group' : 'bars'}`} style={{ fontSize: 10 }} />
-            {groupByType ? 'Agrupado' : 'Agrupar'}
-          </button>
+          {/* Gestión de categorías movida a Configuración → Categorías de productos.
+              Agrupar movido a la barra de acciones (arriba). */}
         </div>
       </div>
 
