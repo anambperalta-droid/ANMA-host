@@ -755,10 +755,21 @@ export default function Catalogo() {
           <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} style={{ cursor: 'pointer' }} />
         </td>
         <td>
-          {p.image && <img src={p.image} alt={p.name} loading="lazy" decoding="async" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, marginRight: 8, verticalAlign: 'middle', flexShrink: 0 }} />}
-          {!p.image && isKit && <i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 8, fontSize: 16, verticalAlign: 'middle' }} />}
-          <span style={{ fontWeight: 800 }}>{p.name}</span>
-          {isKit && <span style={{ marginLeft: 6, verticalAlign: 'middle' }}><KitBadge small /></span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {p.image && <img src={p.image} alt={p.name} loading="lazy" decoding="async" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />}
+            {!p.image && isKit && <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 16, flexShrink: 0 }} />}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 800 }}>{p.name}</span>
+                {isKit && <KitBadge small />}
+              </div>
+              {supplierName(p.supplierId) !== '—' && (
+                <div style={{ fontSize: 10, color: 'var(--txt3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <i className="fa fa-store" style={{ fontSize: 8, opacity: .7 }} />{supplierName(p.supplierId)}
+                </div>
+              )}
+            </div>
+          </div>
         </td>
         <td className="col-hide-mobile">
           {/* Categoría editable inline. Click → abre dropdown con cats del workspace.
@@ -784,26 +795,27 @@ export default function Catalogo() {
           </select>
           <i className="fa fa-chevron-down" style={{ fontSize: 8, color: cc.color, marginLeft: -18, pointerEvents: 'none', opacity: .6 }} />
         </td>
-        <td className="col-hide-mobile">{supplierName(p.supplierId)}</td>
         {!opHideCosts && <td>
-          {Number(p.cost) > 0
-            ? <span style={{ fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{fmt(p.cost)}</span>
-            : <span title="Sin costo cargado — no vas a poder fijar bien el precio" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: '#B45309', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 20, padding: '2px 9px', whiteSpace: 'nowrap' }}><i className="fa fa-triangle-exclamation" style={{ fontSize: 9 }} />Sin costo</span>}
-          {isKit && p.componentes?.length > 0 && (
-            <span style={{ fontSize: 9, color: 'var(--txt4)', marginLeft: 4 }}>({p.componentes.length} comp.)</span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            {Number(p.cost) > 0
+              ? <span style={{ fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{fmt(p.cost)}</span>
+              : <span title="Sin costo cargado — no vas a poder fijar bien el precio" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: '#B45309', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 20, padding: '2px 9px', whiteSpace: 'nowrap' }}><i className="fa fa-triangle-exclamation" style={{ fontSize: 9 }} />Sin costo</span>}
+            {isKit && p.componentes?.length > 0 && (
+              <span style={{ fontSize: 9, color: 'var(--txt4)' }}>({p.componentes.length} comp.)</span>
+            )}
+          </div>
+          {showCostInfo && (
+            <div style={{ fontSize: 10, marginTop: 2 }}>
+              {p.updatedAt ? (
+                <span style={{ color: (() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A' })(), fontWeight: 600 }}>
+                  <i className="fa fa-clock" style={{ fontSize: 8, marginRight: 3, opacity: .8 }} />{(() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); if (days === 0) return 'Hoy'; if (days === 1) return 'Ayer'; if (days < 30) return `hace ${days}d`; if (days < 365) return `hace ${Math.floor(days/30)}m`; return `hace ${Math.floor(days/365)}a` })()}
+                </span>
+              ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
+            </div>
           )}
         </td>}
-        {/* Columna % Margen removida — el margen lo define el presupuesto */}
-        {showCostInfo && (
-          <td className="col-hide-mobile" style={{ fontSize: 11 }}>
-            {p.updatedAt ? (
-              <span style={{ color: (() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); return days > 180 ? '#DC2626' : days > 60 ? '#D97706' : '#16A34A' })(), fontWeight: 600 }}>
-                {(() => { const days = Math.floor((Date.now() - new Date(p.updatedAt)) / 86400000); if (days === 0) return 'Hoy'; if (days === 1) return 'Ayer'; if (days < 30) return `hace ${days}d`; if (days < 365) return `hace ${Math.floor(days/30)}m`; return `hace ${Math.floor(days/365)}a` })()}
-              </span>
-            ) : <span style={{ color: 'var(--txt4)' }}>—</span>}
-          </td>
-        )}
-        {/* Columna Precio sugerido removida — se calcula al armar el presupuesto */}
+        {/* Columnas Proveedor, % Margen y Precio sugerido removidas — proveedor pasó a
+            sub-línea del producto; el margen/precio se definen al armar el presupuesto. */}
         <td><div className="acts" style={{ display:'flex',gap:5 }}>
           <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
           <button onClick={() => duplicateProduct(p)} title={p.tipo === 'kit' ? 'Duplicar kit — crea una copia editable' : 'Duplicar producto'} style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #DDD6FE',background:'#F5F3FF',color:'#7C3AED',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-copy" /></button>
@@ -1045,7 +1057,6 @@ export default function Catalogo() {
                 </th>
                 <th>Producto</th>
                 <th className="col-hide-mobile">Categoría</th>
-                <th className="col-hide-mobile">Proveedor</th>
                 {!opHideCosts && <th>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     Costo ($)
@@ -1058,19 +1069,18 @@ export default function Catalogo() {
                     </button>
                   </span>
                 </th>}
-                {/* % Margen y Precio sugerido removidos — el margen se aplica al armar el presupuesto */}
-                {showCostInfo && <th className="col-hide-mobile">Últ. actualización</th>}
+                {/* Proveedor (→ sub-línea del producto), % Margen y Precio sugerido removidos */}
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {loading ? [1,2,3,4].map(i => (
-                <tr key={i}><td colSpan={showCostInfo ? 7 : 6}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
+                <tr key={i}><td colSpan={5}><div className="sk sk-text" style={{ height: 18, width: `${50 + Math.random() * 40}%` }} /></td></tr>
               )) : filtered.length ? (groupByType
                 ? [
                     ...(prodsFiltered.length > 0 ? [
                       <tr key="__hd_prod" style={{ background: 'var(--surface)' }}>
-                        <td colSpan={showCostInfo ? 7 : 6} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                        <td colSpan={5} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
                           <div className="grp-section-hd" style={{ marginTop: 0 }} onClick={() => toggleGrp('prods')}>
                             <i className="fa fa-box" style={{ color: 'var(--brand)', fontSize: 11 }} />
                             Productos
@@ -1083,7 +1093,7 @@ export default function Catalogo() {
                     ] : []),
                     ...(kitsFiltered.length > 0 ? [
                       <tr key="__hd_kit" style={{ background: 'var(--surface)' }}>
-                        <td colSpan={showCostInfo ? 7 : 6} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
+                        <td colSpan={5} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
                           <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
                             <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />
                             Kits & Boxes
@@ -1095,7 +1105,7 @@ export default function Catalogo() {
                       ...(collapsedGrps.kits ? [] : kitsFiltered.map(p => renderTableRow(p)))
                     ] : []),
                   ]
-                : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={showCostInfo ? 7 : 6}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
+                : filtered.map(p => renderTableRow(p))) : <tr><td colSpan={5}><div className="empty"><div className="ico"><i className="fa fa-box-open" /></div><p>Sin productos</p></div></td></tr>}
             </tbody>
           </table>
         </div>
