@@ -933,7 +933,7 @@ export default function Catalogo() {
       `}</style>
 
       <div className="pill-row cat-pill-row">
-        <div className="search-row" style={{ maxWidth: 280 }}><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+        <div className="search-row"><i className="fa fa-magnifying-glass" /><input type="text" placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} /></div>
         <div className="cat-scroll-row">
           <div className="cat-scroll-pills">
             {cats.length > 6 ? (
@@ -977,7 +977,7 @@ export default function Catalogo() {
           return (
             <div key={p.id} className="cat-mob-item" onClick={() => open(p)}>
               <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
-                style={{ cursor: 'pointer', flexShrink: 0, width: 16, height: 16 }}
+                className="cat-mob-item-check"
                 onClick={e => e.stopPropagation()} />
               <div className="cat-mob-item-l">
                 {p.image
@@ -987,8 +987,8 @@ export default function Catalogo() {
                     </div>
                 }
                 <div className="cat-mob-item-info">
-                  <span className="cat-mob-item-name" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    {p.name}
+                  <span className="cat-mob-item-name">
+                    <span className="cat-mob-item-nametext">{p.name}</span>
                     {isKit && <KitBadge small />}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
@@ -1008,9 +1008,10 @@ export default function Catalogo() {
                   ? <span className="cat-mob-item-price">{fmt(p.cost)}</span>
                   : <span className="cat-mob-item-price" title="Sin costo cargado" style={{ fontSize: 10.5, fontWeight: 700, color: '#B45309', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 20, padding: '2px 9px' }}><i className="fa fa-triangle-exclamation" style={{ fontSize: 9, marginRight: 3 }} />Sin costo</span>}
               </div>
-              <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:1,alignItems:'center',flexShrink:0 }}>
-                <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-pen" /></button>
-                <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'#F87171',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}><i className="fa fa-trash" /></button>
+              {/* Tocar la card ya abre para editar → el lápiz era redundante.
+                  Queda solo un delete discreto (gris; no compite con el nombre/precio). */}
+              <div className="cat-mob-item-acts" onClick={e => e.stopPropagation()}>
+                <button onClick={() => del(p.id)} title="Eliminar" className="cat-mob-del"><i className="fa fa-trash" /></button>
               </div>
             </div>
           )
