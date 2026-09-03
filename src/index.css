@@ -881,27 +881,22 @@ td b{color:var(--txt);font-weight:600}
 .notif-mark-all:hover{background:var(--brand-dim)}
 .notif-list{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
 .notif-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--txt3)}
-.notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);border-left-width:3px;transition:opacity .15s}
-.notif-item.read{opacity:.55}
+.notif-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);border-left-width:3px;transition:opacity .15s,background .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.notif-item:hover{background:var(--surface2)!important}
+.notif-item.read{opacity:.7}
 .notif-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.notif-item-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.notif-item-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 .notif-item-body{flex:1;min-width:0}
-.notif-item-title{font-size:12px;font-weight:700;line-height:1.3;margin-bottom:2px}
-.notif-item-sub{font-size:11px;color:var(--txt3);line-height:1.35;margin-bottom:6px}
-.notif-action-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  margin-top:6px;padding:5px 11px;border-radius:8px;
-  font-size:11px;font-weight:700;border:none;cursor:pointer;
-  font-family:inherit;transition:opacity .15s,transform .1s;
-  background:var(--na-bg,var(--brand-xlt));color:var(--na-color,var(--brand));
-  -webkit-tap-highlight-color:transparent;min-height:32px;
-}
-.notif-action-btn:hover{opacity:.85}
-.notif-action-btn:active{transform:scale(.95)}
-.notif-action-btn i{font-size:13px}
-.notif-unread-dot{position:absolute;right:28px;top:14px;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.notif-item-title{font-size:12.5px;font-weight:700;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:30px}
+.notif-item-sub{font-size:11px;color:var(--txt3);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+/* Grupo colapsable (≥3 alertas iguales) */
+.notif-group{display:flex;flex-direction:column;gap:4px}
+.notif-group-head{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);border-left-width:3px;background:var(--surface);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.notif-group-head:hover{filter:brightness(.98)}
+.notif-group-list{display:flex;flex-direction:column;gap:6px;padding-left:12px;border-left:2px dashed var(--border);margin-left:6px}
+.notif-unread-dot{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .notif-dismiss-btn{
-  position:absolute;right:6px;top:6px;
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
   width:24px;height:24px;border-radius:6px;
   background:transparent;border:none;
   color:var(--txt4);cursor:pointer;font-size:11px;

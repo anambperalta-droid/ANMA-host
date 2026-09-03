@@ -11,12 +11,13 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 // ── Estados ────────────────────────────────────────────────────────
-// Pipeline limpio de 6 etapas: el camino comercial + estado perdido.
-// 'pausado' y 'cerrado' quedan como LEGACY (se siguen renderizando en
-// pedidos viejos que los tengan, pero no se ofrecen como opción nueva).
+// Pipeline limpio de 5 etapas: el camino comercial + estado perdido.
+// 'pausado', 'cerrado' y 'produccion' quedan como LEGACY (se siguen
+// renderizando en pedidos viejos que los tengan, pero no se ofrecen como
+// opción nueva — ANMA Regalos no fabrica, arma con productos del catálogo).
 export const ESTADOS = [
   'consulta', 'presupuestado', 'confirmado',
-  'produccion', 'entregado', 'perdido',
+  'entregado', 'perdido',
 ]
 
 export const ESTADO_LABELS = {

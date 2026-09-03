@@ -1039,13 +1039,12 @@ export default function Historial() {
   const statuses = [
     { k: 'consulta',      l: 'Consulta',      c: '#94A3B8' },
     { k: 'presupuestado', l: 'Presupuestado', c: 'var(--blue)' },
-    { k: 'pausado',       l: 'Pausado',       c: 'var(--amber)' },
     { k: 'confirmado',    l: 'Confirmado',    c: 'var(--green)' },
-    { k: 'produccion',    l: 'En producción', c: 'var(--brand)' },
     { k: 'entregado',     l: 'Entregado',     c: '#065f46' },
-    { k: 'cerrado',       l: 'Cerrado',       c: '#64748b' },
     { k: 'perdido',       l: 'Perdido',       c: 'var(--red)' },
   ]
+  // 'pausado', 'produccion' y 'cerrado' quedan como labels/colores para pedidos
+  // legacy que los tengan (ver lib/pedido.js), pero no se ofrecen como filtro nuevo.
 
   // ── Filtered + sorted budget list (memoized) ──
   const deliveryDays = (iso) => { if (!iso) return null; const t = new Date(); t.setHours(0,0,0,0); const d = new Date(iso + 'T00:00'); return Math.ceil((d - t) / 86400000) }

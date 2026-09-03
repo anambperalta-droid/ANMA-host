@@ -320,6 +320,109 @@ const LEVEL_COLORS = {
   warning:  { bg: '#F59E0B',   light: '#FEF3C7', text: '#92400E', border: '#FCD34D' },
 }
 
+/* ── Item: card compacta, clickeable, tinte solo cuando NO leída */
+function NotifItem({ alert, isRead, executeAction, dismissAlert }) {
+  const col    = LEVEL_COLORS[alert.level]
+  const action = resolveAction(alert.category)
+  return (
+    <div
+      className={`notif-item${isRead ? ' read' : ''}`}
+      role="button" tabIndex={0}
+      onClick={() => executeAction(alert)}
+      onKeyDown={(e) => { if (e.key === 'Enter') executeAction(alert) }}
+      style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80' }}
+      title={action.label}
+    >
+      <div className="notif-item-ico" style={{ background: col.bg + '22', color: col.bg }}>
+        <i className={`fa ${alert.icon}`} />
+      </div>
+      <div className="notif-item-body">
+        <div className="notif-item-title" style={{ color: isRead ? 'var(--txt2)' : col.text }}>
+          {alert.title}
+        </div>
+        <div className="notif-item-sub">{alert.body}</div>
+      </div>
+      {!isRead && <div className="notif-unread-dot" style={{ background: col.bg }} />}
+      <button
+        className="notif-dismiss-btn"
+        onClick={(e) => { e.stopPropagation(); dismissAlert(alert.id) }}
+        title="Descartar"
+      >
+        <i className="fa fa-xmark" />
+      </button>
+    </div>
+  )
+}
+
+/* ── Agrupamiento visual: colapsa ≥3 alertas iguales bajo un header (evita
+   la "pared roja" cuando hay muchas entregas vencidas idénticas). ── */
+const GROUP_THRESHOLD = 3
+function groupAlerts(alerts) {
+  const out = []
+  let bucket = null
+  for (const a of alerts) {
+    const key = `${a.category}::${a.level}`
+    if (bucket && bucket.key === key) bucket.items.push(a)
+    else { bucket = { key, category: a.category, level: a.level, items: [a] }; out.push(bucket) }
+  }
+  return out
+}
+function renderGroupedAlerts(alerts, { readIds, executeAction, dismissAlert, expandedGroups, setExpandedGroups }) {
+  const groups = groupAlerts(alerts)
+  const nodes = []
+  for (const g of groups) {
+    if (g.items.length < GROUP_THRESHOLD) {
+      for (const a of g.items) {
+        nodes.push(<NotifItem key={a.id} alert={a} isRead={readIds.has(a.id)} executeAction={executeAction} dismissAlert={dismissAlert} />)
+      }
+      continue
+    }
+    const col = LEVEL_COLORS[g.level]
+    const first = g.items[0]
+    const isExpanded = expandedGroups.has(g.key)
+    const unreadInGroup = g.items.filter(a => !readIds.has(a.id)).length
+    const groupTitle = ({
+      logistica:    'Entregas vencidas o próximas',
+      pago:         'Cobros pendientes',
+      comercial:    'Presupuestos por seguir',
+      stock:        'Stock bajo o agotado',
+      insumo:       'Insumos por reponer',
+      cumpleaños:   'Cumpleaños',
+      recordatorio: 'Recordatorios',
+    })[g.category] || `${g.items.length} alertas`
+    nodes.push(
+      <div key={g.key} className="notif-group">
+        <button
+          className="notif-group-head"
+          onClick={() => setExpandedGroups(prev => { const next = new Set(prev); next.has(g.key) ? next.delete(g.key) : next.add(g.key); return next })}
+          style={{ borderLeft: `3px solid ${col.bg}`, background: unreadInGroup > 0 ? col.light + '80' : 'var(--surface)' }}
+        >
+          <div className="notif-item-ico" style={{ background: col.bg + '22', color: col.bg }}>
+            <i className={`fa ${first.icon}`} />
+          </div>
+          <div className="notif-item-body">
+            <div className="notif-item-title" style={{ color: unreadInGroup > 0 ? col.text : 'var(--txt2)' }}>
+              {groupTitle} <span style={{ color: 'var(--txt3)', fontWeight: 600 }}>· {g.items.length}</span>
+            </div>
+            <div className="notif-item-sub">
+              {unreadInGroup > 0 ? `${unreadInGroup} sin leer` : 'Todas leídas'} · tocá para {isExpanded ? 'colapsar' : 'ver todas'}
+            </div>
+          </div>
+          <i className={`fa fa-chevron-${isExpanded ? 'up' : 'down'}`} style={{ color: 'var(--txt3)', fontSize: 11, marginRight: 6 }} />
+        </button>
+        {isExpanded && (
+          <div className="notif-group-list">
+            {g.items.map(a => (
+              <NotifItem key={a.id} alert={a} isRead={readIds.has(a.id)} executeAction={executeAction} dismissAlert={dismissAlert} />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+  return nodes
+}
+
 export default function NotificationBell() {
   const { get } = useData()
   const { user } = useAuth()
@@ -327,6 +430,9 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const [readIds, setReadIds] = useState(() => new Set(db('notifRead', [])))
   const [dismissedIds, setDismissedIds] = useState(() => new Set(db('notifDismissed', [])))
+  // Grupos expandidos (por key "categoria:level"). Un grupo con ≥3 alertas
+  // iguales se muestra colapsado por defecto (evita la "pared roja").
+  const [expandedGroups, setExpandedGroups] = useState(() => new Set())
 
   const budgets  = get('budgets')
   const products = get('products')
@@ -432,46 +538,7 @@ export default function NotificationBell() {
               <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 4 }}>No hay alertas pendientes</div>
             </div>
           ) : (
-            alerts.map(alert => {
-              const col    = LEVEL_COLORS[alert.level]
-              const isRead = readIds.has(alert.id)
-              const action = resolveAction(alert.category)
-              return (
-                <div key={alert.id} className={`notif-item${isRead ? ' read' : ''}`}
-                  style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80' }}>
-                  {/* Icon */}
-                  <div className="notif-item-ico" style={{ background: col.bg + '22', color: col.bg }}>
-                    <i className={`fa ${alert.icon}`} />
-                  </div>
-                  {/* Content */}
-                  <div className="notif-item-body">
-                    <div className="notif-item-title" style={{ color: isRead ? 'var(--txt2)' : col.text }}>
-                      {alert.title}
-                    </div>
-                    <div className="notif-item-sub">{alert.body}</div>
-                    {/* ACTION BUTTON — dinámico por categoría */}
-                    <button
-                      className="notif-action-btn"
-                      style={{ '--na-color': action.color, '--na-bg': action.bg }}
-                      onClick={(e) => { e.stopPropagation(); executeAction(alert) }}
-                    >
-                      <i className={`fa ${action.icon}`} />
-                      {action.label}
-                    </button>
-                  </div>
-                  {/* Unread dot */}
-                  {!isRead && <div className="notif-unread-dot" style={{ background: col.bg }} />}
-                  {/* Dismiss */}
-                  <button
-                    className="notif-dismiss-btn"
-                    onClick={(e) => { e.stopPropagation(); dismissAlert(alert.id) }}
-                    title="Descartar"
-                  >
-                    <i className="fa fa-xmark" />
-                  </button>
-                </div>
-              )
-            })
+            renderGroupedAlerts(alerts, { readIds, executeAction, dismissAlert, expandedGroups, setExpandedGroups })
           )}
           {dismissedCount > 0 && (
             <div className="notif-restore">
