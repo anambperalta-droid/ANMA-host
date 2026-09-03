@@ -592,10 +592,11 @@ const PERIODS = [
   { key: 'custom', label: 'Personalizado' },
 ]
 
-/* ── Seguimiento card — rediseño limpio y accionable ──
-   Fila horizontal: acento de urgencia · cliente + monto · una línea de
-   contexto · botón primario "Recontactar" (WhatsApp directo). Menos datos
-   chicos, foco en la acción que mueve el trato. */
+/* ── Seguimiento card — rediseño denso y jerárquico ──
+   Prioridad visual: (1) días sin respuesta como CHIP dominante — es el dato de
+   decisión; (2) cliente + pedido; (3) monto; (4) acción WA como botón circular
+   compacto (no compite con el semáforo). El borde-izquierdo grueso lleva la
+   carga del semáforo — sacamos el ícono grande redundante. */
 function SeguimientoCard({ b, onView, onWA, hasWA }) {
   const { money } = usePrivacy()
   const now = new Date()
@@ -606,60 +607,41 @@ function SeguimientoCard({ b, onView, onWA, hasWA }) {
   return (
     <div
       onClick={() => onView(b)}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 14,
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderLeft: `4px solid ${urg.color}`, borderRadius: 12,
-        padding: '13px 16px', cursor: 'pointer', transition: 'box-shadow .15s ease, transform .1s ease',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(15,23,42,.07)' }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}>
+      className="seg-card"
+      style={{ borderLeft: `4px solid ${urg.color}` }}>
 
-      {/* Ícono de urgencia */}
-      <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: urg.color + '15', color: urg.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-        <i className={`fa ${urg.icon}`} />
+      {/* Chip dominante: DÍAS sin respuesta — dato de decisión (color = semáforo) */}
+      <div className="seg-days-chip" style={{ background: urg.color + '18', color: urg.color, borderColor: urg.color + '55' }}>
+        <span className="seg-days-num">{days}</span>
+        <span className="seg-days-lbl">días</span>
       </div>
 
-      {/* Cliente + contexto */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>
-            {b.company || b.contact || 'Sin cliente'}
-          </span>
-          {b.company && b.contact && <span style={{ fontSize: 12, color: 'var(--txt3)' }}>· {b.contact}</span>}
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--txt4)', fontVariantNumeric: 'tabular-nums' }}>{b.num}</span>
+      {/* Cliente + pedido + contexto */}
+      <div className="seg-body">
+        <div className="seg-row1">
+          <span className="seg-cli">{b.company || b.contact || 'Sin cliente'}</span>
+          {b.company && b.contact && <span className="seg-contact">· {b.contact}</span>}
+          <span className="seg-num">{b.num}</span>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 3, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <b style={{ color: urg.color, fontWeight: 700 }}>{days} días sin respuesta</b>
+        <div className="seg-row2">
+          <span className="seg-sent"><i className="fa fa-paper-plane" /> Enviado hace {days}d</span>
           {dd != null && dd >= 0 && (
-            <><span style={{ color: 'var(--txt4)' }}>·</span>
-              <span style={{ color: dd <= 3 ? 'var(--red)' : dd <= 7 ? 'var(--amber)' : 'var(--txt3)', fontWeight: dd <= 7 ? 700 : 500 }}>
-                <i className="fa fa-truck-fast" style={{ marginRight: 4, fontSize: 10 }} />
-                entrega {dd === 0 ? 'hoy' : `en ${dd}d`}
-              </span></>
+            <span style={{ color: dd <= 3 ? 'var(--red)' : dd <= 7 ? '#B45309' : 'var(--txt3)', fontWeight: dd <= 7 ? 700 : 500 }}>
+              <i className="fa fa-truck-fast" /> entrega {dd === 0 ? 'hoy' : `en ${dd}d`}
+            </span>
           )}
         </div>
       </div>
 
       {/* Monto */}
-      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--money)', flexShrink: 0, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-        {money(b.total)}
-      </div>
+      <div className="seg-amount">{money(b.total)}</div>
 
-      {/* Acción primaria: Recontactar */}
+      {/* Acción WA — botón circular compacto (no compite con el chip de urgencia) */}
       <button
         onClick={e => { e.stopPropagation(); onWA(b) }}
         title={hasWA ? 'Recontactar por WhatsApp' : 'Sin WhatsApp — copiar mensaje'}
-        style={{
-          flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 7,
-          padding: '9px 14px', borderRadius: 10, border: 'none',
-          background: '#25D366', color: '#fff', cursor: 'pointer',
-          fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = '#1DA851'}
-        onMouseLeave={e => e.currentTarget.style.background = '#25D366'}>
-        <i className="fa-brands fa-whatsapp" style={{ fontSize: 15 }} />
-        <span className="seg-recontactar-lbl">Recontactar</span>
+        className="seg-wa-btn">
+        <i className="fa-brands fa-whatsapp" />
       </button>
     </div>
   )
@@ -2305,12 +2287,11 @@ export default function Historial() {
       {/* ═══ SEGUIMIENTO ACTIVO — Grouped by urgency tier ═══ */}
       {tab === 'seguimiento' && (
         <>
-          <style>{`@media(max-width:560px){.seg-recontactar-lbl{display:none}}`}</style>
           <div className="seg-legend">
-            <div className="seg-legend-item"><div className="seg-legend-dot" style={{ background: 'var(--red)' }} />15+ días — Crítico</div>
-            <div className="seg-legend-item"><div className="seg-legend-dot" style={{ background: '#EA580C' }} />8–14 días — Urgente</div>
-            <div className="seg-legend-item"><div className="seg-legend-dot" style={{ background: 'var(--amber)' }} />4–7 días — Atención</div>
-            <div className="seg-legend-item"><div className="seg-legend-dot" style={{ background: 'var(--green)' }} />0–3 días — Reciente</div>
+            <span className="seg-legend-item"><span className="seg-legend-dot" style={{ background: 'var(--red)' }} />15+ Crítico</span>
+            <span className="seg-legend-item"><span className="seg-legend-dot" style={{ background: '#EA580C' }} />8–14 Urgente</span>
+            <span className="seg-legend-item"><span className="seg-legend-dot" style={{ background: 'var(--amber)' }} />4–7 Atención</span>
+            <span className="seg-legend-item"><span className="seg-legend-dot" style={{ background: 'var(--green)' }} />0–3 Reciente</span>
           </div>
 
           {seguimiento.length ? (

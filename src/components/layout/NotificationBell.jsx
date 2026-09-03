@@ -320,9 +320,23 @@ const LEVEL_COLORS = {
   warning:  { bg: '#F59E0B',   light: '#FEF3C7', text: '#92400E', border: '#FCD34D' },
 }
 
+/* Color del ÍCONO por categoría (independiente del semáforo del borde).
+   Borde-izquierdo = urgencia; ícono = tipo. Dos ejes visuales. */
+const CATEGORY_STYLE = {
+  logistica:    { color: '#2563EB', bg: '#EFF6FF', label: 'Entrega' },
+  pago:         { color: '#059669', bg: '#ECFDF5', label: 'Cobro' },
+  comercial:    { color: '#7C3AED', bg: '#F5F3FF', label: 'Presupuesto' },
+  stock:        { color: '#B45309', bg: '#FEF3C7', label: 'Stock' },
+  insumo:       { color: '#B45309', bg: '#FEF3C7', label: 'Insumo' },
+  cumpleaños:   { color: '#DB2777', bg: '#FCE7F3', label: 'Cumpleaños' },
+  recordatorio: { color: '#0891B2', bg: '#ECFEFF', label: 'Recordatorio' },
+}
+const catStyle = (cat) => CATEGORY_STYLE[cat] || { color: 'var(--brand)', bg: 'var(--brand-xlt)', label: 'Alerta' }
+
 /* ── Item: card compacta, clickeable, tinte solo cuando NO leída */
 function NotifItem({ alert, isRead, executeAction, dismissAlert }) {
   const col    = LEVEL_COLORS[alert.level]
+  const cat    = catStyle(alert.category)
   const action = resolveAction(alert.category)
   return (
     <div
@@ -331,9 +345,10 @@ function NotifItem({ alert, isRead, executeAction, dismissAlert }) {
       onClick={() => executeAction(alert)}
       onKeyDown={(e) => { if (e.key === 'Enter') executeAction(alert) }}
       style={{ borderLeft: `3px solid ${col.bg}`, background: isRead ? 'var(--surface)' : col.light + '80' }}
-      title={action.label}
+      title={`${cat.label} · ${action.label}`}
     >
-      <div className="notif-item-ico" style={{ background: col.bg + '22', color: col.bg }}>
+      {/* Ícono con color por CATEGORÍA (no por nivel) — segundo eje visual */}
+      <div className="notif-item-ico" style={{ background: cat.bg, color: cat.color }}>
         <i className={`fa ${alert.icon}`} />
       </div>
       <div className="notif-item-body">
@@ -378,6 +393,7 @@ function renderGroupedAlerts(alerts, { readIds, executeAction, dismissAlert, exp
       continue
     }
     const col = LEVEL_COLORS[g.level]
+    const cat = catStyle(g.category)
     const first = g.items[0]
     const isExpanded = expandedGroups.has(g.key)
     const unreadInGroup = g.items.filter(a => !readIds.has(a.id)).length
@@ -397,7 +413,8 @@ function renderGroupedAlerts(alerts, { readIds, executeAction, dismissAlert, exp
           onClick={() => setExpandedGroups(prev => { const next = new Set(prev); next.has(g.key) ? next.delete(g.key) : next.add(g.key); return next })}
           style={{ borderLeft: `3px solid ${col.bg}`, background: unreadInGroup > 0 ? col.light + '80' : 'var(--surface)' }}
         >
-          <div className="notif-item-ico" style={{ background: col.bg + '22', color: col.bg }}>
+          {/* Ícono con color por CATEGORÍA (no por nivel) — el borde ya trae el semáforo */}
+          <div className="notif-item-ico" style={{ background: cat.bg, color: cat.color }}>
             <i className={`fa ${first.icon}`} />
           </div>
           <div className="notif-item-body">
