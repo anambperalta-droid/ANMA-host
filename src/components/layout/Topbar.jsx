@@ -73,20 +73,22 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
       <span className="tb-page-title">{title}</span>
       <div style={{ flex: 1 }} />
 
-      {/* Ocultar datos financieros — rojo solo cuando está ocultando (estado activo) */}
+      {/* Ocultar datos financieros — DESKTOP-only: en mobile vive en el sidebar */}
       <button
-        className={`tb-btn${hidden ? ' is-alert' : ''}`}
+        className={`tb-btn tb-hide-mobile${hidden ? ' is-alert' : ''}`}
         onClick={toggle}
         title={hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
       >
         <i className={`fa ${hidden ? 'fa-eye-slash' : 'fa-eye'}`} />
       </button>
 
-      <NotificationBell />
+      {/* Campana — ÚNICO indicador de notificaciones visible en mobile. Su badge
+          suma alertas del sistema + tareas activas para dar un indicador global. */}
+      <NotificationBell extraCount={activeTasks.length} />
 
-      {/* Tareas / Modo Enfoque — neutro en reposo; tinte solo cuando está activo */}
+      {/* Tareas / Modo Enfoque — DESKTOP-only: en mobile vive en el sidebar */}
       <button
-        className={`tb-btn${focusMode || panelOpen ? ' is-on' : ''}`}
+        className={`tb-btn tb-hide-mobile${focusMode || panelOpen ? ' is-on' : ''}`}
         onClick={() => {
           if (focusMode) { setFocusMode(false); return }
           setPanelOpen(o => !o)
@@ -109,9 +111,9 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
         )}
       </button>
 
-      {/* Cloud sync indicator */}
+      {/* Cloud sync indicator — DESKTOP-only */}
       {syncStatus && (
-        <div title={syncStatus === 'ok' ? 'Datos guardados en la nube' : 'Guardando…'} style={{
+        <div className="tb-hide-mobile" title={syncStatus === 'ok' ? 'Datos guardados en la nube' : 'Guardando…'} style={{
           display: 'flex', alignItems: 'center', gap: 4,
           fontSize: 11, fontWeight: 600, padding: '0 8px', height: 28,
           borderRadius: 8, transition: 'all .3s',
@@ -125,9 +127,9 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
         </div>
       )}
 
-      {/* Tema claro/oscuro */}
+      {/* Tema — DESKTOP-only: en mobile vive en el sidebar */}
       <button
-        className="tb-btn"
+        className="tb-btn tb-hide-mobile"
         onClick={toggleTheme}
         aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
         title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}

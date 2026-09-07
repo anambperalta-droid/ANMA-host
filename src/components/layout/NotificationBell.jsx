@@ -440,7 +440,9 @@ function renderGroupedAlerts(alerts, { readIds, executeAction, dismissAlert, exp
   return nodes
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ extraCount = 0 }) {
+  // extraCount: cuenta adicional a sumar al badge global (p.ej. tareas activas
+  // desde el TaskFab). Sirve para consolidar en mobile el header a UN indicador.
   const { get } = useData()
   const { user } = useAuth()
   const nav = useNavigate()
@@ -511,13 +513,13 @@ export default function NotificationBell() {
         aria-label="Notificaciones"
         title="Notificaciones"
       >
-        <i className="fa fa-bell" style={!hasCritical && unreadCount > 0 ? { color: '#D97706' } : undefined} />
-        {unreadCount > 0 && (
+        <i className="fa fa-bell" style={!hasCritical && (unreadCount + extraCount) > 0 ? { color: '#D97706' } : undefined} />
+        {(unreadCount + extraCount) > 0 && (
           <span
             className="notif-badge"
             style={{ background: hasCritical ? '#EF4444' : '#F59E0B' }}
           >
-            {unreadCount > 9 ? '9+' : unreadCount}
+            {(unreadCount + extraCount) > 9 ? '9+' : (unreadCount + extraCount)}
           </span>
         )}
       </button>

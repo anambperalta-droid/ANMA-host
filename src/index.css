@@ -205,6 +205,22 @@ input,select,textarea{font-family:inherit}
 .sb-item i{width:16px;font-size:13px;text-align:center;flex-shrink:0}
 .sb-chip{margin-left:auto;background:var(--acento);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;min-width:18px;text-align:center}
 .sb-foot{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06)}
+/* ── Sidebar > Ajustes rápidos (mobile) — reubica ojo/tareas/tema del Topbar ── */
+.sb-quick-settings{padding:10px 8px 8px;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:2px}
+.sb-quick-settings .sb-section-title{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;padding:0 10px 6px}
+.sb-quick-item{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 12px;border:none;background:transparent;color:rgba(255,255,255,.85);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border-radius:8px;text-align:left;transition:background .12s;-webkit-tap-highlight-color:transparent}
+.sb-quick-item:hover{background:rgba(255,255,255,.06)}
+.sb-quick-item:active{background:rgba(255,255,255,.1)}
+.sb-quick-item i{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.sb-quick-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-quick-badge{min-width:20px;height:20px;padding:0 6px;border-radius:99px;color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0}
+.sb-quick-toggle{width:32px;height:18px;border-radius:99px;background:rgba(255,255,255,.15);position:relative;transition:background .18s;flex-shrink:0}
+.sb-quick-toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .18s,background .18s}
+.sb-quick-toggle[data-on="true"]{background:var(--brand)}
+.sb-quick-toggle[data-on="true"]::after{transform:translateX(14px)}
+.sidebar.slim .sb-quick-settings{padding:8px 4px}
+.sidebar.slim .sb-quick-item{justify-content:center;padding:0}
+.sidebar.slim .sb-quick-lbl,.sidebar.slim .sb-section-title,.sidebar.slim .sb-quick-toggle{display:none}
 .sb-user{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background var(--tr)}
 .sb-user:hover{background:rgba(255,255,255,.07)}
 .sb-ava{width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
@@ -1083,7 +1099,15 @@ td b{color:var(--txt);font-weight:600}
   .notif-drawer{width:100vw;max-width:100vw}
 }
 @media(max-width:640px){
-  .topbar{height:56px!important;padding:0 14px!important}
+  /* Header mobile — LEAN & ERGONÓMICO
+     Solo 3 elementos: [☰] · Título (truncate) · [🔔] campana consolidada.
+     Ojo/tareas/tema movidos al Sidebar → sección "Ajustes rápidos".
+     Alto 56px, padding 16px lateral, touch target ≥44×44. */
+  .topbar{height:56px!important;padding:0 16px!important;gap:8px!important}
+  .tb-hide-mobile{display:none!important}
+  .topbar .tb-btn.notif-bell{width:44px!important;height:44px!important;font-size:16px!important;border-radius:10px!important}
+  .topbar .tb-btn-menu{width:44px!important;height:44px!important;font-size:16px!important;border-radius:10px!important}
+  .tb-page-title{font-size:16px!important;font-weight:700!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;flex:1;min-width:0}
   .tfab-btn{bottom:72px!important;right:16px!important}
   .hide-xs{display:none!important}
   /* Botones del header: más compactos y touch-safe */
