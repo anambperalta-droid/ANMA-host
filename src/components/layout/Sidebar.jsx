@@ -158,10 +158,18 @@ export default function Sidebar({ open, onClose, collapsed }) {
         </button>
       </div>
       <div className="sb-foot">
-        <div className="sb-user" onClick={logout}>
-          <div className="sb-ava">{(userName[0] || 'A').toUpperCase()}</div>
-          <div><div className="sb-uname">{userName}</div><div className="sb-urole">{role === 'operator' ? 'Operador · Cerrar sesión' : 'Cerrar sesión'}</div></div>
-          <i className="fa fa-right-from-bracket" style={{ marginLeft: 'auto', color: 'rgba(255,255,255,.25)', fontSize: 13 }} />
+        {/* User row — perfil arriba, Cerrar sesión como acción explícita separada */}
+        <div className="sb-user">
+          <div className="sb-user-info">
+            <div className="sb-ava">{(userName[0] || 'A').toUpperCase()}</div>
+            <div className="sb-user-meta">
+              <div className="sb-uname">{userName}</div>
+              <div className="sb-urole">{role === 'operator' ? 'Operador' : 'Cuenta'}</div>
+            </div>
+          </div>
+          <button className="sb-logout-btn" onClick={logout} title="Cerrar sesión" aria-label="Cerrar sesión">
+            <i className="fa fa-right-from-bracket" />
+          </button>
         </div>
         {/* Versión del build — útil para detectar caché viejo del usuario */}
         <div className="sb-version" title="Versión del build — si reportás un bug, mencionalo">

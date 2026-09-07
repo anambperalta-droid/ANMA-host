@@ -196,14 +196,20 @@ input,select,textarea{font-family:inherit}
   font-family:ui-monospace, 'SF Mono', Consolas, monospace;
 }
 .sidebar.slim .sb-version{display:none}
-.sb-nav{flex:1;padding:10px 10px}
-.sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:1.2px;text-transform:uppercase;padding:14px 12px 5px}
-.sb-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;transition:all var(--tr);margin-bottom:2px;position:relative;user-select:none}
-.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
-.sb-item.active{background:linear-gradient(90deg,var(--acento-dim),rgba(255,255,255,.04));color:#fff}
-.sb-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;border-radius:0 2px 2px 0;background:var(--acento-grad)}
-.sb-item i{width:16px;font-size:13px;text-align:center;flex-shrink:0}
-.sb-chip{margin-left:auto;background:var(--acento);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;min-width:18px;text-align:center}
+.sb-nav{flex:1;padding:10px 10px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.sb-nav::-webkit-scrollbar{width:5px}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:99px}
+.sb-nav::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+.sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.32);letter-spacing:1.4px;text-transform:uppercase;padding:16px 12px 6px}
+.sb-sec:first-child{padding-top:6px}
+.sb-item{display:flex;align-items:center;gap:12px;padding:0 12px;height:40px;border-radius:9px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;transition:background .15s,color .15s;margin-bottom:2px;position:relative;user-select:none}
+.sb-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.sb-item.active{background:rgba(124,58,237,.14);color:#fff;font-weight:600}
+.sb-item.active::before{content:'';position:absolute;left:-10px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--brand,#7C3AED),var(--brand-light,#8B5CF6));box-shadow:0 0 8px rgba(139,92,246,.6)}
+.sb-item i{width:18px;font-size:13.5px;text-align:center;flex-shrink:0;opacity:.85}
+.sb-item.active i{opacity:1;color:var(--brand-light,#A78BFA)}
+.sb-chip{margin-left:auto;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;min-width:20px;text-align:center;line-height:1.4}
+.sb-item.active .sb-chip{background:var(--brand);color:#fff}
 .sb-foot{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06)}
 /* ── Sidebar > Ajustes rápidos (mobile) — reubica ojo/tareas/tema del Topbar ── */
 .sb-quick-settings{padding:10px 8px 8px;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:2px}
@@ -221,9 +227,25 @@ input,select,textarea{font-family:inherit}
 .sidebar.slim .sb-quick-settings{padding:8px 4px}
 .sidebar.slim .sb-quick-item{justify-content:center;padding:0}
 .sidebar.slim .sb-quick-lbl,.sidebar.slim .sb-section-title,.sidebar.slim .sb-quick-toggle{display:none}
-.sb-user{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background var(--tr)}
-.sb-user:hover{background:rgba(255,255,255,.07)}
-.sb-ava{width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+/* User row refactor — perfil separado de acción logout (evita click accidental) */
+.sb-user{display:flex;align-items:center;gap:6px;padding:8px 8px;border-radius:10px;background:rgba(255,255,255,.03)}
+.sb-user-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.sb-user-meta{min-width:0;flex:1}
+.sb-uname{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.9);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25}
+.sb-urole{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:1px;line-height:1.2}
+.sb-logout-btn{
+  width:34px;height:34px;border-radius:8px;
+  background:transparent;border:none;color:rgba(255,255,255,.35);
+  cursor:pointer;font-size:13px;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.sb-logout-btn:hover{background:rgba(239,68,68,.15);color:#F87171}
+.sb-logout-btn:active{transform:scale(.94)}
+.sb-ava{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#fff;flex-shrink:0;letter-spacing:-.2px}
+.sidebar.slim .sb-user-info{justify-content:center}
+.sidebar.slim .sb-user-meta{display:none}
+.sidebar.slim .sb-logout-btn{display:none}
 
 /* ─── MAIN AREA ─── */
 .main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:calc(100vw - var(--sw));overflow:clip;transition:margin-left .3s ease,max-width .3s ease}
@@ -1105,8 +1127,18 @@ td b{color:var(--txt);font-weight:600}
      Alto 56px, padding 16px lateral, touch target ≥44×44. */
   .topbar{height:56px!important;padding:0 16px!important;gap:8px!important}
   .tb-hide-mobile{display:none!important}
-  .topbar .tb-btn.notif-bell{width:44px!important;height:44px!important;font-size:16px!important;border-radius:10px!important}
-  .topbar .tb-btn-menu{width:44px!important;height:44px!important;font-size:16px!important;border-radius:10px!important}
+  /* Botones del header mobile — GHOST style: transparente en reposo, sin borde.
+     Touch target 44×44 pero visualmente sólo el ícono → no compite con el título. */
+  .topbar .tb-btn.notif-bell,
+  .topbar .tb-btn-menu{
+    width:44px!important;height:44px!important;
+    font-size:17px!important;border-radius:10px!important;
+    background:transparent!important;border:none!important;
+    color:var(--txt2)!important;
+  }
+  .topbar .tb-btn.notif-bell:active,
+  .topbar .tb-btn-menu:active{background:var(--surface2)!important}
+  .topbar .tb-btn.notif-bell.is-alert{background:#FEE2E2!important;color:#DC2626!important}
   .tb-page-title{font-size:16px!important;font-weight:700!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;flex:1;min-width:0}
   .tfab-btn{bottom:72px!important;right:16px!important}
   .hide-xs{display:none!important}
