@@ -1449,7 +1449,7 @@ export default function Historial() {
             <button
               className="ph-period-btn"
               onClick={() => setShowPeriodDrop(d => !d)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', color: 'var(--txt2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, height: 34, padding: '0 12px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)', color: 'var(--txt2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
             >
               <i className="fa fa-calendar" style={{ fontSize: 11, color: 'var(--txt3)' }} />
               <span className="ph-period-lbl">{PERIODS.find(p => p.key === period)?.label || 'Período'}</span>
@@ -1481,8 +1481,8 @@ export default function Historial() {
                 style={{ padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)' }} />
             </div>
           )}
-          <button className="btn btn-ghost ph-export-btn" onClick={exportCSV} style={{minHeight:44}}><i className="fa fa-download" /><span>Exportar</span></button>
-          <button className="btn btn-primary ph-fab" onClick={() => nav('/pedido')} style={{ minHeight:44 }}><i className="fa fa-plus" /><span>Nuevo pedido</span></button>
+          <button className="btn btn-ghost ph-export-btn" onClick={exportCSV} style={{ height: 34, padding: '0 12px', fontSize: 12 }}><i className="fa fa-download" /><span>Exportar</span></button>
+          <button className="btn btn-primary ph-fab" onClick={() => nav('/pedido')} style={{ height: 34, padding: '0 14px', fontSize: 12.5 }}><i className="fa fa-plus" /><span>Nuevo pedido</span></button>
         </div>
       </div>
 

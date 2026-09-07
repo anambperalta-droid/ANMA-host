@@ -97,10 +97,10 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
         <i className={`fa ${focusMode ? 'fa-xmark' : 'fa-brain'}`} />
         {!focusMode && activeTasks.length > 0 && (
           <span style={{
-            position: 'absolute', top: -3, right: -3,
+            position: 'absolute', top: -4, right: -4,
             background: activeTasks.some(t => t.priority === 'today') ? '#DC2626' : '#D97706',
-            color: '#fff', fontSize: 9, fontWeight: 800,
-            minWidth: 15, height: 15, padding: '0 3px', borderRadius: 999,
+            color: '#fff', fontSize: 8.5, fontWeight: 800,
+            minWidth: 14, height: 14, padding: '0 3px', borderRadius: 999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: '1.5px solid var(--surface)', pointerEvents: 'none',
           }}>
