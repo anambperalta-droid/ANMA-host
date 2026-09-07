@@ -1366,9 +1366,8 @@ td b{color:var(--txt);font-weight:600}
   .resumen-tbl table{min-width:0!important;table-layout:fixed!important}
   .resumen-tbl .c-num{display:none!important}
   .resumen-tbl .c-fec{display:none!important}
-  /* Filtros de estado: una sola fila con scroll horizontal (no 2 filas) */
-  .hist-estado-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .hist-estado-tabs::-webkit-scrollbar{display:none}
+  /* Filtros de estado (nuevo diseño Primary + overflow kebab) — sin scroll horizontal */
+  .hist-estado-tabs{flex-wrap:nowrap!important}
   /* Bulk bar compacto: botones solo icono, entra en 1 fila */
   .hist-bulk-bar{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}
   .hist-bulk-bar::-webkit-scrollbar{display:none}
@@ -1753,6 +1752,22 @@ td b{color:var(--txt);font-weight:600}
   .cat-mob-list{display:none!important}
   .cat-desk-view{display:block!important}
 }
+
+/* ── FILTROS DE ESTADO (Historial > Pedidos) — chips Primary + kebab overflow ── */
+.hist-estado-tabs{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;max-width:100%}
+.hist-status-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--txt3);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.hist-status-chip:hover{border-color:var(--brand);color:var(--brand)}
+.hist-status-chip.active{background:var(--txt);color:var(--surface);border-color:var(--txt);font-weight:700}
+.hist-status-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.hist-status-more-wrap{position:relative;flex-shrink:0;margin-left:auto}
+.hist-status-more{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--txt3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.hist-status-more:hover,.hist-status-more.open{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
+.hist-status-menu-overlay{position:fixed;inset:0;z-index:199;background:transparent}
+.hist-status-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.15);min-width:170px;overflow:hidden;padding:4px}
+.hist-status-menu-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border:none;background:transparent;color:var(--txt2);font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;border-radius:8px;transition:background .1s;-webkit-tap-highlight-color:transparent}
+.hist-status-menu-item:hover{background:var(--surface2)}
+.hist-status-menu-item.active{background:var(--brand-xlt);color:var(--brand);font-weight:700}
+.hist-status-menu-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 /* ── DASHBOARD CTRL BAR (mobile) — 2 filas: acciones + pestañas iguales ── */
 .dash-ctrl-bar{display:flex;flex-direction:column;position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--border);margin:0 -10px 10px;padding:6px 10px 0}

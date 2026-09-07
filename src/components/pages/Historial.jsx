@@ -808,6 +808,7 @@ export default function Historial() {
   const nav = useNavigate()
   const [tab, setTab] = useState('resumen')
   const [filter, setFilter] = useState('all')
+  const [showStatusMenu, setShowStatusMenu] = useState(false)   // menú overflow (⋯) de filtros de estado
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [resendBudget, setResendBudget] = useState(null)
@@ -1879,19 +1880,54 @@ export default function Historial() {
               <i className="fa fa-magnifying-glass" />
               <input type="text" placeholder="Buscar cliente, N°, producto, nota…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <div className="hist-estado-tabs" style={{ display: 'flex', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 2, gap: 1, flexWrap: 'wrap' }}>
-              {['all', ...ESTADOS].map(f => {
-                const isActive = filter === f
-                const color = f === 'all' ? 'var(--txt)' : ESTADO_TAB_COLOR[f]
-                return (
-                  <button key={f} onClick={() => setFilter(f)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: isActive ? 700 : 500, background: isActive ? 'var(--surface)' : 'transparent', color: isActive ? color : 'var(--txt3)', boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s ease', whiteSpace: 'nowrap' }}>
-                    {f !== 'all' && <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, opacity: isActive ? 1 : 0.6 }} />}
-                    {f === 'all' ? 'Todos' : ESTADO_LABELS[f]}
-                  </button>
-                )
-              })}
-            </div>
+            {/* Filtros de estado: Primary siempre visibles + overflow (⋯) para los menos frecuentes.
+                Primary = flujo comercial activo (Todos · Presupuestado · Confirmado); overflow =
+                estados extremos (Consulta · Entregado · Perdido). El activo del menú aparece
+                inline igual para no perderlo de vista. */}
+            {(() => {
+              const PRIMARY = ['all', 'presupuestado', 'confirmado']
+              const OVERFLOW = ['consulta', 'entregado', 'perdido']
+              const activeInOverflow = OVERFLOW.includes(filter)
+              const visible = activeInOverflow ? [...PRIMARY, filter] : PRIMARY
+              return (
+                <div className="hist-estado-tabs">
+                  {visible.map(f => {
+                    const isActive = filter === f
+                    const color = f === 'all' ? 'var(--txt)' : ESTADO_TAB_COLOR[f]
+                    return (
+                      <button key={f} onClick={() => setFilter(f)}
+                        className={`hist-status-chip${isActive ? ' active' : ''}`}
+                        style={isActive && f !== 'all' ? { background: color, borderColor: color, color: '#fff' } : undefined}>
+                        {f !== 'all' && <span className="hist-status-chip-dot" style={{ background: isActive ? '#fff' : color }} />}
+                        {f === 'all' ? 'Todos' : ESTADO_LABELS[f]}
+                      </button>
+                    )
+                  })}
+                  <div className="hist-status-more-wrap">
+                    <button onClick={() => setShowStatusMenu(m => !m)}
+                      className={`hist-status-more${showStatusMenu ? ' open' : ''}`}
+                      title="Más filtros" aria-label="Más filtros">
+                      <i className="fa fa-ellipsis" />
+                    </button>
+                    {showStatusMenu && (
+                      <>
+                        <div className="hist-status-menu-overlay" onClick={() => setShowStatusMenu(false)} />
+                        <div className="hist-status-menu" onClick={e => e.stopPropagation()}>
+                          {OVERFLOW.map(f => (
+                            <button key={f} onClick={() => { setFilter(f); setShowStatusMenu(false) }}
+                              className={`hist-status-menu-item${filter === f ? ' active' : ''}`}>
+                              <span className="hist-status-menu-dot" style={{ background: ESTADO_TAB_COLOR[f] || '#94A3B8' }} />
+                              {ESTADO_LABELS[f]}
+                              {filter === f && <i className="fa fa-check" style={{ marginLeft: 'auto', fontSize: 10 }} />}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
             {[
