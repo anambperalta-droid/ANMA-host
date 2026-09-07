@@ -243,7 +243,7 @@ input,select,textarea{font-family:inherit}
 .sb-user-meta{min-width:0;flex:1}
 .sb-uname{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.9);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25}
 .sb-urole{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:1px;line-height:1.2}
-.sb-logout-btn{
+.sb-logout-btn,.sb-admin-btn{
   width:34px;height:34px;border-radius:8px;
   background:transparent;border:none;color:rgba(255,255,255,.35);
   cursor:pointer;font-size:13px;flex-shrink:0;
@@ -251,7 +251,9 @@ input,select,textarea{font-family:inherit}
   transition:all .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;
 }
 .sb-logout-btn:hover{background:rgba(239,68,68,.15);color:#F87171}
-.sb-logout-btn:active{transform:scale(.94)}
+.sb-logout-btn:active,.sb-admin-btn:active{transform:scale(.94)}
+/* Super Admin — accento marca (solo lo ve Ana) */
+.sb-admin-btn:hover{background:rgba(124,58,237,.2);color:var(--brand-light,#A78BFA)}
 .sb-ava{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#fff;flex-shrink:0;letter-spacing:-.2px}
 .sidebar.slim .sb-user-info{justify-content:center}
 .sidebar.slim .sb-user-meta{display:none}
@@ -1129,6 +1131,8 @@ td b{color:var(--txt);font-weight:600}
   .ph-btn-txt{display:none}
   /* Notification drawer full width on phone */
   .notif-drawer{width:100vw;max-width:100vw}
+  /* Subtítulo del logo del sidebar — redundante con el nombre en mobile */
+  .sidebar .sb-logo-txt .s{display:none}
 }
 @media(max-width:640px){
   /* Header mobile — LEAN & ERGONÓMICO

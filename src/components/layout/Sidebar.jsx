@@ -115,16 +115,11 @@ export default function Sidebar({ open, onClose, collapsed }) {
           )
         })}
         {role === 'owner' && (
-          <div className="sb-item" data-tip="Backup" onClick={doBackup}><i className="fa fa-cloud-arrow-down" /><span className="sb-lbl">Backup</span></div>
+          <div className="sb-item" data-tip="Backup" onClick={doBackup}>
+            <i className="fa fa-cloud-arrow-down" /><span className="sb-lbl">Backup de datos</span>
+          </div>
         )}
-        {isGlobalAdmin && (
-          <>
-            <div className="sb-sec">Super admin</div>
-            <div className={`sb-item ${loc.pathname === '/admin' ? 'active' : ''}`} data-tip="Admin · Workspaces" onClick={() => goTo('/admin')}>
-              <i className="fa fa-shield-halved" /><span className="sb-lbl">Admin · Workspaces</span>
-            </div>
-          </>
-        )}
+        {/* Super Admin removido del nav — ahora vive como ícono discreto en el footer. */}
       </nav>
       {/* Ajustes rápidos — barra horizontal compacta de 3 íconos (48px total). */}
       <div className="sb-quick-bar">
@@ -154,7 +149,8 @@ export default function Sidebar({ open, onClose, collapsed }) {
         </button>
       </div>
       <div className="sb-foot">
-        {/* User row — perfil arriba, Cerrar sesión como acción explícita separada */}
+        {/* User row — perfil arriba, Cerrar sesión como acción explícita separada.
+            Super Admin (solo Ana) va como ícono discreto ANTES del logout. */}
         <div className="sb-user">
           <div className="sb-user-info">
             <div className="sb-ava">{(userName[0] || 'A').toUpperCase()}</div>
@@ -163,6 +159,14 @@ export default function Sidebar({ open, onClose, collapsed }) {
               <div className="sb-urole">{role === 'operator' ? 'Operador' : 'Cuenta'}</div>
             </div>
           </div>
+          {isGlobalAdmin && (
+            <button className="sb-admin-btn"
+              onClick={() => goTo('/admin')}
+              title="Super Admin · Workspaces"
+              aria-label="Super Admin">
+              <i className="fa fa-shield-halved" />
+            </button>
+          )}
           <button className="sb-logout-btn" onClick={logout} title="Cerrar sesión" aria-label="Cerrar sesión">
             <i className="fa fa-right-from-bracket" />
           </button>
