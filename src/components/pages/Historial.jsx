@@ -1046,9 +1046,19 @@ export default function Historial() {
       return (a.id - b.id) * dir
     })
     if (quickFilter === 'atrasados') {
-      list = list.filter(b => { const dd = deliveryDays(b.deliveryDate); const e = getEstado(b); return dd !== null && dd <= 0 && !['entregado', 'perdido', 'cerrado'].includes(e) })
+      // Entrega vencida y todavía no entregado / no perdido.
+      list = list.filter(b => {
+        const dd = deliveryDays(b.deliveryDate)
+        const e = getEstado(b)
+        return dd !== null && dd < 0 && !['entregado', 'perdido', 'cerrado'].includes(e)
+      })
     } else if (quickFilter === 'sin_cobrar') {
-      list = list.filter(b => ['confirmado', 'produccion'].includes(getEstado(b)) && (!b.payStatus || b.payStatus === 'pending'))
+      // Pedidos aceptados (confirmado/producción/entregado) con plata pendiente.
+      // Antes solo aceptaba 'pending' → dejaba fuera los parcialmente cobrados.
+      list = list.filter(b =>
+        ['confirmado', 'produccion', 'entregado'].includes(getEstado(b)) &&
+        (!b.payStatus || b.payStatus === 'pending' || b.payStatus === 'partial')
+      )
     } else if (quickFilter === 'alta_ganancia') {
       const gs = [...periodBudgets].map(b => ({ b, g: gananciaBudget(b) })).filter(x => x.g > 0).sort((a, b) => b.g - a.g)
       const cutoff = gs[Math.floor(gs.length / 3)]?.g || 0

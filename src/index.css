@@ -1017,9 +1017,36 @@ td b{color:var(--txt);font-weight:600}
   .hist-tbl tbody td:nth-child(2),
   .hist-tbl tbody td:last-child{position:static!important;left:auto!important;right:auto!important;box-shadow:none!important}
 
-  /* Checkbox */
+  /* Checkbox — chico y discreto, custom style (evita el cuadro gigante nativo) */
   .hist-tbl td[data-cell="sel"]{grid-area:sel;align-self:start;padding-top:3px!important}
-  .hist-tbl td[data-cell="sel"] input{width:15px;height:15px;accent-color:var(--brand);cursor:pointer}
+  .hist-tbl td[data-cell="sel"] input{
+    appearance:none;-webkit-appearance:none;
+    width:16px;height:16px;
+    border:1.5px solid var(--border2,#cbd5e1);border-radius:5px;
+    background:var(--surface);cursor:pointer;flex-shrink:0;
+    position:relative;transition:all .12s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .hist-tbl td[data-cell="sel"] input:checked{
+    background:var(--brand);border-color:var(--brand);
+  }
+  .hist-tbl td[data-cell="sel"] input:checked::after{
+    content:'';position:absolute;left:4px;top:1px;
+    width:5px;height:9px;
+    border:solid #fff;border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  /* Selects estado/pago SIN flecha nativa gigante, chevron sutil por background */
+  .hist-tbl td[data-cell="estado"] select,
+  .hist-tbl td[data-cell="pago"] select{
+    appearance:none!important;-webkit-appearance:none!important;-moz-appearance:none!important;
+    font-size:11.5px!important;font-weight:700!important;
+    padding:0 12px 0 0!important;line-height:1.2!important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='currentColor' stroke-width='1.8'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E")!important;
+    background-repeat:no-repeat!important;background-position:right center!important;background-size:10px!important;
+    max-width:110px;text-overflow:ellipsis;overflow:hidden;
+  }
+  .hist-tbl td[data-cell="pago"] > div > span:first-child{padding:4px 8px 4px 9px!important;gap:5px!important}
 
   /* Cliente — nombre + contacto abajo, alineado al TOP para que las
      acciones queden a la altura del nombre */
