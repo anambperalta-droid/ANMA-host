@@ -1404,38 +1404,49 @@ export default function Historial() {
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>
       <GuideBanner />
       {/* Mobile: single combined period + tabs row */}
+      {/* Mobile control bar: fila de acciones (período · exportar · nuevo) +
+          fila de pestañas (4 columnas iguales, sin scroll). Patrón Stripe/Notion. */}
       <div className="dash-ctrl-bar">
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <button className="dash-period-pill" onClick={() => setShowPeriodDrop(d => !d)}>
-            <i className="fa fa-calendar" style={{ fontSize: 10 }} />
-            <span>{PERIODS.find(p => p.key === period)?.label || 'Este mes'}</span>
-            <i className="fa fa-chevron-down" style={{ fontSize: 8, marginLeft: 1 }} />
+        <div className="dash-ctrl-actions">
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button className="dash-period-pill" onClick={() => setShowPeriodDrop(d => !d)}>
+              <i className="fa fa-calendar" style={{ fontSize: 10 }} />
+              <span>{PERIODS.find(p => p.key === period)?.label || 'Este mes'}</span>
+              <i className="fa fa-chevron-down" style={{ fontSize: 8, marginLeft: 1 }} />
+            </button>
+            {showPeriodDrop && (
+              <div className="dash-period-drop-m" onClick={e => e.stopPropagation()}>
+                {PERIODS.map(p => (
+                  <button key={p.key} onClick={() => { setPeriod(p.key); setShowPeriodDrop(false) }}
+                    style={{ display: 'block', width: '100%', padding: '9px 16px', border: 'none',
+                      background: period === p.key ? 'var(--brand-xlt)' : 'transparent',
+                      color: period === p.key ? 'var(--brand)' : 'var(--txt2)',
+                      fontSize: 12, fontWeight: period === p.key ? 700 : 500,
+                      cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ flex: 1 }} />
+          <button className="dash-act-icon" onClick={exportCSV} title="Exportar CSV" aria-label="Exportar">
+            <i className="fa fa-download" />
           </button>
-          {showPeriodDrop && (
-            <div className="dash-period-drop-m" onClick={e => e.stopPropagation()}>
-              {PERIODS.map(p => (
-                <button key={p.key} onClick={() => { setPeriod(p.key); setShowPeriodDrop(false) }}
-                  style={{ display: 'block', width: '100%', padding: '9px 16px', border: 'none',
-                    background: period === p.key ? 'var(--brand-xlt)' : 'transparent',
-                    color: period === p.key ? 'var(--brand)' : 'var(--txt2)',
-                    fontSize: 12, fontWeight: period === p.key ? 700 : 500,
-                    cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <button className="dash-act-new" onClick={() => nav('/pedido')} title="Nuevo pedido">
+            <i className="fa fa-plus" /><span>Nuevo</span>
+          </button>
         </div>
-        <div className="dash-ctrl-divider" />
         <div className="dash-ctrl-tabs">
           {[
             { key: 'resumen',     lbl: 'Resumen' },
-            { key: 'lista',       lbl: 'Presupuestos' },
+            { key: 'lista',       lbl: 'Pedidos' },
             { key: 'analisis',    lbl: 'Análisis' },
-            { key: 'seguimiento', lbl: seguimiento.length > 0 ? `Seguim. (${seguimiento.length})` : 'Seguimiento' },
+            { key: 'seguimiento', lbl: 'Seguim.', badge: seguimiento.length },
           ].map(t => (
             <button key={t.key} className={`dash-ctrl-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
               {t.lbl}
+              {t.badge > 0 && <span className="dash-ctrl-tab-badge">{t.badge}</span>}
             </button>
           ))}
         </div>
