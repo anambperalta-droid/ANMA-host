@@ -1931,13 +1931,11 @@ export default function Historial() {
                 <th style={{ width: 32 }}>
                   <input type="checkbox" checked={filteredBudgets.length > 0 && filteredBudgets.every(b => selectedIds.has(b.id))} onChange={() => toggleSelectAll(filteredBudgets)} />
                 </th>
-                <th>N°</th>
-                <th className="col-hide-mobile" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>Fecha{sortArrow('date')}</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>Pedido · Fecha{sortArrow('date')}</th>
                 <th>Cliente / Empresa</th>
                 <th className="col-hide-mobile">Entrega</th>
-                <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('total')}>Total{sortArrow('total')}</th>
-                <th className="col-hide-mobile" style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('gain')}>
-                  Ganancia{sortArrow('gain')}
+                <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('total')}>
+                  Total{sortArrow('total')}
                   {hidden && <i className="fa fa-eye-slash" style={{ marginLeft: 4, fontSize: 9, color: 'var(--txt4)' }} />}
                 </th>
                 <th>Estado</th><th>Pago</th><th>Acciones</th>
@@ -1949,8 +1947,10 @@ export default function Historial() {
                   return (
                     <tr key={b.id} className={selectedIds.has(b.id) ? 'selected' : ''} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
                       <td data-cell="sel"><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
-                      <td data-cell="num" style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--txt)' }}>{b.num || '—'}</td>
-                      <td className="col-hide-mobile" style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', color: 'var(--txt3)' }}>{fmtDate(b.date)}</td>
+                      <td data-cell="num" style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--txt)' }}>
+                        <div>{b.num || '—'}</div>
+                        <div className="col-hide-mobile" style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 500, marginTop: 2 }}>{fmtDate(b.date)}</div>
+                      </td>
                       <td data-cell="cli" style={{ maxWidth: 200 }}>
                         <button
                           type="button"
@@ -1975,11 +1975,16 @@ export default function Historial() {
                           </div>
                         )}
                       </td>
-                      <td data-cell="total" data-label="Total" style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>{money(b.total)}</td>
                       {(() => {
                         const gan = gananciaBudget(b)
+                        const ganColor = hidden ? 'var(--txt4)' : (gan === 0 ? 'var(--txt4)' : gan < 0 ? 'var(--red)' : 'var(--green)')
                         return (
-                          <td className="col-hide-mobile" data-cell="gan" data-label="Ganancia" style={{ color: hidden ? 'var(--txt4)' : (gan === 0 ? 'var(--txt4)' : gan < 0 ? 'var(--red)' : 'var(--green)'), fontWeight: 700, fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em' }}>{money(gan)}</td>
+                          <td data-cell="total" data-label="Total" style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>
+                            <div>{money(b.total)}</div>
+                            <div className="col-hide-mobile" style={{ fontSize: 10.5, fontWeight: 600, color: ganColor, marginTop: 2 }}>
+                              {gan === 0 ? 'sin ganancia' : `${gan > 0 ? '+' : ''}${money(gan)} gan.`}
+                            </div>
+                          </td>
                         )
                       })()}
                       <td data-cell="estado" style={{ whiteSpace: 'nowrap' }}>
@@ -2088,7 +2093,7 @@ export default function Historial() {
                     </tr>
                   )
                 }) : (
-                  <tr><td colSpan={12}><div className="empty"><div className="ico"><i className="fa fa-file-invoice" /></div><p>No hay presupuestos con este filtro</p></div></td></tr>
+                  <tr><td colSpan={8}><div className="empty"><div className="ico"><i className="fa fa-file-invoice" /></div><p>No hay presupuestos con este filtro</p></div></td></tr>
                 )}
               </tbody>
             </table>
