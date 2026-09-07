@@ -230,6 +230,12 @@ input,select,textarea{font-family:inherit}
 /* Estado activo: mismo fondo neutro, ícono en color de marca — jerarquía
    consistente con los otros dos botones (cerebro/ojo). Sin fluor. */
 .sb-quick-icon.is-on{background:rgba(255,255,255,.1);color:var(--brand-light,#A78BFA);box-shadow:inset 0 0 0 1px rgba(139,92,246,.35)}
+/* Campana dentro del sidebar: neutraliza fondo rojo/amarillo del is-alert.
+   Solo el ícono se colorea según pendientes. */
+.sb-quick-bar .sb-quick-icon.notif-bell.is-alert{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7)}
+.sb-quick-bar .sb-quick-icon.notif-bell .notif-badge{border-color:var(--sidebar-bg,#0f172a)}
+/* Con 4 íconos el gap se achica un poco */
+.sb-quick-bar{gap:5px}
 .sb-quick-icon-badge{
   position:absolute;top:-3px;right:-3px;
   min-width:16px;height:16px;padding:0 4px;border-radius:99px;

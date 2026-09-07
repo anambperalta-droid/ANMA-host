@@ -440,9 +440,9 @@ function renderGroupedAlerts(alerts, { readIds, executeAction, dismissAlert, exp
   return nodes
 }
 
-export default function NotificationBell({ extraCount = 0 }) {
-  // extraCount: cuenta adicional a sumar al badge global (p.ej. tareas activas
-  // desde el TaskFab). Sirve para consolidar en mobile el header a UN indicador.
+export default function NotificationBell({ extraCount = 0, className = '', variant = 'topbar' }) {
+  // extraCount: cuenta adicional a sumar al badge global (p.ej. tareas activas).
+  // variant='sidebar' → estilos coherentes con el quick-bar del sidebar.
   const { get } = useData()
   const { user } = useAuth()
   const nav = useNavigate()
@@ -508,12 +508,16 @@ export default function NotificationBell({ extraCount = 0 }) {
   return (
     <>
       <button
-        className={`tb-btn notif-bell${hasCritical ? ' is-alert pulse-critical' : ''}`}
+        className={`${className || 'tb-btn'} notif-bell${hasCritical ? ' is-alert pulse-critical' : ''}`}
         onClick={() => setOpen(o => !o)}
         aria-label="Notificaciones"
         title="Notificaciones"
       >
-        <i className="fa fa-bell" style={!hasCritical && (unreadCount + extraCount) > 0 ? { color: '#D97706' } : undefined} />
+        <i className="fa fa-bell" style={
+          variant === 'sidebar'
+            ? (hasCritical ? { color: '#F87171' } : (unreadCount + extraCount) > 0 ? { color: '#FBBF24' } : undefined)
+            : (!hasCritical && (unreadCount + extraCount) > 0 ? { color: '#D97706' } : undefined)
+        } />
         {(unreadCount + extraCount) > 0 && (
           <span
             className="notif-badge"
