@@ -1430,11 +1430,9 @@ export default function Historial() {
             )}
           </div>
           <div style={{ flex: 1 }} />
+          {/* "+ Nuevo" ya vive en el FAB circular del bottom nav — evitamos duplicar */}
           <button className="dash-act-icon" onClick={exportCSV} title="Exportar CSV" aria-label="Exportar">
             <i className="fa fa-download" />
-          </button>
-          <button className="dash-act-new" onClick={() => nav('/pedido')} title="Nuevo pedido">
-            <i className="fa fa-plus" /><span>Nuevo</span>
           </button>
         </div>
         <div className="dash-ctrl-tabs">
