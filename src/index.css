@@ -181,7 +181,7 @@ input,select,textarea{font-family:inherit}
 
 /* ─── APP SHELL ─── */
 :root{--sw-slim:64px}
-.sidebar{width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:transform var(--tr),width .3s ease}
+.sidebar{width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:600;overflow-y:auto;transition:transform var(--tr),width .3s ease}
 .sidebar::-webkit-scrollbar{width:0}
 .sb-top{padding:12px 12px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
 .sb-logo-row{display:flex;align-items:center;gap:10px}
@@ -196,7 +196,7 @@ input,select,textarea{font-family:inherit}
   font-family:ui-monospace, 'SF Mono', Consolas, monospace;
 }
 .sidebar.slim .sb-version{display:none}
-.sb-nav{flex:1;padding:10px 10px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.sb-nav{flex:1;padding:10px 10px 24px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
 .sb-nav::-webkit-scrollbar{width:5px}
 .sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:99px}
 .sb-nav::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
@@ -210,12 +210,12 @@ input,select,textarea{font-family:inherit}
 .sb-item.active i{opacity:1;color:var(--brand-light,#A78BFA)}
 .sb-chip{margin-left:auto;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;min-width:20px;text-align:center;line-height:1.4}
 .sb-item.active .sb-chip{background:var(--brand);color:#fff}
-.sb-foot{padding:8px 8px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-foot{padding:8px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.06)}
 /* ── Sidebar > Ajustes rápidos — barra horizontal COMPACTA (mobile-first).
    3 íconos 40×40 en fila, ocupa ~48px vs 140px del layout de filas anterior. */
 .sb-quick-bar{
   display:flex;align-items:center;gap:6px;
-  padding:8px 10px;border-top:1px solid rgba(255,255,255,.06);
+  padding:8px 12px;border-top:1px solid rgba(255,255,255,.06);
 }
 .sb-quick-icon{
   position:relative;width:40px;height:40px;border-radius:10px;
@@ -227,7 +227,9 @@ input,select,textarea{font-family:inherit}
 }
 .sb-quick-icon:hover{background:rgba(255,255,255,.12);color:#fff}
 .sb-quick-icon:active{transform:scale(.94)}
-.sb-quick-icon.is-on{background:var(--brand);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.35)}
+/* Estado activo: mismo fondo neutro, ícono en color de marca — jerarquía
+   consistente con los otros dos botones (cerebro/ojo). Sin fluor. */
+.sb-quick-icon.is-on{background:rgba(255,255,255,.1);color:var(--brand-light,#A78BFA);box-shadow:inset 0 0 0 1px rgba(139,92,246,.35)}
 .sb-quick-icon-badge{
   position:absolute;top:-3px;right:-3px;
   min-width:16px;height:16px;padding:0 4px;border-radius:99px;
@@ -462,7 +464,7 @@ td b{color:var(--txt);font-weight:600}
 .modal .grid3{gap:12px 16px}
 .modal textarea.f-inp{min-height:68px;max-height:160px}
 .modal .modal-actions,.modal .ma{margin-top:16px}
-.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:450;animation:pgIn .2s ease both}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:590;animation:pgIn .2s ease both;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .mh h3{font-size:17px;font-weight:800;color:var(--txt);letter-spacing:-.3px}
 .mclose{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);color:var(--txt2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
