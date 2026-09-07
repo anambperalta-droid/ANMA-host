@@ -1,4 +1,5 @@
 import { useState, useEffect, Suspense } from 'react'
+import { createPortal } from 'react-dom'
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
@@ -330,7 +331,12 @@ function AppShellInner() {
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'clip' }}>
       <a href="#main-content" className="skip-link">Saltar al contenido</a>
       <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} collapsed={collapsed} />
-      {sideOpen && <div className="sb-overlay" onClick={() => setSideOpen(false)} />}
+      {/* Overlay del sidebar en Portal al body → escapa del stacking context
+          del contenedor padre (overflow:clip) que dejaba el Bottom Nav por encima. */}
+      {sideOpen && createPortal(
+        <div className="sb-overlay" onClick={() => setSideOpen(false)} />,
+        document.body
+      )}
       <div className={`main${collapsed ? ' slim' : ''}`}>
         <TrialBanner />
         <PaymentDueBanner />

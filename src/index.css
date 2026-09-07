@@ -181,7 +181,7 @@ input,select,textarea{font-family:inherit}
 
 /* ─── APP SHELL ─── */
 :root{--sw-slim:64px}
-.sidebar{width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:600;overflow-y:auto;transition:transform var(--tr),width .3s ease}
+.sidebar{width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;height:100vh;height:100dvh;z-index:9999;overflow-y:auto;transition:transform var(--tr),width .3s ease}
 .sidebar::-webkit-scrollbar{width:0}
 .sb-top{padding:12px 12px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
 .sb-logo-row{display:flex;align-items:center;gap:10px}
@@ -464,7 +464,7 @@ td b{color:var(--txt);font-weight:600}
 .modal .grid3{gap:12px 16px}
 .modal textarea.f-inp{min-height:68px;max-height:160px}
 .modal .modal-actions,.modal .ma{margin-top:16px}
-.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:590;animation:pgIn .2s ease both;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.sb-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;background:rgba(0,0,0,.55);z-index:9998;animation:pgIn .2s ease both;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .mh h3{font-size:17px;font-weight:800;color:var(--txt);letter-spacing:-.3px}
 .mclose{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);color:var(--txt2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
@@ -871,7 +871,7 @@ td b{color:var(--txt);font-weight:600}
 @media(max-width:900px){
   /* Sidebar: drawer — padding bottom para que el bottom-nav no tape los últimos items.
      90px = altura nav (60px) + margen + safe area iOS. */
-  .sidebar{position:fixed;top:0;left:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform .25s ease;z-index:500;box-shadow:0 10px 40px rgba(0,0,0,.35);padding-bottom:calc(90px + env(safe-area-inset-bottom, 0px))}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform .25s ease;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,.35);padding-bottom:calc(env(safe-area-inset-bottom, 0px))}
   .sidebar.open{transform:translateX(0)}
   .sb-overlay{display:block}
   /* Main fills viewport */
@@ -1340,7 +1340,7 @@ td b{color:var(--txt);font-weight:600}
   border:1px solid var(--border);
   border-radius:24px;
   box-shadow:0 -4px 24px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.08);
-  z-index:500;
+  z-index:50;
   align-items:center;
   justify-content:space-around;
 }

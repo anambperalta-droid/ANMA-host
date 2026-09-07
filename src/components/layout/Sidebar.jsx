@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
@@ -73,7 +74,16 @@ export default function Sidebar({ open, onClose, collapsed }) {
     a.download = `ANMA_backup_${new Date().toISOString().slice(0,10)}.json`; a.click()
   }
 
-  return (
+  // Body scroll lock cuando el sidebar está abierto (mobile).
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [open])
+
+  const sidebarEl = (
     <aside className={`sidebar ${open ? 'open' : ''}${collapsed ? ' slim' : ''}`}>
       <div className="sb-top">
         <div className="sb-logo-row">
@@ -178,4 +188,9 @@ export default function Sidebar({ open, onClose, collapsed }) {
       </div>
     </aside>
   )
+
+  // Portal al <body> — escapa de stacking contexts de ancestros. Garantiza que
+  // el sidebar tape la Bottom Nav al abrirse en mobile.
+  if (typeof document !== 'undefined') return createPortal(sidebarEl, document.body)
+  return sidebarEl
 }
