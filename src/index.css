@@ -183,12 +183,12 @@ input,select,textarea{font-family:inherit}
 :root{--sw-slim:64px}
 .sidebar{width:var(--sw);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:transform var(--tr),width .3s ease}
 .sidebar::-webkit-scrollbar{width:0}
-.sb-top{padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-top{padding:12px 12px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
 .sb-logo-row{display:flex;align-items:center;gap:10px}
-.sb-logo{width:36px;height:36px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(124,58,237,.35);overflow:hidden}
+.sb-logo{width:32px;height:32px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(124,58,237,.35);overflow:hidden}
 .sb-logo img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-.sb-logo-txt .n{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px}
-.sb-logo-txt .s{font-size:10.5px;color:rgba(255,255,255,.4);margin-top:2px;letter-spacing:.2px}
+.sb-logo-txt .n{font-size:14.5px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1.2}
+.sb-logo-txt .s{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;letter-spacing:.2px;line-height:1.2}
 /* Versión del build — chip discreto al pie del sidebar */
 .sb-version{
   font-size:9px;color:rgba(255,255,255,.25);
@@ -210,23 +210,33 @@ input,select,textarea{font-family:inherit}
 .sb-item.active i{opacity:1;color:var(--brand-light,#A78BFA)}
 .sb-chip{margin-left:auto;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;min-width:20px;text-align:center;line-height:1.4}
 .sb-item.active .sb-chip{background:var(--brand);color:#fff}
-.sb-foot{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06)}
-/* ── Sidebar > Ajustes rápidos (mobile) — reubica ojo/tareas/tema del Topbar ── */
-.sb-quick-settings{padding:10px 8px 8px;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:2px}
-.sb-quick-settings .sb-section-title{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;padding:0 10px 6px}
-.sb-quick-item{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 12px;border:none;background:transparent;color:rgba(255,255,255,.85);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border-radius:8px;text-align:left;transition:background .12s;-webkit-tap-highlight-color:transparent}
-.sb-quick-item:hover{background:rgba(255,255,255,.06)}
-.sb-quick-item:active{background:rgba(255,255,255,.1)}
-.sb-quick-item i{font-size:14px;width:20px;text-align:center;flex-shrink:0}
-.sb-quick-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb-quick-badge{min-width:20px;height:20px;padding:0 6px;border-radius:99px;color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0}
-.sb-quick-toggle{width:32px;height:18px;border-radius:99px;background:rgba(255,255,255,.15);position:relative;transition:background .18s;flex-shrink:0}
-.sb-quick-toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .18s,background .18s}
-.sb-quick-toggle[data-on="true"]{background:var(--brand)}
-.sb-quick-toggle[data-on="true"]::after{transform:translateX(14px)}
-.sidebar.slim .sb-quick-settings{padding:8px 4px}
-.sidebar.slim .sb-quick-item{justify-content:center;padding:0}
-.sidebar.slim .sb-quick-lbl,.sidebar.slim .sb-section-title,.sidebar.slim .sb-quick-toggle{display:none}
+.sb-foot{padding:8px 8px;border-top:1px solid rgba(255,255,255,.06)}
+/* ── Sidebar > Ajustes rápidos — barra horizontal COMPACTA (mobile-first).
+   3 íconos 40×40 en fila, ocupa ~48px vs 140px del layout de filas anterior. */
+.sb-quick-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 10px;border-top:1px solid rgba(255,255,255,.06);
+}
+.sb-quick-icon{
+  position:relative;width:40px;height:40px;border-radius:10px;
+  background:rgba(255,255,255,.06);border:none;
+  color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,transform .1s;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;flex:1;
+}
+.sb-quick-icon:hover{background:rgba(255,255,255,.12);color:#fff}
+.sb-quick-icon:active{transform:scale(.94)}
+.sb-quick-icon.is-on{background:var(--brand);color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.35)}
+.sb-quick-icon-badge{
+  position:absolute;top:-3px;right:-3px;
+  min-width:16px;height:16px;padding:0 4px;border-radius:99px;
+  background:#DC2626;color:#fff;font-size:9px;font-weight:800;
+  display:inline-flex;align-items:center;justify-content:center;line-height:1;
+  border:1.5px solid var(--sidebar-bg,#0f172a);
+}
+.sidebar.slim .sb-quick-bar{flex-direction:column;padding:6px 4px;gap:4px}
+.sidebar.slim .sb-quick-icon{width:36px;height:36px;flex:none}
 /* User row refactor — perfil separado de acción logout (evita click accidental) */
 .sb-user{display:flex;align-items:center;gap:6px;padding:8px 8px;border-radius:10px;background:rgba(255,255,255,.03)}
 .sb-user-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}

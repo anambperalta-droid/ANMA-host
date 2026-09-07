@@ -126,35 +126,31 @@ export default function Sidebar({ open, onClose, collapsed }) {
           </>
         )}
       </nav>
-      {/* Ajustes rápidos — reubicados del Topbar para descongestionar mobile */}
-      <div className="sb-quick-settings">
-        <div className="sb-section-title">Ajustes rápidos</div>
-        <button className="sb-quick-item" onClick={openTasksPanel}>
-          <i className="fa fa-brain" style={{ color: 'var(--brand)' }} />
-          <span className="sb-quick-lbl">
-            {focusMode ? 'Salir del Modo Enfoque' : 'Tareas y Modo Enfoque'}
-          </span>
+      {/* Ajustes rápidos — barra horizontal compacta de 3 íconos (48px total). */}
+      <div className="sb-quick-bar">
+        <button className="sb-quick-icon" onClick={openTasksPanel}
+          title={focusMode ? 'Salir del Modo Enfoque' : 'Tareas y Modo Enfoque'}
+          aria-label="Tareas y Modo Enfoque">
+          <i className="fa fa-brain" />
           {!focusMode && activeTasks.length > 0 && (
-            <span className="sb-quick-badge" style={{
+            <span className="sb-quick-icon-badge" style={{
               background: activeTasks.some(t => t.priority === 'today') ? '#DC2626' : '#D97706'
             }}>
               {activeTasks.length > 9 ? '9+' : activeTasks.length}
             </span>
           )}
         </button>
-        <button className="sb-quick-item" onClick={() => { togglePrivacy() }}>
-          <i className={`fa ${hidden ? 'fa-eye-slash' : 'fa-eye'}`} style={{ color: hidden ? '#DC2626' : 'var(--txt3)' }} />
-          <span className="sb-quick-lbl">
-            {hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
-          </span>
-          <span className="sb-quick-toggle" data-on={hidden ? 'true' : 'false'} />
+        <button className={`sb-quick-icon${hidden ? ' is-on' : ''}`} onClick={togglePrivacy}
+          title={hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
+          aria-label={hidden ? 'Mostrar datos financieros' : 'Ocultar datos financieros'}
+          aria-pressed={hidden}>
+          <i className={`fa ${hidden ? 'fa-eye-slash' : 'fa-eye'}`} />
         </button>
-        <button className="sb-quick-item" onClick={toggleTheme}>
-          <i className={`fa ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} style={{ color: 'var(--txt3)' }} />
-          <span className="sb-quick-lbl">
-            {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-          </span>
-          <span className="sb-quick-toggle" data-on={theme === 'dark' ? 'true' : 'false'} />
+        <button className={`sb-quick-icon${theme === 'dark' ? ' is-on' : ''}`} onClick={toggleTheme}
+          title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          aria-pressed={theme === 'dark'}>
+          <i className={`fa ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
         </button>
       </div>
       <div className="sb-foot">
