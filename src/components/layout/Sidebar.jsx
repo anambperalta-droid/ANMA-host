@@ -65,7 +65,8 @@ export default function Sidebar({ open, onClose, collapsed }) {
   const email = c.email || ''
   const userName = email.split('@')[0] || 'Administrador'
 
-  const goTo = (path) => { nav(path); onClose() }
+  // onClose primero → cierra el drawer visualmente antes de disparar la nav.
+  const goTo = (path) => { onClose(); nav(path) }
 
   const doBackup = () => {
     const data = { budgets: get('budgets'), clients: get('clients'), products: get('products'), suppliers: get('suppliers'), tariffs: get('tariffs'), shipments: get('shipments'), waTemplates: get('waTemplates'), cfg: config() }
@@ -75,12 +76,12 @@ export default function Sidebar({ open, onClose, collapsed }) {
   }
 
   // Body scroll lock cuando el sidebar está abierto (mobile).
+  // Cleanup fn siempre limpia — evita que 'overflow:hidden' quede pegado.
   useEffect(() => {
     if (typeof document === 'undefined') return
-    if (open) {
-      document.body.style.overflow = 'hidden'
-      return () => { document.body.style.overflow = '' }
-    }
+    const prev = document.body.style.overflow
+    document.body.style.overflow = open ? 'hidden' : prev
+    return () => { document.body.style.overflow = '' }
   }, [open])
 
   const sidebarEl = (

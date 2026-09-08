@@ -73,10 +73,11 @@ export function applyThemeColors(principal, acento) {
     root.setProperty('--grad-soft', `linear-gradient(135deg, rgba(${r},${g},${b},.08) 0%, rgba(${r},${g},${b},.04) 100%)`)
     root.setProperty('--sh-brand', `0 6px 20px rgba(${r},${g},${b},.28)`)
 
-    /* Sidebar y paneles oscuros: tinte del color principal */
-    root.setProperty('--sidebar-bg', mixHex(principal, '#0c0a24', 0.15))
+    /* Sidebar y paneles oscuros: tinte del color principal (base menos oscura
+     y más peso del principal → sidebar "encendido", no apagado) */
+    root.setProperty('--sidebar-bg', mixHex(principal, '#1a1650', 0.22))
     root.setProperty('--panel-grad',
-      `linear-gradient(160deg, ${mixHex(principal, '#0c0a24', 0.12)} 0%, ${mixHex(principal, '#1a1650', 0.2)} 50%, ${mixHex(principal, '#2d1a6b', 0.3)} 100%)`
+      `linear-gradient(160deg, ${mixHex(principal, '#1a1650', 0.18)} 0%, ${mixHex(principal, '#2d1a6b', 0.26)} 50%, ${mixHex(principal, '#3f2299', 0.34)} 100%)`
     )
   }
 
