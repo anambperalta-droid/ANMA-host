@@ -6,7 +6,6 @@ import { useData } from '../../context/DataContext'
 import { useTaskFab } from '../../context/TaskFabContext'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { prefetchRoute } from '../../lib/routes'
-import NotificationBell from './NotificationBell'
 
 // Theme helpers — mismo storage que Topbar (clave 'anma_theme').
 const THEME_KEY = 'anma_theme'
@@ -132,11 +131,9 @@ export default function Sidebar({ open, onClose, collapsed }) {
         )}
         {/* Super Admin removido del nav — ahora vive como ícono discreto en el footer. */}
       </nav>
-      {/* Ajustes rápidos — 4 íconos horizontales: Notif · Tareas · Ojo · Tema.
-          Es la ÚNICA fuente de estos controles (removidos del Topbar tanto
-          desktop como mobile para eliminar duplicidad). */}
+      {/* Ajustes rápidos — 3 íconos: Tareas · Ojo · Tema.
+          La campana vive en el Topbar (acceso rápido siempre visible). */}
       <div className="sb-quick-bar">
-        <NotificationBell extraCount={activeTasks.length} className="sb-quick-icon" variant="sidebar" />
         <button className="sb-quick-icon" onClick={openTasksPanel}
           title={focusMode ? 'Salir del Modo Enfoque' : 'Tareas y Modo Enfoque'}
           aria-label="Tareas y Modo Enfoque">

@@ -1,5 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
+import NotificationBell from './NotificationBell'
+import { useTaskFab } from '../../context/TaskFabContext'
 
 const PAGE_NAMES = { '/': 'Dashboard', '/pedido': 'Nuevo pedido', '/clientes': 'Clientes', '/catalogo': 'Productos', '/proveedores': 'Proveedores', '/logistica': 'Logística', '/mensajes': 'Mensajes WhatsApp', '/insumos': 'Packaging', '/config': 'Configuración' }
 
@@ -39,6 +41,7 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
   const title = PAGE_NAMES[loc.pathname] || 'ANMA Regalos'
   const [theme] = useState(initialTheme)
   const syncStatus = useSyncStatus()
+  const { activeTasks } = useTaskFab()
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -75,8 +78,9 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
           <span className="hide-xs">{syncStatus === 'ok' ? 'Guardado' : 'Guardando'}</span>
         </div>
       )}
-      {/* Ojo/Campana/Cerebro/Sol removidos del header — evita duplicidad con el
-          Sidebar > Ajustes rápidos (única fuente de verdad para esos controles). */}
+      {/* Campana — permanece en el Topbar como acceso rápido a notificaciones.
+          Ojo/Cerebro/Sol viven en el Sidebar > Ajustes rápidos. */}
+      <NotificationBell extraCount={activeTasks.length} />
     </header>
   )
 }
