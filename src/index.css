@@ -203,7 +203,9 @@ input,select,textarea{font-family:inherit}
 .sb-nav::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
 .sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1.4px;text-transform:uppercase;padding:16px 12px 6px}
 .sb-sec:first-child{padding-top:6px}
-.sb-item{display:flex;align-items:center;gap:12px;padding:0 12px;height:40px;border-radius:9px;cursor:pointer;color:rgba(255,255,255,.78);font-size:13px;font-weight:500;transition:background .15s,color .15s;margin-bottom:2px;position:relative;user-select:none;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+/* .sb-item ahora es <button> — reset de estilos default + reglas propias */
+.sb-item{display:flex;align-items:center;gap:12px;padding:0 12px;height:40px;width:100%;text-align:left;border-radius:9px;cursor:pointer;color:rgba(255,255,255,.78);font-family:inherit;font-size:13px;font-weight:500;background:transparent;border:none;transition:background .15s,color .15s;margin-bottom:2px;position:relative;user-select:none;pointer-events:auto;-webkit-tap-highlight-color:transparent;touch-action:manipulation;outline:none}
+.sb-item:focus-visible{outline:2px solid var(--brand-light,#A78BFA);outline-offset:-2px}
 .sb-item i,.sb-item span{pointer-events:none}
 .sb-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
 .sb-item.active{background:rgba(124,58,237,.14);color:#fff;font-weight:600}

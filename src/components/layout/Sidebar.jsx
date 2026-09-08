@@ -108,27 +108,24 @@ export default function Sidebar({ open, onClose, collapsed }) {
             || (item.path === '/pedido' && (loc.pathname.startsWith('/pedido') || loc.pathname.startsWith('/presupuesto')))
             || (item.path === '/pedido' && loc.pathname.startsWith('/pedido'))
           return (
-            <div
+            <button
               key={item.path}
+              type="button"
               className={`sb-item ${active ? 'active' : ''}`}
               data-tip={item.label}
               onClick={() => goTo(item.path)}
               onMouseEnter={() => prefetchRoute(item.path)}
-              onTouchStart={() => prefetchRoute(item.path)}
               onFocus={() => prefetchRoute(item.path)}
-              role="link"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goTo(item.path) } }}
             >
               <i className={`fa ${item.icon}`} />
               <span className="sb-lbl">{item.label}</span>
-            </div>
+            </button>
           )
         })}
         {role === 'owner' && (
-          <div className="sb-item" data-tip="Backup" onClick={doBackup}>
+          <button type="button" className="sb-item" data-tip="Backup" onClick={doBackup}>
             <i className="fa fa-cloud-arrow-down" /><span className="sb-lbl">Backup de datos</span>
-          </div>
+          </button>
         )}
         {/* Super Admin removido del nav — ahora vive como ícono discreto en el footer. */}
       </nav>
