@@ -653,6 +653,23 @@ export default function PedidoNuevo() {
           .pedido-cliente-grid { grid-template-columns: 1fr !important; }
           .pedido-entrega-grid { grid-template-columns: 1fr !important; }
           .pedido-precio-grid  { grid-template-columns: 1fr !important; }
+          /* ── Fix iOS auto-zoom en focus: inputs deben ser >=16px.
+             Los inputs base de Cliente/Entrega/Nota usan inputStyle con
+             fontSize: 13 → zoom automatico en iPhone. Aca los subo. ── */
+          .pedido-pane input[type="text"],
+          .pedido-pane input[type="date"],
+          .pedido-pane input[type="number"],
+          .pedido-pane input[type="tel"],
+          .pedido-pane input[type="email"],
+          .pedido-pane textarea {
+            font-size: 16px !important;
+          }
+          /* Excepcion: los cell-input de las filas de producto/costo
+             mantienen 14px con override propio arriba. */
+          /* Nota interna textarea: mas alta y font legible */
+          .pedido-pane textarea { min-height: 68px !important; padding: 10px 12px !important; }
+          /* PrecioBlock inputs (margen/total): tambien >=16px */
+          .pedido-pane input[data-precio-inp] { font-size: 15px !important; }
         }
         @media (max-width: 960px) and (min-width: 721px) {
           .pedido-precio-grid { grid-template-columns: 1fr 1fr !important; }
@@ -870,6 +887,7 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
         <span style={lbl}><i className="fa fa-bullseye" style={{ marginRight: 6, opacity: .7 }} />Margen objetivo</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <input type="number" min={0} max={99} value={margenTarget} onChange={e => onMargenChange(e.target.value)}
+            data-precio-inp
             style={{ width: 54, textAlign: 'right', padding: '4px 8px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.08)', color: '#fff', ...sg }} />
           <span style={{ color: 'rgba(255,255,255,.6)' }}>%</span>
         </span>
@@ -905,6 +923,7 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', marginBottom: 6, fontWeight: 700, letterSpacing: '.04em' }}>ANTICIPO / SEÑA</div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <input type="number" min={0} value={pedido.seniaMonto || ''} onChange={e => onSeniaChange(e.target.value)} placeholder="$0"
+            data-precio-inp
             style={{ flex: 1, minWidth: 0, padding: '8px 10px', fontSize: 12.5, fontWeight: 700, borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.08)', color: '#fff', ...sg }} />
           {totales.total > 0 && [30, 50, 100].map(pct => {
             const monto = Math.round(totales.total * pct / 100)
