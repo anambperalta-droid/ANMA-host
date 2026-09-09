@@ -1099,9 +1099,9 @@ td b{color:var(--txt);font-weight:600}
       'sel cli    acc'
       'sel num    total'
       'estado estado pago';
-    align-items:center;column-gap:12px;row-gap:8px;
-    background:var(--surface);border:1px solid var(--border);border-radius:14px;
-    padding:14px 14px 12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 5px 16px -10px rgba(15,23,42,.10);
+    align-items:center;column-gap:10px;row-gap:7px;
+    background:var(--surface);border:1px solid var(--border);border-radius:13px;
+    padding:11px 12px 10px;margin-bottom:8px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px -10px rgba(15,23,42,.09);
     position:relative;left:auto!important;max-width:100%;
   }
   .hist-tbl tbody tr:active{background:var(--surface2)}
@@ -1146,8 +1146,8 @@ td b{color:var(--txt);font-weight:600}
   /* Cliente — nombre + contacto abajo, alineado al TOP para que las
      acciones queden a la altura del nombre */
   .hist-tbl td[data-cell="cli"]{grid-area:cli;max-width:none!important;align-self:start;min-width:0}
-  .hist-tbl td[data-cell="cli"] [data-cli]{font-size:14.5px!important;font-weight:700!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-decoration:none!important;line-height:1.25!important;color:var(--txt)!important;letter-spacing:-.2px}
-  .hist-tbl td[data-cell="cli"] [data-cli]+div{font-size:11.5px!important;color:var(--txt3)!important;margin-top:2px!important;line-height:1.3!important;font-weight:500!important}
+  .hist-tbl td[data-cell="cli"] [data-cli]{font-size:13.5px!important;font-weight:700!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-decoration:none!important;line-height:1.25!important;color:var(--txt)!important;letter-spacing:-.2px}
+  .hist-tbl td[data-cell="cli"] [data-cli]+div{font-size:11px!important;color:var(--txt3)!important;margin-top:1px!important;line-height:1.3!important;font-weight:500!important}
 
   /* Acciones — WA + ⋮ arriba a la derecha, alineadas con el nombre */
   .hist-tbl td[data-cell="acc"]{grid-area:acc;justify-self:end;align-self:start;padding-top:0!important}
@@ -1159,7 +1159,7 @@ td b{color:var(--txt);font-weight:600}
   .hist-tbl td[data-cell="num"]{grid-area:num;font-size:11.5px!important;color:var(--txt3)!important;font-weight:600!important;letter-spacing:.2px;align-self:center;line-height:1.3;font-family:'Space Grotesk','Inter',sans-serif!important;font-variant-numeric:tabular-nums}
 
   /* Total — label chico + número grande, dato de mayor jerarquía */
-  .hist-tbl td[data-cell="total"]{grid-area:total;text-align:right!important;font-size:17px!important;font-weight:800!important;align-self:center;line-height:1.1;color:var(--txt)!important;font-family:'Space Grotesk','Inter',sans-serif!important;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+  .hist-tbl td[data-cell="total"]{grid-area:total;text-align:right!important;font-size:15.5px!important;font-weight:800!important;align-self:center;line-height:1.1;color:var(--txt)!important;font-family:'Space Grotesk','Inter',sans-serif!important;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
   .hist-tbl td[data-cell="total"]::before{content:'Total';display:block;font-size:8.5px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.06em;text-align:right;margin-bottom:2px}
 
   /* Estado y Pago — misma altura, sin border-top separador (el row-gap alcanza) */
@@ -1948,7 +1948,7 @@ td b{color:var(--txt);font-weight:600}
 
 /* Fila 2: pestañas iguales (flex:1) — todas visibles, sin scroll */
 .dash-ctrl-tabs{display:flex;gap:0;padding:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
-.dash-ctrl-tab{flex:1;min-width:0;height:34px;border:none;background:transparent;color:var(--txt3);font-size:11.5px;font-weight:600;cursor:pointer;font-family:'Space Grotesk','Inter',sans-serif;transition:background .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 4px;letter-spacing:-.1px;position:relative;-webkit-tap-highlight-color:transparent}
+.dash-ctrl-tab{flex:1;min-width:0;height:34px;border:none;background:transparent;color:var(--txt3);font-size:11px;font-weight:600;cursor:pointer;font-family:'Space Grotesk','Inter',sans-serif;transition:background .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 4px;letter-spacing:-.1px;position:relative;-webkit-tap-highlight-color:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dash-ctrl-tab:not(:last-child){border-right:1px solid var(--border)}
 .dash-ctrl-tab.active{background:var(--surface);color:var(--brand);font-weight:700}
 .dash-ctrl-tab.active::after{content:'';position:absolute;left:14%;right:14%;bottom:0;height:2.5px;background:linear-gradient(90deg,var(--brand),var(--brand-light,#8B5CF6));border-radius:2px 2px 0 0}

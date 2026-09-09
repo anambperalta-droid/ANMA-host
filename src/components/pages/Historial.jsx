@@ -1451,7 +1451,7 @@ export default function Historial() {
             { key: 'resumen',     lbl: 'Resumen' },
             { key: 'lista',       lbl: 'Pedidos' },
             { key: 'analisis',    lbl: 'Análisis' },
-            { key: 'seguimiento', lbl: 'Seguim.', badge: seguimiento.length },
+            { key: 'seguimiento', lbl: 'Seguimiento', badge: seguimiento.length },
           ].map(t => (
             <button key={t.key} className={`dash-ctrl-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
               {t.lbl}
@@ -1511,7 +1511,7 @@ export default function Historial() {
           { key: 'resumen',     icon: 'fa-house',     lbl: 'Resumen',                           short: 'Inicio'   },
           { key: 'lista',       icon: 'fa-receipt',   lbl: 'Presupuestos',                      short: 'Presup.'  },
           { key: 'analisis',    icon: 'fa-chart-bar', lbl: 'Análisis',                          short: 'Stats'    },
-          { key: 'seguimiento', icon: 'fa-bell',      lbl: `Seguimiento (${seguimiento.length})`, short: seguimiento.length > 0 ? `${seguimiento.length}` : 'Seguim.' },
+          { key: 'seguimiento', icon: 'fa-bell',      lbl: `Seguimiento (${seguimiento.length})`, short: seguimiento.length > 0 ? `${seguimiento.length}` : 'Seguimiento' },
         ].map(t => (
           <div key={t.key} className={`tab-btn ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
             <i className={`fa ${t.icon} tab-btn-icon`} />
