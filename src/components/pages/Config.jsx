@@ -768,11 +768,11 @@ export default function Config() {
                 </div>
                 <div className="fg">
                   <label>Condiciones de pago</label>
-                  <textarea value={conds} onChange={e => setConds(e.target.value)} rows={4} style={{ borderRadius: 12 }} />
+                  <textarea value={conds} onChange={e => setConds(e.target.value)} rows={2} className="cfg-textarea-auto" style={{ borderRadius: 12 }} />
                 </div>
                 <div className="fg" style={{ marginBottom: 0 }}>
                   <label>Nota legal</label>
-                  <textarea value={legal} onChange={e => setLegal(e.target.value)} rows={3} style={{ borderRadius: 12 }} />
+                  <textarea value={legal} onChange={e => setLegal(e.target.value)} rows={2} className="cfg-textarea-auto" style={{ borderRadius: 12 }} />
                 </div>
               </div>
 
@@ -1036,13 +1036,8 @@ export default function Config() {
       )}
 
       {tab === 'tools' && (
-        <div style={{ display: 'grid', gap: 18, maxWidth: 820 }}>
-          <div style={{ fontSize: 13, color: 'var(--txt2)', marginBottom: 2 }}>
-            <i className="fa fa-circle-info" style={{ marginRight: 6, color: 'var(--brand)' }} />
-            Conectá ANMA con herramientas externas.
-          </div>
-
-          {/* ── WHATSAPP CARD ── */}
+        <div style={{ display: 'grid', gap: 14, maxWidth: 820 }}>
+          {/* ── WHATSAPP CARD (compacta) ── */}
           <div className="pay-card on">
             <div className="pay-card-head">
               <div className="pay-icon" style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)' }}>
@@ -1050,41 +1045,20 @@ export default function Config() {
               </div>
               <div className="pay-head-txt">
                 <div className="pay-head-title">WhatsApp</div>
-                <div className="pay-head-sub">Mensajes y pedidos de reposición directo desde la app</div>
+                <div className="pay-head-sub">Envío directo desde presupuestos, clientes y proveedores.</div>
               </div>
               <div className="pay-status on"><i className="fa fa-circle-check" /> ACTIVO</div>
             </div>
-            <div className="pay-card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 10, marginBottom: 14 }}>
-                {[
-                  { icon: 'fa-paper-plane', color: '#25D366', title: 'Recontacto y cobro', desc: 'Botón directo en cada pedido para escribirle al cliente por WhatsApp' },
-                  { icon: 'fa-rotate',      color: '#128C7E', title: 'Re-orden a proveedor', desc: 'Mensaje automático de reposición con lista de productos' },
-                  { icon: 'fa-share-nodes', color: '#25D366', title: 'Portal de proveedor', desc: 'Compartir el portal de catálogo y precios acordados' },
-                  { icon: 'fa-link',        color: '#128C7E', title: 'Click-to-chat',      desc: 'Cada contacto tiene su botón de WA para abrir la conversación' },
-                ].map(f => (
-                  <div key={f.title} style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(37,211,102,.07)', border: '1px solid rgba(37,211,102,.2)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: f.color + '22', color: f.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                      <i className={`fa ${f.icon}`} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)' }}>{f.title}</div>
-                      <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 2, lineHeight: 1.4 }}>{f.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,.07)', border: '1px solid rgba(245,158,11,.25)', fontSize: 11.5, color: 'var(--txt2)', lineHeight: 1.6 }}>
-                <i className="fa fa-circle-info" style={{ color: '#D97706', marginRight: 6 }} />
-                <b>¿Querés importar tus contactos de WhatsApp?</b> WhatsApp no permite leer contactos desde apps externas. Pero podés exportarlos desde tu teléfono:
+            <details style={{ padding: '10px 22px 14px', borderTop: '1.5px solid var(--border)', background: 'var(--surface2)' }}>
+              <summary style={{ cursor: 'pointer', listStyle: 'none', fontSize: 11.5, color: 'var(--brand)', fontWeight: 600, padding: '4px 0', WebkitTapHighlightColor: 'transparent' }}>
+                <i className="fa fa-circle-info" style={{ marginRight: 5 }} />¿Cómo importo mis contactos?
+              </summary>
+              <div style={{ fontSize: 11, color: 'var(--txt2)', lineHeight: 1.6, marginTop: 6 }}>
+                WhatsApp no permite leer contactos desde apps externas. Exportá desde tu teléfono y usá <b>Importar .vcf</b> en Clientes.
                 <br />
-                <span style={{ color: 'var(--txt3)', fontSize: 11 }}>
-                  Android: Contactos → Más → Exportar → Seleccioná los contactos → Guardar como .vcf
-                  &nbsp;·&nbsp; iOS: Contactos → Compartir → Guardar archivo .vcf
-                </span>
-                <br />
-                <span style={{ fontWeight: 700, color: '#D97706' }}>Luego usá el botón "Importar .vcf" en la sección Clientes.</span>
+                <span style={{ color: 'var(--txt3)' }}>Android: Contactos → Más → Exportar → .vcf &nbsp;·&nbsp; iOS: Contactos → Compartir → .vcf</span>
               </div>
-            </div>
+            </details>
           </div>
 
           {/* ── EMAIL (RESEND) CARD ── */}

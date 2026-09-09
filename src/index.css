@@ -445,6 +445,10 @@ td b{color:var(--txt);font-weight:600}
 /* Config mini-row: 2 columnas fijas para pares de campos cortos (símbolo+prefijo, seña+validez) */
 .cfg-mini-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .cfg-mini-row>.fg{margin-bottom:13px}
+/* Textareas auto-grow: arrancan chicos y crecen con el contenido.
+   field-sizing:content es nativo (Chrome 123+, Safari 17.4+); rows=2 es fallback. */
+.cfg-textarea-auto{field-sizing:content;min-height:44px!important;line-height:1.5}
+.cfg-textarea-auto:focus{min-height:44px!important}
 /* Config list inputs (NewListCreator + ListEditor): iOS zoom fix + touch target en mobile */
 @media(max-width:640px){
   .cfg-list-inp{font-size:16px!important;padding:10px 16px!important;min-height:var(--touch)}
