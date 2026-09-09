@@ -295,6 +295,15 @@ export default function Clientes() {
   const [showFiscal, setShowFiscal] = useState(false)
   const [importTab, setImportTab] = useState('archivo')
   const [pasteNums, setPasteNums] = useState('')
+  // Kebab menu de acciones (mobile card): 1 solo botón (3 puntos) → popover con
+  // Recontactar / Editar / Eliminar. Evita apilar 3 iconos redondos en el cel.
+  const [openMenuId, setOpenMenuId] = useState(null)
+  useEffect(() => {
+    if (!openMenuId) return
+    const close = () => setOpenMenuId(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [openMenuId])
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 80); return () => clearTimeout(t) }, [])
 
@@ -990,26 +999,40 @@ export default function Clientes() {
                 </div>
               </div>
 
-              {/* SECTOR DERECHO: action bar */}
-              <div className="cli-mob-acts" onClick={e => e.stopPropagation()} style={{ display:'flex',gap:1,alignItems:'center',flexShrink:0 }}>
-                {c.wa && (
-                  <button
-                    title={isCold ? 'Recontactar — sin actividad >30d' : 'Re-vincular por WhatsApp'}
-                    style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:isCold?'#D97706':'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}
-                    onClick={e => openRevincul(c, e)}>
-                    <i className="fa fa-bolt" />
-                  </button>
+              {/* SECTOR DERECHO: kebab menu (3 puntos) — abre popover con acciones */}
+              <div style={{ flexShrink:0, position:'relative' }} onClick={e => e.stopPropagation()}>
+                <button
+                  title="Más acciones"
+                  onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === c.id ? null : c.id) }}
+                  style={{ width:36,height:36,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:14,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent',touchAction:'manipulation' }}>
+                  <i className="fa fa-ellipsis-vertical" />
+                </button>
+                {openMenuId === c.id && (
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    style={{ position:'absolute', right:0, top:'calc(100% + 4px)', zIndex:200, background:'var(--surface)', border:'1.5px solid var(--border)', borderRadius:12, padding:6, minWidth:180, boxShadow:'0 12px 32px rgba(0,0,0,.16)' }}>
+                    {c.wa && (
+                      <button
+                        onClick={e => { setOpenMenuId(null); openRevincul(c, e) }}
+                        style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'10px 12px', border:'none', background:'none', borderRadius:8, cursor:'pointer', fontSize:13, fontFamily:'inherit', color:'var(--txt)', textAlign:'left' }}>
+                        <i className="fa fa-bolt" style={{ width:16, color: isCold ? '#EAB308' : 'var(--brand)' }} />
+                        {isCold ? 'Recontactar' : 'Re-vincular WA'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setOpenMenuId(null); openEdit(c) }}
+                      style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'10px 12px', border:'none', background:'none', borderRadius:8, cursor:'pointer', fontSize:13, fontFamily:'inherit', color:'var(--txt)', textAlign:'left' }}>
+                      <i className="fa fa-pen" style={{ width:16, color:'var(--brand)' }} />
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => { setOpenMenuId(null); del(c.id) }}
+                      style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'10px 12px', border:'none', background:'none', borderRadius:8, cursor:'pointer', fontSize:13, fontFamily:'inherit', color:'#DC2626', textAlign:'left' }}>
+                      <i className="fa fa-trash" style={{ width:16 }} />
+                      Eliminar
+                    </button>
+                  </div>
                 )}
-                <button
-                  title="Editar" onClick={() => openEdit(c)}
-                  style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'var(--txt4)',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
-                  <i className="fa fa-pen" />
-                </button>
-                <button
-                  title="Eliminar" onClick={() => del(c.id)}
-                  style={{ width:28,height:28,borderRadius:8,border:'none',background:'transparent',color:'#F87171',cursor:'pointer',fontSize:12.5,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,padding:0,WebkitTapHighlightColor:'transparent' }}>
-                  <i className="fa fa-trash" />
-                </button>
               </div>
             </div>
           )
