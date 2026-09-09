@@ -1094,26 +1094,30 @@ export default function Config() {
                     <i className="fa fa-circle-info" style={{ fontSize: 10 }} /> Ver instrucciones de configuración ▾
                   </button>
                 )}
-                <div className="grid3" style={{ marginBottom: 12 }}>
+                {/* Fila 1: Service ID + Template ID */}
+                <div className="cfg-mini-row" style={{ marginBottom: 10 }}>
                   <div className="fg" style={{ marginBottom: 0 }}>
                     <label><i className="fa fa-server" style={{ marginRight: 4 }} />Service ID</label>
                     <input type="text" value={ejsServiceId} onChange={e => setEjsServiceId(e.target.value)}
-                      placeholder="service_xxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
+                      placeholder="service_xxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
                   </div>
                   <div className="fg" style={{ marginBottom: 0 }}>
                     <label><i className="fa fa-file-lines" style={{ marginRight: 4 }} />Template ID</label>
                     <input type="text" value={ejsTemplateId} onChange={e => setEjsTemplateId(e.target.value)}
-                      placeholder="template_xxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
+                      placeholder="template_xxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
                   </div>
+                </div>
+                {/* Fila 2: Public Key + Email de prueba */}
+                <div className="cfg-mini-row" style={{ marginBottom: 12 }}>
                   <div className="fg" style={{ marginBottom: 0 }}>
                     <label><i className="fa fa-key" style={{ marginRight: 4 }} />Public Key</label>
                     <input type="password" value={ejsPublicKey} onChange={e => setEjsPublicKey(e.target.value)}
-                      placeholder="xxxxxxxxxxxxxxxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
+                      placeholder="xxxxxxxxxxxxxxxx" style={{ fontFamily: 'monospace', fontSize: 12 }} />
                   </div>
-                </div>
-                <div className="fg" style={{ marginBottom: 10, maxWidth: 320 }}>
-                  <label><i className="fa fa-paper-plane" style={{ marginRight: 4 }} />Email de prueba (para verificar)</label>
-                  <input type="email" value={ejsTestEmail} onChange={e => setEjsTestEmail(e.target.value)} placeholder="tu@gmail.com" />
+                  <div className="fg" style={{ marginBottom: 0 }}>
+                    <label><i className="fa fa-paper-plane" style={{ marginRight: 4 }} />Email de prueba</label>
+                    <input type="email" value={ejsTestEmail} onChange={e => setEjsTestEmail(e.target.value)} placeholder="tu@gmail.com" />
+                  </div>
                 </div>
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <button className="btn btn-ghost" onClick={testEmailJS} disabled={ejsTesting} style={{minHeight:44}}>
