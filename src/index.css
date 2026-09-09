@@ -442,6 +442,9 @@ td b{color:var(--txt);font-weight:600}
 .cfg-details summary:hover{background:var(--surface2)}
 .cfg-details-body{padding:0 20px 20px;border-top:1px solid var(--border)}
 .cfg-details-body>*:first-child{margin-top:16px}
+/* Config mini-row: 2 columnas fijas para pares de campos cortos (símbolo+prefijo, seña+validez) */
+.cfg-mini-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cfg-mini-row>.fg{margin-bottom:13px}
 /* Config list inputs (NewListCreator + ListEditor): iOS zoom fix + touch target en mobile */
 @media(max-width:640px){
   .cfg-list-inp{font-size:16px!important;padding:10px 16px!important;min-height:var(--touch)}

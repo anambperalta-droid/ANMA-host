@@ -682,42 +682,43 @@ export default function Config() {
         <div style={{ maxWidth: 1100 }}>
           <div className="cfg-com-grid">
 
-            {/* ══ COLUMNA 1 — Configuración general ══ */}
+            {/* ══ COLUMNA 1 — Configuración general ══
+                 Layout compacto: campos cortos (símbolo, prefijo, seña, validez)
+                 en 2 columnas incluso en mobile. Dropdowns largos (formato) full. */}
             <div className="card" style={{ marginBottom: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <i className="fa fa-sliders" style={{ color: 'var(--brand)', fontSize: 14 }} />Configuración general
                 </div>
-                {/* Fila 1: Símbolo (angosto) + Formato (ancho) — colapsa a 1col en mobile */}
-                <div className="cfg-pair">
-                  <div className="fg cfg-narrow-sm">
+                {/* Fila 1: Símbolo + Prefijo — ambos muy angostos, 2 col siempre */}
+                <div className="cfg-mini-row">
+                  <div className="fg">
                     <label>Símbolo</label>
                     <input type="text" value={currency} onChange={e => setCurrency(e.target.value)} style={{ borderRadius: 12 }} />
                   </div>
-                  <div className="fg cfg-flex">
-                    <label>Formato de números</label>
-                    <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)} style={{ borderRadius: 12 }}>
-                      <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
-                      <option value="en-US">1,234,567 (coma miles — US/UK)</option>
-                    </select>
-                  </div>
-                </div>
-                {/* Fila 2: Prefijo (angosto) + Margen (ancho) — colapsa a 1col en mobile */}
-                <div className="cfg-pair">
-                  <div className="fg cfg-narrow-md">
+                  <div className="fg">
                     <label>Prefijo</label>
                     <input type="text" value={prefix} onChange={e => setPrefix(e.target.value)} style={{ borderRadius: 12 }} />
                   </div>
-                  <div className="fg cfg-flex">
-                    <label>Margen por defecto (%)</label>
-                    <input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ borderRadius: 12 }} />
-                    <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 4, fontStyle: 'italic' }}>
-                      <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
-                      Este valor se aplica solo a presupuestos nuevos. Los existentes mantienen su propio margen.
-                    </div>
+                </div>
+                {/* Fila 2: Formato de números — full width por el texto largo del dropdown */}
+                <div className="fg">
+                  <label>Formato de números</label>
+                  <select value={numberFormat} onChange={e => setNumberFormat(e.target.value)} style={{ borderRadius: 12 }}>
+                    <option value="es-AR">1.234.567 (punto miles — AR/ES)</option>
+                    <option value="en-US">1,234,567 (coma miles — US/UK)</option>
+                  </select>
+                </div>
+                {/* Fila 3: Margen + hint — full width por la nota informativa */}
+                <div className="fg">
+                  <label>Margen por defecto (%)</label>
+                  <input type="number" value={defMargin} onChange={e => setDefMargin(e.target.value)} style={{ borderRadius: 12 }} />
+                  <div style={{ fontSize: 10.5, color: 'var(--txt3)', marginTop: 4, fontStyle: 'italic' }}>
+                    <i className="fa fa-circle-info" style={{ marginRight: 4, opacity: .7 }} />
+                    Se aplica solo a presupuestos nuevos.
                   </div>
                 </div>
-                {/* Fila 3: Seña + Validez — grid2 colapsa a 1col en mobile */}
-                <div className="grid2" style={{ marginBottom: 0 }}>
+                {/* Fila 4: Seña + Validez — 2 col siempre */}
+                <div className="cfg-mini-row" style={{ marginBottom: 0 }}>
                   <div className="fg" style={{ marginBottom: 0 }}>
                     <label>Seña por defecto (%)</label>
                     <input type="number" value={defDeposit} onChange={e => setDefDeposit(e.target.value)} style={{ borderRadius: 12 }} />
