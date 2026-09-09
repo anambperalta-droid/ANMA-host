@@ -290,8 +290,8 @@ export default function Insumos() {
         {lowStock.length > 0 && <i className="ins-statusbar-arrow fa fa-chevron-right" />}
       </div>
 
-      {/* ── KPIs desktop ── */}
-      <div className="bento bento-kpis-4 ins-desk-only" style={{ marginBottom: 14 }}>
+      {/* ── KPIs (visible en desktop + mobile 2×2) ── */}
+      <div className="bento bento-kpis-4 ins-kpis" style={{ marginBottom: 14 }}>
         <div className="bento-kpi" style={{ borderLeft: '3px solid var(--brand)', padding: '12px 14px 10px' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Total materiales</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--txt)', letterSpacing: '-.03em', lineHeight: 1.1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{insumos.length}</div>

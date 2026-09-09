@@ -719,16 +719,43 @@ export default function Clientes() {
         .cli-mob-act:active{transform:scale(0.88)}
         .cli-mob-act-del{background:#FEF2F2!important;color:#DC2626!important}
 
-        @media(max-width:640px){
+        /* ── Header Clientes mobile (<=900px) — patron unificado con Productos.
+           [Grupo utilitarios: Importar / Exportar / Registrar]  |  + Nuevo
+           - Utilitarios: pastillas 36x36 icon-only, surface2/border.
+           - Separador visual (border-right).
+           - Nuevo: CTA primary rose brand con texto. ══════════════════ */
+        @media(max-width:900px){
           .cli-desk-only{display:none!important}
           .cli-mob-list{display:flex}
           .cli-ph-title{display:none!important}
           .cli-view-toggle{display:none!important}
-          .cli-pill{width:40px;height:40px;padding:0;justify-content:center}
-          .cli-pill span{display:none}
-          .cli-pill i{font-size:15px}
-          .cli-pill-new{height:40px;padding:0 16px}
-          .cli-pill-group{gap:8px}
+          /* Contenedor de acciones: flex nowrap con margin-left:auto en el CTA */
+          .ph-right:has(.cli-pill-group){
+            display:flex!important;flex-wrap:nowrap!important;
+            align-items:center!important;gap:6px!important;width:100%;
+          }
+          .cli-pill-group{
+            display:flex;align-items:center;gap:4px;flex:0 0 auto;
+            padding-right:10px;border-right:1px solid var(--border);
+          }
+          .cli-pill-group .cli-pill{
+            width:36px!important;height:36px!important;padding:0!important;
+            justify-content:center!important;border-radius:10px!important;
+            background:var(--surface2)!important;border:1px solid var(--border)!important;
+            color:var(--txt3)!important;
+          }
+          .cli-pill-group .cli-pill i{font-size:13px!important}
+          .cli-pill-group .cli-pill span{display:none!important}
+          .cli-pill-group .cli-pill:active{
+            background:var(--brand-xlt)!important;color:var(--brand)!important;
+            border-color:var(--brand-dim,rgba(244,63,94,.25))!important;transform:scale(.94);
+          }
+          .cli-pill-new{
+            margin-left:auto!important;
+            height:38px!important;padding:0 14px!important;
+            font-size:12.5px!important;flex:0 0 auto;
+          }
+          .cli-pill-new i{font-size:10px!important}
         }
         @media(min-width:641px){
           .cli-mob-list{display:none!important}

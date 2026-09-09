@@ -2049,6 +2049,16 @@ td b{color:var(--txt);font-weight:600}
 /* ══════════════════════════════════════════════════════════ */
 @media(max-width:640px){
   .ins-desk-only{display:none!important}
+  /* KPIs Insumos mobile: 2x2 compacto (mismo tratamiento que Hub).
+     Wrapper .ins-kpis reemplaza el ins-desk-only para verlos tambien
+     en mobile. Los KPIs de insumos usan inline styles (no .kpi-label/
+     .kpi-val) y por eso no los alcanzan los overrides genericos. */
+  .ins-kpis{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:12px!important}
+  .ins-kpis .bento-kpi{padding:10px 12px 9px!important;border-radius:12px!important;border-left-width:3px!important;min-height:64px}
+  .ins-kpis .bento-kpi > div:first-child{font-size:9px!important;margin-bottom:3px!important;letter-spacing:.08em!important}
+  .ins-kpis .bento-kpi > div:nth-child(2){font-size:18px!important;line-height:1.05!important}
+  .ins-kpis .bento-kpi > div:nth-child(3){font-size:9.5px!important;margin-top:3px!important}
+  .ins-kpis .bento-kpi button{font-size:10px!important;margin-top:4px!important}
 }
 
 /* Header actions: compactos en mobile */
