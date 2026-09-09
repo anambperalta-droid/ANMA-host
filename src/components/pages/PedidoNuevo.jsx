@@ -305,7 +305,7 @@ export default function PedidoNuevo() {
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
 
       {/* ── HEADER ── */}
-      <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
+      <div className="ph pedido-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--txt)' }}>
             {pedido.id ? `Pedido ${pedido.numero || `#${pedido.id}`}` : 'Nuevo pedido'}
@@ -364,7 +364,7 @@ export default function PedidoNuevo() {
         />
       )}
 
-      <div className="pedido-form" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0,1fr)' }}>
+      <div className="pedido-form" style={{ display: 'grid', gap: 10, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
         {/* ── CLIENTE ── */}
         <section className="pedido-pane">
@@ -549,6 +549,26 @@ export default function PedidoNuevo() {
         @media (max-width: 720px) {
           .pedido-pane { padding: 13px 13px; border-radius: 12px; }
           .pedido-pane-head { margin-bottom: 10px; }
+          /* ── Header page: mas compacto, botones apretados ── */
+          .pedido-page-header { margin-bottom: 12px !important; gap: 8px !important; }
+          .pedido-page-header h2 { font-size: 17px !important; letter-spacing: -.3px; }
+          .pedido-page-header .btn.btn-sm {
+            padding: 6px 11px !important; font-size: 12px !important;
+            height: 32px !important; min-height: 32px !important; border-radius: 9px !important;
+            display: inline-flex; align-items: center; gap: 4px;
+          }
+          .pedido-page-header .btn.btn-sm i { font-size: 10px !important; }
+          /* Contenedor derecho del header: no salta a otra linea */
+          .pedido-page-header > div:last-child { gap: 6px !important; flex-wrap: nowrap; }
+          /* ── Boton "+ Agregar" dentro de las secciones: mas compacto ── */
+          .pedido-pane > div:first-child > .btn.btn-primary.btn-sm {
+            padding: 6px 12px !important; font-size: 12px !important;
+            height: 34px !important; min-height: 34px !important; border-radius: 10px !important;
+            box-shadow: 0 2px 8px var(--brand-dim, rgba(244,63,94,.22)) !important;
+          }
+          .pedido-pane > div:first-child > .btn.btn-primary.btn-sm i { font-size: 10px !important; }
+          /* Empty hint mas compacto */
+          .pedido-pane > div:last-child { padding-top: 10px !important; }
         }
 
         /* Fila plana con divisor sutil abajo, sin bg propio */
