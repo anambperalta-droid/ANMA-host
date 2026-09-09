@@ -54,6 +54,7 @@ function NewListCreator({ onCreate }) {
     <div style={{ border: '2px dashed var(--border)', borderRadius: 12, padding: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
       <i className="fa fa-layer-group" style={{ color: 'var(--brand)', fontSize: 14, flexShrink: 0 }} />
       <input type="text" value={label}
+        className="cfg-list-inp"
         onChange={e => setLabel(e.target.value)}
         onKeyDown={e => e.key === 'Enter' && create()}
         placeholder="Nombre para la nueva lista (ej: Colores, Regiones, Tamaños...)"
@@ -128,6 +129,7 @@ function ListEditor({ label, icon = 'fa-list', accentColor = 'var(--brand)', ite
         <div style={{ display: 'flex', gap: 6 }}>
           <input
             type="text" value={val}
+            className="cfg-list-inp"
             onChange={e => { setVal(e.target.value); setDupErr(false) }}
             onKeyDown={e => e.key === 'Enter' && add()}
             style={{

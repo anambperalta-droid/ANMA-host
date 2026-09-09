@@ -33,6 +33,7 @@ const NAV = [
   { path: '/guia', icon: 'fa-book-open', label: 'Guía completa' },
   { section: 'Sistema', ownerOnly: true },
   { path: '/config', icon: 'fa-gear', label: 'Configuración', ownerOnly: true },
+  { path: '/importador', icon: 'fa-file-import', label: 'Importador', ownerOnly: true, perm: 'config.access' },
 ]
 
 export default function Sidebar({ open, onClose, collapsed }) {
