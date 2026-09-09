@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, db, dbW, dbDel } from '../../lib/storage'
+import { triggerMilestone } from '../layout/MilestoneToast'
 import MoneyInput from '../common/MoneyInput'
 import QuickProductModal from '../common/QuickProductModal'
 
@@ -300,6 +301,7 @@ export default function Catalogo() {
     // El margen y precio final se calculan al armar el presupuesto.
     // Removemos esos campos del payload para mantener la BD limpia.
     const { price: _omitPrice, margin: _omitMargin, priceB2C: _omitPriceB2C, ...formClean } = form
+    const wasEmpty = get('products').length === 0
     saveEntity('products', {
       ...formClean,
       cat:         formClean.cat ?? '',
@@ -313,6 +315,15 @@ export default function Catalogo() {
     })
     try { dbDel('prod_draft') } catch {}
     setHasDraft(null)
+    // Milestone: primer producto/kit cargado
+    if (wasEmpty && !formClean.id) {
+      triggerMilestone('product-first', {
+        title: '¡Primer producto en tu catálogo!',
+        body: 'Armar ventas ahora es más rápido. Tu tiempo empieza a rendir.',
+        icon: 'fa-box-open',
+        gradient: 'linear-gradient(135deg, #EC4899, #F472B6)',
+      })
+    }
     if (keepOpen) {
       // Modo carga en cadena — mantenemos categoría y proveedor (contexto que
       // suele repetirse entre productos del mismo lote) y reseteamos el resto.

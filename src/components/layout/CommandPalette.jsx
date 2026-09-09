@@ -14,7 +14,7 @@ export default function CommandPalette({ onClose }) {
 
   const pages = [
     { type: 'nav', icon: 'fa-clock-rotate-left', label: 'Historial', sub: 'Dashboard y análisis', path: '/' },
-    { type: 'nav', icon: 'fa-clipboard-list', label: 'Nuevo pedido', sub: 'Crear pedido', path: '/pedido' },
+    { type: 'nav', icon: 'fa-cart-shopping', label: 'Ventas', sub: 'Crear nueva venta / pedido', path: '/pedido' },
     { type: 'nav', icon: 'fa-users', label: 'Clientes', sub: 'Base de contactos', path: '/clientes' },
     { type: 'nav', icon: 'fa-box-open', label: 'Catálogo', sub: 'Productos y categorías', path: '/catalogo' },
     { type: 'nav', icon: 'fa-industry', label: 'Proveedores', sub: 'Directorio', path: '/proveedores' },

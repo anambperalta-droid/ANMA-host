@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import NotificationBell from './NotificationBell'
 import { useTaskFab } from '../../context/TaskFabContext'
 
-const PAGE_NAMES = { '/': 'Dashboard', '/pedido': 'Nuevo pedido', '/clientes': 'Clientes', '/catalogo': 'Productos', '/proveedores': 'Proveedores', '/logistica': 'Logística', '/mensajes': 'Mensajes WhatsApp', '/insumos': 'Packaging', '/config': 'Configuración' }
+const PAGE_NAMES = { '/': 'Dashboard', '/pedido': 'Ventas', '/clientes': 'Clientes', '/catalogo': 'Productos', '/proveedores': 'Proveedores', '/logistica': 'Logística', '/mensajes': 'Mensajes WhatsApp', '/insumos': 'Packaging', '/config': 'Configuración' }
 
 const THEME_KEY = 'anma_theme'
 

@@ -20,6 +20,7 @@ import {
   getEstado, registrarEvento,
   ESTADOS, ESTADO_LABELS, estadoOptions, ESTADOS_COMPRA, TAGS, TAG_LABELS,
 } from '../../lib/pedido'
+import { triggerMilestone } from '../layout/MilestoneToast'
 
 const ESTADO_COMPRA_LABELS = {
   pendiente: 'Pendiente',
@@ -175,7 +176,33 @@ export default function PedidoNuevo() {
         dirtyRef.current = false
         // Primer save de un pedido nuevo: reflejamos el id en la URL para
         // que F5 no pierda la referencia. replace: true no ensucia el back.
-        if (wasNew && saved?.id) nav(`/pedido/${saved.id}`, { replace: true })
+        if (wasNew && saved?.id) {
+          nav(`/pedido/${saved.id}`, { replace: true })
+          // Milestones: primera venta + N=5 / N=25 / N=100.
+          const total = get('budgets').length
+          if (total === 1) {
+            triggerMilestone('sale-first', {
+              title: '¡Tu primera venta cargada!',
+              body: 'Todo lo que hagas desde acá suma. Mandale la propuesta por WhatsApp.',
+              icon: 'fa-cart-shopping',
+              gradient: 'linear-gradient(135deg, #EC4899, #F472B6)',
+            })
+          } else if (total === 5) {
+            triggerMilestone('sales-5', {
+              title: '5 ventas ya. Vas afilada.',
+              body: 'Empieza a rendir. Tu Dashboard ya tiene data para mostrarte tendencia.',
+              icon: 'fa-fire',
+              gradient: 'linear-gradient(135deg, #F59E0B, #EF4444)',
+            })
+          } else if (total === 25) {
+            triggerMilestone('sales-25', {
+              title: '25 ventas. Sos usuaria power.',
+              body: 'Mirá el margen promedio en Historial. Ahí ves cuánto rinde tu trabajo real.',
+              icon: 'fa-trophy',
+              gradient: 'linear-gradient(135deg, #EC4899, #7C3AED)',
+            })
+          }
+        }
       } catch {
         toast('No se pudo guardar. Revisá los datos.', 'er')
       } finally {
