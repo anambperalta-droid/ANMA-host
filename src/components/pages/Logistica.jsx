@@ -1508,11 +1508,11 @@ export default function Logistica() {
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           <div className="modal-form-card" style={{ maxWidth: 600 }}
                onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && (form.remito || form.client)) saveShip() }}>
-            <div className="mh" style={{ padding: '18px 22px 12px', borderBottom: '1px solid var(--border)', margin: 0, flexShrink: 0 }}>
+            <div className="mh" style={{ padding: '18px 22px 12px', borderBottom: '1px solid var(--border)', margin: 0 }}>
               <h3>{form.id ? 'Editar envío' : 'Registrar envío'}</h3>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '14px 22px' }}>
+            <div style={{ padding: '14px 22px' }}>
 
             {/* ── 1. ENVÍO — datos esenciales ─────────────────────────── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>

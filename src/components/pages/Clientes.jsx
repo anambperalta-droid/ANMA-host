@@ -1025,7 +1025,7 @@ export default function Clientes() {
       {/* ── Modal: recontacto masivo por WhatsApp ── */}
       {recontactModal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setRecontactModal(false) }}>
-          <div className="modal-form-card" style={{ maxWidth: 560, minHeight:'auto', height:'auto', maxHeight:'90vh', overflow:'auto' }}>
+          <div className="modal-form-card" style={{ maxWidth: 560 }}>
             <div style={{ padding:'18px 24px 14px', borderBottom:'1px solid var(--border)' }}>
               <div className="mh" style={{ margin:0, paddingBottom:0, borderBottom:'none' }}>
                 <h3><i className="fa-brands fa-whatsapp" style={{ marginRight:8, color:'#16A34A' }} />Recontactar por WhatsApp</h3>
@@ -1066,19 +1066,20 @@ export default function Clientes() {
       {/* MODAL EDITAR */}
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
-          {/* overflow:hidden garantiza que header y footer queden fijos y el body scrollee */}
+          {/* Modal SIN scroll interno — el .modal-bg scrollea la pagina entera
+              si el contenido excede viewport (arquitectura global de Regalos). */}
           <div className="modal-form-card" style={{ maxWidth: 680 }}>
 
-            {/* ── Header fijo ── */}
-            <div style={{ padding: '18px 28px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+            {/* ── Header ── */}
+            <div style={{ padding: '18px 28px 14px', borderBottom: '1px solid var(--border)' }}>
               <div className="mh" style={{ margin: 0, paddingBottom: 0, borderBottom: 'none' }}>
                 <h3>{form.id ? 'Editar' : 'Agregar'} cliente</h3>
                 <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
               </div>
             </div>
 
-            {/* ── Body scrollable — NUNCA clipea el footer ── */}
-            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '18px 28px 4px', WebkitOverflowScrolling: 'touch' }}>
+            {/* ── Body (flujo natural, sin scroll interno) ── */}
+            <div style={{ padding: '18px 28px 4px' }}>
 
               {/* ── Pegar texto de WhatsApp / email / tarjeta ── */}
               <div style={{ marginBottom: 16, borderRadius: 10, border: `1.5px solid ${pasteMode ? 'rgba(37,211,102,.4)' : 'var(--border)'}`, overflow: 'hidden', transition: 'border-color .2s' }}>

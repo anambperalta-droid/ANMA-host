@@ -1321,7 +1321,7 @@ export default function Admin() {
               </button>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 22px 22px' }}>
+            <div style={{ padding: '14px 22px 22px' }}>
               {paymentHistoryLoading ? (
                 <div style={{ padding: 32, textAlign: 'center', color: 'var(--txt3)' }}>
                   <i className="fa fa-spinner fa-spin" style={{ marginRight: 8 }} /> Cargando…

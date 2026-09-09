@@ -594,16 +594,16 @@ export default function Insumos() {
       {modal && (
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           <div className="modal-form-card" style={{ maxWidth: 560 }}>
-            {/* Header fijo */}
-            <div style={{ padding: '16px 22px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {/* Header */}
+            <div style={{ padding: '16px 22px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{form.id ? 'Editar material' : 'Nuevo material de packaging'}</h3>
                 <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 2 }}>Cajas, cintas, viruta, tarjetas, bolsas…</div>
               </div>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
             </div>
-            {/* Body scrollable */}
-            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 22px 8px', WebkitOverflowScrolling: 'touch' }}>
+            {/* Body — flujo natural, sin scroll interno */}
+            <div style={{ padding: '16px 22px 8px' }}>
 
             {/* Fila 1: Nombre */}
             <div className="fg">
