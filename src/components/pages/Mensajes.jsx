@@ -412,43 +412,45 @@ export default function Mensajes() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
-      {/* ── Header con título + utility group + CTA (patrón unificado) ── */}
-      <div className="ph">
+      {/* ── Header compacto: título + acciones alineadas ── */}
+      <div className="ph msg-ph">
         <div className="ph-left">
           <h2>Mensajes</h2>
-          <p>Plantillas de WhatsApp por etapa de venta. Variables se completan con el cliente activo.</p>
+          <p className="msg-ph-sub">Plantillas de WhatsApp por etapa de venta. Variables se completan con el cliente activo.</p>
         </div>
         <div className="ph-right">
-          <button className="btn btn-ghost btn-sm" onClick={restoreDefaults} style={{ borderRadius: 10 }} title="Volver a los mensajes originales">
+          <button className="btn btn-ghost btn-sm msg-btn-restore" onClick={restoreDefaults} style={{ borderRadius: 10 }} title="Restaurar mensajes originales">
             <i className="fa fa-rotate-left" /><span className="desc-txt"> Restaurar</span>
           </button>
-          <button className="btn btn-sm" onClick={openNew}
+          <button className="btn btn-sm msg-btn-new" onClick={openNew}
             style={{ background: P.accent, color: '#fff', border: 'none', borderRadius: 10, boxShadow: '0 4px 12px rgba(37,211,102,.2)' }}>
-            <i className="fa fa-plus" /> Nuevo mensaje
+            <i className="fa fa-plus" /><span className="msg-btn-new-lbl"> Nuevo mensaje</span>
           </button>
         </div>
       </div>
 
-      {/* ── Selector de cliente ── */}
-      <div style={{ marginBottom: 20, maxWidth: 480 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: P.textMuted, letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 6 }}>
+      {/* ── Selector de cliente — sin label header en mobile ── */}
+      <div className="msg-cli-block" style={{ marginBottom: 16, maxWidth: 480 }}>
+        <div className="msg-cli-label" style={{ fontSize: 10, fontWeight: 600, color: P.textMuted, letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 6 }}>
           <i className="fa fa-user-tie" style={{ marginRight: 5 }} />Cliente activo
         </div>
         <ClientSelector clients={clients} selected={activeClient} onSelect={setActiveClient} onClear={() => setActiveClient(null)} />
       </div>
 
-      {/* ── Tabs de etapas ── */}
+      {/* ── Tabs de etapas — mobile: icon-only inactivos, activo con label ── */}
       <div className="msg-stage-tabs" style={{
         display: 'flex', gap: 2, background: '#f8fafc', border: '1px solid #e2e8f0',
-        borderRadius: 14, padding: 4, marginBottom: 20, width: 'fit-content',
+        borderRadius: 14, padding: 4, marginBottom: 20,
       }}>
         {STAGES.map(s => {
           const isActive = activeStage === s
           const count = templates.filter(t => t.stage === s).length
           return (
             <button key={s} onClick={() => setActiveStage(s)}
+              className={`msg-stage-tab${isActive ? ' active' : ''}`}
+              title={s}
               style={{
-                padding: '8px 16px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 600,
+                padding: '8px 14px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
                 transition: 'all .15s ease',
                 background: isActive ? '#fff' : 'transparent',
@@ -456,8 +458,8 @@ export default function Mensajes() {
                 boxShadow: isActive ? P.shadow : 'none',
               }}>
               <i className={`fa ${STAGE_ICONS[s]}`} style={{ fontSize: 11 }} />
-              {s}
-              <span style={{
+              <span className="msg-stage-lbl">{s}</span>
+              <span className="msg-stage-count" style={{
                 fontSize: 9, fontWeight: 700, minWidth: 16, textAlign: 'center',
                 padding: '1px 5px', borderRadius: 10,
                 background: isActive ? P.accentSoft : '#f1f5f9',

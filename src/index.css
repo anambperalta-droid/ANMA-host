@@ -1710,10 +1710,27 @@ td b{color:var(--txt);font-weight:600}
   }
   .msg-vars-panel > div:first-child{grid-column:1/-1}
   .msg-cards-grid{grid-template-columns:1fr!important}
-  .msg-stage-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;scrollbar-width:none;width:100%!important}
-  .msg-stage-tabs::-webkit-scrollbar{display:none}
   /* iOS zoom fix: search input del ClientSelector */
   .msg-cli-search{font-size:16px!important}
+}
+/* Mensajes mobile ≤640px: quita scroll horizontal + compacta header */
+@media(max-width:640px){
+  /* Tab strip: se ajusta al ancho, todos visibles sin scroll */
+  .msg-stage-tabs{width:100%!important;overflow:visible!important;flex-wrap:nowrap!important;justify-content:space-around}
+  .msg-stage-tab{flex:0 1 auto;padding:8px 6px!important;gap:4px!important;min-width:0}
+  .msg-stage-tab i{font-size:13px!important}
+  .msg-stage-tab .msg-stage-lbl{display:none}
+  .msg-stage-tab.active{flex:1 1 auto;padding:8px 10px!important;justify-content:center}
+  .msg-stage-tab.active .msg-stage-lbl{display:inline;font-size:11px}
+  .msg-stage-tab .msg-stage-count{font-size:9px!important;padding:1px 5px!important;min-width:14px!important}
+  /* Header: subtítulo oculto (usa el espacio para tabs), CTA sin label */
+  .msg-ph-sub{display:none}
+  .msg-btn-new-lbl{display:none}
+  .msg-btn-new{width:44px;height:36px;padding:0!important;justify-content:center}
+  .msg-btn-restore{width:40px;height:36px;padding:0!important;justify-content:center}
+  /* Cliente activo: sin el label header ("CLIENTE ACTIVO") — el placeholder ya lo dice */
+  .msg-cli-label{display:none}
+  .msg-cli-block{margin-bottom:10px!important}
 }
 
 /* ── Catalogo modal: sections stacked nicely ── */
