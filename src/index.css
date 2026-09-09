@@ -881,9 +881,41 @@ td b{color:var(--txt);font-weight:600}
 @media(max-width:900px){
   /* Sidebar: drawer — padding bottom para que el bottom-nav no tape los últimos items.
      90px = altura nav (60px) + margen + safe area iOS. */
-  .sidebar{position:fixed;top:0;left:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform .25s ease;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,.35);padding-bottom:calc(env(safe-area-inset-bottom, 0px))}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform .25s ease;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,.18);padding-bottom:calc(env(safe-area-inset-bottom, 0px))}
   .sidebar.open{transform:translateX(0)}
   .sb-overlay{display:block}
+  /* ── Aspecto CLARO en mobile — mismo tratamiento que Hub.
+     El drawer usa surface (blanco) con textos oscuros en vez del tinte
+     rose oscuro del desktop. Overrides con !important porque las reglas
+     base usan rgba(255,255,255,*) hardcoded. */
+  .sidebar{background:var(--surface)!important}
+  .sb-top{border-bottom:1px solid var(--border)!important}
+  .sb-logo-txt .n{color:var(--txt)!important}
+  .sb-logo-txt .s{color:var(--txt3)!important}
+  .sb-sec{color:var(--txt3)!important}
+  .sb-nav::-webkit-scrollbar-thumb{background:var(--border)!important}
+  .sb-item{color:var(--txt2)!important}
+  .sb-item i{opacity:.75!important}
+  .sb-item:hover{background:var(--surface2)!important;color:var(--txt)!important}
+  .sb-item.active{background:var(--brand-xlt)!important;color:var(--brand)!important;font-weight:700!important}
+  .sb-item.active i{opacity:1!important;color:var(--brand)!important}
+  .sb-chip{background:var(--surface2)!important;color:var(--txt3)!important}
+  .sb-item.active .sb-chip{background:var(--brand)!important;color:#fff!important}
+  .sb-quick-bar{background:var(--surface2)!important;border-top:1px solid var(--border)!important}
+  .sb-quick-icon{background:var(--surface)!important;color:var(--txt3)!important;border:1px solid var(--border)!important}
+  .sb-quick-icon:hover{background:var(--surface2)!important;color:var(--txt)!important}
+  .sb-quick-icon.is-on{background:var(--brand-xlt)!important;color:var(--brand)!important;box-shadow:inset 0 0 0 1px var(--brand-dim,rgba(244,63,94,.18))!important}
+  .sb-quick-icon-badge{border-color:var(--surface2)!important}
+  .sb-foot{border-top:1px solid var(--border)!important}
+  .sb-user{background:var(--surface2)!important}
+  .sb-uname{color:var(--txt)!important}
+  .sb-urole{color:var(--txt3)!important}
+  .sb-logout-btn,.sb-admin-btn{color:var(--txt3)!important}
+  .sb-logout-btn:hover{background:#FEF2F2!important;color:#DC2626!important}
+  .sb-admin-btn:hover{background:var(--brand-xlt)!important;color:var(--brand)!important}
+  .sb-install-btn{color:var(--txt2)!important;border-color:var(--border)!important}
+  .sb-install-btn:hover{background:var(--brand-xlt)!important;border-color:var(--brand-dim,rgba(244,63,94,.35))!important;color:var(--brand)!important}
+  .sb-version{color:var(--txt4)!important}
   /* Main fills viewport */
   .main{margin-left:0;width:100vw;max-width:100vw}
   .main.slim{margin-left:0;max-width:100vw}

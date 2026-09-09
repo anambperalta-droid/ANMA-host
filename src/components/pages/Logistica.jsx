@@ -377,7 +377,7 @@ export default function Logistica() {
         .logi-pills-row::-webkit-scrollbar{display:none}
         /* Mobile cards */
         .logi-mob-list{display:none;flex-direction:column;padding:4px 0 16px}
-        .logi-card{display:flex;flex-direction:column;gap:4px;border-radius:24px;padding:13px 16px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;position:relative;-webkit-tap-highlight-color:transparent;transition:background .1s;cursor:pointer}
+        .logi-card{display:flex;flex-direction:column;gap:6px;border-radius:18px;padding:12px 14px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;-webkit-tap-highlight-color:transparent;transition:background .1s,border-color .1s;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.04)}
         .logi-card.late{border-color:#FECACA;border-left:4px solid #DC2626}
         .logi-card:active{background:rgba(0,0,0,.025)}
         /* Fila 1: identidad (remito + cliente) | acciones */
@@ -400,8 +400,10 @@ export default function Logistica() {
         .logi-card-spec{flex-shrink:0;white-space:nowrap}
         .logi-card-spec+.logi-card-spec::before{content:'·';margin:0 4px;color:#D1D5DB;font-weight:400}
         .logi-card-spec-price{font-weight:700;color:var(--txt)!important}
-        .logi-card-status-wrap{flex-shrink:0;display:flex;align-items:center;gap:5px;margin-left:auto}
-        .logi-card-late{font-size:10px;color:#DC2626;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px}
+        .logi-card-status-wrap{flex-shrink:0;display:flex;align-items:center;gap:6px;margin-left:auto}
+        .logi-card-status-wrap .badge{font-size:10.5px!important;padding:3px 9px!important;border-radius:99px!important;font-weight:700!important;line-height:1.3!important}
+        .logi-card-late{font-size:10.5px;color:#DC2626;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:3px;background:#FEF2F2;border:1px solid #FCA5A5;padding:3px 8px;border-radius:99px}
+        .logi-card-late i{font-size:9px}
         @media(max-width:767px){
           .logi-ph{display:none!important}
           .logi-mob-tabs{display:flex!important}
@@ -431,6 +433,14 @@ export default function Logistica() {
         @media(max-width:640px){
           .viaje-header-grid{grid-template-columns:1fr 1fr!important}
           .viaje-stats-grid{grid-template-columns:1fr 1fr!important}
+          /* Resumen KPIs mobile: 2 cols + Desvíos span 2 (mismo patron Hub) */
+          .logi-resumen-kpis{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:12px!important}
+          .logi-resumen-kpis .card{padding:9px 11px!important;border-radius:12px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important}
+          .logi-resumen-kpis .card > div:first-child{font-size:8.5px!important;letter-spacing:.6px!important;margin-bottom:3px!important;font-weight:800!important}
+          .logi-resumen-kpis .card > div:nth-child(2){font-size:17px!important;line-height:1.05!important;letter-spacing:-.02em!important}
+          .logi-resumen-kpis .card > div:nth-child(3),
+          .logi-resumen-kpis .card > div:nth-child(4){font-size:9px!important;line-height:1.3!important;margin-top:2px!important}
+          .logi-resumen-variance{grid-column:1 / -1!important}
         }
         @media(max-width:400px){
           .viaje-header-grid{grid-template-columns:1fr!important}
@@ -837,11 +847,9 @@ export default function Logistica() {
                   onClick={() => openShip(s)}
                 >
                   {/* Badge estado — esquina superior derecha */}
-                  <div style={{ position: 'absolute', top: 12, right: 12 }} onClick={e => e.stopPropagation()}>
-                    {statusBadge(s.status)}
-                  </div>
-
-                  {/* Fila 1: Remito + Cliente | Acciones */}
+                  {/* Fila 1: Remito + Cliente | Acciones (badge se movio a fila 3
+                      para evitar que se superponga con los botones — patron
+                      identico al de Hub, mismo fix). */}
                   <div className="logi-card-row1">
                     <div className="logi-card-id">
                       <div className="logi-card-remito">
@@ -849,7 +857,7 @@ export default function Logistica() {
                       </div>
                       {s.client && <div className="logi-card-client">{s.client}</div>}
                     </div>
-                    <div className="logi-card-acts" onClick={e => e.stopPropagation()} style={{ marginRight: 72 }}>
+                    <div className="logi-card-acts" onClick={e => e.stopPropagation()}>
                       {notifyLink && (
                         <button className="logi-card-act logi-card-act-wa" title="Avisar al cliente" onClick={() => window.open(notifyLink, '_blank')}>
                           <i className="fa-brands fa-whatsapp" />
@@ -876,7 +884,7 @@ export default function Logistica() {
                     </div>
                   )}
 
-                  {/* Fila 3: Specs técnicos | Alerta atrasado */}
+                  {/* Fila 3: Specs técnicos | Badge de estado + alerta atrasado */}
                   <div className="logi-card-row3">
                     <div className="logi-card-specs">
                       {s.bulks > 0 && <span className="logi-card-spec">{s.bulks} bulto{s.bulks !== 1 ? 's' : ''}</span>}
@@ -884,12 +892,15 @@ export default function Logistica() {
                       {feats.costoInterno && <span className="logi-card-spec logi-card-spec-price">{fmt(s.freight)}</span>}
                       {payerChip && <span className="logi-card-spec">{payerChip}</span>}
                     </div>
-                    {late && (
-                      <span className="logi-card-late">
-                        <span className="ins-led-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: '#DC2626', display: 'inline-block', flexShrink: 0 }} />
-                        <i className="fa fa-triangle-exclamation" /> {days}d
-                      </span>
-                    )}
+                    <div className="logi-card-status-wrap" onClick={e => e.stopPropagation()}>
+                      {late && (
+                        <span className="logi-card-late">
+                          <span className="ins-led-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: '#DC2626', display: 'inline-block', flexShrink: 0 }} />
+                          <i className="fa fa-triangle-exclamation" /> {days}d
+                        </span>
+                      )}
+                      {statusBadge(s.status)}
+                    </div>
                   </div>
                 </div>
               )
@@ -1246,8 +1257,10 @@ export default function Logistica() {
             </button>
           </div>
 
-          {/* KPI cards */}
-          <div className="kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
+          {/* KPI cards — mismo patron que Hub: grid 2 cols en mobile con
+             "Desvíos de flete" span 2 para no dejar hueco. Auto-fit dejaba
+             el 5to KPI solo abajo (feo). */}
+          <div className="kpis logi-resumen-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
             {/* Costo total — with trend */}
             <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Costo total envíos</div>
@@ -1280,8 +1293,9 @@ export default function Logistica() {
               <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 3 }}>{lateShipments.length > 0 ? 'Despachado/En tránsito > SLA' : 'Todo al día'}</div>
             </div>
 
-            {/* Desvíos de flete — red bg when > 0 */}
-            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', background: varianceCount > 0 ? '#FEF2F2' : undefined, border: varianceCount > 0 ? '1.5px solid #FCA5A5' : undefined }}>
+            {/* Desvíos de flete — red bg when > 0. En mobile span 2 col
+                para no dejar hueco a la derecha. */}
+            <div className="card logi-resumen-variance" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', background: varianceCount > 0 ? '#FEF2F2' : undefined, border: varianceCount > 0 ? '1.5px solid #FCA5A5' : undefined }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: varianceCount > 0 ? '#991B1B' : 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Desvíos de flete</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: varianceCount > 0 ? '#DC2626' : 'var(--txt)' }}>{varianceCount}</div>
               <div style={{ fontSize: 10, color: varianceCount > 0 ? '#B91C1C' : 'var(--txt3)', marginTop: 3 }}>{varianceCount > 0 ? 'Real ≠ cobrado al cliente' : 'Coincide con lo cobrado'}</div>
