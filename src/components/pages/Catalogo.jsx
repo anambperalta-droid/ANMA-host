@@ -2325,7 +2325,7 @@ export default function Catalogo() {
                   title="Guardar y cargar otro producto sin cerrar el modal — mantiene categoría y proveedor"
                   style={{ borderColor: 'var(--brand)', color: 'var(--brand)' }}
                 >
-                  <i className="fa fa-plus" /> Guardar + otro
+                  <i className="fa fa-plus" /> <span className="lbl-long">Guardar + otro</span><span className="lbl-short">+ Otro</span>
                 </button>
               )}
               <button className="btn btn-primary" onClick={() => save()}
