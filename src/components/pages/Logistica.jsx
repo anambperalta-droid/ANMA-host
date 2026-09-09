@@ -114,6 +114,9 @@ export default function Logistica() {
     const list = db('viajes', [])
     return list.length ? list[list.length - 1].id : null
   })
+  // ── Filtros de la lista de viajes ──
+  const [viajeSearch, setViajeSearch] = useState('')
+  const [viajeStateFilter, setViajeStateFilter] = useState('all')
 
   const dismissLateAlert = () => {
     try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
@@ -162,6 +165,40 @@ export default function Logistica() {
     return stats
   }, [viajes])
   const gastoLogisticoTotal = useMemo(() => viajes.reduce((s, v) => s + viajeTotal(v), 0), [viajes])
+
+  // ── Lista de viajes con filtros aplicados (mas reciente primero) ──
+  const viajesFiltered = useMemo(() => {
+    let list = viajes.slice().reverse()
+    if (viajeStateFilter !== 'all') {
+      list = list.filter(v => v.status === viajeStateFilter)
+    }
+    if (viajeSearch.trim()) {
+      const q = viajeSearch.toLowerCase()
+      const budgetsAll = db('budgets', [])
+      list = list.filter(v => {
+        // Busca en cliente asociado, num pedido y descripciones de tasks
+        const bud = v.budgetId ? budgetsAll.find(b => b.id === v.budgetId) : null
+        const inClient = ((bud?.contact || '') + ' ' + (bud?.company || '')).toLowerCase().includes(q)
+        const inNum = (bud?.num || '').toLowerCase().includes(q)
+        const inTasks = (v.tasks || []).some(t => (t.detail || '').toLowerCase().includes(q))
+        return inClient || inNum || inTasks
+      })
+    }
+    return list
+  }, [viajes, viajeStateFilter, viajeSearch])
+
+  // ── Agrupacion por mes para separadores visuales ──
+  const viajesGrouped = useMemo(() => {
+    const groups = new Map()
+    viajesFiltered.forEach(v => {
+      const d = new Date(v.date + 'T12:00:00')
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const label = d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+      if (!groups.has(key)) groups.set(key, { label, items: [] })
+      groups.get(key).items.push(v)
+    })
+    return Array.from(groups.entries()).sort((a, b) => b[0].localeCompare(a[0]))
+  }, [viajesFiltered])
   const patchTask = (viajeId, taskId, patch) => {
     const v = viajes.find(x => x.id === viajeId)
     if (!v) return
@@ -429,6 +466,31 @@ export default function Logistica() {
         .logi-act-circ.del{background:#FEF2F2;color:#DC2626}
         /* Status quick-select */
         .logi-status-sel{border-radius:20px;padding:3px 22px 3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;background-repeat:no-repeat;background-position:right 7px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%236B7280' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E")}
+        /* ── Filtros de la lista de Viajes: buscador + pills estado ── */
+        .viaje-filters{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+        .viaje-search{position:relative;display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:0 40px 0 14px;height:40px;transition:border-color .15s}
+        .viaje-search:focus-within{border-color:var(--brand);background:var(--surface)}
+        .viaje-search > i:first-child{color:var(--txt3);font-size:12px;margin-right:8px;flex-shrink:0}
+        .viaje-search input{flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:inherit;font-size:13.5px;color:var(--txt)}
+        .viaje-search input::placeholder{color:var(--txt4)}
+        .viaje-search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--txt4);cursor:pointer;font-size:12px;padding:6px;border-radius:6px;transition:background .12s,color .12s}
+        .viaje-search-clear:hover{background:var(--surface);color:var(--txt2)}
+        .viaje-state-pills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:1px}
+        .viaje-state-pills::-webkit-scrollbar{display:none}
+        .viaje-pill{flex-shrink:0;white-space:nowrap;background:var(--surface);border:1px solid var(--border);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;transition:background .12s,color .12s,border-color .12s;-webkit-tap-highlight-color:transparent}
+        .viaje-pill:hover{background:var(--surface2)}
+        .viaje-pill.active{background:var(--brand-xlt);border-color:var(--brand-dim,rgba(244,63,94,.25));color:var(--brand);font-weight:700}
+        /* ── Empty state con filtro aplicado ── */
+        .viaje-empty-filter{text-align:center;padding:32px 20px;background:var(--surface2);border:1px dashed var(--border);border-radius:14px;color:var(--txt3);margin-bottom:12px}
+        .viaje-empty-filter > i{font-size:22px;opacity:.4;margin-bottom:8px;display:block}
+        .viaje-empty-filter > div{font-size:13px;font-weight:600;color:var(--txt2);margin-bottom:12px}
+        .viaje-empty-filter > button{background:var(--brand);color:#fff;border:none;font-family:inherit;font-size:12px;font-weight:700;padding:8px 16px;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .12s}
+        .viaje-empty-filter > button:active{opacity:.85}
+        /* ── Separador por mes (sticky en scroll) ── */
+        .viaje-month-sep{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px 8px;margin-top:14px;position:sticky;top:0;background:linear-gradient(180deg,var(--bg,#fdf7f4) 60%,rgba(253,247,244,0));z-index:5}
+        .viaje-month-sep:first-child{margin-top:0}
+        .viaje-month-lbl{font-size:10.5px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;font-family:'Space Grotesk','Inter',sans-serif}
+        .viaje-month-count{font-size:10px;color:var(--txt4);font-weight:600;background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:99px}
         /* ── CONTROL DE VIAJES: grilla de campos en mobile → 1 col ── */
         @media(max-width:640px){
           .viaje-header-grid{grid-template-columns:1fr 1fr!important}
@@ -558,8 +620,51 @@ export default function Logistica() {
             </div>
           )}
 
-          {/* ── Lista de viajes (más reciente primero) ── */}
-          {viajes.slice().reverse().map(viaje => {
+          {/* ── Filtros: buscador + pills por estado ── */}
+          {viajes.length > 0 && (
+            <div className="viaje-filters">
+              <div className="viaje-search">
+                <i className="fa fa-magnifying-glass" />
+                <input
+                  type="text" placeholder="Buscar por cliente, pedido o parada…"
+                  value={viajeSearch} onChange={e => setViajeSearch(e.target.value)}
+                />
+                {viajeSearch && <i className="fa fa-xmark viaje-search-clear" onClick={() => setViajeSearch('')} />}
+              </div>
+              <div className="viaje-state-pills">
+                {[
+                  { key: 'all',         label: 'Todos' },
+                  { key: 'Planificado', label: 'Planificados' },
+                  { key: 'En Curso',    label: 'En curso' },
+                  { key: 'Finalizado',  label: 'Finalizados' },
+                ].map(f => (
+                  <button key={f.key}
+                    className={`viaje-pill${viajeStateFilter === f.key ? ' active' : ''}`}
+                    onClick={() => setViajeStateFilter(f.key)}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Sin resultados por filtro ── */}
+          {viajes.length > 0 && viajesFiltered.length === 0 && (
+            <div className="viaje-empty-filter">
+              <i className="fa fa-magnifying-glass" />
+              <div>Sin viajes que coincidan con el filtro</div>
+              <button onClick={() => { setViajeSearch(''); setViajeStateFilter('all') }}>Limpiar filtros</button>
+            </div>
+          )}
+
+          {/* ── Lista de viajes agrupados por mes ── */}
+          {viajesGrouped.map(([groupKey, group]) => (
+            <div key={groupKey}>
+              <div className="viaje-month-sep">
+                <span className="viaje-month-lbl">{group.label}</span>
+                <span className="viaje-month-count">{group.items.length} viaje{group.items.length !== 1 ? 's' : ''}</span>
+              </div>
+              {group.items.map(viaje => {
             const isOpen = viaje.id === activeViajeId
             const tasks = viaje.tasks || []
             const doneTasks = tasks.filter(t => t.done).length
@@ -777,6 +882,8 @@ export default function Logistica() {
               </div>
             )
           })}
+            </div>
+          ))}
         </div>
       )}
 
