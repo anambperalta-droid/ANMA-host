@@ -4,7 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, STATUS_MAP, STATUS_CLS } from '../../lib/storage'
-import { triggerMilestone } from '../layout/MilestoneToast'
+import { triggerMilestone, triggerEncouragement } from '../layout/MilestoneToast'
 
 /* ── Modal de vista previa de presupuesto (solo lectura, mobile-first) ── */
 function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
@@ -383,6 +383,8 @@ export default function Clientes() {
         icon: 'fa-user-plus',
         gradient: 'linear-gradient(135deg, #EC4899, #F472B6)',
       })
+    } else if (!form.id) {
+      triggerEncouragement('client')
     }
   }
   const del = (id) => confirm('¿Eliminar cliente?', () => {

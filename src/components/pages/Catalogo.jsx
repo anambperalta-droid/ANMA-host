@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, db, dbW, dbDel } from '../../lib/storage'
-import { triggerMilestone } from '../layout/MilestoneToast'
+import { triggerMilestone, triggerEncouragement } from '../layout/MilestoneToast'
 import MoneyInput from '../common/MoneyInput'
 import QuickProductModal from '../common/QuickProductModal'
 
@@ -323,6 +323,8 @@ export default function Catalogo() {
         icon: 'fa-box-open',
         gradient: 'linear-gradient(135deg, #EC4899, #F472B6)',
       })
+    } else if (!formClean.id) {
+      triggerEncouragement('product')
     }
     if (keepOpen) {
       // Modo carga en cadena — mantenemos categoría y proveedor (contexto que

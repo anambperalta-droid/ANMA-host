@@ -20,7 +20,7 @@ import {
   getEstado, registrarEvento,
   ESTADOS, ESTADO_LABELS, estadoOptions, ESTADOS_COMPRA, TAGS, TAG_LABELS,
 } from '../../lib/pedido'
-import { triggerMilestone } from '../layout/MilestoneToast'
+import { triggerMilestone, triggerEncouragement } from '../layout/MilestoneToast'
 
 const ESTADO_COMPRA_LABELS = {
   pendiente: 'Pendiente',
@@ -201,6 +201,8 @@ export default function PedidoNuevo() {
               icon: 'fa-trophy',
               gradient: 'linear-gradient(135deg, #EC4899, #7C3AED)',
             })
+          } else {
+            triggerEncouragement('sale')
           }
         }
       } catch {

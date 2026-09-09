@@ -1,26 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
-/**
- * MilestoneToast — pop-up de logro / refuerzo positivo.
- *
- * Filosofía: "Intuitive design isn't about adding clarity.
- * It's about removing confusion." — el toast celebra lo bueno,
- * sin obligar al usuario a leer nada obligatorio.
- *
- * Diseño: card compacta en la esquina inferior derecha, animación de
- * entrada suave desde abajo, mini-confetti (8 partículas), auto-dismiss
- * en 5s. NO bloquea la app — solo aparece, celebra y se va.
- *
- * Trigger:
- *   window.dispatchEvent(new CustomEvent('anma:milestone', {
- *     detail: { id: 'client-first', title: '...', body: '...', icon: 'fa-users' }
- *   }))
- *
- * Persistencia: cada milestone id se guarda por usuario en localStorage
- * → solo se dispara UNA VEZ por usuario.
- */
-
 const key = (userId, milestoneId) => `anma_milestone_${milestoneId}_${userId || 'anon'}`
 
 export function isMilestoneUnseen(userId, milestoneId) {
@@ -31,15 +11,6 @@ export function markMilestoneSeen(userId, milestoneId) {
   try { localStorage.setItem(key(userId, milestoneId), new Date().toISOString()) } catch { /* ignorar */ }
 }
 
-/**
- * Helper para disparar desde cualquier lugar de la app.
- * Ejemplo:
- *   triggerMilestone('client-first', {
- *     title: '¡Primer cliente cargado!',
- *     body: 'Ya tenés a quién venderle. Ahora armale su primer presupuesto.',
- *     icon: 'fa-users',
- *   })
- */
 export function triggerMilestone(id, opts = {}) {
   if (typeof window === 'undefined') return
   window.dispatchEvent(new CustomEvent('anma:milestone', {
@@ -47,36 +18,80 @@ export function triggerMilestone(id, opts = {}) {
   }))
 }
 
-const DEFAULT_GRADIENT = 'linear-gradient(135deg, #7C3AED, #059669)'
+const ENCOURAGEMENTS = {
+  client: [
+    { title: 'Muy bien hecho', body: 'Cliente guardado. Tu cartera crece.', icon: 'fa-user-check' },
+    { title: 'Dato actualizado', body: 'Cada detalle cuenta para vender mejor.', icon: 'fa-address-book' },
+    { title: 'Sumaste otro contacto', body: 'Más clientes, más oportunidades.', icon: 'fa-users' },
+  ],
+  product: [
+    { title: 'Producto listo', body: 'Tu catálogo se fortalece.', icon: 'fa-cube' },
+    { title: 'Bien ahí', body: 'Cada producto que cargás te ahorra tiempo después.', icon: 'fa-boxes-stacked' },
+    { title: 'Catálogo actualizado', body: 'Más opciones para tus ventas.', icon: 'fa-tags' },
+  ],
+  sale: [
+    { title: 'Venta registrada', body: 'Bien ahí. Cada venta suma.', icon: 'fa-cart-shopping' },
+    { title: 'Muy bien', body: 'Seguí construyendo. Los números acompañan.', icon: 'fa-circle-check' },
+    { title: 'Otro pedido listo', body: 'Tu negocio se mueve.', icon: 'fa-rocket' },
+  ],
+  supplier: [
+    { title: 'Proveedor guardado', body: 'Buena red de proveedores, mejor negocio.', icon: 'fa-truck' },
+    { title: 'Dato registrado', body: 'Tener tus proveedores ordenados te da ventaja.', icon: 'fa-handshake' },
+  ],
+}
+
+let _sessionEncCount = 0
+const SESSION_ENC_MAX = 4
+
+export function triggerEncouragement(actionType) {
+  if (typeof window === 'undefined') return
+  if (_sessionEncCount >= SESSION_ENC_MAX) return
+  const pool = ENCOURAGEMENTS[actionType]
+  if (!pool) return
+  _sessionEncCount++
+  const msg = pool[Math.floor(Math.random() * pool.length)]
+  window.dispatchEvent(new CustomEvent('anma:encouragement', {
+    detail: { ...msg, gradient: 'linear-gradient(135deg, #E11D48, #F43F5E)' },
+  }))
+}
+
+const DEFAULT_GRADIENT = 'linear-gradient(135deg, #E11D48, #F43F5E)'
 
 export default function MilestoneToast() {
   const { user } = useAuth()
-  const [queue, setQueue] = useState([])   // stack — múltiples milestones seguidos
+  const [queue, setQueue] = useState([])
   const [current, setCurrent] = useState(null)
   const [exiting, setExiting] = useState(false)
   const dismissTimer = useRef(null)
 
-  // Suscripción global al evento
   useEffect(() => {
-    const onFire = (ev) => {
+    const onMilestone = (ev) => {
       const detail = ev?.detail
       if (!detail?.id) return
       if (!isMilestoneUnseen(user?.id, detail.id)) return
       markMilestoneSeen(user?.id, detail.id)
-      setQueue(q => [...q, detail])
+      setQueue(q => [...q, { ...detail, _type: 'milestone' }])
     }
-    window.addEventListener('anma:milestone', onFire)
-    return () => window.removeEventListener('anma:milestone', onFire)
+    const onEncouragement = (ev) => {
+      const detail = ev?.detail
+      if (!detail?.title) return
+      setQueue(q => [...q, { ...detail, _type: 'encouragement' }])
+    }
+    window.addEventListener('anma:milestone', onMilestone)
+    window.addEventListener('anma:encouragement', onEncouragement)
+    return () => {
+      window.removeEventListener('anma:milestone', onMilestone)
+      window.removeEventListener('anma:encouragement', onEncouragement)
+    }
   }, [user])
 
-  // Procesar cola: mostrar 1 a la vez
   useEffect(() => {
     if (current || queue.length === 0) return
     const [next, ...rest] = queue
     setQueue(rest)
     setCurrent(next)
-    // Auto-dismiss en 5.5s
-    dismissTimer.current = setTimeout(close, 5500)
+    const dur = next._type === 'encouragement' ? 3500 : 5500
+    dismissTimer.current = setTimeout(close, dur)
     return () => { if (dismissTimer.current) clearTimeout(dismissTimer.current) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queue, current])
@@ -90,13 +105,13 @@ export default function MilestoneToast() {
 
   const gradient = current.gradient || DEFAULT_GRADIENT
   const icon = current.icon || 'fa-trophy'
+  const isMilestoneType = current._type === 'milestone'
 
-  // 8 partículas de confetti minimalista (no invasivo — solo un toque)
-  const PARTICLES = Array.from({ length: 8 }, (_, i) => ({
+  const PARTICLES = !isMilestoneType ? [] : Array.from({ length: 8 }, (_, i) => ({
     left: 10 + (i * 11) % 80,
     delay: (i * 0.08) % 0.6,
     duration: 1.8 + ((i * 0.15) % 1.2),
-    color: ['#7C3AED', '#059669', '#F59E0B', '#EC4899', '#2563EB'][i % 5],
+    color: ['#E11D48', '#F43F5E', '#F59E0B', '#EC4899', '#2563EB'][i % 5],
     size: 5 + (i % 3) * 2,
   }))
 
@@ -163,7 +178,7 @@ export default function MilestoneToast() {
             fontFamily: 'inherit',
           }}
         >
-          {/* Mini-confetti sobre el icono (top-left area) */}
+          {PARTICLES.length > 0 && (
           <div aria-hidden="true" style={{
             position: 'absolute',
             top: 8, left: 8, width: 60, height: 60,
@@ -181,8 +196,8 @@ export default function MilestoneToast() {
               }} />
             ))}
           </div>
+          )}
 
-          {/* Icono con gradient del milestone */}
           <div style={{
             position: 'absolute',
             top: 14, left: 16,
@@ -190,13 +205,13 @@ export default function MilestoneToast() {
             background: gradient,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontSize: 18,
-            boxShadow: '0 8px 20px rgba(124,58,237,.28)',
+            boxShadow: '0 8px 20px rgba(225,29,72,.28)',
             animation: 'anma-mt-icon-pop .5s .1s cubic-bezier(.34,1.56,.64,1) both',
           }}>
             <i className={`fa ${icon}`} />
           </div>
 
-          {/* Contenido */}
+          {isMilestoneType && (
           <div style={{
             fontSize: 10.5, fontWeight: 700,
             letterSpacing: '.14em', textTransform: 'uppercase',
@@ -204,6 +219,7 @@ export default function MilestoneToast() {
           }}>
             Logro desbloqueado
           </div>
+          )}
           <div style={{
             fontSize: 14, fontWeight: 700,
             color: 'var(--txt, #111827)', marginBottom: 4,
@@ -220,7 +236,6 @@ export default function MilestoneToast() {
             </div>
           )}
 
-          {/* Progress bar de auto-dismiss */}
           <div aria-hidden="true" style={{
             position: 'absolute',
             left: 0, right: 0, bottom: 0,
@@ -232,7 +247,7 @@ export default function MilestoneToast() {
               width: '100%', height: '100%',
               background: gradient,
               transform: 'translateX(-100%)',
-              animation: 'anma-mt-progress 5.5s linear forwards',
+              animation: `anma-mt-progress ${current._type === 'encouragement' ? '3.5' : '5.5'}s linear forwards`,
             }} />
           </div>
         </div>
