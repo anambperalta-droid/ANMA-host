@@ -911,17 +911,56 @@ export default function Catalogo() {
         .cli-pill-new:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 10px 26px var(--brand-dim)}
         .cli-pill-new:active{transform:scale(.95)}
         .cli-pill-new i{font-size:11px}
-        @media(max-width:640px){
-          /* Barra de acciones (mobile): alineada a la derecha; utilitarios como íconos,
-             "Nuevo" mantiene su texto como CTA principal. Sin toggle grilla/lista. */
-          .cat-ph{display:block!important;margin-bottom:8px!important}
-          .cat-ph .ph-right{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px}
-          .cat-ph .cli-pill-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+        /* ═══════════════════════════════════════════════════════════════
+           Header Productos mobile (<=900px) — mismo patron que Hub.
+           [Grupo utilitarios: %  CSV  ↑]  |  ⚡ Rapido  + Nuevo
+           - Utilitarios: 3 pastillas 36x36 icon-only, surface2/border.
+           - Separador visual (border-right en el grupo).
+           - Rapido: chip amarillo con texto (hijo directo de .ph-right).
+           - Nuevo: CTA principal rose brand con texto.
+           - flex nowrap + margin-left:auto empuja los CTAs a la derecha.
+           ═══════════════════════════════════════════════════════════════ */
+        @media(max-width:900px){
+          .cat-ph{margin-bottom:10px}
+          .cat-ph .ph-right{
+            display:flex!important;flex-wrap:nowrap!important;
+            align-items:center!important;justify-content:flex-start!important;
+            gap:6px!important;width:100%;background:transparent!important;padding:0!important;
+          }
+          .cat-ph .cli-pill-group{
+            display:flex;align-items:center;gap:4px;flex:0 0 auto;
+            padding-right:10px;border-right:1px solid var(--border);
+          }
+          .cat-ph .cli-pill-group .cli-pill{
+            width:36px!important;height:36px!important;padding:0!important;
+            justify-content:center!important;border-radius:10px!important;
+            background:var(--surface2)!important;border:1px solid var(--border)!important;
+            color:var(--txt3)!important;
+          }
+          .cat-ph .cli-pill-group .cli-pill i{font-size:13px!important}
+          .cat-ph .cli-pill-group .cli-pill span{display:none!important}
+          .cat-ph .cli-pill-group .cli-pill:active{
+            background:var(--brand-xlt)!important;color:var(--brand)!important;
+            border-color:var(--brand-dim,rgba(244,63,94,.25))!important;transform:scale(.94);
+          }
           .cat-view-toggle{display:none!important}
-          .cat-ph .cli-pill{width:40px;height:40px;padding:0!important;justify-content:center}
-          .cat-ph .cli-pill span{display:none}
-          .cat-ph .cli-pill i{font-size:14px}
-          .cat-ph .cli-pill-new{height:40px;padding:0 16px!important}
+          /* Rapido — chip amarillo hijo directo de .ph-right (>). */
+          .cat-ph > .ph-right > .cli-pill{
+            margin-left:auto!important;
+            height:38px!important;padding:0 14px!important;width:auto!important;
+            background:linear-gradient(135deg,rgba(251,191,36,.14),rgba(245,158,11,.10))!important;
+            border:1px solid #FBBF24!important;color:#B45309!important;
+            border-radius:9999px!important;font-size:11.5px!important;font-weight:700!important;
+            display:inline-flex!important;align-items:center!important;gap:5px!important;
+          }
+          .cat-ph > .ph-right > .cli-pill span{display:inline!important;font-size:11.5px!important}
+          .cat-ph > .ph-right > .cli-pill i{font-size:11px!important;color:#F59E0B!important}
+          /* Nuevo CTA */
+          .cat-ph .cli-pill-new{
+            height:38px!important;padding:0 14px!important;
+            font-size:12.5px!important;flex:0 0 auto;
+          }
+          .cat-ph .cli-pill-new i{font-size:10px!important}
           .modal-3col{grid-template-columns:1fr!important}
         }
         @media(max-width:480px){.cat-price-calc{grid-template-columns:1fr!important}.cat-price-arrow{display:none!important}}
