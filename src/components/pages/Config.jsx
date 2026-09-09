@@ -499,17 +499,17 @@ export default function Config() {
     { key: 'notasInternas',     icon: 'fa-note-sticky',  color: '#2563EB', label: 'Notas internas en pedidos',       desc: 'Campo privado de notas en cada pedido, solo para vos' },
   ]
 
-  // 8 secciones separadas: cada una con su foco. En mobile se muestra icon-only
-  // para no cargar visualmente; en desktop icon + label. Estilo pill liviano.
+  // 8 secciones separadas: cada una con su foco. Patrón dashboard: desktop
+  // muestra label largo, mobile muestra icon + short label como píldora vertical.
   const allTabs = [
-    { id: 'identidad', icon: 'fa-building', label: 'Identidad' },
-    { id: 'comercial', icon: 'fa-dollar-sign', label: 'Comercial' },
-    { id: 'listas', icon: 'fa-list', label: 'Listas' },
-    { id: 'modulos', icon: 'fa-sliders', label: 'Módulos' },
-    { id: 'pagos', icon: 'fa-credit-card', label: 'Pagos' },
-    { id: 'integraciones', icon: 'fa-plug', label: 'Integraciones' },
-    { id: 'equipo', icon: 'fa-user-plus', label: 'Equipo' },
-    { id: 'cuenta', icon: 'fa-shield-halved', label: 'Cuenta' },
+    { id: 'identidad',     icon: 'fa-building',        label: 'Identidad y contacto', short: 'Marca' },
+    { id: 'comercial',     icon: 'fa-dollar-sign',     label: 'Comercial',            short: 'Ventas' },
+    { id: 'listas',        icon: 'fa-list',            label: 'Listas',               short: 'Listas' },
+    { id: 'modulos',       icon: 'fa-sliders',         label: 'Módulos',              short: 'Extras' },
+    { id: 'pagos',         icon: 'fa-credit-card',     label: 'Pagos',                short: 'Pagos' },
+    { id: 'integraciones', icon: 'fa-plug',            label: 'Integraciones',        short: 'Conex.' },
+    { id: 'equipo',        icon: 'fa-user-plus',       label: 'Equipo',               short: 'Equipo' },
+    { id: 'cuenta',        icon: 'fa-shield-halved',   label: 'Cuenta',               short: 'Cuenta' },
   ]
   const tabs = allTabs.filter(t => t.id !== 'equipo' || canManageTeam)
 
@@ -535,9 +535,11 @@ export default function Config() {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`cfg-tab-btn${tab === t.id ? ' active' : ''}`}
+              title={t.label}
             >
-              <i className={`fa ${t.icon}`} style={{ fontSize: 11 }} />
-              {t.label}
+              <i className={`fa ${t.icon} cfg-tab-icon`} />
+              <span className="cfg-tab-lbl">{t.label}</span>
+              <span className="cfg-tab-short">{t.short}</span>
             </button>
           ))}
         </div>
