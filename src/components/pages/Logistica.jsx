@@ -117,6 +117,7 @@ export default function Logistica() {
   // ── Filtros de la lista de viajes ──
   const [viajeSearch, setViajeSearch] = useState('')
   const [viajeStateFilter, setViajeStateFilter] = useState('all')
+  const [viajeTimeFilter, setViajeTimeFilter] = useState('all') // all | thisMonth | lastMonth | last90
 
   const dismissLateAlert = () => {
     try { sessionStorage.setItem('logistica_late_dismissed', '1') } catch { }
@@ -172,6 +173,25 @@ export default function Logistica() {
     if (viajeStateFilter !== 'all') {
       list = list.filter(v => v.status === viajeStateFilter)
     }
+    // Filtro por tiempo — recorta viajes segun periodo elegido
+    if (viajeTimeFilter !== 'all') {
+      const now = new Date()
+      const y = now.getFullYear(), m = now.getMonth()
+      let from = null, to = null
+      if (viajeTimeFilter === 'thisMonth') {
+        from = new Date(y, m, 1); to = new Date(y, m + 1, 1)
+      } else if (viajeTimeFilter === 'lastMonth') {
+        from = new Date(y, m - 1, 1); to = new Date(y, m, 1)
+      } else if (viajeTimeFilter === 'last90') {
+        from = new Date(now.getTime() - 90 * 86400000); to = new Date(y, m + 1, 1)
+      }
+      if (from && to) {
+        list = list.filter(v => {
+          const d = new Date(v.date + 'T12:00:00')
+          return d >= from && d < to
+        })
+      }
+    }
     if (viajeSearch.trim()) {
       const q = viajeSearch.toLowerCase()
       const budgetsAll = db('budgets', [])
@@ -185,7 +205,7 @@ export default function Logistica() {
       })
     }
     return list
-  }, [viajes, viajeStateFilter, viajeSearch])
+  }, [viajes, viajeStateFilter, viajeTimeFilter, viajeSearch])
 
   // ── Agrupacion por mes para separadores visuales ──
   const viajesGrouped = useMemo(() => {
@@ -480,6 +500,13 @@ export default function Logistica() {
         .viaje-pill{flex-shrink:0;white-space:nowrap;background:var(--surface);border:1px solid var(--border);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;transition:background .12s,color .12s,border-color .12s;-webkit-tap-highlight-color:transparent}
         .viaje-pill:hover{background:var(--surface2)}
         .viaje-pill.active{background:var(--brand-xlt);border-color:var(--brand-dim,rgba(244,63,94,.25));color:var(--brand);font-weight:700}
+        /* Filtro tiempo: mas discreto, con icono calendario prefijo */
+        .viaje-time-pills{display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:1px;margin-top:2px}
+        .viaje-time-pills::-webkit-scrollbar{display:none}
+        .viaje-time-ic{color:var(--txt4);font-size:11px;margin-right:2px;flex-shrink:0}
+        .viaje-pill-time{padding:5px 11px!important;font-size:11px!important;border-color:transparent!important;background:transparent!important;color:var(--txt3)!important}
+        .viaje-pill-time:hover{background:var(--surface2)!important}
+        .viaje-pill-time.active{background:var(--surface)!important;border-color:var(--border)!important;color:var(--txt)!important;font-weight:700!important;box-shadow:0 1px 2px rgba(15,23,42,.05)}
         /* ── Empty state con filtro aplicado ── */
         .viaje-empty-filter{text-align:center;padding:32px 20px;background:var(--surface2);border:1px dashed var(--border);border-radius:14px;color:var(--txt3);margin-bottom:12px}
         .viaje-empty-filter > i{font-size:22px;opacity:.4;margin-bottom:8px;display:block}
@@ -567,13 +594,8 @@ export default function Logistica() {
 
           {/* ── Barra superior ── */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px' }}>
-                Registro de recorridos
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>
-                Un viaje · Múltiples tareas
-              </div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px' }}>
+              Registro de recorridos
             </div>
             <button className="btn btn-primary btn-sm" onClick={createViaje} style={{ gap: 5 }}>
               <i className="fa fa-plus" style={{ fontSize: 11 }} /> Nuevo viaje
@@ -645,6 +667,22 @@ export default function Logistica() {
                   </button>
                 ))}
               </div>
+              {/* Filtro de tiempo (fila propia mas discreta, con icono) */}
+              <div className="viaje-time-pills">
+                <i className="fa fa-calendar viaje-time-ic" />
+                {[
+                  { key: 'all',       label: 'Todos los meses' },
+                  { key: 'thisMonth', label: 'Este mes' },
+                  { key: 'lastMonth', label: 'Mes pasado' },
+                  { key: 'last90',    label: 'Últimos 3 meses' },
+                ].map(f => (
+                  <button key={f.key}
+                    className={`viaje-pill viaje-pill-time${viajeTimeFilter === f.key ? ' active' : ''}`}
+                    onClick={() => setViajeTimeFilter(f.key)}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -652,8 +690,8 @@ export default function Logistica() {
           {viajes.length > 0 && viajesFiltered.length === 0 && (
             <div className="viaje-empty-filter">
               <i className="fa fa-magnifying-glass" />
-              <div>Sin viajes que coincidan con el filtro</div>
-              <button onClick={() => { setViajeSearch(''); setViajeStateFilter('all') }}>Limpiar filtros</button>
+              <div>Sin viajes que coincidan con los filtros</div>
+              <button onClick={() => { setViajeSearch(''); setViajeStateFilter('all'); setViajeTimeFilter('all') }}>Limpiar filtros</button>
             </div>
           )}
 
