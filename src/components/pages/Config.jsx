@@ -554,7 +554,11 @@ export default function Config() {
         </button>
       </div>
 
-      {tab === 'identidad' && (
+      {tab === 'identidad' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Lo que cambies acá aparece en <b>tus pedidos, emails y portal</b>. Dedicale 2 minutos y quedan bien para siempre.</p>
+        </div>
         <div className="card" style={{ maxWidth: 900 }}>
           <div className="cfg-id-grid">
             {/* ── Columna Izquierda: Logo + Datos ── */}
@@ -664,26 +668,35 @@ export default function Config() {
             </div>
           </div>
 
-          {/* ── Datos de contacto (mergeados a Identidad para flujo más rápido) ── */}
-          <div className="card" style={{ marginTop: 16 }}>
+          {/* ── Datos de contacto: 2 col fijas en pares lógicos + Dirección full ── */}
+          <div className="card" style={{ marginTop: 18 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 7 }}>
               <i className="fa fa-phone" style={{ color: 'var(--brand)', fontSize: 14 }} />Datos de contacto
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0 14px' }}>
+            {/* Fila 1: Email + WhatsApp — canales primarios */}
+            <div className="cfg-mini-row">
               <div className="fg"><label>Email</label><input type="email" value={cEmail} onChange={e => setCEmail(e.target.value)} placeholder="hola@anma.com" style={{ borderRadius: 12 }} /></div>
               <div className="fg"><label>WhatsApp</label><input type="text" value={cWA} onChange={e => setCWA(e.target.value)} placeholder="+54 351 ..." style={{ borderRadius: 12 }} /></div>
+            </div>
+            {/* Fila 2: Instagram + Sitio web — presencia online */}
+            <div className="cfg-mini-row">
               <div className="fg"><label>Instagram</label><input type="text" value={cIG} onChange={e => setCIG(e.target.value)} placeholder="@anma_regalos" style={{ borderRadius: 12 }} /></div>
               <div className="fg"><label>Sitio web</label><input type="text" value={cWeb} onChange={e => setCWeb(e.target.value)} placeholder="https://..." style={{ borderRadius: 12 }} /></div>
-              <div className="fg" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
-                <label>Dirección</label>
-                <input type="text" value={cAddr} onChange={e => setCAddr(e.target.value)} placeholder="Av. Corrientes 1234, CABA" style={{ borderRadius: 12 }} />
-              </div>
+            </div>
+            {/* Fila 3: Dirección full — texto largo */}
+            <div className="fg" style={{ marginBottom: 0 }}>
+              <label>Dirección</label>
+              <input type="text" value={cAddr} onChange={e => setCAddr(e.target.value)} placeholder="Av. Corrientes 1234, CABA" style={{ borderRadius: 12 }} />
             </div>
           </div>
         </div>
-      )}
+      </>)}
 
-      {tab === 'comercial' && (
+      {tab === 'comercial' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 1100 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Definí tus <b>reglas de cobro una vez</b>. ANMA las aplica sola en cada pedido nuevo — vos ganás tiempo.</p>
+        </div>
         <div style={{ maxWidth: 1100 }}>
           <div className="cfg-com-grid">
 
@@ -808,9 +821,13 @@ export default function Config() {
 
           </div>
         </div>
-      )}
+      </>)}
 
-      {tab === 'listas' && (
+      {tab === 'listas' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Cargá las <b>categorías, modalidades y ocasiones que usás</b>. Después las elegís con un clic — menos escribir, más vender.</p>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
           <ListEditor label="Modalidades de entrega" icon="fa-truck" accentColor="#D97706"
             items={c.deliveryModes || []} onAdd={v => handleListAdd('deliveryModes', v)} onRemove={i => handleListRemove('deliveryModes', i)} />
@@ -852,9 +869,13 @@ export default function Config() {
             )
           })}
         </div>
-      )}
+      </>)}
 
-      {tab === 'modulos' && (
+      {tab === 'modulos' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Activá <b>solo lo que necesitás</b>. La app se adapta a cómo trabajás vos — menos ruido, más foco.</p>
+        </div>
         <div style={{ maxWidth: 900 }}>
           <div className="feat-grid">
           {FEATURE_FLAGS.map(f => {
@@ -895,9 +916,13 @@ export default function Config() {
           })}
           </div>
         </div>
-      )}
+      </>)}
 
-      {tab === 'pagos' && (
+      {tab === 'pagos' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 780 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Cuanto más <b>fácil sea pagarte</b>, más cobrás. Ofrecé Mercado Pago, transferencia o ambos — sin fricción para tu cliente.</p>
+        </div>
         <div style={{ display: 'grid', gap: 18, maxWidth: 780 }}>
           {/* ── MERCADO PAGO CARD ── */}
           <div className={`pay-card ${mpEnabled ? 'on' : ''}`}>
@@ -1028,9 +1053,13 @@ export default function Config() {
             )}
           </div>
         </div>
-      )}
+      </>)}
 
-      {tab === 'integraciones' && (
+      {tab === 'integraciones' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 820 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Conectá ANMA con <b>lo que ya tenés</b> — tu WhatsApp, tu email personal, tu Google Sheet. Menos apps, menos tiempo perdido.</p>
+        </div>
         <div style={{ display: 'grid', gap: 14, maxWidth: 820 }}>
           {/* ── WHATSAPP CARD (compacta) ── */}
           <div className="pay-card on">
@@ -1250,9 +1279,13 @@ export default function Config() {
             )}
           </div>
         </div>
-      )}
+      </>)}
 
-      {tab === 'equipo' && (
+      {tab === 'equipo' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Sumá gente con <b>permisos claros</b>. Cada rol ve solo lo suyo — vos seguís teniendo el control total.</p>
+        </div>
         <div style={{ display: 'grid', gap: 16, maxWidth: 900 }}>
           {/* ── Permisos del Operador ── */}
           <div className="card">
@@ -1367,9 +1400,13 @@ export default function Config() {
           </div>
           </div>
         </div>
-      )}
+      </>)}
 
-      {tab === 'cuenta' && (
+      {tab === 'cuenta' && (<>
+        <div className="cfg-coach" style={{ maxWidth: 700 }}>
+          <i className="fa fa-lightbulb" />
+          <p>Tu <b>suscripción, backup y datos personales</b>. Todo tuyo, en un solo panel — con snapshots automáticos por si algo sale mal.</p>
+        </div>
         <div style={{ display: 'grid', gap: 20, maxWidth: 700 }}>
           {/* ── Colaboradores (solo para owners) ── */}
           {canManageTeam && (
@@ -1459,7 +1496,7 @@ export default function Config() {
           </div>
           {/* (grid 2 cols eliminado) */}
         </div>
-      )}
+      </>)}
 
       {deleteConfirm && (
         <DeleteConfirmModal
