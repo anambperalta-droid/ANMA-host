@@ -478,18 +478,12 @@ export default function PedidoNuevo() {
         {/* ── ENTREGA ── */}
         <section className="pedido-pane">
           <PaneHead meta={SECCION_META.entrega} />
-          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 12 }} className="pedido-entrega-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 12 }} className="pedido-entrega-grid">
             <div>
               <label style={labelStyle}>Fecha</label>
               <input type="date" value={pedido.fechaEntrega || ''}
                 onChange={e => update({ fechaEntrega: e.target.value })}
                 style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Horario</label>
-              <input type="text" value={pedido.horarioEntrega || ''}
-                onChange={e => update({ horarioEntrega: e.target.value })}
-                placeholder="Ej: mañana antes de las 12" style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>Contacto para coordinar</label>

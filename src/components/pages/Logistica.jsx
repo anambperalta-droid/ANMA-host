@@ -724,7 +724,6 @@ export default function Logistica() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', lineHeight: 1.2 }}>
                       {new Date(viaje.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                      {viaje.time && <span style={{ fontWeight: 500, color: 'var(--txt3)', marginLeft: 6, fontSize: 12 }}>· Salida {viaje.time}</span>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: stateBg, color: stateColor }}>{viaje.status}</span>
@@ -755,17 +754,12 @@ export default function Logistica() {
                 {isOpen && (
                   <div style={{ borderTop: '1px solid var(--border)', padding: '16px 18px' }}>
 
-                    {/* Campos del header del viaje */}
-                    <div className="viaje-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
+                    {/* Campos del header del viaje — sin horario (no es relevante para el flujo de entregas) */}
+                    <div className="viaje-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                       <div className="fg" style={{ marginBottom: 0 }}>
                         <label>Fecha de salida</label>
                         <input type="date" value={viaje.date}
                           onChange={e => patchViaje(viaje.id, { date: e.target.value })} />
-                      </div>
-                      <div className="fg" style={{ marginBottom: 0 }}>
-                        <label>Hora de salida</label>
-                        <input type="time" value={viaje.time || ''}
-                          onChange={e => patchViaje(viaje.id, { time: e.target.value })} />
                       </div>
                       <div className="fg" style={{ marginBottom: 0 }}>
                         <label>Estado general</label>

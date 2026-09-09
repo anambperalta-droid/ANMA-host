@@ -237,7 +237,6 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
           <SectionHead icon="fa-truck-fast" title="Entrega" />
           <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', marginBottom: 18, fontSize: 12, color: 'var(--txt2)', lineHeight: 1.7 }}>
             <div><b style={{ color: 'var(--txt3)', fontWeight: 600, marginRight: 6 }}>Fecha:</b> {fmtFecha(budget.deliveryDate)}</div>
-            <div><b style={{ color: 'var(--txt3)', fontWeight: 600, marginRight: 6 }}>Horario:</b> {budget.deliveryTime || '—'}</div>
             <div><b style={{ color: 'var(--txt3)', fontWeight: 600, marginRight: 6 }}>Dirección:</b> {budget.deliveryAddress || '—'}</div>
             <div><b style={{ color: 'var(--txt3)', fontWeight: 600, marginRight: 6 }}>Contacto:</b> {budget.deliveryContact || '—'}</div>
           </div>

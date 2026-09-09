@@ -171,6 +171,7 @@ function ClientSelector({ clients, selected, onSelect, onClear }) {
       }}>
         <i className="fa fa-magnifying-glass" style={{ color: P.textMuted, fontSize: 13 }} />
         <input type="text" value={q}
+          className="msg-cli-search"
           onChange={e => { setQ(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
           placeholder="Buscar cliente por nombre o empresa..."
@@ -411,11 +412,15 @@ export default function Mensajes() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
-      {/* ── Header ── */}
+      {/* ── Header con título + utility group + CTA (patrón unificado) ── */}
       <div className="ph">
+        <div className="ph-left">
+          <h2>Mensajes</h2>
+          <p>Plantillas de WhatsApp por etapa de venta. Variables se completan con el cliente activo.</p>
+        </div>
         <div className="ph-right">
-          <button className="btn btn-ghost btn-sm" onClick={restoreDefaults} style={{ borderRadius: 10 }}>
-            <i className="fa fa-rotate-left" /> Restaurar
+          <button className="btn btn-ghost btn-sm" onClick={restoreDefaults} style={{ borderRadius: 10 }} title="Volver a los mensajes originales">
+            <i className="fa fa-rotate-left" /><span className="desc-txt"> Restaurar</span>
           </button>
           <button className="btn btn-sm" onClick={openNew}
             style={{ background: P.accent, color: '#fff', border: 'none', borderRadius: 10, boxShadow: '0 4px 12px rgba(37,211,102,.2)' }}>
@@ -469,7 +474,7 @@ export default function Mensajes() {
         {/* Cards grid */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {stageTemplates.length ? (
-            <div className="msg-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+            <div className="msg-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
               {stageTemplates.map(t => {
                 const pending = activeClient ? unresolvedCount(t.text) : 0
                 return (

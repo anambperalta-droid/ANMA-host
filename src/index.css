@@ -394,11 +394,20 @@ td b{color:var(--txt);font-weight:600}
 .act.del:hover{background:var(--red-lt);color:var(--red);border-color:var(--red)}
 .act.wa:hover{background:#DCFCE7;color:#16A34A;border-color:#16A34A}
 .act.resend:hover{background:var(--acento-xlt);color:var(--acento);border-color:var(--acento)}
-/* Config tab pills */
-.cfg-tab-btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:9999px;border:1px solid transparent;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;background:transparent;color:var(--txt2);white-space:nowrap;transition:all .15s;flex-shrink:0}
-.cfg-tab-btn:hover:not(.active){background:var(--brand-xlt);color:var(--brand)}
-.cfg-tab-btn.active{background:var(--brand-xlt);color:var(--brand);border-color:var(--brand-dim);font-weight:700}
+/* Config tab pills — livianas y compactas (8 tabs sin saturar) */
+.cfg-tab-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:9999px;border:1px solid transparent;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;background:transparent;color:var(--txt3);white-space:nowrap;transition:all .15s;flex-shrink:0}
+.cfg-tab-btn:hover:not(.active){background:var(--surface2);color:var(--txt)}
+.cfg-tab-btn.active{background:var(--brand-xlt);color:var(--brand);font-weight:700}
 .cfg-tab-btn:active{transform:scale(.95)}
+/* Mobile: icon-only para no cargar visualmente los 8 tabs.
+   El tab activo muestra su label; los inactivos solo icono. */
+@media(max-width:640px){
+  .cfg-tab-btn{height:36px;width:36px;padding:0;justify-content:center;gap:0}
+  .cfg-tab-btn > i{font-size:13px!important}
+  .cfg-tab-btn > *:not(i){display:none}
+  .cfg-tab-btn.active{width:auto;padding:0 14px;gap:6px}
+  .cfg-tab-btn.active > *:not(i){display:inline}
+}
 /* Config list-item delete */
 .list-del-btn{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;color:var(--txt4);font-size:13px;display:flex;align-items:center;justify-content:center;transition:color .15s;line-height:1;flex-shrink:0}
 /* Config Identidad 2-col + logo avatar */
@@ -1703,6 +1712,8 @@ td b{color:var(--txt);font-weight:600}
   .msg-cards-grid{grid-template-columns:1fr!important}
   .msg-stage-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;scrollbar-width:none;width:100%!important}
   .msg-stage-tabs::-webkit-scrollbar{display:none}
+  /* iOS zoom fix: search input del ClientSelector */
+  .msg-cli-search{font-size:16px!important}
 }
 
 /* ── Catalogo modal: sections stacked nicely ── */
