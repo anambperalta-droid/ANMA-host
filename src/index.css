@@ -1620,20 +1620,22 @@ td b{color:var(--txt);font-weight:600}
   .tab-bar::-webkit-scrollbar{display:none}
   .tab-btn{white-space:nowrap;flex-shrink:0;font-size:12px!important;padding:6px 12px!important}
 
-  /* Seguimiento cards compact */
-  .seg-card{padding:10px 12px!important;border-radius:12px!important;gap:6px!important;flex-wrap:wrap}
-  .seg-light{width:28px!important;height:28px!important;font-size:11px!important}
-  .seg-info{min-width:0;flex:1}
-  .seg-top{flex-wrap:wrap;gap:4px!important}
-  .seg-top span{font-size:10px!important}
-  .seg-cli{font-size:12px!important}
-  .seg-co{font-size:10px!important}
-  .seg-meta{flex-direction:row!important;align-items:center;width:100%;gap:10px!important;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
-  .seg-days{flex-direction:row!important;gap:4px!important;align-items:baseline}
-  .seg-days .num{font-size:15px!important}
-  .seg-days .lbl{font-size:10px!important}
-  .seg-total{font-size:12px!important;flex:1}
-  .seg-actions{flex-direction:row!important;gap:4px!important}
+  /* Seguimiento cards — layout más claro y touch-friendly en mobile */
+  .seg-card{
+    padding:12px 14px!important;border-radius:14px!important;
+    gap:10px!important;align-items:center!important;flex-wrap:nowrap!important;
+  }
+  .seg-days-chip{min-width:52px;padding:7px 10px}
+  .seg-days-num{font-size:18px!important}
+  .seg-days-lbl{font-size:9px!important}
+  .seg-body{flex:1;min-width:0}
+  .seg-row1{gap:5px!important;flex-wrap:wrap}
+  .seg-cli{font-size:13.5px!important;font-weight:700}
+  .seg-contact{display:none}
+  .seg-num{font-size:11px!important;color:var(--txt3)}
+  .seg-row2{gap:8px!important;font-size:11px!important;color:var(--txt3);margin-top:2px}
+  .seg-amount{font-size:14.5px!important;min-width:auto!important;font-weight:800}
+  .seg-wa-btn{width:44px!important;height:44px!important;font-size:18px!important;flex-shrink:0}
 
   /* Insight cards */
   .insight-card{border-radius:12px!important;padding:12px!important}
