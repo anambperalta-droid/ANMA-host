@@ -165,7 +165,7 @@ export default function Config() {
   const toast   = useToast()
   const confirm = useConfirm()
   const nav     = useNavigate()
-  const [tab, setTab] = useState('identidad')
+  const [tab, setTab] = useState('negocio')
   const c = config()
 
   const [bname, setBname] = useState(c.businessName || '')
@@ -499,22 +499,25 @@ export default function Config() {
     { key: 'notasInternas',     icon: 'fa-note-sticky',  color: '#2563EB', label: 'Notas internas en pedidos',       desc: 'Campo privado de notas en cada pedido, solo para vos' },
   ]
 
-  const allTabs = [
-    { id: 'identidad', icon: 'fa-building', label: 'Identidad y contacto' },
-    { id: 'comercial', icon: 'fa-dollar-sign', label: 'Comercial' },
-    { id: 'listas', icon: 'fa-list', label: 'Listas' },
-    { id: 'modulos', icon: 'fa-sliders', label: 'Módulos' },
-    { id: 'pagos', icon: 'fa-credit-card', label: 'Pagos' },
-    { id: 'integraciones', icon: 'fa-plug', label: 'Integraciones' },
-    { id: 'equipo', icon: 'fa-user-plus', label: 'Equipo' },
+  // 4 tabs consolidados: menos ruido visual, mejor lectura.
+  // Lo poco usado (Módulos, Listas) vive dentro de "Herramientas" como <details>.
+  const tabs = [
+    { id: 'negocio', icon: 'fa-building', label: 'Mi negocio' },
+    { id: 'ventas', icon: 'fa-dollar-sign', label: 'Ventas y cobros' },
+    { id: 'tools', icon: 'fa-plug', label: 'Herramientas' },
     { id: 'cuenta', icon: 'fa-shield-halved', label: 'Cuenta' },
   ]
-  const tabs = allTabs.filter(t => t.id !== 'equipo' || canManageTeam)
 
+  // Migración de IDs viejos → nuevos. Corre solo si el state actual matchea.
   useEffect(() => {
-    if (!canManageTeam && tab === 'equipo') setTab('identidad')
-    if (tab === 'contacto') setTab('identidad')
-  }, [canManageTeam, tab])
+    const OLD_TO_NEW = {
+      identidad: 'negocio', contacto: 'negocio',
+      comercial: 'ventas', pagos: 'ventas',
+      listas: 'tools', modulos: 'tools', integraciones: 'tools',
+      equipo: 'cuenta',
+    }
+    if (OLD_TO_NEW[tab]) setTab(OLD_TO_NEW[tab])
+  }, [tab])
 
   return (
     <div className="page active page-config" style={{ animation: 'pgIn .25s ease both' }}>
@@ -546,7 +549,7 @@ export default function Config() {
         </button>
       </div>
 
-      {tab === 'identidad' && (
+      {tab === 'negocio' && (
         <div className="card" style={{ maxWidth: 900 }}>
           <div className="cfg-id-grid">
             {/* ── Columna Izquierda: Logo + Datos ── */}
@@ -675,7 +678,7 @@ export default function Config() {
         </div>
       )}
 
-      {tab === 'comercial' && (
+      {tab === 'ventas' && (
         <div style={{ maxWidth: 1100 }}>
           <div className="cfg-com-grid">
 
@@ -801,7 +804,10 @@ export default function Config() {
         </div>
       )}
 
-      {tab === 'listas' && (
+      {tab === 'tools' && (
+        <details className="cfg-details" style={{ marginTop: 16, maxWidth: 820 }}>
+          <summary><i className="fa fa-list" style={{ color: 'var(--brand)', marginRight: 8 }} />Listas personalizadas</summary>
+          <div className="cfg-details-body">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
           <ListEditor label="Modalidades de entrega" icon="fa-truck" accentColor="#D97706"
             items={c.deliveryModes || []} onAdd={v => handleListAdd('deliveryModes', v)} onRemove={i => handleListRemove('deliveryModes', i)} />
@@ -843,9 +849,14 @@ export default function Config() {
             )
           })}
         </div>
+          </div>
+        </details>
       )}
 
-      {tab === 'modulos' && (
+      {tab === 'tools' && (
+        <details className="cfg-details" style={{ marginTop: 12, maxWidth: 820 }}>
+          <summary><i className="fa fa-sliders" style={{ color: 'var(--brand)', marginRight: 8 }} />Módulos avanzados</summary>
+          <div className="cfg-details-body">
         <div style={{ maxWidth: 900 }}>
           <div className="feat-grid">
           {FEATURE_FLAGS.map(f => {
@@ -886,10 +897,12 @@ export default function Config() {
           })}
           </div>
         </div>
+          </div>
+        </details>
       )}
 
-      {tab === 'pagos' && (
-        <div style={{ display: 'grid', gap: 18, maxWidth: 780 }}>
+      {tab === 'ventas' && (
+        <div style={{ display: 'grid', gap: 18, maxWidth: 780, marginTop: 16 }}>
           {/* ── MERCADO PAGO CARD ── */}
           <div className={`pay-card ${mpEnabled ? 'on' : ''}`}>
             <div className="pay-card-head" onClick={() => { const v = !mpEnabled; setMpEnabled(v); updateConfig({ mpEnabled: v }) }}>
@@ -1021,7 +1034,7 @@ export default function Config() {
         </div>
       )}
 
-      {tab === 'integraciones' && (
+      {tab === 'tools' && (
         <div style={{ display: 'grid', gap: 18, maxWidth: 820 }}>
           <div style={{ fontSize: 13, color: 'var(--txt2)', marginBottom: 2 }}>
             <i className="fa fa-circle-info" style={{ marginRight: 6, color: 'var(--brand)' }} />
@@ -1265,8 +1278,8 @@ export default function Config() {
         </div>
       )}
 
-      {tab === 'equipo' && (
-        <div style={{ display: 'grid', gap: 16, maxWidth: 900 }}>
+      {tab === 'cuenta' && canManageTeam && (
+        <div style={{ display: 'grid', gap: 16, maxWidth: 900, marginBottom: 20 }}>
           {/* ── Permisos del Operador ── */}
           <div className="card">
             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1384,28 +1397,6 @@ export default function Config() {
 
       {tab === 'cuenta' && (
         <div style={{ display: 'grid', gap: 20, maxWidth: 700 }}>
-          {/* ── Colaboradores (solo para owners) ── */}
-          {canManageTeam && (
-            <div style={{
-              padding: '14px 18px', borderRadius: 14,
-              background: 'linear-gradient(135deg, var(--brand)10, var(--surface2))',
-              border: '1.5px solid var(--brand)30',
-              display: 'flex', alignItems: 'center', gap: 14,
-            }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, flexShrink: 0 }}>
-                <i className="fa fa-users" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--txt)' }}>Colaboradores</div>
-                <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
-                  Invitá a tu equipo para que acceda a la app con su propio usuario y contraseña.
-                </div>
-              </div>
-              <button className="btn btn-primary btn-sm" onClick={() => setTab('equipo')} style={{ flexShrink: 0, fontWeight: 700 }}>
-                <i className="fa fa-user-plus" /> Agregar usuario
-              </button>
-            </div>
-          )}
           {/* Banner: redirigir a Mi Cuenta para gestión de suscripción/password/datos */}
           <div
             onClick={() => nav('/mi-cuenta')}

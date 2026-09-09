@@ -432,6 +432,16 @@ td b{color:var(--txt);font-weight:600}
   /* El contenido de Config debe librar la barra de guardar (82px) + el nav flotante (80px) */
   .page-config{padding-bottom:170px!important}}
 .list-del-btn:hover{color:var(--red)}
+/* Config <details> colapsables — módulos avanzados, listas personalizadas */
+.cfg-details{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--sh);transition:box-shadow var(--tr)}
+.cfg-details[open]{box-shadow:var(--sh-md)}
+.cfg-details summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;gap:8px;font-weight:700;color:var(--txt);font-size:13.5px;-webkit-tap-highlight-color:transparent;user-select:none}
+.cfg-details summary::-webkit-details-marker{display:none}
+.cfg-details summary::after{content:'\f078';font-family:'Font Awesome 6 Free';font-weight:900;margin-left:auto;color:var(--txt3);font-size:11px;transition:transform .2s}
+.cfg-details[open] summary::after{transform:rotate(180deg)}
+.cfg-details summary:hover{background:var(--surface2)}
+.cfg-details-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.cfg-details-body>*:first-child{margin-top:16px}
 /* Config list inputs (NewListCreator + ListEditor): iOS zoom fix + touch target en mobile */
 @media(max-width:640px){
   .cfg-list-inp{font-size:16px!important;padding:10px 16px!important;min-height:var(--touch)}
