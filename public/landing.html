@@ -146,18 +146,18 @@ section{padding:72px 0}
 /* COMPARACIÓN */
 .compare{background:#fff}
 .compare-table{max-width:880px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(157,23,77,.04)}
-.compare-row{display:grid;grid-template-columns:2fr 1fr 1fr;border-bottom:1px solid #faf5ff}
+.compare-row{display:grid;grid-template-columns:1.8fr 1.1fr 1.1fr;border-bottom:1px solid #faf5ff}
 .compare-row:last-child{border-bottom:none}
-.compare-row.head{background:#1F1338;color:#fff;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
-.compare-row.head .col{padding:18px 20px}
+.compare-row.head{background:#1F1338;color:#fff;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.8px}
+.compare-row.head .col{padding:16px 24px}
 .compare-row.head .col-anma{background:linear-gradient(135deg,#E11D74,#a855f7);color:#fff}
-.col{padding:16px 20px;font-size:14px;color:#6b5b8c;display:flex;align-items:center}
-.col-feat{font-weight:600;color:#1F1338}
+.col{padding:18px 24px;font-size:14px;color:#6b5b8c;display:flex;align-items:center;line-height:1.5}
+.col-feat{font-weight:700;color:#1F1338;font-size:14.5px}
 .col-yes{color:#16a34a;font-weight:700}
-.col-yes::before{content:"✓ ";font-weight:800}
-.col-no{color:#9D5B8C;font-style:italic}
-.col-anma-cell{background:#fafbfc;color:#1F1338;font-weight:700}
-@media(max-width:780px){.compare-row{grid-template-columns:1.5fr 1fr 1fr}.col{padding:12px 14px;font-size:12.5px}}
+.col-yes::before{content:"✓ ";font-weight:800;margin-right:2px}
+.col-no{color:#9D5B8C;font-style:italic;font-size:13px}
+.col-anma-cell{background:#fdfaff;color:#1F1338;font-weight:600}
+@media(max-width:780px){.compare-row{grid-template-columns:1.4fr 1fr 1fr}.col{padding:14px 16px;font-size:12.5px}}
 
 /* COMO FUNCIONA */
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:14px}
@@ -323,7 +323,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
   .app-layout{height:360px!important}
   .demo-tabs{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
   .demo-tab{white-space:nowrap!important;font-size:11px!important;padding:7px 12px!important}
-  .dtable td,.dtable th{font-size:11px!important;padding:7px 10px!important}
 }
 
 /* MOBILE 540px */
@@ -398,7 +397,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
       </div>
     </div>
     <div class="mock-wrap">
-      <!-- Floating notification chip -->
       <div class="mock-notify">
         <span class="ndot"></span>
         🎁 Nuevo pedido · Lucía confirmó caja VIP
@@ -417,15 +415,12 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
           <div class="mock-row"><span class="dot" style="background:#f59e0b"></span><b>Carla M. · Caja Cumple</b><span class="amt">$22.150</span></div>
           <div class="mock-row"><span class="dot"></span><b>Estudio Norte · 8 cajas</b><span class="amt">$92.000</span></div>
           <div class="mock-row"><span class="dot"></span><b>Lucía V. · Detalle</b><span class="amt">$8.450</span></div>
-          <!-- Mini meta strip -->
           <div style="margin-top:12px;padding-top:10px;border-top:1px solid #f3e8ff">
             <div style="display:flex;justify-content:space-between;font-size:10px;color:#9D5B8C;margin-bottom:5px"><span>Ingresos del mes</span><span style="font-weight:700;color:#9D174D">84% de meta</span></div>
             <div style="height:5px;background:#fce7f3;border-radius:99px;overflow:hidden"><div style="width:84%;height:100%;background:linear-gradient(90deg,#E11D74,#a855f7);border-radius:99px"></div></div>
           </div>
         </div>
       </div>
-
-      <!-- Floating mini-stat badge -->
       <div class="mock-badge">
         <div class="bstat"><div class="bv">34</div><div class="bl">Pedidos</div></div>
         <div class="bdiv"></div>
@@ -483,7 +478,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
       <h2 class="h2">Todo lo que tu marca<br>necesita para escalar sin caos</h2>
       <p class="sub center">Hecho específicamente para marcas de regalos corporativos. No es un ERP adaptado — es una herramienta pensada para cómo funciona tu día.</p>
     </div>
-    <p style="text-align:center;font-size:15px;font-weight:700;color:#9D174D;margin:0 0 28px;letter-spacing:-.1px">— Menos ruido, más espacio para lo que importa. —</p>
     <div class="feat-grid">
       <div class="feat">
         <div class="feat-head">
@@ -610,285 +604,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
   </div>
 </section>
 
-<!-- DEMO INLINE -->
-<section id="demo-vivo" style="padding:52px 0;background:#1F1338">
-  <div class="wrap">
-    <div style="text-align:center;max-width:680px;margin:0 auto 28px">
-      <span style="display:inline-block;padding:5px 14px;background:rgba(225,29,116,.18);color:#f9a8d4;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border:1px solid rgba(225,29,116,.28);margin-bottom:14px">Vista real del sistema</span>
-      <h2 style="font-family:'Fraunces',serif;font-size:clamp(26px,3.6vw,36px);font-weight:600;color:#fff;letter-spacing:-.5px;line-height:1.15;margin:0 0 10px;text-wrap:balance">Así se ve <em style="font-style:italic;background:linear-gradient(120deg,#fbcfe8,#c084fc);-webkit-background-clip:text;background-clip:text;color:transparent">ANMA Regalos</em> por dentro</h2>
-      <p style="font-size:14px;color:rgba(255,255,255,.6);margin:0">Navegá entre secciones — pedidos urgentes, insumos con alerta y logística del día</p>
-    </div>
-
-    <!-- Tabs -->
-    <div style="display:flex;gap:1px;background:#111827;padding:8px 14px 0;border-bottom:1px solid rgba(255,255,255,.05);border-radius:12px 12px 0 0;overflow:hidden">
-      <div class="rg-tab" data-rg="pedidos" style="padding:8px 18px;font-size:12.5px;font-weight:600;border-radius:7px 7px 0 0;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.07);border-bottom:none;background:#f8fafc;color:#1F1338"><i class="fa-solid fa-list-check" style="font-size:11px;color:#9D174D"></i> Pedidos</div>
-      <div class="rg-tab" data-rg="insumos" style="padding:8px 18px;font-size:12.5px;font-weight:600;border-radius:7px 7px 0 0;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;border-bottom:none;background:transparent;color:#64748b"><i class="fa-solid fa-box-open" style="font-size:11px"></i> Insumos</div>
-      <div class="rg-tab" data-rg="logistica" style="padding:8px 18px;font-size:12.5px;font-weight:600;border-radius:7px 7px 0 0;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;border-bottom:none;background:transparent;color:#64748b"><i class="fa-solid fa-truck-fast" style="font-size:11px"></i> Logística</div>
-    </div>
-
-    <!-- App shell -->
-    <div style="border-radius:0 0 16px 16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.06);border-top:none">
-      <div style="display:flex;height:480px;background:#f8fafc">
-
-        <!-- Sidebar — espejo real de la app Regalos -->
-        <nav style="width:176px;background:#1F1338;flex-shrink:0;padding:0;display:flex;flex-direction:column;overflow-y:auto">
-          <!-- logo -->
-          <div style="padding:12px 14px 10px;border-bottom:1px solid rgba(255,255,255,.06)">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#E11D74,#a855f7);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0"><i class="fa-solid fa-gift"></i></div>
-              <div>
-                <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.1">Cajas Lúa</div>
-                <div style="font-size:9px;color:rgba(255,255,255,.4);line-height:1">Tu negocio en un solo lugar</div>
-              </div>
-            </div>
-          </div>
-          <!-- nav -->
-          <div style="padding:8px 0;flex:1">
-            <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:6px 14px 3px">Gestión</div>
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
-              <i class="fa-solid fa-chart-line" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-              <span style="font-size:12px;color:#94a3b8">Dashboard</span>
-            </div>
-            <div id="rg-nav-pedidos" style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;background:rgba(225,29,116,.2);cursor:default">
-              <i class="fa-solid fa-file-invoice-dollar" style="font-size:12px;color:#E11D74;width:14px;text-align:center"></i>
-              <span style="font-size:12px;font-weight:700;color:#fff">Presupuesto</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
-              <i class="fa-solid fa-users" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-              <span style="font-size:12px;color:#94a3b8">Clientes</span>
-            </div>
-            <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:8px 14px 3px">Catálogo</div>
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
-              <i class="fa-solid fa-box-open" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-              <span style="font-size:12px;color:#94a3b8">Productos</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
-              <i class="fa-solid fa-industry" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-              <span style="font-size:12px;color:#94a3b8">Proveedores</span>
-            </div>
-            <div id="rg-nav-insumos" style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
-              <i class="fa-solid fa-cubes" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-              <span style="font-size:12px;color:#94a3b8">Packaging</span>
-            </div>
-            <div id="rg-nav-logistica" style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
-              <i class="fa-solid fa-truck-fast" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-              <span style="font-size:12px;color:#94a3b8">Logística</span>
-            </div>
-            <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:8px 14px 3px">Comunicación</div>
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;margin:1px 6px;border-radius:7px;cursor:default">
-              <i class="fa-brands fa-whatsapp" style="font-size:12px;color:#64748b;width:14px;text-align:center"></i>
-              <span style="font-size:12px;color:#94a3b8">Mensajes WA</span>
-            </div>
-          </div>
-          <!-- user footer -->
-          <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px">
-            <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#E11D74,#a855f7);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">L</div>
-            <div style="min-width:0">
-              <div style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">laura.mendez</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.4)">Cerrar sesión</div>
-            </div>
-          </div>
-        </nav>
-
-        <!-- Main panels -->
-        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
-
-          <!-- PANEL: Pedidos -->
-          <div id="rg-panel-pedidos" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;border-bottom:1px solid #f3e8ff;flex-shrink:0">
-              <div style="display:flex;align-items:center;gap:8px"><b style="font-size:13px;color:#1F1338">Pedidos</b><span style="font-size:11px;background:#fee2e2;color:#dc2626;border-radius:99px;padding:2px 9px;font-weight:700">3 urgentes</span></div>
-              <div style="display:flex;gap:6px">
-                <span style="font-size:11px;padding:4px 10px;border:1px solid #e5e7eb;border-radius:6px;color:#9D5B8C;background:#fafbfc">Todos</span>
-                <span style="font-size:11px;padding:4px 12px;background:linear-gradient(135deg,#E11D74,#a855f7);color:#fff;border-radius:6px;font-weight:700">+ Nuevo</span>
-              </div>
-            </div>
-            <div style="flex:1;overflow-y:auto">
-              <table style="width:100%;border-collapse:collapse">
-                <thead><tr style="background:#fafbfc;border-bottom:1.5px solid #f3e8ff">
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;text-align:left">Cliente</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;text-align:left">Producto</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;text-align:left">Entrega</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;text-align:right">Monto</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;letter-spacing:.5px;text-align:left">Estado</th>
-                  <th style="padding:8px 14px;text-align:center"></th>
-                </tr></thead>
-                <tbody>
-                  <tr style="border-bottom:1px solid #fdf4ff;border-left:3px solid #ef4444;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Sofía R.</div><div style="font-size:11px;color:#9D5B8C">Caja Bienvenida</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Box VIP · Personalizada</td>
-                    <td style="padding:9px 14px;font-size:12px;font-weight:700;color:#ef4444">Hoy 18hs ⚠</td>
-                    <td style="padding:9px 14px;font-size:13px;font-weight:800;color:#1F1338;text-align:right">$13.930</td>
-                    <td style="padding:9px 14px"><span style="background:#fee2e2;color:#dc2626;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">Urgente</span></td>
-                    <td style="padding:9px 14px;text-align:center;color:#25D366;font-size:15px;cursor:default"><i class="fa-brands fa-whatsapp"></i></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid #fdf4ff;border-left:3px solid #ef4444;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Lucía V.</div><div style="font-size:11px;color:#9D5B8C">Detalle especial</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Box Mínima · Sin lazo</td>
-                    <td style="padding:9px 14px;font-size:12px;font-weight:700;color:#ef4444">Hoy 20hs ⚠</td>
-                    <td style="padding:9px 14px;font-size:13px;font-weight:800;color:#1F1338;text-align:right">$8.450</td>
-                    <td style="padding:9px 14px"><span style="background:#fee2e2;color:#dc2626;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">Urgente</span></td>
-                    <td style="padding:9px 14px;text-align:center;color:#25D366;font-size:15px;cursor:default"><i class="fa-brands fa-whatsapp"></i></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid #fdf4ff;border-left:3px solid #f59e0b;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Carla M.</div><div style="font-size:11px;color:#9D5B8C">Caja Cumpleaños</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Box Festiva · Lazo dorado</td>
-                    <td style="padding:9px 14px;font-size:12px;font-weight:700;color:#f59e0b">Mañana</td>
-                    <td style="padding:9px 14px;font-size:13px;font-weight:800;color:#1F1338;text-align:right">$22.150</td>
-                    <td style="padding:9px 14px"><span style="background:#fef3c7;color:#92400e;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">En proceso</span></td>
-                    <td style="padding:9px 14px;text-align:center;color:#25D366;font-size:15px;cursor:default"><i class="fa-brands fa-whatsapp"></i></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid #fdf4ff;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Estudio Norte</div><div style="font-size:11px;color:#9D5B8C">Pedido corporativo</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">8× Box Empresa · Logo</td>
-                    <td style="padding:9px 14px;font-size:12px;color:#6b5b8c">28/05</td>
-                    <td style="padding:9px 14px;font-size:13px;font-weight:800;color:#1F1338;text-align:right">$92.000</td>
-                    <td style="padding:9px 14px"><span style="background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">Confirmado</span></td>
-                    <td style="padding:9px 14px;text-align:center;color:#25D366;font-size:15px;cursor:default"><i class="fa-brands fa-whatsapp"></i></td>
-                  </tr>
-                  <tr style="background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Ana B.</div><div style="font-size:11px;color:#9D5B8C">Baby shower</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Box Celeste · Tul relleno</td>
-                    <td style="padding:9px 14px;font-size:12px;color:#6b5b8c">30/05</td>
-                    <td style="padding:9px 14px;font-size:13px;font-weight:800;color:#1F1338;text-align:right">$18.700</td>
-                    <td style="padding:9px 14px"><span style="background:#dbeafe;color:#1d4ed8;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">Preparando</span></td>
-                    <td style="padding:9px 14px;text-align:center;color:#25D366;font-size:15px;cursor:default"><i class="fa-brands fa-whatsapp"></i></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div><!-- /pedidos -->
-
-          <!-- PANEL: Insumos -->
-          <div id="rg-panel-insumos" style="flex:1;display:none;flex-direction:column;overflow:hidden">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;border-bottom:1px solid #f3e8ff;flex-shrink:0">
-              <div style="display:flex;align-items:center;gap:8px"><b style="font-size:13px;color:#1F1338">Insumos</b><span style="font-size:11px;background:#fee2e2;color:#dc2626;border-radius:99px;padding:2px 9px;font-weight:700">2 críticos</span></div>
-              <span style="font-size:11px;padding:4px 12px;background:linear-gradient(135deg,#E11D74,#a855f7);color:#fff;border-radius:6px;font-weight:700">+ Nuevo insumo</span>
-            </div>
-            <div style="flex:1;overflow-y:auto">
-              <table style="width:100%;border-collapse:collapse">
-                <thead><tr style="background:#fafbfc;border-bottom:1.5px solid #f3e8ff">
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;text-align:left">Insumo</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;text-align:left">Proveedor</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;text-align:right">Stock actual</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;text-align:right">Mín.</th>
-                  <th style="padding:8px 14px;font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;text-align:left">Alerta</th>
-                </tr></thead>
-                <tbody>
-                  <tr style="border-bottom:1px solid #fdf4ff;border-left:3px solid #ef4444;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Cinta de raso 2cm</div><div style="font-size:11px;color:#9D5B8C">Blanca · rosa · lila</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Textil Norte</td>
-                    <td style="padding:9px 14px;font-size:14px;font-weight:900;color:#dc2626;text-align:right">3 mts</td>
-                    <td style="padding:9px 14px;font-size:12px;color:#9D5B8C;text-align:right">50 mts</td>
-                    <td style="padding:9px 14px"><span style="background:#fee2e2;color:#dc2626;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">Sin stock ⚠</span></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid #fdf4ff;border-left:3px solid #f59e0b;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Caja kraft M</div><div style="font-size:11px;color:#9D5B8C">20×15×10 cm</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Embalajes Sur</td>
-                    <td style="padding:9px 14px;font-size:14px;font-weight:900;color:#f59e0b;text-align:right">12 u.</td>
-                    <td style="padding:9px 14px;font-size:12px;color:#9D5B8C;text-align:right">30 u.</td>
-                    <td style="padding:9px 14px"><span style="background:#fef3c7;color:#92400e;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">Stock bajo</span></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid #fdf4ff;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Papel de seda rosa</div><div style="font-size:11px;color:#9D5B8C">50×70 cm</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Papeles & Co</td>
-                    <td style="padding:9px 14px;font-size:14px;font-weight:900;color:#16a34a;text-align:right">200 u.</td>
-                    <td style="padding:9px 14px;font-size:12px;color:#9D5B8C;text-align:right">50 u.</td>
-                    <td style="padding:9px 14px"><span style="background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">OK</span></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid #fdf4ff;background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Viruta de papel</div><div style="font-size:11px;color:#9D5B8C">Colores variados</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Papeles & Co</td>
-                    <td style="padding:9px 14px;font-size:14px;font-weight:900;color:#16a34a;text-align:right">15 kg</td>
-                    <td style="padding:9px 14px;font-size:12px;color:#9D5B8C;text-align:right">3 kg</td>
-                    <td style="padding:9px 14px"><span style="background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">OK</span></td>
-                  </tr>
-                  <tr style="background:#fff">
-                    <td style="padding:9px 14px"><div style="font-size:13px;font-weight:700;color:#1F1338">Stickers personalizados</div><div style="font-size:11px;color:#9D5B8C">Circular 4cm · logo</div></td>
-                    <td style="padding:9px 14px;font-size:12.5px;color:#6b5b8c">Imprenta Local</td>
-                    <td style="padding:9px 14px;font-size:14px;font-weight:900;color:#16a34a;text-align:right">500 u.</td>
-                    <td style="padding:9px 14px;font-size:12px;color:#9D5B8C;text-align:right">100 u.</td>
-                    <td style="padding:9px 14px"><span style="background:#dcfce7;color:#15803d;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px">OK</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div><!-- /insumos -->
-
-          <!-- PANEL: Logística -->
-          <div id="rg-panel-logistica" style="flex:1;display:none;flex-direction:column;overflow:hidden">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;border-bottom:1px solid #f3e8ff;flex-shrink:0">
-              <div><b style="font-size:13px;color:#1F1338">Logística</b> <span style="font-size:11px;color:#9D5B8C">Hoy 27/05</span></div>
-              <span style="font-size:11px;padding:4px 12px;background:linear-gradient(135deg,#E11D74,#a855f7);color:#fff;border-radius:6px;font-weight:700">+ Asignar envío</span>
-            </div>
-            <div style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:14px;background:#fafbfc">
-              <div>
-                <div style="font-size:10px;font-weight:800;color:#9D174D;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-                  <span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;box-shadow:0 0 0 3px rgba(239,68,68,.2)"></span>
-                  HOY — 3 entregas urgentes
-                </div>
-                <div style="display:flex;flex-direction:column;gap:7px">
-                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:12px;border-left:3px solid #ef4444">
-                    <div style="width:34px;height:34px;border-radius:8px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-size:14px;color:#dc2626;flex-shrink:0"><i class="fa-solid fa-person-running"></i></div>
-                    <div style="flex:1">
-                      <div style="font-size:13px;font-weight:700;color:#1F1338">Sofía R. · Caja Bienvenida</div>
-                      <div style="font-size:11px;color:#9D5B8C">Envío domicilio · Av. Corrientes 1234, CABA</div>
-                    </div>
-                    <div style="text-align:right;flex-shrink:0">
-                      <div style="font-size:12px;font-weight:700;color:#ef4444">18:00 hs</div>
-                      <div style="font-size:10px;color:#9D5B8C">Urgente</div>
-                    </div>
-                  </div>
-                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:12px;border-left:3px solid #ef4444">
-                    <div style="width:34px;height:34px;border-radius:8px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-size:14px;color:#dc2626;flex-shrink:0"><i class="fa-solid fa-person-running"></i></div>
-                    <div style="flex:1">
-                      <div style="font-size:13px;font-weight:700;color:#1F1338">Lucía V. · Detalle especial</div>
-                      <div style="font-size:11px;color:#9D5B8C">Envío domicilio · Palermo, CABA</div>
-                    </div>
-                    <div style="text-align:right;flex-shrink:0">
-                      <div style="font-size:12px;font-weight:700;color:#ef4444">20:00 hs</div>
-                      <div style="font-size:10px;color:#9D5B8C">Urgente</div>
-                    </div>
-                  </div>
-                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:12px">
-                    <div style="width:34px;height:34px;border-radius:8px;background:#fafbfc;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9D174D;flex-shrink:0"><i class="fa-solid fa-motorcycle"></i></div>
-                    <div style="flex:1">
-                      <div style="font-size:13px;font-weight:700;color:#1F1338">Mariana F. · Box Estudio</div>
-                      <div style="font-size:11px;color:#9D5B8C">Retiro en local · San Telmo</div>
-                    </div>
-                    <div style="text-align:right;flex-shrink:0">
-                      <div style="font-size:12px;font-weight:700;color:#9D174D">14:30 hs</div>
-                      <div style="font-size:10px;color:#9D5B8C">Retiro</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div style="font-size:10px;font-weight:800;color:#9D5B8C;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-                  <span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block"></span>
-                  MAÑANA — 1 entrega
-                </div>
-                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:12px">
-                  <div style="width:34px;height:34px;border-radius:8px;background:#fafbfc;display:flex;align-items:center;justify-content:center;font-size:14px;color:#9D174D;flex-shrink:0"><i class="fa-solid fa-truck"></i></div>
-                  <div style="flex:1">
-                    <div style="font-size:13px;font-weight:700;color:#1F1338">Carla M. · Caja Cumpleaños</div>
-                    <div style="font-size:11px;color:#9D5B8C">Envío domicilio · Belgrano, CABA</div>
-                  </div>
-                  <div style="text-align:right;flex-shrink:0">
-                    <div style="font-size:12px;font-weight:700;color:#6b5b8c">10:00 hs</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div><!-- /logistica -->
-
-        </div><!-- /main panels -->
-      </div><!-- /app layout -->
-    </div><!-- /shell -->
-
-    <p style="text-align:center;margin:20px 0 0;font-size:13px;color:rgba(255,255,255,.35)">Navegá entre secciones · Datos de muestra del sistema real</p>
-  </div>
-</section>
-<!-- /DEMO INLINE -->
 
 <section class="para-quien">
   <div class="wrap">
@@ -939,33 +654,23 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
     </div>
   </div>
 </section>
-
-<!-- DESTACADO 2 — separador entre testimonios y pricing -->
 <div style="padding:36px 24px;text-align:center">
   <p style="font-family:'Fraunces',serif;font-size:24px;font-weight:600;color:#1F1338;letter-spacing:-.4px;margin:0 auto;line-height:1.35;max-width:640px">Cuando dejás de improvisar,<span style="color:#9D174D"> aparece el espacio para crear</span></p>
 </div>
 
 <section id="pricing" style="background:#150d26;padding:52px 0">
   <div class="wrap">
-
-    <!-- Encabezado -->
     <div style="text-align:center;max-width:560px;margin:0 auto 24px">
       <span style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#E11D74;background:rgba(225,29,116,.12);border:1px solid rgba(225,29,116,.25);border-radius:99px;padding:5px 16px;margin-bottom:14px">Planes</span>
       <h2 style="font-family:'Fraunces',serif;font-size:clamp(28px,3.8vw,38px);font-weight:600;color:#fff;letter-spacing:-.6px;line-height:1.15;margin:0 0 10px;text-wrap:balance">Una <em style="font-style:italic;background:linear-gradient(120deg,#fbcfe8,#c084fc);-webkit-background-clip:text;background-clip:text;color:transparent">inversión fija</em><br>un sistema que trabaja por vos</h2>
       <p style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.6;margin:0">Sin sorpresas, sin cargos ocultos. Empezás a operar el primer día.</p>
     </div>
-
-    <!-- Tarjeta horizontal compacta -->
     <div style="max-width:900px;margin:0 auto">
       <div style="background:linear-gradient(150deg,#1e1135 0%,#180d2e 100%);border:1.5px solid rgba(225,29,116,.35);border-radius:22px;padding:36px 40px;position:relative;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)">
-
-        <!-- Brillos decorativos -->
         <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(225,29,116,.2),transparent 70%);pointer-events:none"></div>
         <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(168,85,247,.12),transparent 70%);pointer-events:none"></div>
 
         <div style="display:flex;flex-wrap:wrap;gap:36px;align-items:center;position:relative">
-
-          <!-- Lado izquierdo: badge + precio + CTA -->
           <div style="flex:0 0 220px;text-align:center">
             <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(225,29,116,.12);border:1px solid rgba(225,29,116,.28);border-radius:99px;padding:4px 12px;margin-bottom:16px">
               <span style="width:6px;height:6px;border-radius:50%;background:#E11D74;box-shadow:0 0 6px rgba(225,29,116,.9);display:inline-block;animation:pulse 2s infinite"></span>
@@ -990,11 +695,7 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
             </a>
             <p style="font-size:11px;color:rgba(255,255,255,.4);margin:10px 0 0">Sin contratos · Cancelás cuando quieras</p>
           </div>
-
-          <!-- Divisor vertical -->
           <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(225,29,116,.3),transparent);align-self:stretch;flex-shrink:0"></div>
-
-          <!-- Lado derecho: features en grid 2×2 -->
           <div style="flex:1;min-width:260px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
             <div style="display:flex;gap:12px;align-items:flex-start">
               <span style="width:32px;height:32px;border-radius:9px;background:rgba(225,29,116,.18);border:1px solid rgba(225,29,116,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -1036,8 +737,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 
         </div>
       </div>
-
-      <!-- Bloque "a medida" compacto -->
       <div style="margin-top:12px;background:rgba(168,85,247,.05);border:1.5px dashed rgba(168,85,247,.35);border-radius:14px;padding:16px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
         <i class="fa-solid fa-sliders" style="color:#a855f7;font-size:18px;flex-shrink:0"></i>
         <div style="flex:1;min-width:200px">
@@ -1089,16 +788,10 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
     </div>
   </div>
 </section>
-
-<!-- INVITACIÓN A HABLAR (en lugar de form genérico) -->
 <section id="contact" class="contact">
   <div class="wrap">
     <div style="max-width:760px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:48px 44px;text-align:center;box-shadow:0 18px 48px -24px rgba(225,29,116,.18);position:relative;overflow:hidden">
-
-      <!-- Decoración sutil -->
       <div style="position:absolute;top:-60px;right:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(225,29,116,.08),transparent 70%);pointer-events:none"></div>
-
-      <!-- Avatar / iniciales -->
       <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#E11D74,#9D174D);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:#fff;font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:.5px;box-shadow:0 8px 24px -8px rgba(225,29,116,.55);position:relative">A</div>
 
       <p style="font-size:11.5px;font-weight:800;color:#9D174D;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;position:relative">Hablemos directo</p>
@@ -1124,8 +817,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
     </div>
   </div>
 </section>
-
-<!-- CTA FINAL — CIERRE DE CAJA (último bloque antes del footer) -->
 <section style="padding:56px 0 72px;background:#fafbfc">
   <div class="wrap">
     <div class="cta-final">
@@ -1176,7 +867,10 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
       </div>
     </div>
     <div class="foot-bot">
-      <div>© <span id="y"></span> ANMA Regalos · Buenos Aires, Argentina · Parte de <a href="https://anmahub.com" target="_blank" style="color:#f472b6;text-decoration:underline;text-underline-offset:2px">ANMA</a></div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span>© <span id="y"></span> ANMA Regalos · Buenos Aires</span>
+        <a href="https://anmahub.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#f472b6;font-weight:600;letter-spacing:.2px;transition:color .2s"><i class="fa-solid fa-link" style="font-size:10px"></i> Parte de ANMA Hub</a>
+      </div>
       <div class="badges">
         <span><i class="fa-solid fa-shield-halved"></i> SSL</span>
         <span><i class="fa-solid fa-database"></i> Backups diarios</span>
@@ -1189,49 +883,32 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 <script>
 document.getElementById('y').textContent = new Date().getFullYear();
 
-// Regalos demo tabs — sincroniza panel + sidebar nav (espejo real de la app)
 (function(){
-  // Tab → nav item mapping (según rutas reales de la app)
-  var tabNavMap = { pedidos:'rg-nav-pedidos', insumos:'rg-nav-insumos', logistica:'rg-nav-logistica' };
-  // Íconos y textos del nav por tab
-  var navMeta = {
-    pedidos:   { icon:'fa-file-invoice-dollar', label:'Presupuesto' },
-    insumos:   { icon:'fa-cubes',               label:'Packaging'   },
-    logistica: { icon:'fa-truck-fast',           label:'Logística'  }
-  };
-
-  function setNavActive(navId, meta, isActive){
-    var el = document.getElementById(navId);
-    if(!el) return;
-    el.style.background = isActive ? 'rgba(225,29,116,.2)' : '';
-    var ico = el.querySelector('i');
-    var lbl = el.querySelector('span');
-    if(ico) ico.style.color = isActive ? '#E11D74' : '#64748b';
-    if(lbl){ lbl.style.color = isActive ? '#fff' : '#94a3b8'; lbl.style.fontWeight = isActive ? '700' : '400'; }
-  }
-
-  document.querySelectorAll('.rg-tab').forEach(function(tab){
-    tab.addEventListener('click', function(){
-      var target = this.dataset.rg;
-      // Panels
-      ['pedidos','insumos','logistica'].forEach(function(p){
-        var panel = document.getElementById('rg-panel-'+p);
-        if(panel) panel.style.display = (p===target) ? 'flex' : 'none';
-      });
-      // Sidebar
-      ['pedidos','insumos','logistica'].forEach(function(p){
-        setNavActive(tabNavMap[p], navMeta[p], p===target);
-      });
-      // Tabs
-      document.querySelectorAll('.rg-tab').forEach(function(t){
-        var on = t.dataset.rg === target;
-        t.style.background   = on ? '#f8fafc'                    : 'transparent';
-        t.style.color        = on ? '#1F1338'                    : '#64748b';
-        t.style.borderColor  = on ? 'rgba(255,255,255,.07)'      : 'transparent';
-      });
-    });
+  var form = document.getElementById('contact-form');
+  var success = document.getElementById('form-success');
+  if (!form) return;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (form.elements['website'].value) { success.classList.add('show'); form.style.display = 'none'; return; }
+    var d = {
+      nombre: form.elements['nombre'].value.trim(),
+      email: form.elements['email'].value.trim(),
+      empresa: form.elements['empresa'].value.trim(),
+      wa: form.elements['wa'].value.trim(),
+      interes: form.elements['interes'].value,
+      mensaje: form.elements['mensaje'].value.trim(),
+    };
+    if (!d.nombre || !d.email || !d.interes) { alert('Completá nombre, email y motivo de contacto.'); return; }
+    var body = 'Nombre: '+d.nombre+'\nEmail: '+d.email+'\nEmprendimiento: '+d.empresa+'\nWhatsApp: '+d.wa+'\nInterés: '+d.interes+'\n\nMensaje:\n'+d.mensaje;
+    var subject = 'ANMA Regalos — Nueva consulta de '+d.nombre+(d.empresa?' ('+d.empresa+')':'');
+    var mailto = 'mailto:ana.mbperalta@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    window.location.href = mailto;
+    setTimeout(function(){ success.classList.add('show'); form.style.display = 'none'; }, 400);
   });
 })();
+</script>
+</body>
+</html>
 (function(){
   var form = document.getElementById('contact-form');
   var success = document.getElementById('form-success');
