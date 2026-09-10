@@ -96,12 +96,12 @@ a{color:inherit;text-decoration:none}
 @media(max-width:920px){.hero{padding:40px 0 52px}.hero-grid{grid-template-columns:1fr;gap:32px}.h1{font-size:38px}}
 
 /* SECTIONS */
-section{padding:72px 0}
+section{padding:56px 0}
 .eyebrow-dark{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#fafbfc;border:1px solid #e5e7eb;color:#9D174D;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px}
 .eyebrow-dark::before{content:"";width:6px;height:6px;border-radius:50%;background:#E11D74;flex-shrink:0}
-.h2{font-family:'Fraunces',serif;font-size:42px;font-weight:600;letter-spacing:-.8px;line-height:1.12;margin:0 0 20px;color:#1F1338;text-wrap:balance}
+.h2{font-family:'Fraunces',serif;font-size:42px;font-weight:600;letter-spacing:-.8px;line-height:1.12;margin:0 0 14px;color:#1F1338;text-wrap:balance}
 .h2 em{font-style:italic;background:linear-gradient(135deg,#9D174D,#E11D74,#A855F7);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{font-size:17px;color:#6b5b8c;max-width:640px;margin:0 0 36px;line-height:1.7}
+.sub{font-size:17px;color:#6b5b8c;max-width:640px;margin:0 0 28px;line-height:1.65}
 .center{text-align:center;margin-left:auto;margin-right:auto}
 
 /* IMPACTO */
@@ -128,8 +128,9 @@ section{padding:72px 0}
 .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
 .prob-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:26px;transition:transform .2s,border-color .2s}
 .prob-card:hover{transform:translateY(-3px);border-color:#fbcfe8}
-.prob-card i{color:#9D174D;font-size:22px;margin-bottom:14px}
-.prob-card h4{font-size:16px;margin:0 0 8px;font-weight:700}
+.prob-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.prob-head i{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#E11D7418,#a855f718);color:#9D174D;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.prob-card h4{font-size:16px;margin:0;font-weight:700}
 .prob-card p{font-size:13.5px;color:#6b5b8c;margin:0;line-height:1.6}
 @media(max-width:780px){.prob-grid{grid-template-columns:1fr}}
 
@@ -464,9 +465,9 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
     <h2 class="h2">Entre los <em>chats, los post-it</em><br>y la memoria, algo siempre se cae</h2>
     <p class="sub">Tu marca crece y cada kit tiene su detalle: una dedicatoria, un branding del cliente, una fecha tope, una orden de compra, una factura A. Sin un lugar donde todo eso viva junto, terminás copiando y pegando lo mismo todo el día — y aun así algo se escapa.</p>
     <div class="prob-grid">
-      <div class="prob-card"><i class="fa-solid fa-layer-group"></i><h4>Cotizaciones que se mezclan</h4><p>Mails, capturas de WhatsApp, planillas con versiones distintas. Una empresa recibe una propuesta y otra la versión vieja — justo cuando no podés permitirte el error.</p></div>
-      <div class="prob-card"><i class="fa-solid fa-clock"></i><h4>Entregas que se atrasan</h4><p>Fin de año, lanzamientos, día del empleado. Perder una fecha con una empresa no es perder un pedido — es perder la cuenta del año siguiente.</p></div>
-      <div class="prob-card"><i class="fa-solid fa-money-bill-wave"></i><h4>Plata que no sabés dónde está</h4><p>Señas, OCs aprobadas, facturas vencidas, gastos de packaging. ¿Cuál es tu margen real por kit corporativo? Difícil saberlo sin datos consolidados.</p></div>
+      <div class="prob-card"><div class="prob-head"><i class="fa-solid fa-layer-group"></i><h4>Cotizaciones que se mezclan</h4></div><p>Mails, capturas de WhatsApp, planillas con versiones distintas. Una empresa recibe una propuesta y otra la versión vieja — justo cuando no podés permitirte el error.</p></div>
+      <div class="prob-card"><div class="prob-head"><i class="fa-solid fa-clock"></i><h4>Entregas que se atrasan</h4></div><p>Fin de año, lanzamientos, día del empleado. Perder una fecha con una empresa no es perder un pedido — es perder la cuenta del año siguiente.</p></div>
+      <div class="prob-card"><div class="prob-head"><i class="fa-solid fa-money-bill-wave"></i><h4>Plata que no sabés dónde está</h4></div><p>Señas, OCs aprobadas, facturas vencidas, gastos de packaging. ¿Cuál es tu margen real por kit corporativo? Difícil saberlo sin datos consolidados.</p></div>
     </div>
   </div>
 </section>
@@ -883,32 +884,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
 <script>
 document.getElementById('y').textContent = new Date().getFullYear();
 
-(function(){
-  var form = document.getElementById('contact-form');
-  var success = document.getElementById('form-success');
-  if (!form) return;
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    if (form.elements['website'].value) { success.classList.add('show'); form.style.display = 'none'; return; }
-    var d = {
-      nombre: form.elements['nombre'].value.trim(),
-      email: form.elements['email'].value.trim(),
-      empresa: form.elements['empresa'].value.trim(),
-      wa: form.elements['wa'].value.trim(),
-      interes: form.elements['interes'].value,
-      mensaje: form.elements['mensaje'].value.trim(),
-    };
-    if (!d.nombre || !d.email || !d.interes) { alert('Completá nombre, email y motivo de contacto.'); return; }
-    var body = 'Nombre: '+d.nombre+'\nEmail: '+d.email+'\nEmprendimiento: '+d.empresa+'\nWhatsApp: '+d.wa+'\nInterés: '+d.interes+'\n\nMensaje:\n'+d.mensaje;
-    var subject = 'ANMA Regalos — Nueva consulta de '+d.nombre+(d.empresa?' ('+d.empresa+')':'');
-    var mailto = 'mailto:ana.mbperalta@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-    window.location.href = mailto;
-    setTimeout(function(){ success.classList.add('show'); form.style.display = 'none'; }, 400);
-  });
-})();
-</script>
-</body>
-</html>
 (function(){
   var form = document.getElementById('contact-form');
   var success = document.getElementById('form-success');
