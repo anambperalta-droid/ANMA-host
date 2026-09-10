@@ -144,21 +144,6 @@ section{padding:56px 0}
 .feat p{font-size:13.5px;color:#6b5b8c;margin:0;line-height:1.6}
 @media(max-width:767px){.feat-grid{grid-template-columns:1fr}}
 
-/* COMPARACIÓN */
-.compare{background:#fff}
-.compare-table{max-width:880px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(157,23,77,.04)}
-.compare-row{display:grid;grid-template-columns:1.8fr 1.1fr 1.1fr;border-bottom:1px solid #faf5ff}
-.compare-row:last-child{border-bottom:none}
-.compare-row.head{background:#1F1338;color:#fff;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.8px}
-.compare-row.head .col{padding:16px 24px}
-.compare-row.head .col-anma{background:linear-gradient(135deg,#E11D74,#a855f7);color:#fff}
-.col{padding:18px 24px;font-size:14px;color:#6b5b8c;display:flex;align-items:center;line-height:1.5}
-.col-feat{font-weight:700;color:#1F1338;font-size:14.5px}
-.col-yes{color:#16a34a;font-weight:700}
-.col-yes::before{content:"✓ ";font-weight:800;margin-right:2px}
-.col-no{color:#9D5B8C;font-style:italic;font-size:13px}
-.col-anma-cell{background:#fdfaff;color:#1F1338;font-weight:600}
-@media(max-width:780px){.compare-row{grid-template-columns:1.4fr 1fr 1fr}.col{padding:14px 16px;font-size:12.5px}}
 
 /* COMO FUNCIONA */
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:14px}
@@ -512,52 +497,6 @@ footer{background:#1F1338;color:rgba(255,255,255,.7);padding:36px 0 20px}
   </div>
 </section>
 
-<section class="compare">
-  <div class="wrap">
-    <div style="text-align:center;max-width:700px;margin:0 auto 24px">
-      <span class="eyebrow-dark">Por qué ANMA</span>
-      <h2 class="h2">El caos <em>hasta acá</em><br>ANMA <em>desde acá</em></h2>
-      <p class="sub center">Las planillas y el WhatsApp sirven para empezar. Cuando una empresa te pide 200 kits con branding propio y entrega a 3 sucursales, dejan de alcanzar.</p>
-    </div>
-    <div class="compare-table">
-      <div class="compare-row head">
-        <div class="col">Lo que necesitás</div>
-        <div class="col">Chats + planillas</div>
-        <div class="col col-anma">ANMA Regalos</div>
-      </div>
-      <div class="compare-row">
-        <div class="col col-feat">Saber qué entregar hoy</div>
-        <div class="col col-no">Revisar cada chat</div>
-        <div class="col col-anma-cell col-yes">Tablero de urgencia</div>
-      </div>
-      <div class="compare-row">
-        <div class="col col-feat">Packaging antes de quedar en cero</div>
-        <div class="col col-no">Te enterás armando el kit</div>
-        <div class="col col-anma-cell col-yes">Alertas en tiempo real</div>
-      </div>
-      <div class="compare-row">
-        <div class="col col-feat">Cuánto deja cada cuenta corporativa</div>
-        <div class="col col-no">Imposible de calcular</div>
-        <div class="col col-anma-cell col-yes">Top clientes y margen real</div>
-      </div>
-      <div class="compare-row">
-        <div class="col col-feat">Operar con asistente o socia</div>
-        <div class="col col-no">Archivos pisándose</div>
-        <div class="col col-anma-cell col-yes">Multi-usuario con roles</div>
-      </div>
-      <div class="compare-row">
-        <div class="col col-feat">Ver y operar desde el celu</div>
-        <div class="col col-no">Pésima experiencia</div>
-        <div class="col col-anma-cell col-yes">100% mobile-first</div>
-      </div>
-      <div class="compare-row">
-        <div class="col col-feat">Backup y seguridad</div>
-        <div class="col col-no">Si se pierde, se pierde</div>
-        <div class="col col-anma-cell col-yes">Backup automático diario</div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section id="how">
   <div class="wrap">
