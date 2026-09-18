@@ -165,7 +165,7 @@ export default function PaymentDueBanner() {
         padding: 20,
       }}>
         <div style={{
-          background: '#fff', borderRadius: 18, padding: '36px 32px 28px',
+          background: 'var(--surface, #fff)', borderRadius: 18, padding: '36px 32px 28px',
           maxWidth: 460, width: '100%', textAlign: 'center',
           boxShadow: '0 25px 70px rgba(15,12,60,.4)',
         }}>

@@ -108,7 +108,7 @@ function BudgetPreviewModal({ budget, config, onClose, onEdit }) {
         </div>
 
         {/* ── Content ── */}
-        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px 18px', background: '#fff' }}>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px 18px', background: 'var(--surface)' }}>
 
           {/* Cabecera del comprobante */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 14, borderBottom: `3px solid ${brandColor}`, marginBottom: 16, gap: 12 }}>

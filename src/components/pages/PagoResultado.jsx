@@ -148,7 +148,7 @@ export default function PagoResultado({ variant = 'exitoso' }) {
 
         {/* Next steps */}
         <div style={{
-          background: '#fff', border: '1.5px solid var(--border)',
+          background: 'var(--surface)', border: '1.5px solid var(--border)',
           borderRadius: 14, padding: '20px 24px', marginBottom: 24, textAlign: 'left',
         }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>

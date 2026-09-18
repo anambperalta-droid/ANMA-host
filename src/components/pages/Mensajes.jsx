@@ -132,7 +132,7 @@ function ClientSelector({ clients, selected, onSelect, onClear }) {
   if (selected) {
     return (
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10, background: '#fff',
+        display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)',
         border: `1px solid ${P.accentBorder}`, borderRadius: 12, padding: '8px 14px',
         boxShadow: '0 1px 3px rgba(37,211,102,.06)',
       }}>
@@ -163,8 +163,8 @@ function ClientSelector({ clients, selected, onSelect, onClear }) {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10, background: '#fff',
-        border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px',
+        display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)',
+        border: '1px solid var(--border)', borderRadius: 12, padding: '9px 14px',
         transition: 'border-color .15s, box-shadow .15s',
         boxShadow: open ? '0 0 0 3px rgba(37,211,102,.08)' : 'none',
         borderColor: open ? P.accentBorder : '#e2e8f0',
@@ -181,7 +181,7 @@ function ClientSelector({ clients, selected, onSelect, onClear }) {
       {open && filtered.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
-          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
+          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12,
           boxShadow: '0 12px 28px rgba(0,0,0,.08)', maxHeight: 240, overflowY: 'auto', marginTop: 4,
         }}>
           {filtered.map(c => (
@@ -225,8 +225,8 @@ function VariablesPanel({ client, config, budget }) {
 
   return (
     <div className="msg-vars-panel" style={{
-      position: 'sticky', top: 72, background: '#fff', borderRadius: 16,
-      border: '1px solid #e2e8f0', padding: '18px 20px',
+      position: 'sticky', top: 72, background: 'var(--surface)', borderRadius: 16,
+      border: '1px solid var(--border)', padding: '18px 20px',
       boxShadow: P.shadow, width: 240, flexShrink: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14 }}>
@@ -360,13 +360,13 @@ export default function Mensajes() {
   const IconBtn = ({ icon, title, onClick, hoverBg, hoverColor, hoverBorder }) => (
     <button onClick={onClick} title={title}
       style={{
-        width: 32, height: 32, borderRadius: 10, border: '1px solid #e2e8f0',
-        background: '#fff', color: P.textMuted, fontSize: 12,
+        width: 32, height: 32, borderRadius: 10, border: '1px solid var(--border)',
+        background: 'var(--surface)', color: P.textMuted, fontSize: 12,
         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: 'all .15s ease', flexShrink: 0,
       }}
       onMouseEnter={e => { e.currentTarget.style.background = hoverBg; e.currentTarget.style.color = hoverColor; e.currentTarget.style.borderColor = hoverBorder }}
-      onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = P.textMuted; e.currentTarget.style.borderColor = '#e2e8f0' }}>
+      onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = P.textMuted; e.currentTarget.style.borderColor = 'var(--border)' }}>
       <i className={`fa ${icon}`} />
     </button>
   )
@@ -532,13 +532,13 @@ export default function Mensajes() {
                     <div style={{ padding: '12px 18px 16px', display: 'flex', gap: 6, borderTop: '1px solid #f1f5f9', alignItems: 'center' }}>
                       <button onClick={() => copyText(t.text)}
                         style={{
-                          flex: 1, padding: '8px 0', borderRadius: 10, border: '1px solid #e2e8f0',
-                          background: '#fff', color: P.textSoft, fontSize: 11, fontWeight: 600,
+                          flex: 1, padding: '8px 0', borderRadius: 10, border: '1px solid var(--border)',
+                          background: 'var(--surface)', color: P.textSoft, fontSize: 11, fontWeight: 600,
                           cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center',
                           justifyContent: 'center', gap: 5, transition: 'all .15s ease',
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0' }}>
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border2)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
                         <i className="fa fa-copy" /> Copiar
                       </button>
                       <button onClick={() => sendWA(t.text)}

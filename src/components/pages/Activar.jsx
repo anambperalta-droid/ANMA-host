@@ -310,7 +310,7 @@ export default function Activar() {
                 onClick={() => setShowTransfer(true)}
                 style={{
                   width: '100%', padding: '13px 20px',
-                  background: '#fff', color: 'var(--txt)',
+                  background: 'var(--surface)', color: 'var(--txt)',
                   border: '1.5px solid var(--border)', borderRadius: 14,
                   fontSize: 14, fontWeight: 700, cursor: 'pointer',
                   fontFamily: 'inherit',
@@ -323,7 +323,7 @@ export default function Activar() {
               </button>
             ) : (
               <div style={{
-                background: '#fff', border: '1.5px solid var(--border)',
+                background: 'var(--surface)', border: '1.5px solid var(--border)',
                 borderRadius: 16, padding: '20px 22px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -429,7 +429,7 @@ export default function Activar() {
         </div>
 
         {/* FAQ resumido */}
-        <div style={{ marginTop: 36, padding: '24px 28px', background: '#fff', border: '1.5px solid var(--border)', borderRadius: 16 }}>
+        <div style={{ marginTop: 36, padding: '24px 28px', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 16 }}>
           <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <i className="fa fa-circle-question" style={{ color: '#7C3AED' }} />
             Preguntas frecuentes

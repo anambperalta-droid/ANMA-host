@@ -83,7 +83,7 @@ export default function PWAInstall() {
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 9800,
+    zIndex: 10100,
     background: 'linear-gradient(135deg, #1a103a 0%, #2d1a5e 100%)',
     borderTop: '1px solid rgba(168,85,247,.35)',
     boxShadow: '0 -8px 32px rgba(0,0,0,.4)',
