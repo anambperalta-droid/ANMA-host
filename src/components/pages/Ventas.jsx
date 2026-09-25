@@ -665,7 +665,6 @@ function InsightCard({ budgets, month, hidden }) {
 }
 
 function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
-  const [expandedId, setExpandedId] = useState(null)
   const [justPaidId, setJustPaidId] = useState(null)
   const pendientes = useMemo(() =>
     budgets.filter(b => b.payStatus !== 'paid' && (Number(b.total) || 0) > 0).sort((a, b) => {
@@ -683,14 +682,8 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
   const markPaid = (b) => {
     if (saveBudget) saveBudget({ ...b, payStatus: 'paid' })
     setJustPaidId(b.id)
-    setExpandedId(null)
     setTimeout(() => setJustPaidId(null), 1400)
     if (toast) toast('Cobro registrado', 'ok')
-  }
-
-  const markPartial = (b) => {
-    if (saveBudget) saveBudget({ ...b, payStatus: 'partial' })
-    setExpandedId(null)
   }
 
   const sendWA = (b) => {
@@ -705,85 +698,62 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
   }
 
   return (
-    <div style={{ marginTop: 20, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+    <div style={{ marginTop: 16, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
       <style>{`
-        .pc-item{border-bottom:1px solid var(--border);transition:background .15s;-webkit-tap-highlight-color:transparent}
-        .pc-head{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;min-height:52px}
-        .pc-head:hover{background:var(--surface2)}
-        .pc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-        .pc-expand{max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0}
-        .pc-expand-open{max-height:120px;opacity:1}
-        .pc-actions-bar{display:flex;gap:8px;padding:0 18px 12px 38px;flex-wrap:wrap}
-        .pc-act{border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;border-radius:10px;font-size:12px;font-weight:700;transition:all .15s;-webkit-tap-highlight-color:transparent;padding:9px 16px}
-        .pc-act:active{transform:scale(.96)}
-        .pc-act-pri{background:#059669;color:#fff;box-shadow:0 2px 8px rgba(5,150,105,.25)}
-        .pc-act-pri:hover{background:#047857}
-        .pc-act-sec{background:var(--surface2,#f3f4f6);color:var(--txt2);border:1px solid var(--border)}
-        .pc-act-sec:hover{border-color:var(--txt3)}
-        .pc-act-wa{background:rgba(37,211,102,.08);color:#128C7E;border:1px solid rgba(37,211,102,.2)}
-        .pc-act-wa:hover{background:rgba(37,211,102,.15)}
+        .pc-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent}
+        .pc-row:hover{background:var(--surface2)}
+        .pc-row:last-child{border-bottom:none}
+        .pc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+        .pc-name{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .pc-days{font-size:10px;color:var(--txt4);flex-shrink:0;font-weight:600;min-width:24px;text-align:right}
+        .pc-amt{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:-.02em;min-width:70px;text-align:right}
+        .pc-ib{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .12s;-webkit-tap-highlight-color:transparent;font-family:inherit;padding:0}
+        .pc-ib:active{transform:scale(.9)}
+        .pc-ib-pay{background:#dcfce7;color:#15803d}
+        .pc-ib-pay:hover{background:#bbf7d0}
+        .pc-ib-wa{background:rgba(37,211,102,.08);color:#128C7E}
+        .pc-ib-wa:hover{background:rgba(37,211,102,.18)}
         .pc-flash{animation:pc-done .6s ease}
-        @keyframes pc-done{0%{background:rgba(5,150,105,.12)}50%{background:rgba(5,150,105,.06)}100%{background:transparent}}
-        .pc-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+        @keyframes pc-done{0%{background:rgba(5,150,105,.15)}100%{background:transparent}}
+        .pc-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;white-space:nowrap}
         @media(max-width:600px){
-          .pc-head{padding:10px 14px;gap:10px;min-height:48px}
-          .pc-actions-bar{padding:0 14px 10px 32px;gap:6px}
-          .pc-act{padding:8px 12px;font-size:11px;flex:1;justify-content:center;min-height:38px}
+          .pc-row{padding:8px 12px;gap:8px}
+          .pc-name{font-size:12px}
+          .pc-amt{font-size:12px;min-width:60px}
+          .pc-ib{width:32px;height:32px}
         }
       `}</style>
-      <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <i className="fa fa-clock" style={{ color: '#b45309', fontSize: 13 }} />
-          <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px' }}>Pendientes de cobro</span>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: '#fef3c7', color: '#92400e' }}>{pendientes.length}</span>
+          <i className="fa fa-clock" style={{ color: '#b45309', fontSize: 12 }} />
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px' }}>Pendientes de cobro</span>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 99, background: '#fef3c7', color: '#92400e' }}>{pendientes.length}</span>
         </div>
-        <span style={{ fontSize: 14, fontWeight: 800, color: '#b45309', fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(totalPend)}</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: '#b45309', fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(totalPend)}</span>
       </div>
-      {pendientes.slice(0, 12).map(b => {
+      {pendientes.slice(0, 15).map(b => {
         const days = Math.floor((Date.now() - (b.updatedAt || Date.now())) / 86400000)
         const owed = b.payStatus === 'partial' ? (Number(b.total) || 0) - (Number(b.depositAmt) || 0) : Number(b.total) || 0
-        const isOpen = expandedId === b.id
         const isFlash = justPaidId === b.id
         const urgency = days > 30 ? 'critical' : days > 7 ? 'warn' : 'normal'
         const dotColor = urgency === 'critical' ? '#DC2626' : urgency === 'warn' ? '#D97706' : b.payStatus === 'partial' ? '#D97706' : '#94A3B8'
         return (
-          <div key={b.id} className={`pc-item ${isFlash ? 'pc-flash' : ''}`}>
-            <div className="pc-head" onClick={() => setExpandedId(isOpen ? null : b.id)}>
-              <div className="pc-dot" style={{ background: dotColor }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }}>{b.company || b.contact || '—'}</div>
-                <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="pc-badge" style={{ background: b.payStatus === 'partial' ? '#fef3c7' : '#f1f5f9', color: b.payStatus === 'partial' ? '#92400e' : '#64748b' }}>
-                    {b.payStatus === 'partial' ? 'Señado' : 'Pendiente'}
-                  </span>
-                  {days > 0 && <span style={{ color: urgency === 'critical' ? '#DC2626' : 'var(--txt4)', fontWeight: urgency === 'critical' ? 700 : 400 }}>{days}d</span>}
-                </div>
-              </div>
-              <span style={{ fontSize: 15, fontWeight: 800, color: urgency === 'critical' ? '#DC2626' : '#b45309', fontVariantNumeric: 'tabular-nums', flexShrink: 0, letterSpacing: '-.02em' }}>{hidden ? '***' : fmt(owed)}</span>
-              <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 10, color: 'var(--txt4)', flexShrink: 0, transition: 'transform .2s' }} />
-            </div>
-            <div className={`pc-expand ${isOpen ? 'pc-expand-open' : ''}`}>
-              <div className="pc-actions-bar">
-                <button className="pc-act pc-act-pri" onClick={() => markPaid(b)}>
-                  <i className="fa fa-check" /> Marcar cobrado
-                </button>
-                {b.payStatus === 'pending' && (
-                  <button className="pc-act pc-act-sec" onClick={() => markPartial(b)}>
-                    <i className="fa fa-hand-holding-dollar" style={{ fontSize: 11 }} /> Señado
-                  </button>
-                )}
-                <button className="pc-act pc-act-wa" onClick={() => sendWA(b)}>
-                  <i className="fa-brands fa-whatsapp" /> Recordar
-                </button>
-                <button className="pc-act pc-act-sec" onClick={() => nav(`/pedido/${b.id}`)}>
-                  <i className="fa fa-arrow-up-right-from-square" style={{ fontSize: 10 }} /> Ver pedido
-                </button>
-              </div>
-            </div>
+          <div key={b.id} className={`pc-row ${isFlash ? 'pc-flash' : ''}`} onClick={() => nav(`/pedido/${b.id}`)}>
+            <div className="pc-dot" style={{ background: dotColor }} />
+            <span className="pc-name">{b.company || b.contact || '---'}</span>
+            {b.payStatus === 'partial' && <span className="pc-tag" style={{ background: '#fef3c7', color: '#92400e' }}>Señado</span>}
+            {days > 0 && <span className="pc-days" style={{ color: urgency === 'critical' ? '#DC2626' : undefined, fontWeight: urgency === 'critical' ? 700 : undefined }}>{days}d</span>}
+            <span className="pc-amt" style={{ color: urgency === 'critical' ? '#DC2626' : '#b45309' }}>{hidden ? '***' : fmt(owed)}</span>
+            <button className="pc-ib pc-ib-pay" title="Marcar cobrado" onClick={e => { e.stopPropagation(); markPaid(b) }}>
+              <i className="fa fa-check" />
+            </button>
+            <button className="pc-ib pc-ib-wa" title="Recordar por WhatsApp" onClick={e => { e.stopPropagation(); sendWA(b) }}>
+              <i className="fa-brands fa-whatsapp" />
+            </button>
           </div>
         )
       })}
-      {pendientes.length > 12 && <div style={{ padding: '10px 18px', textAlign: 'center', fontSize: 12, color: 'var(--txt3)' }}>y {pendientes.length - 12} mas...</div>}
+      {pendientes.length > 15 && <div style={{ padding: '8px 14px', textAlign: 'center', fontSize: 11, color: 'var(--txt3)' }}>y {pendientes.length - 15} mas...</div>}
     </div>
   )
 }
