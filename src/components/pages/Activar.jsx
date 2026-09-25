@@ -27,7 +27,6 @@ export default function Activar() {
   const { user, trial, authed, loading } = useAuth()
   const { config } = useData()
   const nav = useNavigate()
-  const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
   const [workspaceId, setWorkspaceId] = useState(null)
   const [showTransfer, setShowTransfer] = useState(false)
@@ -99,29 +98,6 @@ export default function Activar() {
       setWorkspaceId(data?.workspace_id || user.id)  // fallback al user.id (self-workspace legacy)
     })()
   }, [user?.id])
-
-  const handlePay = async () => {
-    if (!workspaceId) return
-    setCreating(true); setError('')
-    try {
-      const resp = await fetch('/api/mp-create-preference', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspaceId,
-          kind: 'onboarding',
-          userEmail: user?.email,
-        }),
-      })
-      const data = await resp.json()
-      if (!data.ok) throw new Error(data.message || 'Error creando link de pago')
-      // Redirect a Mercado Pago
-      window.location.href = data.init_point
-    } catch (e) {
-      setError(e?.message || 'No pudimos generar el link de pago. Probá de nuevo.')
-      setCreating(false)
-    }
-  }
 
   if (loading || !authed) {
     return (
@@ -274,52 +250,27 @@ export default function Activar() {
           </div>
         )}
 
-        {/* CTA principal */}
-        <button
-          onClick={handlePay}
-          disabled={creating || !workspaceId}
-          style={{
-            width: '100%', padding: '17px 28px',
-            background: 'linear-gradient(135deg, #059669, #047857)',
-            color: '#fff', border: 'none', borderRadius: 14,
-            fontSize: 16, fontWeight: 800, cursor: creating ? 'wait' : 'pointer',
-            fontFamily: 'inherit', letterSpacing: '-.2px',
-            boxShadow: '0 10px 32px rgba(5,150,105,.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            transition: 'transform .15s, box-shadow .2s',
-            opacity: creating ? .7 : 1,
-          }}
-          onMouseEnter={e => !creating && (e.currentTarget.style.transform = 'translateY(-2px)')}
-          onMouseLeave={e => (e.currentTarget.style.transform = '')}
-        >
-          {creating ? (
-            <><i className="fa fa-spinner fa-spin" /> Generando link de pago…</>
-          ) : (
-            <>
-              <i className="fa fa-lock" style={{ fontSize: 14 }} />
-              Pagar $120.000 con Mercado Pago
-            </>
-          )}
-        </button>
-
-        {/* ─── Opción B: pagar por transferencia (sin comisión) ─── */}
+        {/* CTA principal — Solo transferencia bancaria (sin comisión) */}
         {bankReady && (
-          <div style={{ marginTop: 14 }}>
+          <div>
             {!showTransfer ? (
               <button
                 onClick={() => setShowTransfer(true)}
                 style={{
-                  width: '100%', padding: '13px 20px',
-                  background: 'var(--surface)', color: 'var(--txt)',
-                  border: '1.5px solid var(--border)', borderRadius: 14,
-                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
-                  flexWrap: 'wrap',
+                  width: '100%', padding: '17px 28px',
+                  background: 'linear-gradient(135deg, #059669, #047857)',
+                  color: '#fff', border: 'none', borderRadius: 14,
+                  fontSize: 16, fontWeight: 800, cursor: 'pointer',
+                  fontFamily: 'inherit', letterSpacing: '-.2px',
+                  boxShadow: '0 10px 32px rgba(5,150,105,.4)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  transition: 'transform .15s, box-shadow .2s',
                 }}
+                onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
+                onMouseLeave={e => (e.currentTarget.style.transform = '')}
               >
-                <i className="fa fa-building-columns" style={{ color: '#059669' }} />
-                O pagá por transferencia bancaria
+                <i className="fa fa-building-columns" style={{ fontSize: 14 }} />
+                Pagar $120.000 por transferencia
               </button>
             ) : (
               <div style={{
@@ -423,8 +374,7 @@ export default function Activar() {
 
         {/* Trust line */}
         <div style={{ textAlign: 'center', marginTop: 18, display: 'flex', justifyContent: 'center', gap: 18, flexWrap: 'wrap', fontSize: 11.5, color: 'var(--txt3)' }}>
-          <span><i className="fa fa-lock" style={{ marginRight: 5, color: '#10B981' }} /> Pago seguro con Mercado Pago</span>
-          <span><i className="fa fa-credit-card" style={{ marginRight: 5, color: '#7C3AED' }} /> Aceptamos todas las tarjetas</span>
+          <span><i className="fa fa-building-columns" style={{ marginRight: 5, color: '#059669' }} /> Transferencia directa sin comisión</span>
           <span><i className="fa fa-shield-halved" style={{ marginRight: 5, color: '#7C3AED' }} /> SSL · Encriptación E2E</span>
         </div>
 

@@ -29,7 +29,6 @@ export default function PaymentDueBanner() {
   const SNOOZE_KEY  = `anma_payment_due_snoozed_until_${user?.id || 'anon'}`
   const [workspace, setWorkspace] = useState(null)
   const [hidden, setHidden] = useState(true)
-  const [paying, setPaying] = useState(false)
 
   // ── Trial vencido sin pago → bloqueo automático ────────────────────
   // Cuando el trial de 7 días expiró y el workspace NUNCA se activó
@@ -96,28 +95,8 @@ export default function PaymentDueBanner() {
 
   if (hidden && (canDismiss || canSnooze)) return null
 
-  const handlePay = async () => {
-    if (!workspace?.id) return
-    setPaying(true)
-    try {
-      const resp = await fetch('/api/mp-create-preference', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspaceId: workspace.id,
-          // Si nunca activó, el primer pago es onboarding ($120k). Si ya pagó,
-          // este flujo no aplica (billing manejaría 'monthly').
-          kind: trialLockout ? 'onboarding' : 'monthly',
-          userEmail: user?.email,
-        }),
-      })
-      const data = await resp.json()
-      if (!data.ok) throw new Error(data.message || 'Error')
-      window.location.href = data.init_point
-    } catch (e) {
-      alert('No pudimos generar el link de pago. Probá de nuevo o escribinos por WhatsApp.')
-      setPaying(false)
-    }
+  const handlePay = () => {
+    window.location.href = '/activar'
   }
 
   const dismissToday = () => {
@@ -186,16 +165,15 @@ export default function PaymentDueBanner() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
               onClick={handlePay}
-              disabled={paying}
               style={{
                 width: '100%', padding: '14px 24px', borderRadius: 12, border: 'none',
                 background: 'linear-gradient(135deg, #7C3AED, #6366F1)',
-                color: '#fff', fontSize: 14.5, fontWeight: 800, cursor: paying ? 'wait' : 'pointer',
+                color: '#fff', fontSize: 14.5, fontWeight: 800, cursor: 'pointer',
                 fontFamily: 'inherit', boxShadow: '0 10px 28px rgba(124,58,237,.4)',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              {paying ? <><i className="fa fa-spinner fa-spin" /> Generando link…</> : <><i className="fa fa-bolt" /> {modalCopy.cta}</>}
+              <i className="fa fa-bolt" /> {modalCopy.cta}
             </button>
             <button
               onClick={openWA}
@@ -293,20 +271,19 @@ export default function PaymentDueBanner() {
         {/* CTA primario: pagar */}
         <button
           onClick={handlePay}
-          disabled={paying}
           style={{
             background: styles.ctaBg,
             color: '#fff', border: 'none',
             padding: '7px 14px', borderRadius: 8,
             fontSize: 12, fontWeight: 700,
             whiteSpace: 'nowrap',
-            cursor: paying ? 'wait' : 'pointer',
+            cursor: 'pointer',
             fontFamily: 'inherit',
             boxShadow: '0 2px 6px rgba(0,0,0,.1)',
             display: 'inline-flex', alignItems: 'center', gap: 6,
           }}
         >
-          {paying ? <i className="fa fa-spinner fa-spin" /> : <><i className="fa fa-bolt" />{billing.bannerCopy.cta}</>}
+          <i className="fa fa-bolt" />{billing.bannerCopy.cta}
         </button>
 
         {/* Opción secundaria: WhatsApp */}

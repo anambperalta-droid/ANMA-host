@@ -56,6 +56,8 @@ export default function Ventas() {
   const [draft, setDraft] = useState({ ...EMPTY })
   const [showNota, setShowNota] = useState(false)
   const [savedCount, setSavedCount] = useState(0)
+  const [sortCol, setSortCol] = useState(null)
+  const [sortDir, setSortDir] = useState('desc')
   const inputRef = useRef(null)
 
   const clients = get('clients') || []
@@ -80,6 +82,29 @@ export default function Ventas() {
     })
     return { facturado, iva, cobrado, pendiente, count: monthBudgets.length }
   }, [monthBudgets])
+
+  const pctCobrado = totals.facturado > 0 ? Math.round(totals.cobrado / totals.facturado * 100) : 0
+
+  const sortedBudgets = useMemo(() => {
+    if (!sortCol) return monthBudgets
+    const dir = sortDir === 'asc' ? 1 : -1
+    return [...monthBudgets].sort((a, b) => {
+      if (sortCol === 'cliente') return dir * (a.company || a.contact || '').localeCompare(b.company || b.contact || '')
+      if (sortCol === 'producto') return dir * ((a.items?.[0]?.name || '').localeCompare(b.items?.[0]?.name || ''))
+      if (sortCol === 'cant') return dir * ((a.items?.[0]?.qty || 1) - (b.items?.[0]?.qty || 1))
+      if (sortCol === 'facturado') return dir * ((Number(a.total) || 0) - (Number(b.total) || 0))
+      if (sortCol === 'cobro') {
+        const ord = { pending: 0, partial: 1, paid: 2 }
+        return dir * ((ord[a.payStatus] || 0) - (ord[b.payStatus] || 0))
+      }
+      return 0
+    })
+  }, [monthBudgets, sortCol, sortDir])
+
+  const toggleSort = (col) => {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortCol(col); setSortDir('asc') }
+  }
 
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1) } else setMonth(m => m - 1) }
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1) } else setMonth(m => m + 1) }
@@ -224,7 +249,7 @@ export default function Ventas() {
       </div>
 
       {/* RESUMEN */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 10 }}>
         {[
           { label: 'Facturado', value: totals.facturado, icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
           { label: 'IVA', value: totals.iva, icon: 'fa-percent', color: '#6366f1' },
@@ -241,12 +266,41 @@ export default function Ventas() {
         ))}
       </div>
 
+      {totals.facturado > 0 && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: pctCobrado >= 80 ? '#15803d' : pctCobrado >= 40 ? '#b45309' : '#DC2626' }}>
+              {hidden ? '***' : `${pctCobrado}% cobrado`}
+            </span>
+            <span style={{ fontSize: 10, color: 'var(--txt3)' }}>{hidden ? '' : `${fmt(totals.cobrado)} / ${fmt(totals.facturado)}`}</span>
+          </div>
+          <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', borderRadius: 99, width: `${Math.min(pctCobrado, 100)}%`, background: pctCobrado >= 80 ? '#15803d' : pctCobrado >= 40 ? '#b45309' : '#DC2626', transition: 'width .4s ease' }} />
+          </div>
+        </div>
+      )}
+
+      <PendientesCobro budgets={allBudgets} hidden={hidden} nav={nav} />
+
       {/* TABLA */}
-      <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 18 }}>
         <div className="vt-row vt-hdr">
-          <span>Cliente</span><span>Producto</span>
-          <span className="vt-cell-r">Cant</span><span className="vt-cell-r">Facturado</span>
-          <span className="vt-cell-r vt-hide-m">IVA</span><span style={{ textAlign: 'center' }}>Cobro</span>
+          {[
+            { key: 'cliente', label: 'Cliente', cls: '' },
+            { key: 'producto', label: 'Producto', cls: '' },
+            { key: 'cant', label: 'Cant', cls: 'vt-cell-r' },
+            { key: 'facturado', label: 'Facturado', cls: 'vt-cell-r' },
+          ].map(h => (
+            <span key={h.key} className={h.cls} onClick={() => toggleSort(h.key)} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              {h.label}
+              {sortCol === h.key && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
+          ))}
+          <span className="vt-cell-r vt-hide-m">IVA</span>
+          <span onClick={() => toggleSort('cobro')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+            Cobro
+            {sortCol === 'cobro' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+          </span>
         </div>
 
         {monthBudgets.length === 0 && (
@@ -257,17 +311,23 @@ export default function Ventas() {
           </div>
         )}
 
-        {monthBudgets.map(b => {
+        {sortedBudgets.map(b => {
           const pi = payInfo(b)
+          const isPending = b.payStatus === 'pending'
+          const isPartial = b.payStatus === 'partial'
           return (
-            <div key={b.id} className="vt-row" style={{ cursor: 'pointer' }} onClick={() => nav(`/pedido/${b.id}`)}>
+            <div key={b.id} className="vt-row" style={{ cursor: 'pointer', borderLeft: isPending ? '3px solid #DC2626' : isPartial ? '3px solid #b45309' : '3px solid transparent' }} onClick={() => nav(`/pedido/${b.id}`)}>
               <span className="vt-cell" style={{ fontWeight: 600, color: 'var(--txt)' }}>{b.company || b.contact || '—'}</span>
               <span className="vt-cell" style={{ color: 'var(--txt2)' }}>{b.items?.[0]?.name || '—'}</span>
               <span className="vt-cell vt-cell-r" style={{ color: 'var(--txt3)' }}>{b.items?.[0]?.qty || 1}</span>
               <span className="vt-cell vt-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(b.total || 0)}</span>
               <span className="vt-cell vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : (b._quickIva ? fmt(b._quickIva) : '—')}</span>
               <span style={{ textAlign: 'center' }} onClick={e => { e.stopPropagation(); const nx = b.payStatus === 'pending' ? 'partial' : b.payStatus === 'partial' ? 'paid' : 'pending'; updatePayStatus(b.id, nx) }}>
-                <span className="vt-pay-chip" style={{ background: pi.bg, color: pi.color }}>{pi.label}</span>
+                <span className="vt-pay-chip" style={{
+                  background: pi.bg, color: pi.color,
+                  border: isPending ? '1.5px solid #DC2626' : isPartial ? '1.5px solid #b45309' : '1.5px solid transparent',
+                  fontWeight: isPending ? 800 : 700,
+                }}>{pi.label}</span>
               </span>
             </div>
           )
@@ -285,7 +345,6 @@ export default function Ventas() {
       </div>
 
       {monthBudgets.length >= 2 && <InsightCard budgets={monthBudgets} month={MESES[month]} hidden={hidden} />}
-      <PendientesCobro budgets={allBudgets} hidden={hidden} nav={nav} />
 
       {/* DRAWER */}
       <SaleDrawer
