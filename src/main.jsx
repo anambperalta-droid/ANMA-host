@@ -32,7 +32,9 @@ window.addEventListener('vite:preloadError', (e) => {
 // Resultado: el user ve la nueva versión sin tener que hacer Ctrl+Shift+R.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(reg => {
+      reg.update().catch(() => {})
+    }).catch(() => {})
   })
   // Listener: cuando el SW nuevo se activa, reload una vez para que tome los JS nuevos.
   // El sessionStorage flag evita loop si por algún motivo el SW manda dos mensajes.

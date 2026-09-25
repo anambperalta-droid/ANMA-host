@@ -376,6 +376,7 @@ export default function Login() {
           <div className="lpr-fg">
             <label className="lpr-lbl">Email</label>
             <input type="email" className="lpr-inp" placeholder="tu@email.com"
+              name="email" id="email"
               value={email} onChange={e => setEmail(e.target.value)}
               onKeyDown={handleKey} autoComplete="email" autoFocus={!email} />
           </div>
@@ -390,6 +391,7 @@ export default function Login() {
                 type={showPwd ? 'text' : 'password'}
                 className="lpr-inp"
                 placeholder="••••••••"
+                name="password" id="password"
                 value={pass}
                 onChange={e => setPass(e.target.value)}
                 onKeyDown={handleKey}
