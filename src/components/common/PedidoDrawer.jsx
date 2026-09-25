@@ -94,6 +94,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
 
       {/* Sheet lateral derecho */}
       <aside
+        className="pd-aside"
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0,
           width: 'min(520px, 100vw)', background: 'var(--surface)',
@@ -107,6 +108,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
         <header style={{
           padding: '18px 22px 14px', borderBottom: '1px solid var(--border)',
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
+          flexShrink: 0,
         }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
@@ -141,12 +143,33 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
         </header>
 
         {/* ── BODY scrolleable ── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '18px 22px', WebkitOverflowScrolling: 'touch' }}>
+
+          {/* KPI cards — sync con PedidoNuevo */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+            {[
+              { label: 'Facturado', value: fmt(totales.total), icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
+              { label: 'Costo', value: fmt(totales.costoTotal), icon: 'fa-lock', color: '#b45309' },
+              { label: 'Ganancia', value: fmt(totales.ganancia), icon: 'fa-arrow-trend-up', color: totales.ganancia >= 0 ? '#15803d' : '#DC2626' },
+              { label: 'Margen', value: `${totales.total > 0 ? Math.round((totales.ganancia / totales.total) * 100) : 0}%`, icon: 'fa-bullseye', color: '#6366f1' },
+            ].map(c => (
+              <div key={c.label} style={{
+                background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10,
+                padding: '8px 10px', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 2 }}>
+                  <i className={`fa ${c.icon}`} style={{ color: c.color, marginRight: 3, fontSize: 9 }} />
+                  {c.label}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums' }}>{c.value}</div>
+              </div>
+            ))}
+          </div>
 
           {/* Info clave */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+          <div className="pd-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
             <MiniKpi icon="fa-calendar-day" label="Fecha" value={fmtFecha(budget.date)} />
-            <MiniKpi icon="fa-gift" label="Ocasión" value={budget.ocasion || '—'} />
+            <MiniKpi icon="fa-gift" label="Ocasion" value={budget.ocasion || '—'} />
             <MiniKpi icon="fa-truck-fast" label="Entrega" value={fmtFecha(budget.deliveryDate)} />
             <MiniKpi icon="fa-comment-dots" label="WhatsApp" value={budget.wa || '—'} />
           </div>
@@ -309,7 +332,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
         {/* ── FOOTER sticky ── */}
         <footer style={{
           padding: '14px 22px', borderTop: '1px solid var(--border)',
-          display: 'flex', gap: 8, background: 'var(--surface)',
+          display: 'flex', gap: 8, background: 'var(--surface)', flexShrink: 0,
         }}>
           <button onClick={onEdit} className="btn btn-primary" style={{ flex: 1 }}>
             <i className="fa fa-pen" /> Editar pedido
@@ -332,6 +355,13 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
       <style>{`
         @keyframes drawerFade { from { opacity: 0 } to { opacity: 1 } }
         @keyframes drawerIn   { from { transform: translateX(24px); opacity: 0 } to { transform: none; opacity: 1 } }
+        @keyframes drawerUp   { from { transform: translateY(100%); opacity: 0 } to { transform: none; opacity: 1 } }
+        @media(max-width:600px){
+          .pd-aside{top:auto!important;left:0!important;right:0!important;bottom:0!important;
+            width:100%!important;max-height:95vh;border-radius:18px 18px 0 0;
+            animation:drawerUp .28s cubic-bezier(.16,1,.3,1) both!important}
+          .pd-aside .pd-info-grid{grid-template-columns:1fr 1fr}
+        }
       `}</style>
     </>
   )

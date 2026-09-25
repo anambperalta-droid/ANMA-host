@@ -30,6 +30,7 @@ const REGISTRY = {
   micuenta:    { loader: () => import('../components/pages/MiCuenta'),     kind: 'form' },
   notfound:    { loader: () => import('../components/pages/NotFound'),     kind: 'dashboard' },
   guia:        { loader: () => import('../components/pages/Guia'),         kind: 'dashboard' },
+  ventas:      { loader: () => import('../components/pages/Ventas'),       kind: 'table' },
 }
 
 // Cache de promesas para que múltiples hovers no disparen múltiples fetches
@@ -59,6 +60,7 @@ export const Importador  = lazy(() => cachedLoad('importador'))
 export const MiCuenta    = lazy(() => cachedLoad('micuenta'))
 export const NotFound    = lazy(() => cachedLoad('notfound'))
 export const Guia        = lazy(() => cachedLoad('guia'))
+export const Ventas      = lazy(() => cachedLoad('ventas'))
 
 /**
  * Prefetch: dispara el download del chunk sin esperar.

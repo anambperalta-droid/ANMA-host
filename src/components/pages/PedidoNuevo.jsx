@@ -336,13 +336,18 @@ export default function PedidoNuevo() {
       {/* ── HEADER ── */}
       <div className="ph pedido-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--txt)' }}>
-            {pedido.id ? `Pedido ${pedido.numero || `#${pedido.id}`}` : 'Nuevo pedido'}
-          </h2>
-          <SaveIndicator saving={saving} lastSaved={lastSaved} pedido={pedido} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: 'var(--txt)', letterSpacing: '-.3px' }}>
+              {pedido.clienteNombre || pedido.company || pedido.contact || (pedido.id ? 'Pedido' : 'Nuevo pedido')}
+            </h2>
+            <EstadoSelect value={pedido.estado} onChange={v => update({ estado: v })} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+            {pedido.id && <span style={{ fontSize: 11, color: 'var(--txt4)', fontWeight: 600 }}>{pedido.numero || `#${pedido.id}`}</span>}
+            <SaveIndicator saving={saving} lastSaved={lastSaved} pedido={pedido} />
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <EstadoSelect value={pedido.estado} onChange={v => update({ estado: v })} />
           <MenuMore
             pedido={pedido}
             onSaveAlt={() => {
@@ -391,6 +396,31 @@ export default function PedidoNuevo() {
           onChange={v => update({ cantKits: Math.max(1, Number(v) || 1) })}
           onOff={() => update({ esKit: false, cantKits: 0 })}
         />
+      )}
+
+      {/* ── RESUMEN RÁPIDO (visible siempre arriba) ── */}
+      {pedido.id && (
+        <div className="pedido-quick-summary" style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 10,
+        }}>
+          {[
+            { label: 'Facturado', value: fmt(totales.total), icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
+            { label: 'Costo', value: fmt(totales.costoTotal), icon: 'fa-lock', color: '#b45309' },
+            { label: 'Ganancia', value: fmt(totales.ganancia), icon: 'fa-arrow-trend-up', color: totales.ganancia >= 0 ? '#15803d' : '#DC2626' },
+            { label: 'Margen', value: `${totales.total > 0 ? Math.round((totales.ganancia / totales.total) * 100) : 0}%`, icon: 'fa-bullseye', color: '#6366f1' },
+          ].map(c => (
+            <div key={c.label} style={{
+              background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10,
+              padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <i className={`fa ${c.icon}`} style={{ color: c.color, fontSize: 11, opacity: .7 }} />
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{c.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.2px' }}>{c.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <div className="pedido-form" style={{ display: 'grid', gap: 10, gridTemplateColumns: 'minmax(0,1fr)' }}>
@@ -476,22 +506,29 @@ export default function PedidoNuevo() {
           )}
         />
 
-        {/* ── COSTOS OPERATIVOS (tareas guardables, NO catálogo de productos) ── */}
-        <LineasSection
+        {/* ── COSTOS OPERATIVOS (colapsable, cerrado por default) ── */}
+        <CollapsibleSection
           meta={SECCION_META.costos}
-          tags={TAGS_COSTOS}
-          defaultTag="manoDeObra"
-          lineas={pedido.lineas.filter(l => TAGS_COSTOS.includes(l.tag))}
-          products={costosPresets}
-          isCostos
-          onAdd={() => addLinea('manoDeObra')}
-          onChange={setCostoLinea}
-          onRemove={removeLineaById}
-          onPickProduct={(name) => toast(`${name} agregada`, 'ok')}
-          onCreatePreset={savePresetCosto}
-          totalLineas={pedido.lineas.length}
-          emptyHint="Diseño, mano de obra, envío u otros costos que se suman al pedido."
-        />
+          defaultOpen={pedido.lineas.some(l => TAGS_COSTOS.includes(l.tag) && l.descripcion)}
+          hint="Diseño, mano de obra, envío u otros costos que se suman al pedido."
+        >
+          <LineasSection
+            meta={SECCION_META.costos}
+            tags={TAGS_COSTOS}
+            defaultTag="manoDeObra"
+            lineas={pedido.lineas.filter(l => TAGS_COSTOS.includes(l.tag))}
+            products={costosPresets}
+            isCostos
+            onAdd={() => addLinea('manoDeObra')}
+            onChange={setCostoLinea}
+            onRemove={removeLineaById}
+            onPickProduct={(name) => toast(`${name} agregada`, 'ok')}
+            onCreatePreset={savePresetCosto}
+            totalLineas={pedido.lineas.length}
+            emptyHint="Diseño, mano de obra, envío u otros costos que se suman al pedido."
+            hidePaneHead
+          />
+        </CollapsibleSection>
 
         {/* ── PRECIO ── */}
         <section className="pedido-pane">
@@ -543,8 +580,16 @@ export default function PedidoNuevo() {
             style={{ ...inputStyle, minHeight: 48, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} />
         </section>
 
-        {/* ── CIERRE: confirmación de carga ── */}
-        <FinalizarBar pedido={pedido} saving={saving} lastSaved={lastSaved} onFinish={() => nav('/')} />
+        {/* ── CIERRE: acciones rápidas + confirmación ── */}
+        <QuickActions
+          pedido={pedido}
+          saving={saving}
+          lastSaved={lastSaved}
+          onEstado={v => update({ estado: v })}
+          onPay={v => update({ payStatus: v })}
+          onFinish={() => nav('/')}
+          onVentas={() => nav('/ventas')}
+        />
       </div>
 
       {/* Estilos propios del form — clase pedido-pane (NO reusa .wiz-pane
@@ -676,6 +721,8 @@ export default function PedidoNuevo() {
           .pedido-cliente-grid { grid-template-columns: 1fr !important; }
           .pedido-entrega-grid { grid-template-columns: 1fr !important; }
           .pedido-precio-grid  { grid-template-columns: 1fr !important; }
+          .pedido-quick-summary { grid-template-columns: 1fr 1fr !important; }
+          .pedido-estado-dd { left: auto !important; right: 0 !important; }
           /* ── Fix iOS auto-zoom en focus: inputs deben ser >=16px.
              Los inputs base de Cliente/Entrega/Nota usan inputStyle con
              fontSize: 13 → zoom automatico en iPhone. Aca los subo. ── */
@@ -717,53 +764,94 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
   )
 }
 
-// Barra de cierre — confirma que todo quedó guardado y ofrece "salir al tablero".
-// El pedido ya se guarda solo; esto le da al usuario la certeza de haber terminado.
-function FinalizarBar({ pedido, saving, lastSaved, onFinish }) {
+function QuickActions({ pedido, saving, lastSaved, onEstado, onPay, onFinish, onVentas }) {
   const ready = hasMinimum(pedido)
+  const isConfirmed = ['confirmado', 'produccion', 'entregado', 'cerrado'].includes(pedido.estado)
+  const isDelivered = pedido.estado === 'entregado' || pedido.estado === 'cerrado'
+  const isPaid = pedido.payStatus === 'paid'
+
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
-      padding: '14px 18px', marginTop: 2,
-      background: ready ? 'linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%)' : 'var(--surface2)',
-      border: `1px solid ${ready ? '#bbf7d0' : 'var(--border)'}`, borderRadius: 14,
+      padding: '16px 18px', marginTop: 2,
+      background: ready ? 'var(--surface)' : 'var(--surface2)',
+      border: `1.5px solid ${ready ? 'var(--border)' : 'var(--border)'}`, borderRadius: 14,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-          background: ready ? '#16a34a' : 'var(--border2)', color: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-        }}>
-          <i className={`fa ${saving ? 'fa-arrows-rotate fa-spin' : ready ? 'fa-check' : 'fa-pen'}`} />
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: ready ? '#065f46' : 'var(--txt2)' }}>
-            {saving ? 'Guardando…' : ready ? 'Pedido guardado' : 'Falta cliente + una descripción'}
-          </div>
-          <div style={{ fontSize: 11.5, color: 'var(--txt3)', marginTop: 1 }}>
-            {ready ? 'Se guarda solo con cada cambio. Podés cerrar tranquila.' : 'Con eso ya se empieza a guardar automáticamente.'}
-          </div>
-        </div>
+      {/* Status row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: ready ? 14 : 0 }}>
+        <i className={`fa ${saving ? 'fa-arrows-rotate fa-spin' : ready ? 'fa-check-circle' : 'fa-pen'}`}
+          style={{ color: saving ? 'var(--txt3)' : ready ? '#16a34a' : 'var(--txt4)', fontSize: 14 }} />
+        <span style={{ fontSize: 12, fontWeight: 600, color: ready ? '#065f46' : 'var(--txt3)' }}>
+          {saving ? 'Guardando...' : ready ? 'Guardado' : 'Falta cliente + una descripcion'}
+        </span>
       </div>
-      <button onClick={onFinish} className="btn btn-primary"
-        disabled={!lastSaved && !ready}
-        style={{ flexShrink: 0, opacity: (!lastSaved && !ready) ? 0.5 : 1 }}>
-        <i className="fa fa-check-double" /> Listo — ir al tablero
-      </button>
+
+      {/* Quick action buttons */}
+      {ready && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {!isConfirmed && (
+            <button onClick={() => onEstado('confirmado')} className="btn btn-sm"
+              style={{ background: '#dcfce7', color: '#15803d', border: '1.5px solid #bbf7d0', fontWeight: 700, borderRadius: 10, padding: '8px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <i className="fa fa-check" /> Confirmar pedido
+            </button>
+          )}
+          {isConfirmed && !isDelivered && (
+            <button onClick={() => onEstado('entregado')} className="btn btn-sm"
+              style={{ background: '#d1fae5', color: '#065f46', border: '1.5px solid #a7f3d0', fontWeight: 700, borderRadius: 10, padding: '8px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <i className="fa fa-truck" /> Marcar entregado
+            </button>
+          )}
+          {!isPaid && (
+            <button onClick={() => onPay('paid')} className="btn btn-sm"
+              style={{ background: '#fef3c7', color: '#92400e', border: '1.5px solid #fde68a', fontWeight: 700, borderRadius: 10, padding: '8px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <i className="fa fa-circle-check" /> Registrar cobro
+            </button>
+          )}
+          <button onClick={onVentas} className="btn btn-sm"
+            style={{ background: 'var(--surface2)', color: 'var(--txt3)', border: '1.5px solid var(--border)', fontWeight: 600, borderRadius: 10, padding: '8px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <i className="fa fa-receipt" /> Registro de ventas
+          </button>
+          <button onClick={onFinish} className="btn btn-sm"
+            style={{ background: 'var(--grad)', color: '#fff', border: 'none', fontWeight: 700, borderRadius: 10, padding: '8px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto', boxShadow: '0 2px 8px rgba(124,58,237,.2)' }}>
+            <i className="fa fa-check-double" /> Listo
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
-function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint }) {
+function CollapsibleSection({ meta, defaultOpen, hint, children }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <section className="pedido-pane">
+      <button onClick={() => setOpen(o => !o)} style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+        background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+      }}>
+        <div className="pedido-pane-head" style={{ marginBottom: 0 }}>
+          <div className="pedido-pane-ico"><i className={`fa ${meta.icon}`} /></div>
+          <div className="pedido-pane-title">{meta.title}</div>
+        </div>
+        <i className={`fa fa-chevron-${open ? 'up' : 'down'}`} style={{ color: 'var(--txt4)', fontSize: 11 }} />
+      </button>
+      {!open && hint && (
+        <div style={{ fontSize: 12, color: 'var(--txt4)', marginTop: 8, paddingLeft: 40 }}>{hint}</div>
+      )}
+      {open && <div style={{ marginTop: 12 }}>{children}</div>}
+    </section>
+  )
+}
+
+function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint, hidePaneHead }) {
   // Estado elevado: cuando cualquier fila abre su dropdown de catálogo, la
   // sección sube z-index para que no la tape la siguiente. Solución robusta
   // (el :focus-within CSS no alcanza por los stacking context de pgIn).
   const [dropdownOpen, setDropdownOpen] = useState(false)
   return (
-    <section className="pedido-pane" style={{ position: 'relative', zIndex: dropdownOpen ? 200 : undefined }}>
+    <div className={hidePaneHead ? '' : 'pedido-pane'} style={{ position: 'relative', zIndex: dropdownOpen ? 200 : undefined }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <PaneHead meta={meta} />
-        <button onClick={onAdd} className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>
+        {!hidePaneHead && <PaneHead meta={meta} />}
+        <button onClick={onAdd} className="btn btn-primary btn-sm" style={{ flexShrink: 0, marginLeft: hidePaneHead ? 'auto' : undefined }}>
           <i className="fa fa-plus" /> Agregar
         </button>
       </div>
@@ -809,7 +897,7 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
           {emptyHint || `Todavía no cargaste ${meta.title.toLowerCase()}. Tocá "+ Agregar" para sumar una línea.`}
         </div>
       )}
-    </section>
+    </div>
   )
 }
 
@@ -1074,18 +1162,71 @@ function PaneHead({ meta }) {
 
 function EstadoSelect({ value, onChange }) {
   const st = ESTADO_COLOR[value] || ESTADO_COLOR.consulta
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [])
+
+  const opts = estadoOptions(value)
+
   return (
-    <select value={value} onChange={e => onChange(e.target.value)}
-      title="Estado del pedido"
-      style={{
-        padding: '7px 12px', maxWidth: 180, fontWeight: 700, fontSize: 12,
-        border: `1.5px solid ${st.bd}`, borderRadius: 999,
-        background: st.bg, color: st.fg,
-        fontFamily: 'inherit', outline: 'none', cursor: 'pointer',
-        letterSpacing: '.02em',
-      }}>
-      {estadoOptions(value).map(k => <option key={k} value={k}>{ESTADO_LABELS[k] || k}</option>)}
-    </select>
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{
+          padding: '5px 12px', fontWeight: 700, fontSize: 11,
+          border: `1.5px solid ${st.bd}`, borderRadius: 999,
+          background: st.bg, color: st.fg,
+          fontFamily: 'inherit', cursor: 'pointer',
+          letterSpacing: '.02em', display: 'inline-flex', alignItems: 'center', gap: 5,
+        }}>
+        {ESTADO_LABELS[value] || value}
+        <i className="fa fa-chevron-down" style={{ fontSize: 8, opacity: .6 }} />
+      </button>
+      {open && (
+        <div className="pedido-estado-dd" style={{
+          position: 'absolute', top: '100%', left: 0, marginTop: 6, zIndex: 300,
+          background: 'var(--surface)', border: '1.5px solid var(--border)',
+          borderRadius: 12, padding: '8px 6px', minWidth: 200, maxWidth: 'calc(100vw - 32px)',
+          boxShadow: '0 12px 32px rgba(0,0,0,.15)',
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.06em', padding: '2px 8px 6px' }}>
+            Estado del pedido
+          </div>
+          {opts.map((k, i) => {
+            const ec = ESTADO_COLOR[k] || ESTADO_COLOR.consulta
+            const active = k === value
+            const passed = opts.indexOf(value) >= i
+            return (
+              <button key={k} onClick={() => { onChange(k); setOpen(false) }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                  padding: '7px 8px', border: 'none', borderRadius: 8,
+                  background: active ? ec.bg : 'transparent',
+                  cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  transition: 'background .1s',
+                }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--surface2)' }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
+                <div style={{
+                  width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                  background: passed ? ec.bg : 'var(--surface2)',
+                  border: `2px solid ${passed ? ec.fg : 'var(--border)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {passed && <i className="fa fa-check" style={{ fontSize: 8, color: ec.fg }} />}
+                </div>
+                <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? ec.fg : 'var(--txt2)' }}>
+                  {ESTADO_LABELS[k] || k}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 

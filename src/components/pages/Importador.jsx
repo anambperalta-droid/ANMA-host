@@ -1,6 +1,14 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useData }         from '../../context/DataContext'
+import { useToast }        from '../../context/ToastContext'
 import { parseText, markDuplicates } from '../../lib/importParser'
+
+const DESTINO_MAP = {
+  clients:   { path: '/clientes',    label: 'Clientes' },
+  suppliers: { path: '/proveedores', label: 'Proveedores' },
+  products:  { path: '/catalogo',    label: 'Catálogo' },
+}
 
 // ── Constantes de entidades para ANMA Regalos ────────────────────────
 const ENTIDADES = [
@@ -249,6 +257,8 @@ function SeccionEntidad({ ent, existingList, onChange }) {
 
 export default function Importador() {
   const { get, importarEntidades } = useData()
+  const nav = useNavigate()
+  const toast = useToast()
 
   const [parsed, setParsed] = useState({
     clients:  [],
@@ -258,6 +268,8 @@ export default function Importador() {
 
   const [loading, setLoading]     = useState(false)
   const [resultado, setResultado] = useState(null)
+  const [countdown, setCountdown] = useState(0)
+  const [resetKey, setResetKey]   = useState(0)
 
   const existing = {
     clients:   get('clients',   []),
@@ -269,6 +281,32 @@ export default function Importador() {
   const totalDupls  = Object.values(parsed).flat().filter(f => f._status === 'duplicate').length
   const totalFilas  = Object.values(parsed).flat().length
   const hayDatos    = totalFilas > 0
+
+  const destino = resultado
+    ? DESTINO_MAP[Object.keys(resultado).find(k => (resultado[k]?.nuevos || 0) + (resultado[k]?.actualizados || 0) > 0)] || null
+    : null
+
+  const goToDestino = useCallback(() => {
+    if (destino) {
+      toast(`Datos importados correctamente`, 'ok')
+      nav(destino.path)
+    }
+    setResultado(null)
+  }, [destino, nav, toast])
+
+  useEffect(() => {
+    if (!resultado) { setCountdown(0); return }
+    setCountdown(5)
+    const iv = setInterval(() => setCountdown(c => {
+      if (c <= 1) { clearInterval(iv); return 0 }
+      return c - 1
+    }), 1000)
+    return () => clearInterval(iv)
+  }, [resultado])
+
+  useEffect(() => {
+    if (countdown === 0 && resultado && destino) goToDestino()
+  }, [countdown, resultado, destino, goToDestino])
 
   const handleSectionChange = (key, filas) => {
     setParsed(prev => ({ ...prev, [key]: filas }))
@@ -303,6 +341,8 @@ export default function Importador() {
       }
 
       setResultado(resumen)
+      setParsed({ clients: [], suppliers: [], products: [] })
+      setResetKey(k => k + 1)
     } finally {
       setLoading(false)
     }
@@ -342,7 +382,7 @@ export default function Importador() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {ENTIDADES.map(ent => (
           <SeccionEntidad
-            key={ent.key}
+            key={ent.key + '-' + resetKey}
             ent={ent}
             existingList={existing[ent.key]}
             onChange={(filas) => handleSectionChange(ent.key, filas)}
@@ -399,72 +439,103 @@ export default function Importador() {
         </button>
       </div>
 
-      {/* Modal de resultado */}
+      {/* Modal de resultado con redirect automático */}
       {resultado && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 600,
-          background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)',
+          background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(6px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        }}
-          onClick={() => setResultado(null)}
-        >
+          animation: 'impFadeIn .2s ease',
+        }}>
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'var(--surface)', borderRadius: 16,
-              border: '1px solid var(--border)',
-              boxShadow: '0 20px 60px rgba(0,0,0,.25)',
-              padding: 24, width: '100%', maxWidth: 400,
-              animation: 'pgIn .18s ease both',
+              background: 'var(--surface)', borderRadius: 18,
+              border: '1.5px solid var(--border)',
+              boxShadow: '0 24px 64px rgba(0,0,0,.3)',
+              padding: '28px 24px 24px', width: '100%', maxWidth: 400,
+              animation: 'impScaleIn .25s cubic-bezier(.4,0,.2,1)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            {/* Icono animado */}
+            <div style={{ textAlign: 'center', marginBottom: 18 }}>
               <div style={{
-                width: 36, height: 36, borderRadius: 8,
+                width: 56, height: 56, borderRadius: '50%', margin: '0 auto 12px',
                 background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: 'impPop .35s cubic-bezier(.17,.67,.25,1.3)',
               }}>
-                <i className="fa fa-check-circle" style={{ color: '#059669', fontSize: 18 }} />
+                <i className="fa fa-check" style={{ color: '#059669', fontSize: 24 }} />
               </div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--txt)' }}>¡Migración completada!</div>
-                <div style={{ fontSize: 12, color: 'var(--txt3)' }}>Los datos ya están en tu app</div>
-              </div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px' }}>Migración completada</div>
+              <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 3 }}>Los datos ya se reflejan en tu app</div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+            {/* Resumen por entidad */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
               {Object.entries(resultado).map(([key, res]) => {
                 const ent = ENTIDADES.find(e => e.key === key)
                 if (!ent) return null
+                const d = DESTINO_MAP[key]
                 return (
                   <div key={key} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '8px 10px', borderRadius: 8,
+                    padding: '10px 12px', borderRadius: 10,
                     background: 'var(--surface2)', border: '1px solid var(--border)',
-                  }}>
+                    cursor: 'pointer', transition: 'background .15s',
+                  }}
+                    onClick={() => { toast(`Datos de ${ent.label.toLowerCase()} importados`, 'ok'); nav(d.path) }}
+                    onMouseEnter={e => { e.currentTarget.style.background = ent.bg }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)' }}
+                  >
                     <i className={`fa ${ent.icon}`} style={{ color: ent.color, fontSize: 14, width: 18, textAlign: 'center' }} />
                     <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--txt)' }}>{ent.label}</span>
-                    <span style={{ fontSize: 11, color: '#059669', fontWeight: 700 }}>{res.nuevos} nuevos</span>
+                    {res.nuevos > 0 && <span style={{ fontSize: 11, color: '#059669', fontWeight: 700 }}>{res.nuevos} nuevos</span>}
                     {res.actualizados > 0 && <span style={{ fontSize: 11, color: '#2563EB', fontWeight: 700 }}>{res.actualizados} actualiz.</span>}
+                    <i className="fa fa-arrow-right" style={{ fontSize: 10, color: 'var(--txt4)' }} />
                   </div>
                 )
               })}
             </div>
 
-            <button
-              onClick={() => setResultado(null)}
-              style={{
-                width: '100%', padding: '10px 0', borderRadius: 8,
-                background: 'linear-gradient(135deg, #DB2777, #7C3AED)', color: '#fff',
-                border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              }}
-            >
-              Aceptar
-            </button>
+            {/* Botones con countdown */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {destino && (
+                <button onClick={goToDestino} style={{
+                  width: '100%', padding: '12px 0', borderRadius: 10,
+                  background: 'linear-gradient(135deg, #DB2777, #7C3AED)', color: '#fff',
+                  border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  {/* Progress bar del countdown */}
+                  <div style={{
+                    position: 'absolute', left: 0, bottom: 0, height: 3,
+                    background: 'rgba(255,255,255,.4)', borderRadius: 2,
+                    width: `${(countdown / 5) * 100}%`, transition: 'width 1s linear',
+                  }} />
+                  <i className="fa fa-arrow-right" />
+                  Ir a {destino.label} {countdown > 0 && <span style={{ fontSize: 11, opacity: .7 }}>({countdown}s)</span>}
+                </button>
+              )}
+              <button onClick={() => { setResultado(null); setCountdown(0) }} style={{
+                width: '100%', padding: '10px 0', borderRadius: 10,
+                background: 'var(--surface2)', color: 'var(--txt2)',
+                border: '1.5px solid var(--border)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}>
+                Seguir importando
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes impFadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes impScaleIn { from { opacity: 0; transform: scale(.92) translateY(10px) } to { opacity: 1; transform: scale(1) translateY(0) } }
+        @keyframes impPop { 0% { transform: scale(0) } 60% { transform: scale(1.15) } 100% { transform: scale(1) } }
+      `}</style>
     </div>
   )
 }

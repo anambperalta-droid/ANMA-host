@@ -99,6 +99,13 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [toast])
 
+  const signup = useCallback(async (email, password) => {
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) return error.message
+    if (data.user && !data.session) return '__confirm__'
+    return null
+  }, [])
+
   const login = useCallback(async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return error.message
@@ -167,7 +174,7 @@ export function AuthProvider({ children }) {
   const trial = getTrialStatus(user)
 
   return (
-    <Ctx.Provider value={{ authed, loading, user, login, logout, siteBlocked, isGlobalAdmin, changePassword, resetPassword, role, can, trial }}>
+    <Ctx.Provider value={{ authed, loading, user, login, signup, logout, siteBlocked, isGlobalAdmin, changePassword, resetPassword, role, can, trial }}>
       {children}
     </Ctx.Provider>
   )

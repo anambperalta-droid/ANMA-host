@@ -44,7 +44,9 @@ export default function Login() {
   const [err, setErr] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [capsOn, setCapsOn] = useState(false)
-  const { login, resetPassword } = useAuth()
+  const { login, signup, resetPassword } = useAuth()
+  const [isSignup, setIsSignup] = useState(false)
+  const [signupDone, setSignupDone] = useState(false)
 
   const lastLogin = (() => { try { return localStorage.getItem(LS_LAST_LOGIN) } catch { return null } })()
   const lastLoginRel = relativeDays(lastLogin)
@@ -65,6 +67,16 @@ export default function Login() {
     const ev = validateEmail(email)
     if (!ev.ok) { setErr(ev.msg); return }
     setSubmitting(true); setErr('')
+
+    if (isSignup) {
+      if (pass.length < 6) { setErr('La contraseña debe tener al menos 6 caracteres.'); setSubmitting(false); return }
+      const result = await signup(email, pass)
+      if (result === '__confirm__') { setSignupDone(true); setSubmitting(false); return }
+      if (result) { setErr(friendlyAuthError(result)); setSubmitting(false); return }
+      try { localStorage.setItem(LS_LAST_LOGIN, new Date().toISOString()) } catch { /* ignorar */ }
+      return
+    }
+
     const result = await login(email, pass)
     if (result) { setErr(friendlyAuthError(result)); setSubmitting(false); return }
     try { localStorage.setItem(LS_LAST_LOGIN, new Date().toISOString()) } catch { /* ignorar */ }
@@ -331,13 +343,29 @@ export default function Login() {
           </div>
 
           <div className="lpr-greet">
-            {greeting()}{knownName ? <>, <em>{knownName}</em></> : <em> 🎁</em>}
+            {isSignup
+              ? <>Creá tu cuenta</>
+              : <>{greeting()}{knownName ? <>, <em>{knownName}</em></> : <em> 🎁</em>}</>}
           </div>
           <div className="lpr-sub">
-            {lastLoginRel
-              ? <>Tu último ingreso fue <b>{lastLoginRel}</b>. Volvemos a lo importante.</>
-              : <>Ingresá para retomar pedidos, stock y entregas donde los dejaste.</>}
+            {isSignup
+              ? <>Registrate en segundos y empezá a gestionar tu negocio.</>
+              : lastLoginRel
+                ? <>Tu último ingreso fue <b>{lastLoginRel}</b>. Volvemos a lo importante.</>
+                : <>Ingresá para retomar pedidos, stock y entregas donde los dejaste.</>}
           </div>
+
+          {signupDone && (
+            <div style={{
+              background: 'rgba(16,185,129,.12)', border: '1.5px solid rgba(110,231,183,.4)',
+              borderRadius: 11, color: '#86efac', fontSize: 13, fontWeight: 600,
+              padding: '14px 16px', marginBottom: 14, lineHeight: 1.6, textAlign: 'center',
+            }}>
+              <i className="fa fa-circle-check" style={{ color: '#10b981', fontSize: 18, display: 'block', marginBottom: 6 }} />
+              Revisá tu email <b style={{ color: '#fff' }}>{email}</b> para confirmar tu cuenta.
+              <br />Despues volvé aca e ingresá con tu contraseña.
+            </div>
+          )}
 
           {err && (
             <div className="lpr-err">
@@ -380,28 +408,26 @@ export default function Login() {
             )}
           </div>
 
-          <button type="submit" className="lpr-btn" disabled={submitting}>
+          <button type="submit" className="lpr-btn" disabled={submitting || signupDone}>
             {submitting
-              ? <><i className="fa fa-spinner fa-spin" /> Ingresando...</>
-              : <><i className="fa fa-arrow-right-to-bracket" /> Entrar a mi negocio</>}
+              ? <><i className="fa fa-spinner fa-spin" /> {isSignup ? 'Creando cuenta...' : 'Ingresando...'}</>
+              : isSignup
+                ? <><i className="fa fa-user-plus" /> Crear mi cuenta</>
+                : <><i className="fa fa-arrow-right-to-bracket" /> Entrar a mi negocio</>}
           </button>
 
-          {/* Pedir acceso por WhatsApp (Regalos no tiene signup nativo) */}
           <div style={{
             textAlign: 'center', marginTop: 18, marginBottom: 14,
             fontSize: 13, color: 'rgba(255,255,255,.65)',
           }}>
-            ¿No tenés cuenta?{' '}
-            <a
-              href="https://wa.me/5491169456863?text=Hola%2C%20quiero%20pedir%20acceso%20a%20ANMA%20Regalos"
-              target="_blank" rel="noopener noreferrer"
-              style={{
-                color: '#f0abfc', fontWeight: 700, textDecoration: 'none',
-                borderBottom: '1px dashed rgba(240,171,252,.5)', paddingBottom: 1,
-              }}
-            >
-              Pedí acceso por WhatsApp →
-            </a>
+            {isSignup ? '¿Ya tenés cuenta? ' : '¿No tenés cuenta? '}
+            <button type="button" onClick={() => { setIsSignup(!isSignup); setErr(''); setSignupDone(false) }} style={{
+              background: 'none', border: 'none', color: '#f0abfc', fontWeight: 700,
+              fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0,
+              borderBottom: '1px dashed rgba(240,171,252,.5)', paddingBottom: 1,
+            }}>
+              {isSignup ? 'Ingresá aca' : 'Registrate gratis'} →
+            </button>
           </div>
 
           <div className="lpr-divider">o</div>

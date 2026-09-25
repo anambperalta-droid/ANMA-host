@@ -21,7 +21,8 @@ function readTheme() {
 const NAV = [
   { section: 'Gestión' },
   { path: '/', icon: 'fa-chart-line', label: 'Dashboard', chipKey: 'budgets', perm: 'dashboard.view' },
-  { path: '/pedido', icon: 'fa-cart-shopping', label: 'Ventas', perm: 'pedido.create' },
+  { path: '/ventas', icon: 'fa-receipt', label: 'Registro ventas', perm: 'dashboard.view' },
+  { path: '/pedido', icon: 'fa-cart-shopping', label: 'Nuevo pedido', perm: 'pedido.create' },
   { path: '/clientes', icon: 'fa-users', label: 'Clientes', chipKey: 'clients', perm: 'cliente.view' },
   { section: 'Catálogo' },
   { path: '/catalogo', icon: 'fa-box-open', label: 'Productos', chipKey: 'products', perm: 'catalogo.view' },
