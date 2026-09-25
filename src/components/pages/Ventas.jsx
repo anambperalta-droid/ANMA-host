@@ -83,7 +83,34 @@ export default function Ventas() {
     return { facturado, iva, cobrado, pendiente, count: monthBudgets.length }
   }, [monthBudgets])
 
+  const prevMonthData = useMemo(() => {
+    const pm = month === 0 ? 11 : month - 1
+    const py = month === 0 ? year - 1 : year
+    const pmk = monthKey(py, pm)
+    const pmBudgets = allBudgets.filter(b => budgetMonth(b) === pmk)
+    const facturado = pmBudgets.reduce((s, b) => s + (Number(b.total) || 0), 0)
+    return { count: pmBudgets.length, facturado }
+  }, [allBudgets, month, year])
+
   const pctCobrado = totals.facturado > 0 ? Math.round(totals.cobrado / totals.facturado * 100) : 0
+
+  const avgTicket = totals.count > 0 ? Math.round(totals.facturado / totals.count) : 0
+
+  const topClient = useMemo(() => {
+    const rev = {}
+    monthBudgets.forEach(b => {
+      const n = b.company || b.contact || ''
+      if (n) rev[n] = (rev[n] || 0) + (Number(b.total) || 0)
+    })
+    const e = Object.entries(rev)
+    if (!e.length) return null
+    e.sort((a, b) => b[1] - a[1])
+    return { name: e[0][0], total: e[0][1] }
+  }, [monthBudgets])
+
+  const deltaCount = prevMonthData.count > 0 ? Math.round(((totals.count - prevMonthData.count) / prevMonthData.count) * 100) : null
+  const prevAvgTicket = prevMonthData.count > 0 ? Math.round(prevMonthData.facturado / prevMonthData.count) : 0
+  const deltaTicket = prevAvgTicket > 0 ? Math.round(((avgTicket - prevAvgTicket) / prevAvgTicket) * 100) : null
 
   const sortedBudgets = useMemo(() => {
     if (!sortCol) return monthBudgets
@@ -207,6 +234,41 @@ export default function Ventas() {
 
   const payInfo = (b) => PAY_OPTS.find(o => o.value === b.payStatus) || PAY_OPTS[0]
 
+  const CobroRing = ({ percent, size = 52, stroke = 5 }) => {
+    const r = (size - stroke) / 2
+    const circ = 2 * Math.PI * r
+    const offset = circ - (Math.min(percent, 100) / 100) * circ
+    const ringColor = percent >= 100 ? '#15803d' : percent >= 50 ? '#7C3AED' : '#b45309'
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', flexShrink: 0 }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={ringColor} strokeWidth={stroke}
+          strokeDasharray={circ} strokeDashoffset={offset}
+          strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`}
+          style={{ transition: 'stroke-dashoffset .6s ease' }} />
+        <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central"
+          style={{ fontSize: size * 0.24, fontWeight: 800, fill: 'var(--txt)', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>
+          {percent}%
+        </text>
+      </svg>
+    )
+  }
+
+  const Delta = ({ value }) => {
+    if (value === null || value === undefined) return null
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 2,
+        fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 6,
+        color: value >= 0 ? '#15803d' : '#DC2626',
+        background: value >= 0 ? 'rgba(34,197,94,.1)' : 'rgba(220,38,38,.1)',
+      }}>
+        <i className={`fa fa-arrow-${value >= 0 ? 'up' : 'down'}`} style={{ fontSize: 7 }} />
+        {Math.abs(value)}%
+      </span>
+    )
+  }
+
   return (
     <div style={{ padding: '10px 20px 80px', maxWidth: 1000, margin: '0 auto' }}>
       <style>{`
@@ -218,72 +280,107 @@ export default function Ventas() {
         .vt-cell-r{text-align:right;font-variant-numeric:tabular-nums}
         .vt-pay-chip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;cursor:pointer;border:none;font-family:inherit;transition:filter .15s;display:inline-flex;align-items:center;gap:4px}
         .vt-pay-chip:hover{filter:brightness(.92)}
+        .vt-nav-btn{background:none;border:1px solid var(--border);cursor:pointer;color:var(--txt2);font-size:13px;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:background .15s;font-family:inherit;-webkit-tap-highlight-color:transparent;padding:0;flex-shrink:0}
+        .vt-nav-btn:active{background:var(--surface2);transform:scale(.94)}
+        .vt-hero{margin-bottom:12px}
+        .vt-hero-main{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+        .vt-hero-stats{flex:1 0 100%;border-top:1px solid var(--border);margin-top:4px;padding-top:12px;display:flex;gap:0}
+        .vt-hero-stat{flex:1;display:flex;align-items:center;gap:10px}
+        .vt-hero-stat-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+        .vt-hero-stat-val{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--txt);letter-spacing:-.02em}
+        .vt-hero-stat-lbl{font-size:9px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.06em}
+        .vt-hero-divider{width:1px;background:var(--border);margin:0 4px;align-self:stretch}
         @media(max-width:700px){
           .vt-row,.vt-hdr{grid-template-columns:1fr .6fr .5fr .3fr;font-size:12px}
           .vt-hide-m{display:none}
         }
+        @media(max-width:600px){
+          .vt-hero{padding:0 14px!important}
+          .vt-hero-main{padding:14px;gap:12px}
+          .vt-hero-main .vt-new-btn{width:100%!important;flex:1 0 100%;order:10;justify-content:center}
+          .vt-hero-stats{padding-top:10px;margin-top:2px}
+          .vt-hero-stat-icon{width:26px;height:26px;font-size:11px}
+          .vt-hero-stat-val{font-size:14px}
+          .vt-month-nav{margin:0 14px 10px!important;padding:6px 10px!important;border-radius:10px!important}
+        }
       `}</style>
 
-      {/* HEADER */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 10 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--txt)', margin: 0, letterSpacing: '-.4px' }}>Registro de ventas</h1>
-        <button onClick={openDrawer} style={{
-          padding: '10px 18px', borderRadius: 10, border: 'none',
-          background: 'var(--grad)', color: '#fff', fontSize: 13, fontWeight: 700,
-          cursor: 'pointer', fontFamily: 'inherit',
-          display: 'inline-flex', alignItems: 'center', gap: 7,
-          boxShadow: '0 4px 12px rgba(124,58,237,.25)',
-        }}>
-          <i className="fa fa-plus" /> Nueva venta
-        </button>
-      </div>
-
       {/* NAV MESES */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '10px 16px', marginBottom: 10 }}>
-        <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--txt2)', fontSize: 14, padding: '4px 8px' }}><i className="fa fa-chevron-left" /></button>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px' }}>{MESES[month]} {year}</div>
-          <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>{totals.count} {totals.count === 1 ? 'venta' : 'ventas'}</div>
+      <div className="vt-month-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 12, padding: '8px 14px', marginBottom: 10 }}>
+        <button className="vt-nav-btn" onClick={prevMonth}><i className="fa fa-chevron-left" /></button>
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px' }}>{MESES[month]} {year}</div>
+          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            {totals.count} {totals.count === 1 ? 'venta' : 'ventas'}
+            {deltaCount !== null && <Delta value={deltaCount} />}
+          </div>
         </div>
-        <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--txt2)', fontSize: 14, padding: '4px 8px' }}><i className="fa fa-chevron-right" /></button>
+        <button className="vt-nav-btn" onClick={nextMonth}><i className="fa fa-chevron-right" /></button>
       </div>
 
-      {/* RESUMEN */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 8 }}>
-        {[
-          { label: 'Facturado', value: totals.facturado, icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
-          { label: 'IVA', value: totals.iva, icon: 'fa-percent', color: '#6366f1' },
-          { label: 'Cobrado', value: totals.cobrado, icon: 'fa-circle-check', color: '#15803d' },
-          { label: 'Pendiente', value: totals.pendiente, icon: 'fa-clock', color: '#b45309' },
-        ].map(c => (
-          <div key={c.label} style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
-              <i className={`fa ${c.icon}`} style={{ color: c.color, fontSize: 12 }} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{c.label}</span>
+      {/* HERO — cobro + stats */}
+      <div className="vt-hero">
+        <div className="vt-hero-main">
+          <CobroRing percent={pctCobrado} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>
+              Cobrado del mes
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(c.value)}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.03em', lineHeight: 1.1 }}>
+              {hidden ? '***' : fmt(totals.cobrado)}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 3 }}>
+              {hidden ? '***' : <>de {fmt(totals.facturado)} facturado</>}
+              {totals.pendiente > 0 && !hidden && <> · <span style={{ color: '#b45309', fontWeight: 600 }}>{fmt(totals.pendiente)} pendiente</span></>}
+            </div>
           </div>
-        ))}
-      </div>
-
-      {totals.facturado > 0 && (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: pctCobrado >= 80 ? '#15803d' : pctCobrado >= 40 ? '#b45309' : '#DC2626' }}>
-              {hidden ? '***' : `${pctCobrado}% cobrado`}
-            </span>
-            <span style={{ fontSize: 10, color: 'var(--txt3)' }}>{hidden ? '' : `${fmt(totals.cobrado)} / ${fmt(totals.facturado)}`}</span>
-          </div>
-          <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', borderRadius: 99, width: `${Math.min(pctCobrado, 100)}%`, background: pctCobrado >= 80 ? '#15803d' : pctCobrado >= 40 ? '#b45309' : '#DC2626', transition: 'width .4s ease' }} />
+          <button className="vt-new-btn" onClick={openDrawer} style={{
+            padding: '9px 16px', borderRadius: 10, border: 'none',
+            background: 'var(--grad)', color: '#fff', fontSize: 12.5, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            boxShadow: '0 4px 12px rgba(124,58,237,.25)', flexShrink: 0,
+          }}>
+            <i className="fa fa-plus" style={{ fontSize: 10 }} /> Nueva venta
+          </button>
+          <div className="vt-hero-stats">
+            <div className="vt-hero-stat">
+              <div className="vt-hero-stat-icon" style={{ background: 'rgba(99,102,241,.1)', color: '#6366f1' }}>
+                <i className="fa fa-receipt" />
+              </div>
+              <div>
+                <div className="vt-hero-stat-lbl">Ticket promedio</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="vt-hero-stat-val">{hidden ? '***' : fmt(avgTicket)}</span>
+                  {deltaTicket !== null && <Delta value={deltaTicket} />}
+                </div>
+              </div>
+            </div>
+            <div className="vt-hero-divider" />
+            <div className="vt-hero-stat">
+              <div className="vt-hero-stat-icon" style={{ background: 'rgba(124,58,237,.1)', color: '#7C3AED' }}>
+                <i className="fa fa-crown" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="vt-hero-stat-lbl">Mejor cliente</div>
+                {topClient ? (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topClient.name}</span>
+                    <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600, flexShrink: 0 }}>{hidden ? '' : fmt(topClient.total)}</span>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt4)' }}>—</span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
       <PendientesCobro budgets={allBudgets} hidden={hidden} nav={nav} saveBudget={saveBudget} toast={toast} />
 
       {/* TABLA */}
-      <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 18 }}>
+      <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 14 }}>
         <div className="vt-row vt-hdr">
           {[
             { key: 'cliente', label: 'Cliente', cls: '' },
