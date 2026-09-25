@@ -705,11 +705,8 @@ export default function Admin() {
         <div>
           <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-.3px' }}>
             <i className="fa fa-shield-halved" style={{ marginRight: 8, color: '#7C3AED' }} />
-            Admin · ANMA Regalos
+            Admin
           </h1>
-          <div style={{ fontSize: 12, color: 'var(--txt3)', marginTop: 2 }}>
-            Gestión cross-tenant · {user?.email}
-          </div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {notifPerm !== 'granted' && (

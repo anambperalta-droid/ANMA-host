@@ -363,7 +363,6 @@ export default function Importador() {
           </div>
           <div>
             <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--txt)' }}>Importador de Datos</h1>
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--txt3)' }}>Pegá CSV o Excel — los duplicados se actualizan automáticamente</p>
           </div>
         </div>
 

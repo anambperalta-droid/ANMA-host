@@ -416,7 +416,6 @@ export default function Mensajes() {
       <div className="ph msg-ph">
         <div className="ph-left">
           <h2>Mensajes</h2>
-          <p className="msg-ph-sub">Plantillas de WhatsApp por etapa de venta. Variables se completan con el cliente activo.</p>
         </div>
         <div className="ph-right">
           <button className="btn btn-ghost btn-sm msg-btn-restore" onClick={restoreDefaults} style={{ borderRadius: 10 }} title="Restaurar mensajes originales">

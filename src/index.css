@@ -240,12 +240,12 @@ input,select,textarea{font-family:inherit}
   padding:8px 12px;border-top:1px solid rgba(255,255,255,.06);
 }
 .sb-quick-icon{
-  position:relative;width:40px;height:40px;border-radius:10px;
+  position:relative;width:30px;height:30px;border-radius:8px;
   background:rgba(255,255,255,.08);border:none;
-  color:rgba(255,255,255,.85);font-size:14px;cursor:pointer;
+  color:rgba(255,255,255,.85);font-size:12px;cursor:pointer;
   display:inline-flex;align-items:center;justify-content:center;
   transition:background .15s,color .15s,transform .1s;
-  font-family:inherit;-webkit-tap-highlight-color:transparent;flex:1;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;flex:none;
 }
 .sb-quick-icon:hover{background:rgba(255,255,255,.12);color:#fff}
 .sb-quick-icon:active{transform:scale(.94)}
@@ -266,7 +266,7 @@ input,select,textarea{font-family:inherit}
   border:1.5px solid var(--sidebar-bg,#0f172a);
 }
 .sidebar.slim .sb-quick-bar{flex-direction:column;padding:6px 4px;gap:4px}
-.sidebar.slim .sb-quick-icon{width:36px;height:36px;flex:none}
+.sidebar.slim .sb-quick-icon{width:30px;height:30px;flex:none}
 /* User row refactor — perfil separado de acción logout (evita click accidental) */
 .sb-user{display:flex;align-items:center;gap:6px;padding:8px 8px;border-radius:10px;background:rgba(255,255,255,.03)}
 .sb-user-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
