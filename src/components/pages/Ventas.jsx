@@ -386,115 +386,127 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
       <style>{`
         .sd-overlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);animation:sd-fade-in .2s ease}
         @keyframes sd-fade-in{from{opacity:0}to{opacity:1}}
-        .sd-panel{position:fixed;top:0;right:0;bottom:0;z-index:9999;width:420px;max-width:100vw;background:var(--surface);border-left:1.5px solid var(--border);display:flex;flex-direction:column;animation:sd-slide-in .25s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,.2)}
+        .sd-panel{position:fixed;top:0;right:0;bottom:0;z-index:9999;width:400px;max-width:100vw;background:var(--surface);border-left:1.5px solid var(--border);display:flex;flex-direction:column;animation:sd-slide-in .25s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,.2)}
         @keyframes sd-slide-in{from{transform:translateX(100%)}to{transform:translateX(0)}}
-        .sd-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-        .sd-body{flex:1;overflow-y:auto;padding:20px 22px}
-        .sd-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:var(--surface);transition:background .3s}
+        .sd-header{padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .sd-body{flex:1;overflow-y:auto;padding:16px 20px 20px}
+        .sd-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:var(--surface);transition:background .3s}
         .sd-footer-flash{background:rgba(5,150,105,.08)}
-        .sd-section{margin-bottom:20px}
-        .sd-section-title{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-        .sd-section-title i{font-size:11px;color:var(--brand);opacity:.7}
-        .sd-fg{margin-bottom:14px}
-        .sd-lbl{font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:5px;display:block}
-        .sd-inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--bg);outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s}
+        .sd-group{margin-bottom:16px}
+        .sd-fg{margin-bottom:10px}
+        .sd-lbl{font-size:11px;font-weight:600;color:var(--txt3);margin-bottom:4px;display:block}
+        .sd-inp{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--bg);outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s}
         .sd-inp:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
         .sd-inp::placeholder{color:var(--txt4)}
         .sd-inp-icon{position:relative}
-        .sd-inp-icon i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--txt4);font-size:13px;pointer-events:none}
-        .sd-inp-icon .sd-inp{padding-left:38px}
-        .sd-sug{position:absolute;top:100%;left:0;right:0;z-index:100;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.2);max-height:200px;overflow-y:auto;margin-top:4px}
-        .sd-sug-item{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--txt2);transition:background .1s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+        .sd-inp-icon i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--txt4);font-size:12px;pointer-events:none}
+        .sd-inp-icon .sd-inp{padding-left:36px}
+        .sd-sug{position:absolute;top:100%;left:0;right:0;z-index:100;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.2);max-height:180px;overflow-y:auto;margin-top:4px}
+        .sd-sug-item{padding:9px 12px;cursor:pointer;font-size:13px;color:var(--txt2);transition:background .1s;display:flex;align-items:center;justify-content:space-between;gap:8px}
         .sd-sug-item:hover{background:var(--surface2)}
         .sd-sug-item:first-child{border-radius:8px 8px 0 0}
         .sd-sug-item:last-child{border-radius:0 0 8px 8px}
-        .sd-row{display:flex;gap:10px}
+        .sd-row{display:flex;gap:8px}
         .sd-row>*{flex:1;min-width:0}
-        .sd-chips{display:flex;gap:6px;flex-wrap:wrap}
-        .sd-chip{padding:7px 12px;border-radius:10px;font-size:11px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--txt3);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+        .sd-sep{height:1px;background:var(--border);margin:0 0 16px}
+        .sd-chips{display:flex;gap:5px;flex-wrap:wrap}
+        .sd-chip{padding:6px 11px;border-radius:8px;font-size:11px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--txt3);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
         .sd-chip:hover{border-color:var(--txt2);background:var(--surface2)}
         .sd-chip-on{border-width:2px}
-        .sd-canal-chips{display:flex;gap:5px;flex-wrap:wrap}
-        .sd-canal{padding:6px 10px;border-radius:8px;font-size:10px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--txt4);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+        .sd-canal-chips{display:flex;gap:4px;flex-wrap:wrap}
+        .sd-canal{padding:5px 9px;border-radius:7px;font-size:10px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--txt4);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
         .sd-canal:hover{border-color:var(--txt3)}
-        .sd-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);transition:border-color .15s}
+        .sd-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);transition:border-color .15s}
         .sd-toggle:hover{border-color:var(--txt3)}
-        .sd-switch{width:38px;height:22px;border-radius:99px;position:relative;transition:background .2s;flex-shrink:0}
-        .sd-switch::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+        .sd-switch{width:36px;height:20px;border-radius:99px;position:relative;transition:background .2s;flex-shrink:0}
+        .sd-switch::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
         .sd-switch-on{background:var(--brand)}
         .sd-switch-on::after{transform:translateX(16px)}
         .sd-switch-off{background:var(--border)}
-        .sd-btn{padding:11px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:filter .15s,transform .1s}
+        .sd-btn{padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:filter .15s,transform .1s}
         .sd-btn:active{transform:scale(.97)}
         .sd-btn-pri{border:none;background:var(--grad);color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.25);width:100%}
         .sd-btn-pri:hover{filter:brightness(1.05)}
         .sd-btn-sec{border:1.5px solid var(--border);background:var(--surface);color:var(--txt2);width:100%}
         .sd-btn-sec:hover{border-color:var(--txt3)}
-        .sd-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:rgba(124,58,237,.1);color:var(--brand)}
-        .sd-nota-link{font-size:12px;color:var(--txt3);cursor:pointer;border:none;background:none;font-family:inherit;padding:0;transition:color .15s;display:inline-flex;align-items:center;gap:5px}
+        .sd-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(124,58,237,.1);color:var(--brand)}
+        .sd-nota-link{font-size:11px;color:var(--txt4);cursor:pointer;border:none;background:none;font-family:inherit;padding:0;transition:color .15s;display:inline-flex;align-items:center;gap:4px}
         .sd-nota-link:hover{color:var(--txt2)}
-        .sd-breakdown{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.15);margin-top:6px;font-size:11px;color:var(--txt2);font-weight:600;animation:sd-fade-in .2s ease}
+        .sd-breakdown{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.12);margin-top:4px;font-size:11px;color:var(--txt2);font-weight:600;animation:sd-fade-in .2s ease}
         .sd-breakdown i{color:var(--brand);font-size:10px}
-        .sd-saved-flash{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:10px;background:rgba(5,150,105,.1);border:1.5px solid rgba(5,150,105,.25);color:#059669;font-size:12px;font-weight:700;animation:sd-pop .3s cubic-bezier(.17,.67,.25,1.3)}
+        .sd-saved-flash{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:8px;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);color:#059669;font-size:12px;font-weight:700;animation:sd-pop .3s cubic-bezier(.17,.67,.25,1.3)}
         @keyframes sd-pop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
-        @media(max-width:500px){.sd-panel{width:100vw;border-left:none}.sd-row{flex-direction:column}}
+        @keyframes sd-sheet-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        @media(max-width:640px){
+          .sd-panel{top:auto;left:0;right:0;bottom:0;width:100vw;max-height:92vh;border-left:none;border-radius:20px 20px 0 0;animation:sd-sheet-up .28s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.18)}
+          .sd-panel::before{content:'';display:block;width:36px;height:4px;border-radius:4px;background:var(--border);margin:10px auto 0;flex-shrink:0}
+          .sd-header{padding:6px 16px 8px}
+          .sd-body{padding:4px 16px 16px}
+          .sd-footer{padding:10px 16px max(12px,env(safe-area-inset-bottom))}
+          .sd-group{margin-bottom:12px}
+          .sd-fg{margin-bottom:6px}
+          .sd-lbl{font-size:10px;margin-bottom:2px}
+          .sd-row{gap:6px}
+          .sd-sep{margin:0 0 12px}
+          .sd-inp{min-height:42px;font-size:14px;padding:9px 12px}
+          .sd-chip{padding:6px 10px;font-size:11px;min-height:32px}
+          .sd-canal{padding:5px 8px;font-size:10px;min-height:26px}
+          .sd-btn{min-height:44px;font-size:13px}
+          .sd-toggle{padding:8px 10px;min-height:36px}
+          .sd-sug{max-height:150px}
+          .sd-sug-item{padding:8px 12px;font-size:12px}
+        }
       `}</style>
 
       <div className="sd-overlay" onClick={onClose} />
       <div className="sd-panel">
-        {/* Header */}
         <div className="sd-header">
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <i className="fa fa-receipt" style={{ color: 'var(--brand)', fontSize: 15 }} />
-              Nueva venta
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px' }}>Nueva venta</div>
             {savedCount > 0 && (
-              <div className="sd-badge" style={{ marginTop: 6 }}>
-                <i className="fa fa-check" style={{ fontSize: 10 }} /> {savedCount} guardada{savedCount > 1 ? 's' : ''}
+              <div className="sd-badge">
+                <i className="fa fa-check" style={{ fontSize: 9 }} /> {savedCount}
               </div>
             )}
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--txt3)', fontSize: 18, cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--txt3)', fontSize: 16, cursor: 'pointer', padding: '4px 8px', borderRadius: 8 }}>
             <i className="fa fa-xmark" />
           </button>
         </div>
 
-        {/* Body */}
         <div className="sd-body">
-          {/* Seccion: Cliente */}
-          <div className="sd-section">
-            <div className="sd-section-title"><i className="fa fa-user" /> Cliente</div>
-            <div className="sd-fg" style={{ marginBottom: 0 }}>
-              <div className="sd-inp-icon" style={{ position: 'relative' }}>
-                <i className="fa fa-search" />
-                <input ref={inputRef} className="sd-inp" placeholder="Buscar o escribir nombre..."
-                  value={draft.cliente}
-                  onChange={e => { setDraft(d => ({ ...d, cliente: e.target.value })); setShowClientSug(true) }}
-                  onFocus={() => draft.cliente.length >= 1 && setShowClientSug(true)}
-                  onBlur={() => setTimeout(() => setShowClientSug(false), 150)}
-                />
-                {showClientSug && clientSuggestions.length > 0 && (
-                  <div className="sd-sug">
-                    {clientSuggestions.map(cl => (
-                      <div key={cl.id} className="sd-sug-item"
-                        onMouseDown={() => { setDraft(d => ({ ...d, cliente: cl.company || cl.contact })); setShowClientSug(false) }}>
-                        <div>
-                          <div style={{ fontWeight: 600, color: 'var(--txt)' }}>{cl.company || cl.contact}</div>
-                          {cl.company && cl.contact && <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 1 }}>{cl.contact}</div>}
-                        </div>
-                        {cl.wa && <span style={{ fontSize: 10, color: 'var(--txt4)' }}><i className="fa-brands fa-whatsapp" style={{ marginRight: 3 }} />{cl.wa.slice(-4)}</span>}
+          {/* Cliente */}
+          <div className="sd-group">
+            <label className="sd-lbl">Cliente</label>
+            <div className="sd-inp-icon" style={{ position: 'relative' }}>
+              <i className="fa fa-search" />
+              <input ref={inputRef} className="sd-inp" placeholder="Buscar o escribir nombre..."
+                value={draft.cliente}
+                onChange={e => { setDraft(d => ({ ...d, cliente: e.target.value })); setShowClientSug(true) }}
+                onFocus={() => draft.cliente.length >= 1 && setShowClientSug(true)}
+                onBlur={() => setTimeout(() => setShowClientSug(false), 150)}
+              />
+              {showClientSug && clientSuggestions.length > 0 && (
+                <div className="sd-sug">
+                  {clientSuggestions.map(cl => (
+                    <div key={cl.id} className="sd-sug-item"
+                      onMouseDown={() => { setDraft(d => ({ ...d, cliente: cl.company || cl.contact })); setShowClientSug(false) }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--txt)' }}>{cl.company || cl.contact}</div>
+                        {cl.company && cl.contact && <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 1 }}>{cl.contact}</div>}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      {cl.wa && <span style={{ fontSize: 10, color: 'var(--txt4)' }}><i className="fa-brands fa-whatsapp" style={{ marginRight: 3 }} />{cl.wa.slice(-4)}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Seccion: Producto y monto */}
-          <div className="sd-section">
-            <div className="sd-section-title"><i className="fa fa-tag" /> Detalle</div>
+          <div className="sd-sep" />
+
+          {/* Producto + monto */}
+          <div className="sd-group">
             <div className="sd-fg">
               <label className="sd-lbl">Producto</label>
               <div style={{ position: 'relative' }}>
@@ -520,15 +532,15 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
               </div>
             </div>
             <div className="sd-row">
-              <div className="sd-fg" style={{ marginBottom: showBreakdown ? 0 : 14 }}>
-                <label className="sd-lbl">Cantidad</label>
+              <div className="sd-fg" style={{ flex: '.6', marginBottom: 0 }}>
+                <label className="sd-lbl">Cant.</label>
                 <input className="sd-inp" type="number" min="1" value={draft.cantidad}
                   onChange={e => setDraft(d => ({ ...d, cantidad: e.target.value }))}
                   style={{ textAlign: 'center', fontWeight: 700 }}
                 />
               </div>
-              <div className="sd-fg" style={{ marginBottom: showBreakdown ? 0 : 14 }}>
-                <label className="sd-lbl">Monto facturado</label>
+              <div className="sd-fg" style={{ marginBottom: 0 }}>
+                <label className="sd-lbl">Monto</label>
                 <input className="sd-inp" placeholder="$0"
                   value={draft.facturado ? `$${draft.facturado}` : ''}
                   onChange={handleFacturadoChange}
@@ -536,7 +548,6 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
                 />
               </div>
             </div>
-            {/* Mejora 2: Chip desglose precio unitario */}
             {showBreakdown && (
               <div className="sd-breakdown">
                 <i className="fa fa-calculator" />
@@ -549,67 +560,67 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
             )}
           </div>
 
-          {/* Seccion: Cobro y fecha */}
-          <div className="sd-section">
-            <div className="sd-section-title"><i className="fa fa-wallet" /> Cobro</div>
+          <div className="sd-sep" />
+
+          {/* Estado de cobro + fecha/IVA */}
+          <div className="sd-group">
             <div className="sd-fg">
-              <label className="sd-lbl">Estado</label>
               <div className="sd-chips">
                 {PAY_OPTS.map(opt => (
                   <button key={opt.value}
                     className={`sd-chip ${draft.payStatus === opt.value ? 'sd-chip-on' : ''}`}
                     style={draft.payStatus === opt.value ? { background: opt.bg, color: opt.color, borderColor: opt.color } : {}}
                     onClick={() => setDraft(d => ({ ...d, payStatus: opt.value }))}>
-                    <i className={`fa ${opt.icon}`} style={{ fontSize: 11 }} /> {opt.label}
+                    <i className={`fa ${opt.icon}`} style={{ fontSize: 10 }} /> {opt.label}
                   </button>
                 ))}
               </div>
             </div>
             <div className="sd-row">
-              <div className="sd-fg">
+              <div className="sd-fg" style={{ marginBottom: 0 }}>
                 <label className="sd-lbl">Fecha</label>
                 <input className="sd-inp" type="date" value={draft.fecha}
                   onChange={e => setDraft(d => ({ ...d, fecha: e.target.value }))}
                 />
               </div>
-              <div className="sd-fg">
+              <div className="sd-fg" style={{ marginBottom: 0 }}>
                 <label className="sd-lbl">IVA</label>
                 <div className="sd-toggle" onClick={() => setDraft(d => ({ ...d, incluyeIva: !d.incluyeIva }))}>
                   <div className={`sd-switch ${draft.incluyeIva ? 'sd-switch-on' : 'sd-switch-off'}`} />
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)' }}>{draft.incluyeIva ? 'Incluye 21%' : 'Sin IVA'}</div>
-                    {draft.incluyeIva && ivaCalc() > 0 && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1 }}>IVA: {fmt(ivaCalc())}</div>}
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--txt2)' }}>{draft.incluyeIva ? '21%' : 'Sin IVA'}</div>
+                    {draft.incluyeIva && ivaCalc() > 0 && <div style={{ fontSize: 10, color: 'var(--brand)', marginTop: 1 }}>{fmt(ivaCalc())}</div>}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Mejora 4: Canal de venta */}
-          <div className="sd-section">
-            <div className="sd-section-title"><i className="fa fa-bullhorn" /> Canal</div>
-            <div className="sd-canal-chips">
-              {CANAL_OPTS.map(c => (
-                <button key={c.value}
-                  className="sd-canal"
-                  style={draft.canal === c.value ? { background: c.color + '18', color: c.color, borderColor: c.color + '60', borderWidth: 2 } : {}}
-                  onClick={() => setDraft(d => ({ ...d, canal: d.canal === c.value ? '' : c.value }))}>
-                  <i className={c.icon.startsWith('fa-brands') ? c.icon : `fa ${c.icon}`} style={{ fontSize: 10 }} /> {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="sd-sep" />
 
-          {/* Nota opcional */}
-          <div className="sd-section" style={{ marginBottom: 0 }}>
+          {/* Canal + nota */}
+          <div className="sd-group" style={{ marginBottom: 0 }}>
+            <div className="sd-fg" style={{ marginBottom: 8 }}>
+              <label className="sd-lbl">Canal</label>
+              <div className="sd-canal-chips">
+                {CANAL_OPTS.map(c => (
+                  <button key={c.value}
+                    className="sd-canal"
+                    style={draft.canal === c.value ? { background: c.color + '18', color: c.color, borderColor: c.color + '60', borderWidth: 2 } : {}}
+                    onClick={() => setDraft(d => ({ ...d, canal: d.canal === c.value ? '' : c.value }))}>
+                    <i className={c.icon.startsWith('fa-brands') ? c.icon : `fa ${c.icon}`} style={{ fontSize: 10 }} /> {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             {!showNota ? (
               <button className="sd-nota-link" onClick={() => setShowNota(true)}>
-                <i className="fa fa-plus" style={{ fontSize: 10 }} /> Agregar nota interna
+                <i className="fa fa-plus" style={{ fontSize: 9 }} /> Nota interna
               </button>
             ) : (
               <div className="sd-fg" style={{ marginBottom: 0 }}>
-                <label className="sd-lbl">Nota interna</label>
-                <input className="sd-inp" placeholder="Ej: falta entregar, paga la semana que viene..."
+                <label className="sd-lbl">Nota</label>
+                <input className="sd-inp" placeholder="Ej: paga la semana que viene..."
                   value={draft.nota}
                   onChange={e => setDraft(d => ({ ...d, nota: e.target.value }))}
                 />
@@ -618,16 +629,15 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
           </div>
         </div>
 
-        {/* Footer con success flash */}
         <div className={`sd-footer ${justSaved ? 'sd-footer-flash' : ''}`}>
           {justSaved && (
             <div className="sd-saved-flash">
-              <i className="fa fa-circle-check" /> Venta guardada — carga otra
+              <i className="fa fa-circle-check" /> Guardada — carga otra
             </div>
           )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="sd-btn sd-btn-sec" onClick={() => saveEntry(true)} style={{ flex: 1 }}>
-              <i className="fa fa-rotate" style={{ fontSize: 11 }} /> Guardar y otra
+              <i className="fa fa-rotate" style={{ fontSize: 11 }} /> Otra mas
             </button>
             <button className="sd-btn sd-btn-pri" onClick={() => saveEntry(false)} style={{ flex: 1 }}>
               <i className="fa fa-check" /> Guardar
