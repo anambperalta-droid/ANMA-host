@@ -95,6 +95,22 @@
 :root[data-theme="dark"] img.inv-on-dark,
 :root[data-theme="dark"] .inv-on-dark{filter:invert(1) hue-rotate(180deg)}
 
+/* ── Dark mode: forms, inputs, tables, badges ── */
+:root[data-theme="dark"] .fg input,
+:root[data-theme="dark"] .fg select,
+:root[data-theme="dark"] .fg textarea{background:var(--surface2);border-color:var(--border);color:var(--txt)}
+:root[data-theme="dark"] .fg input:hover,
+:root[data-theme="dark"] .fg select:hover,
+:root[data-theme="dark"] .fg textarea:hover{background:var(--surface3);border-color:var(--border2)}
+:root[data-theme="dark"] .fg input:focus,
+:root[data-theme="dark"] .fg select:focus,
+:root[data-theme="dark"] .fg textarea:focus{background:var(--surface);border-color:var(--brand);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+:root[data-theme="dark"] table th{background:var(--surface2)!important}
+:root[data-theme="dark"] table td{border-color:var(--border)!important}
+:root[data-theme="dark"] .modal{background:var(--surface);color:var(--txt)}
+:root[data-theme="dark"] .mc-field input{background:var(--surface2);border-color:var(--border);color:var(--txt)}
+:root[data-theme="dark"] .mc-field input:focus{background:var(--surface);border-color:var(--brand)}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;font-size:12px}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
