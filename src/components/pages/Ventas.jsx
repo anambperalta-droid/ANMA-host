@@ -323,11 +323,7 @@ export default function Ventas() {
               <span className="vt-cell vt-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(b.total || 0)}</span>
               <span className="vt-cell vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : (b._quickIva ? fmt(b._quickIva) : '—')}</span>
               <span style={{ textAlign: 'center' }} onClick={e => { e.stopPropagation(); const nx = b.payStatus === 'pending' ? 'partial' : b.payStatus === 'partial' ? 'paid' : 'pending'; updatePayStatus(b.id, nx) }}>
-                <span className="vt-pay-chip" style={{
-                  background: pi.bg, color: pi.color,
-                  border: isPending ? '1.5px solid #DC2626' : isPartial ? '1.5px solid #b45309' : '1.5px solid transparent',
-                  fontWeight: isPending ? 800 : 700,
-                }}>{pi.label}</span>
+                <span className="vt-pay-chip" style={{ background: pi.bg, color: pi.color }}>{pi.label}</span>
               </span>
             </div>
           )
@@ -669,29 +665,35 @@ function InsightCard({ budgets, month, hidden }) {
 }
 
 function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
-  const [justPaid, setJustPaid] = useState(null)
+  const [expandedId, setExpandedId] = useState(null)
+  const [justPaidId, setJustPaidId] = useState(null)
   const pendientes = useMemo(() =>
-    budgets.filter(b => b.payStatus !== 'paid' && (Number(b.total) || 0) > 0).sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0)),
+    budgets.filter(b => b.payStatus !== 'paid' && (Number(b.total) || 0) > 0).sort((a, b) => {
+      const da = Math.floor((Date.now() - (a.updatedAt || Date.now())) / 86400000)
+      const db = Math.floor((Date.now() - (b.updatedAt || Date.now())) / 86400000)
+      if (da > 30 && db <= 30) return -1
+      if (db > 30 && da <= 30) return 1
+      return (a.updatedAt || 0) - (b.updatedAt || 0)
+    }),
     [budgets]
   )
   if (pendientes.length === 0) return null
   const totalPend = pendientes.reduce((s, b) => { const t = Number(b.total) || 0; const d = Number(b.depositAmt) || 0; return s + (b.payStatus === 'partial' ? t - d : t) }, 0)
 
-  const markPaid = (e, b) => {
-    e.stopPropagation()
+  const markPaid = (b) => {
     if (saveBudget) saveBudget({ ...b, payStatus: 'paid' })
-    setJustPaid(b.id)
-    setTimeout(() => setJustPaid(null), 1200)
+    setJustPaidId(b.id)
+    setExpandedId(null)
+    setTimeout(() => setJustPaidId(null), 1400)
     if (toast) toast('Cobro registrado', 'ok')
   }
 
-  const markPartial = (e, b) => {
-    e.stopPropagation()
+  const markPartial = (b) => {
     if (saveBudget) saveBudget({ ...b, payStatus: 'partial' })
+    setExpandedId(null)
   }
 
-  const sendWA = (e, b) => {
-    e.stopPropagation()
+  const sendWA = (b) => {
     const name = b.company || b.contact || ''
     const owed = b.payStatus === 'partial' ? (Number(b.total) || 0) - (Number(b.depositAmt) || 0) : Number(b.total) || 0
     const phone = (b.wa || '').replace(/\D/g, '')
@@ -705,23 +707,28 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
   return (
     <div style={{ marginTop: 20, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
       <style>{`
-        .pc-row{padding:10px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background .1s;min-height:54px}
-        .pc-row:hover{background:var(--surface2)}
-        .pc-btn{border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:8px;font-weight:700;transition:filter .12s,transform .1s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-        .pc-btn:active{transform:scale(.94)}
-        .pc-cobrar{background:#dcfce7;color:#15803d;font-size:11px;padding:6px 12px}
-        .pc-cobrar:hover{filter:brightness(.94)}
-        .pc-partial{background:#fef3c7;color:#92400e;font-size:10px;padding:5px 9px}
-        .pc-partial:hover{filter:brightness(.94)}
-        .pc-wa{background:rgba(37,211,102,.1);color:#25D366;font-size:12px;padding:6px 8px;border-radius:8px}
-        .pc-wa:hover{filter:brightness(.88)}
-        .pc-ver{background:none;color:var(--txt4);font-size:11px;padding:6px 8px;border-radius:8px}
-        .pc-ver:hover{color:var(--txt2)}
-        .pc-paid-flash{animation:pc-flash .5s ease}
-        @keyframes pc-flash{0%{background:rgba(34,197,94,.15)}100%{background:transparent}}
+        .pc-item{border-bottom:1px solid var(--border);transition:background .15s;-webkit-tap-highlight-color:transparent}
+        .pc-head{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;min-height:52px}
+        .pc-head:hover{background:var(--surface2)}
+        .pc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .pc-expand{max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0}
+        .pc-expand-open{max-height:120px;opacity:1}
+        .pc-actions-bar{display:flex;gap:8px;padding:0 18px 12px 38px;flex-wrap:wrap}
+        .pc-act{border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;border-radius:10px;font-size:12px;font-weight:700;transition:all .15s;-webkit-tap-highlight-color:transparent;padding:9px 16px}
+        .pc-act:active{transform:scale(.96)}
+        .pc-act-pri{background:#059669;color:#fff;box-shadow:0 2px 8px rgba(5,150,105,.25)}
+        .pc-act-pri:hover{background:#047857}
+        .pc-act-sec{background:var(--surface2,#f3f4f6);color:var(--txt2);border:1px solid var(--border)}
+        .pc-act-sec:hover{border-color:var(--txt3)}
+        .pc-act-wa{background:rgba(37,211,102,.08);color:#128C7E;border:1px solid rgba(37,211,102,.2)}
+        .pc-act-wa:hover{background:rgba(37,211,102,.15)}
+        .pc-flash{animation:pc-done .6s ease}
+        @keyframes pc-done{0%{background:rgba(5,150,105,.12)}50%{background:rgba(5,150,105,.06)}100%{background:transparent}}
+        .pc-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
         @media(max-width:600px){
-          .pc-row{padding:10px 14px;gap:8px;flex-wrap:wrap}
-          .pc-actions{flex:1 0 100%;display:flex;justify-content:flex-end;gap:6px;margin-top:2px}
+          .pc-head{padding:10px 14px;gap:10px;min-height:48px}
+          .pc-actions-bar{padding:0 14px 10px 32px;gap:6px}
+          .pc-act{padding:8px 12px;font-size:11px;flex:1;justify-content:center;min-height:38px}
         }
       `}</style>
       <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
@@ -735,33 +742,43 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
       {pendientes.slice(0, 12).map(b => {
         const days = Math.floor((Date.now() - (b.updatedAt || Date.now())) / 86400000)
         const owed = b.payStatus === 'partial' ? (Number(b.total) || 0) - (Number(b.depositAmt) || 0) : Number(b.total) || 0
-        const isFlash = justPaid === b.id
+        const isOpen = expandedId === b.id
+        const isFlash = justPaidId === b.id
+        const urgency = days > 30 ? 'critical' : days > 7 ? 'warn' : 'normal'
+        const dotColor = urgency === 'critical' ? '#DC2626' : urgency === 'warn' ? '#D97706' : b.payStatus === 'partial' ? '#D97706' : '#94A3B8'
         return (
-          <div key={b.id} className={`pc-row ${isFlash ? 'pc-paid-flash' : ''}`}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.company || b.contact || '—'}</div>
-              <div style={{ fontSize: 11, color: days > 30 ? '#DC2626' : 'var(--txt3)', fontWeight: days > 30 ? 600 : 400 }}>
-                {b.payStatus === 'partial' ? 'Señado' : 'Pendiente'}
-                {days > 0 && <> · {days}d</>}
-                {days > 30 && ' — revisar'}
+          <div key={b.id} className={`pc-item ${isFlash ? 'pc-flash' : ''}`}>
+            <div className="pc-head" onClick={() => setExpandedId(isOpen ? null : b.id)}>
+              <div className="pc-dot" style={{ background: dotColor }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }}>{b.company || b.contact || '—'}</div>
+                <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="pc-badge" style={{ background: b.payStatus === 'partial' ? '#fef3c7' : '#f1f5f9', color: b.payStatus === 'partial' ? '#92400e' : '#64748b' }}>
+                    {b.payStatus === 'partial' ? 'Señado' : 'Pendiente'}
+                  </span>
+                  {days > 0 && <span style={{ color: urgency === 'critical' ? '#DC2626' : 'var(--txt4)', fontWeight: urgency === 'critical' ? 700 : 400 }}>{days}d</span>}
+                </div>
               </div>
+              <span style={{ fontSize: 15, fontWeight: 800, color: urgency === 'critical' ? '#DC2626' : '#b45309', fontVariantNumeric: 'tabular-nums', flexShrink: 0, letterSpacing: '-.02em' }}>{hidden ? '***' : fmt(owed)}</span>
+              <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 10, color: 'var(--txt4)', flexShrink: 0, transition: 'transform .2s' }} />
             </div>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{hidden ? '***' : fmt(owed)}</span>
-            <div className="pc-actions" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-              <button className="pc-btn pc-cobrar" onClick={e => markPaid(e, b)} title="Marcar como cobrado">
-                <i className="fa fa-circle-check" style={{ fontSize: 11 }} /> Cobrar
-              </button>
-              {b.payStatus === 'pending' && (
-                <button className="pc-btn pc-partial" onClick={e => markPartial(e, b)} title="Marcar como señado">
-                  Seña
+            <div className={`pc-expand ${isOpen ? 'pc-expand-open' : ''}`}>
+              <div className="pc-actions-bar">
+                <button className="pc-act pc-act-pri" onClick={() => markPaid(b)}>
+                  <i className="fa fa-check" /> Marcar cobrado
                 </button>
-              )}
-              <button className="pc-btn pc-wa" onClick={e => sendWA(e, b)} title="Enviar recordatorio por WhatsApp">
-                <i className="fa-brands fa-whatsapp" />
-              </button>
-              <button className="pc-btn pc-ver" onClick={() => nav(`/pedido/${b.id}`)} title="Ver pedido completo">
-                <i className="fa fa-arrow-up-right-from-square" />
-              </button>
+                {b.payStatus === 'pending' && (
+                  <button className="pc-act pc-act-sec" onClick={() => markPartial(b)}>
+                    <i className="fa fa-hand-holding-dollar" style={{ fontSize: 11 }} /> Señado
+                  </button>
+                )}
+                <button className="pc-act pc-act-wa" onClick={() => sendWA(b)}>
+                  <i className="fa-brands fa-whatsapp" /> Recordar
+                </button>
+                <button className="pc-act pc-act-sec" onClick={() => nav(`/pedido/${b.id}`)}>
+                  <i className="fa fa-arrow-up-right-from-square" style={{ fontSize: 10 }} /> Ver pedido
+                </button>
+              </div>
             </div>
           </div>
         )
