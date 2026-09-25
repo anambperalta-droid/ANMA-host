@@ -208,7 +208,7 @@ export default function Ventas() {
   const payInfo = (b) => PAY_OPTS.find(o => o.value === b.payStatus) || PAY_OPTS[0]
 
   return (
-    <div style={{ padding: '20px 20px 80px', maxWidth: 1000, margin: '0 auto' }}>
+    <div style={{ padding: '10px 20px 80px', maxWidth: 1000, margin: '0 auto' }}>
       <style>{`
         .vt-row{display:grid;grid-template-columns:1fr .7fr .4fr .7fr .5fr .35fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
         .vt-row:hover{background:var(--surface2)}
@@ -225,7 +225,7 @@ export default function Ventas() {
       `}</style>
 
       {/* HEADER */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 10 }}>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--txt)', margin: 0, letterSpacing: '-.4px' }}>Registro de ventas</h1>
         <button onClick={openDrawer} style={{
           padding: '10px 18px', borderRadius: 10, border: 'none',
@@ -239,7 +239,7 @@ export default function Ventas() {
       </div>
 
       {/* NAV MESES */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '10px 16px', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '10px 16px', marginBottom: 10 }}>
         <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--txt2)', fontSize: 14, padding: '4px 8px' }}><i className="fa fa-chevron-left" /></button>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.3px' }}>{MESES[month]} {year}</div>
@@ -249,7 +249,7 @@ export default function Ventas() {
       </div>
 
       {/* RESUMEN */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 8 }}>
         {[
           { label: 'Facturado', value: totals.facturado, icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
           { label: 'IVA', value: totals.iva, icon: 'fa-percent', color: '#6366f1' },
@@ -267,7 +267,7 @@ export default function Ventas() {
       </div>
 
       {totals.facturado > 0 && (
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: pctCobrado >= 80 ? '#15803d' : pctCobrado >= 40 ? '#b45309' : '#DC2626' }}>
               {hidden ? '***' : `${pctCobrado}% cobrado`}
