@@ -43,7 +43,7 @@ function parseFmtValue(v) {
 
 const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', incluyeIva: false, canal: '' }
 
-export default function Ventas({ embedded }) {
+export default function Ventas() {
   const { get, saveBudget } = useData()
   const toast = useToast()
   const nav = useNavigate()
@@ -199,37 +199,19 @@ export default function Ventas({ embedded }) {
         }
       `}</style>
 
-      {/* HEADER — oculto cuando está embebido en el Dashboard */}
-      {!embedded && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--txt)', margin: 0, letterSpacing: '-.4px' }}>Registro de ventas</h1>
-            <p style={{ fontSize: 12, color: 'var(--txt3)', margin: '2px 0 0' }}>Carga y seguimiento mensual</p>
-          </div>
-          <button onClick={openDrawer} style={{
-            padding: '10px 18px', borderRadius: 10, border: 'none',
-            background: 'var(--grad)', color: '#fff', fontSize: 13, fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 7,
-            boxShadow: '0 4px 12px rgba(124,58,237,.25)',
-          }}>
-            <i className="fa fa-plus" /> Nueva venta
-          </button>
-        </div>
-      )}
-      {embedded && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-          <button onClick={openDrawer} style={{
-            padding: '8px 16px', borderRadius: 10, border: 'none',
-            background: 'var(--grad)', color: '#fff', fontSize: 13, fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 7,
-            boxShadow: '0 4px 12px rgba(124,58,237,.25)',
-          }}>
-            <i className="fa fa-plus" /> Nueva venta
-          </button>
-        </div>
-      )}
+      {/* HEADER */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--txt)', margin: 0, letterSpacing: '-.4px' }}>Registro de ventas</h1>
+        <button onClick={openDrawer} style={{
+          padding: '10px 18px', borderRadius: 10, border: 'none',
+          background: 'var(--grad)', color: '#fff', fontSize: 13, fontWeight: 700,
+          cursor: 'pointer', fontFamily: 'inherit',
+          display: 'inline-flex', alignItems: 'center', gap: 7,
+          boxShadow: '0 4px 12px rgba(124,58,237,.25)',
+        }}>
+          <i className="fa fa-plus" /> Nueva venta
+        </button>
+      </div>
 
       {/* NAV MESES */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, padding: '10px 16px', marginBottom: 16 }}>

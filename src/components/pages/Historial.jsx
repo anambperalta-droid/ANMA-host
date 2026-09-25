@@ -9,7 +9,6 @@ import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gan
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
-import Ventas from './Ventas'
 
 // Color por estado nuevo — chip filtro
 const ESTADO_TAB_COLOR = {
@@ -1450,7 +1449,6 @@ export default function Historial() {
         <div className="dash-ctrl-tabs">
           {[
             { key: 'resumen',     lbl: 'Resumen' },
-            { key: 'ventas',      lbl: 'Ventas' },
             { key: 'lista',       lbl: 'Pedidos' },
             { key: 'analisis',    lbl: 'Análisis' },
             { key: 'seguimiento', lbl: 'Seguimiento', badge: seguimiento.length },
@@ -1511,7 +1509,6 @@ export default function Historial() {
       <div className="tab-bar tab-bar-dash" style={{ marginTop: 18, marginBottom: 20 }}>
         {[
           { key: 'resumen',     icon: 'fa-house',     lbl: 'Resumen',                           short: 'Inicio'   },
-          { key: 'ventas',      icon: 'fa-receipt',   lbl: 'Ventas',                            short: 'Ventas'   },
           { key: 'lista',       icon: 'fa-list',      lbl: 'Presupuestos',                      short: 'Presup.'  },
           { key: 'analisis',    icon: 'fa-chart-bar', lbl: 'Análisis',                          short: 'Stats'    },
           { key: 'seguimiento', icon: 'fa-bell',      lbl: `Seguimiento (${seguimiento.length})`, short: seguimiento.length > 0 ? `${seguimiento.length}` : 'Seguimiento' },
@@ -1621,10 +1618,10 @@ export default function Historial() {
               <KpiCard label="Presupuestos" value={String(periodBudgets.length)} icon="fa-file-invoice" />
 
               {/* ── Izquierda (gráfico + tabla) + Derecha (donut + seguimiento) ── */}
-              {!opHideMetrics && <div className="bento-wide bento-chart-inner" style={{ display: 'flex', gap: 14, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              {!opHideMetrics && <div className="bento-wide bento-chart-inner" style={{ display: 'flex', gap: 20, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
                 {/* COLUMNA IZQUIERDA: gráfico de barras + tabla de presupuestos */}
-                <div style={{ flex: '1 1 55%', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ flex: '1 1 55%', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div className="bento-chart bento-chart-bar" style={{ boxSizing: 'border-box', overflow: 'hidden' }}>
                     <div className="card-header">
                       <span className="card-title"><i className="fa fa-chart-bar" style={{ color: 'var(--brand)', marginRight: 7 }} />Ingresos cobrados — {isDaily ? 'día a día · ' : ''}{PERIODS.find(p => p.key === period)?.label}</span>
@@ -1724,7 +1721,7 @@ export default function Historial() {
                 </div>
 
                 {/* COLUMNA DERECHA: donut + seguimiento/entregas */}
-                <div style={{ flex: '1 1 30%', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ flex: '1 1 30%', minWidth: 260, display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {/* Donut */}
                   <div className="bento-chart" style={{ padding: 12, paddingBottom: 8 }}>
                     <div className="card-header" style={{ marginBottom: 6 }}>
@@ -1864,9 +1861,6 @@ export default function Historial() {
           )}
         </>
       )}
-
-      {/* ═══ VENTAS (embebido) ═══ */}
-      {tab === 'ventas' && <Ventas embedded />}
 
       {/* ═══ LISTA ═══ */}
       {tab === 'lista' && (
