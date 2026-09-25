@@ -16,26 +16,41 @@ function readTheme() {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-// `perm` define quién ve cada entrada (owner ve todo, operator solo coincidencias).
-// `ownerOnly: true` = oculto para operator siempre.
-const NAV = [
-  { section: 'Gestión' },
-  { path: '/', icon: 'fa-chart-line', label: 'Dashboard', chipKey: 'budgets', perm: 'dashboard.view' },
-  { path: '/ventas', icon: 'fa-receipt', label: 'Registro ventas', perm: 'dashboard.view' },
-  { path: '/pedido', icon: 'fa-cart-shopping', label: 'Nuevo pedido', perm: 'pedido.create' },
-  { path: '/clientes', icon: 'fa-users', label: 'Clientes', chipKey: 'clients', perm: 'cliente.view' },
-  { section: 'Catálogo' },
-  { path: '/catalogo', icon: 'fa-box-open', label: 'Productos', chipKey: 'products', perm: 'catalogo.view' },
-  { path: '/proveedores', icon: 'fa-industry', label: 'Proveedores', chipKey: 'suppliers', perm: 'proveedor.view' },
-  { path: '/logistica', icon: 'fa-truck-fast', label: 'Logística', perm: 'logistica.view' },
-  { section: 'Comunicación' },
-  { path: '/mensajes', icon: 'fa-brands fa-whatsapp', label: 'Mensajes WA', perm: 'mensajes.view' },
-  { section: 'Ayuda' },
-  { path: '/guia', icon: 'fa-book-open', label: 'Guía completa' },
-  { section: 'Sistema', ownerOnly: true },
-  { path: '/config', icon: 'fa-gear', label: 'Configuración', ownerOnly: true },
-  { path: '/importador', icon: 'fa-file-import', label: 'Importador', ownerOnly: true, perm: 'config.access' },
+const NAV_GROUPS = [
+  {
+    id: 'ventas', label: 'Ventas', collapsible: false,
+    items: [
+      { path: '/', icon: 'fa-chart-line', label: 'Dashboard', chipKey: 'budgets', perm: 'dashboard.view' },
+      { path: '/ventas', icon: 'fa-receipt', label: 'Registro ventas', perm: 'dashboard.view' },
+      { path: '/pedido', icon: 'fa-cart-shopping', label: 'Nuevo pedido', perm: 'pedido.create' },
+      { path: '/clientes', icon: 'fa-users', label: 'Clientes', chipKey: 'clients', perm: 'cliente.view' },
+    ],
+  },
+  {
+    id: 'catalogo', label: 'Catálogo', collapsible: true, defaultOpen: true,
+    items: [
+      { path: '/catalogo', icon: 'fa-box-open', label: 'Productos', chipKey: 'products', perm: 'catalogo.view' },
+      { path: '/proveedores', icon: 'fa-industry', label: 'Proveedores', chipKey: 'suppliers', perm: 'proveedor.view' },
+      { path: '/logistica', icon: 'fa-truck-fast', label: 'Logística', perm: 'logistica.view' },
+    ],
+  },
+  {
+    id: 'comunicacion', label: 'Comunicación', collapsible: true, defaultOpen: false,
+    items: [
+      { path: '/mensajes', icon: 'fa-brands fa-whatsapp', label: 'Mensajes WA', perm: 'mensajes.view' },
+    ],
+  },
+  {
+    id: 'herramientas', label: 'Herramientas', collapsible: true, defaultOpen: false, ownerOnly: true,
+    items: [
+      { path: '/config', icon: 'fa-gear', label: 'Configuración', ownerOnly: true },
+      { path: '/importador', icon: 'fa-file-import', label: 'Importador', ownerOnly: true, perm: 'config.access' },
+      { path: '/guia', icon: 'fa-book-open', label: 'Guía completa' },
+    ],
+  },
 ]
+
+const SECTIONS_KEY = 'anma_sidebar_sections'
 
 export default function Sidebar({ open, onClose, collapsed }) {
   const loc = useLocation()
@@ -45,6 +60,23 @@ export default function Sidebar({ open, onClose, collapsed }) {
   const { panelOpen, setPanelOpen, activeTasks, focusMode, setFocusMode } = useTaskFab()
   const { hidden, toggle: togglePrivacy } = usePrivacy()
   const [theme, setTheme] = useState(readTheme)
+  const [sections, setSections] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SECTIONS_KEY) || '{}')
+      const init = {}
+      NAV_GROUPS.forEach(g => {
+        if (g.collapsible) init[g.id] = saved[g.id] !== undefined ? saved[g.id] : (g.defaultOpen ?? true)
+      })
+      return init
+    } catch { return {} }
+  })
+  const toggleSection = (id) => {
+    setSections(prev => {
+      const next = { ...prev, [id]: !prev[id] }
+      try { localStorage.setItem(SECTIONS_KEY, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
   useEffect(() => {
     const h = () => setTheme(readTheme())
     window.addEventListener('storage', h)
@@ -100,36 +132,49 @@ export default function Sidebar({ open, onClose, collapsed }) {
         </div>
       </div>
       <nav className="sb-nav">
-        {NAV.map((item, i) => {
-          if (role === 'operator') {
-            if (item.ownerOnly) return null
-            if (item.perm && !can(item.perm)) return null
-          }
-          if (item.section) return <div key={i} className="sb-sec">{item.section}</div>
-          const active = loc.pathname === item.path
-            || (item.path === '/pedido' && (loc.pathname.startsWith('/pedido') || loc.pathname.startsWith('/presupuesto')))
-            || (item.path === '/pedido' && loc.pathname.startsWith('/pedido'))
+        {NAV_GROUPS.map(group => {
+          if (group.ownerOnly && role === 'operator') return null
+          const isOpen = !group.collapsible || sections[group.id]
+          const visibleItems = group.items.filter(item => {
+            if (role === 'operator' && item.ownerOnly) return false
+            if (role === 'operator' && item.perm && !can(item.perm)) return false
+            return true
+          })
+          if (visibleItems.length === 0) return null
+
           return (
-            <button
-              key={item.path}
-              type="button"
-              className={`sb-item ${active ? 'active' : ''}`}
-              data-tip={item.label}
-              onClick={() => goTo(item.path)}
-              onMouseEnter={() => prefetchRoute(item.path)}
-              onFocus={() => prefetchRoute(item.path)}
-            >
-              <i className={`fa ${item.icon}`} />
-              <span className="sb-lbl">{item.label}</span>
-            </button>
+            <div key={group.id}>
+              {group.collapsible ? (
+                <button type="button" className={`sb-sec sb-sec-toggle${isOpen ? ' is-open' : ''}`} onClick={() => toggleSection(group.id)}>
+                  {group.label}
+                  <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 9, marginLeft: 'auto', opacity: .5 }} />
+                </button>
+              ) : (
+                <div className="sb-sec">{group.label}</div>
+              )}
+              {isOpen && visibleItems.map(item => {
+                const active = loc.pathname === item.path || (item.path === '/pedido' && loc.pathname.startsWith('/pedido'))
+                return (
+                  <button key={item.path} type="button" className={`sb-item ${active ? 'active' : ''}`}
+                    data-tip={item.label} onClick={() => goTo(item.path)}
+                    onMouseEnter={() => prefetchRoute(item.path)} onFocus={() => prefetchRoute(item.path)}>
+                    <i className={`fa ${item.icon}`} /><span className="sb-lbl">{item.label}</span>
+                  </button>
+                )
+              })}
+              {isOpen && group.id === 'herramientas' && role === 'owner' && (
+                <>
+                  <button type="button" className={`sb-item ${loc.pathname === '/mi-cuenta' ? 'active' : ''}`} data-tip="Mi cuenta" onClick={() => goTo('/mi-cuenta')}>
+                    <i className="fa fa-user-gear" /><span className="sb-lbl">Mi cuenta</span>
+                  </button>
+                  <button type="button" className="sb-item" data-tip="Backup" onClick={doBackup}>
+                    <i className="fa fa-cloud-arrow-down" /><span className="sb-lbl">Backup de datos</span>
+                  </button>
+                </>
+              )}
+            </div>
           )
         })}
-        {role === 'owner' && (
-          <button type="button" className="sb-item" data-tip="Backup" onClick={doBackup}>
-            <i className="fa fa-cloud-arrow-down" /><span className="sb-lbl">Backup de datos</span>
-          </button>
-        )}
-        {/* Super Admin removido del nav — ahora vive como ícono discreto en el footer. */}
       </nav>
       {/* Ajustes rápidos — 3 íconos: Tareas · Ojo · Tema.
           La campana vive en el Topbar (acceso rápido siempre visible). */}

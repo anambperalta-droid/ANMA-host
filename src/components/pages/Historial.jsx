@@ -9,6 +9,7 @@ import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gan
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
+import Ventas from './Ventas'
 
 // Color por estado nuevo — chip filtro
 const ESTADO_TAB_COLOR = {
@@ -1449,6 +1450,7 @@ export default function Historial() {
         <div className="dash-ctrl-tabs">
           {[
             { key: 'resumen',     lbl: 'Resumen' },
+            { key: 'ventas',      lbl: 'Ventas' },
             { key: 'lista',       lbl: 'Pedidos' },
             { key: 'analisis',    lbl: 'Análisis' },
             { key: 'seguimiento', lbl: 'Seguimiento', badge: seguimiento.length },
@@ -1509,7 +1511,8 @@ export default function Historial() {
       <div className="tab-bar tab-bar-dash" style={{ marginTop: 18, marginBottom: 20 }}>
         {[
           { key: 'resumen',     icon: 'fa-house',     lbl: 'Resumen',                           short: 'Inicio'   },
-          { key: 'lista',       icon: 'fa-receipt',   lbl: 'Presupuestos',                      short: 'Presup.'  },
+          { key: 'ventas',      icon: 'fa-receipt',   lbl: 'Ventas',                            short: 'Ventas'   },
+          { key: 'lista',       icon: 'fa-list',      lbl: 'Presupuestos',                      short: 'Presup.'  },
           { key: 'analisis',    icon: 'fa-chart-bar', lbl: 'Análisis',                          short: 'Stats'    },
           { key: 'seguimiento', icon: 'fa-bell',      lbl: `Seguimiento (${seguimiento.length})`, short: seguimiento.length > 0 ? `${seguimiento.length}` : 'Seguimiento' },
         ].map(t => (
@@ -1861,6 +1864,9 @@ export default function Historial() {
           )}
         </>
       )}
+
+      {/* ═══ VENTAS (embebido) ═══ */}
+      {tab === 'ventas' && <Ventas embedded />}
 
       {/* ═══ LISTA ═══ */}
       {tab === 'lista' && (
