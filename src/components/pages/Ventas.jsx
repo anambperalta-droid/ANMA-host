@@ -280,7 +280,7 @@ export default function Ventas() {
         </div>
       )}
 
-      <PendientesCobro budgets={allBudgets} hidden={hidden} nav={nav} />
+      <PendientesCobro budgets={allBudgets} hidden={hidden} nav={nav} saveBudget={saveBudget} toast={toast} />
 
       {/* TABLA */}
       <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 18 }}>
@@ -668,7 +668,8 @@ function InsightCard({ budgets, month, hidden }) {
   )
 }
 
-function PendientesCobro({ budgets, hidden, nav }) {
+function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
+  const [justPaid, setJustPaid] = useState(null)
   const pendientes = useMemo(() =>
     budgets.filter(b => b.payStatus !== 'paid' && (Number(b.total) || 0) > 0).sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0)),
     [budgets]
@@ -676,8 +677,53 @@ function PendientesCobro({ budgets, hidden, nav }) {
   if (pendientes.length === 0) return null
   const totalPend = pendientes.reduce((s, b) => { const t = Number(b.total) || 0; const d = Number(b.depositAmt) || 0; return s + (b.payStatus === 'partial' ? t - d : t) }, 0)
 
+  const markPaid = (e, b) => {
+    e.stopPropagation()
+    if (saveBudget) saveBudget({ ...b, payStatus: 'paid' })
+    setJustPaid(b.id)
+    setTimeout(() => setJustPaid(null), 1200)
+    if (toast) toast('Cobro registrado', 'ok')
+  }
+
+  const markPartial = (e, b) => {
+    e.stopPropagation()
+    if (saveBudget) saveBudget({ ...b, payStatus: 'partial' })
+  }
+
+  const sendWA = (e, b) => {
+    e.stopPropagation()
+    const name = b.company || b.contact || ''
+    const owed = b.payStatus === 'partial' ? (Number(b.total) || 0) - (Number(b.depositAmt) || 0) : Number(b.total) || 0
+    const phone = (b.wa || '').replace(/\D/g, '')
+    const msg = `Hola${name ? ` ${name}` : ''}, te escribo por el saldo pendiente de $${owed.toLocaleString('es-AR')}. Quedo atenta, gracias.`
+    const url = phone
+      ? `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`
+    window.open(url, '_blank', 'noopener')
+  }
+
   return (
     <div style={{ marginTop: 20, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+      <style>{`
+        .pc-row{padding:10px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background .1s;min-height:54px}
+        .pc-row:hover{background:var(--surface2)}
+        .pc-btn{border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:8px;font-weight:700;transition:filter .12s,transform .1s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+        .pc-btn:active{transform:scale(.94)}
+        .pc-cobrar{background:#dcfce7;color:#15803d;font-size:11px;padding:6px 12px}
+        .pc-cobrar:hover{filter:brightness(.94)}
+        .pc-partial{background:#fef3c7;color:#92400e;font-size:10px;padding:5px 9px}
+        .pc-partial:hover{filter:brightness(.94)}
+        .pc-wa{background:rgba(37,211,102,.1);color:#25D366;font-size:12px;padding:6px 8px;border-radius:8px}
+        .pc-wa:hover{filter:brightness(.88)}
+        .pc-ver{background:none;color:var(--txt4);font-size:11px;padding:6px 8px;border-radius:8px}
+        .pc-ver:hover{color:var(--txt2)}
+        .pc-paid-flash{animation:pc-flash .5s ease}
+        @keyframes pc-flash{0%{background:rgba(34,197,94,.15)}100%{background:transparent}}
+        @media(max-width:600px){
+          .pc-row{padding:10px 14px;gap:8px;flex-wrap:wrap}
+          .pc-actions{flex:1 0 100%;display:flex;justify-content:flex-end;gap:6px;margin-top:2px}
+        }
+      `}</style>
       <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <i className="fa fa-clock" style={{ color: '#b45309', fontSize: 13 }} />
@@ -686,26 +732,41 @@ function PendientesCobro({ budgets, hidden, nav }) {
         </div>
         <span style={{ fontSize: 14, fontWeight: 800, color: '#b45309', fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(totalPend)}</span>
       </div>
-      {pendientes.slice(0, 8).map(b => {
+      {pendientes.slice(0, 12).map(b => {
         const days = Math.floor((Date.now() - (b.updatedAt || Date.now())) / 86400000)
         const owed = b.payStatus === 'partial' ? (Number(b.total) || 0) - (Number(b.depositAmt) || 0) : Number(b.total) || 0
+        const isFlash = justPaid === b.id
         return (
-          <div key={b.id} onClick={() => nav(`/pedido/${b.id}`)} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background .1s', gap: 8 }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+          <div key={b.id} className={`pc-row ${isFlash ? 'pc-paid-flash' : ''}`}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.company || b.contact || '—'}</div>
-              <div style={{ fontSize: 11, color: 'var(--txt3)' }}>
+              <div style={{ fontSize: 11, color: days > 30 ? '#DC2626' : 'var(--txt3)', fontWeight: days > 30 ? 600 : 400 }}>
                 {b.payStatus === 'partial' ? 'Señado' : 'Pendiente'}
-                {days > 0 && <> · hace {days}d</>}
-                {days > 30 && <span style={{ color: '#DC2626', fontWeight: 700 }}> — revisar</span>}
+                {days > 0 && <> · {days}d</>}
+                {days > 30 && ' — revisar'}
               </div>
             </div>
             <span style={{ fontSize: 14, fontWeight: 700, color: '#b45309', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{hidden ? '***' : fmt(owed)}</span>
+            <div className="pc-actions" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <button className="pc-btn pc-cobrar" onClick={e => markPaid(e, b)} title="Marcar como cobrado">
+                <i className="fa fa-circle-check" style={{ fontSize: 11 }} /> Cobrar
+              </button>
+              {b.payStatus === 'pending' && (
+                <button className="pc-btn pc-partial" onClick={e => markPartial(e, b)} title="Marcar como señado">
+                  Seña
+                </button>
+              )}
+              <button className="pc-btn pc-wa" onClick={e => sendWA(e, b)} title="Enviar recordatorio por WhatsApp">
+                <i className="fa-brands fa-whatsapp" />
+              </button>
+              <button className="pc-btn pc-ver" onClick={() => nav(`/pedido/${b.id}`)} title="Ver pedido completo">
+                <i className="fa fa-arrow-up-right-from-square" />
+              </button>
+            </div>
           </div>
         )
       })}
-      {pendientes.length > 8 && <div style={{ padding: '10px 18px', textAlign: 'center', fontSize: 12, color: 'var(--txt3)' }}>y {pendientes.length - 8} mas...</div>}
+      {pendientes.length > 12 && <div style={{ padding: '10px 18px', textAlign: 'center', fontSize: 12, color: 'var(--txt3)' }}>y {pendientes.length - 12} mas...</div>}
     </div>
   )
 }
