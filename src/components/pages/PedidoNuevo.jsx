@@ -510,7 +510,7 @@ export default function PedidoNuevo() {
         <CollapsibleSection
           meta={SECCION_META.costos}
           defaultOpen={pedido.lineas.some(l => TAGS_COSTOS.includes(l.tag) && l.descripcion)}
-          hint="Diseño, mano de obra, envío u otros costos que se suman al pedido."
+          hint=""
         >
           <LineasSection
             meta={SECCION_META.costos}
@@ -525,7 +525,7 @@ export default function PedidoNuevo() {
             onPickProduct={(name) => toast(`${name} agregada`, 'ok')}
             onCreatePreset={savePresetCosto}
             totalLineas={pedido.lineas.length}
-            emptyHint="Diseño, mano de obra, envío u otros costos que se suman al pedido."
+            emptyHint=""
             hidePaneHead
           />
         </CollapsibleSection>
@@ -757,9 +757,7 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
     <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, minHeight: 16 }}>
       {saving && (<><i className="fa fa-arrows-rotate fa-spin" style={{ fontSize: 10 }} />Guardando…</>)}
       {!saving && lastSaved && (<><i className="fa fa-check" style={{ color: '#16a34a' }} />Guardado automáticamente</>)}
-      {!saving && !lastSaved && !ready && (
-        <>Se guarda solo cuando cargues cliente + una descripción</>
-      )}
+      {!saving && !lastSaved && !ready && null}
     </div>
   )
 }
