@@ -389,12 +389,12 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
         .sd-panel{position:fixed;top:0;right:0;bottom:0;z-index:9999;width:400px;max-width:100vw;background:var(--surface);border-left:1.5px solid var(--border);display:flex;flex-direction:column;animation:sd-slide-in .25s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,.2)}
         @keyframes sd-slide-in{from{transform:translateX(100%)}to{transform:translateX(0)}}
         .sd-header{padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-        .sd-body{flex:1;overflow-y:auto;padding:16px 20px 20px}
+        .sd-body{flex:1;overflow-y:auto;padding:20px 22px 24px}
         .sd-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:var(--surface);transition:background .3s}
         .sd-footer-flash{background:rgba(5,150,105,.08)}
-        .sd-group{margin-bottom:16px}
-        .sd-fg{margin-bottom:10px}
-        .sd-lbl{font-size:11px;font-weight:600;color:var(--txt3);margin-bottom:4px;display:block}
+        .sd-group{margin-bottom:22px}
+        .sd-fg{margin-bottom:14px}
+        .sd-lbl{font-size:11px;font-weight:600;color:var(--txt3);margin-bottom:5px;display:block}
         .sd-inp{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--bg);outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s}
         .sd-inp:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
         .sd-inp::placeholder{color:var(--txt4)}
@@ -406,16 +406,16 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
         .sd-sug-item:hover{background:var(--surface2)}
         .sd-sug-item:first-child{border-radius:8px 8px 0 0}
         .sd-sug-item:last-child{border-radius:0 0 8px 8px}
-        .sd-row{display:flex;gap:8px}
+        .sd-row{display:flex;gap:10px}
         .sd-row>*{flex:1;min-width:0}
-        .sd-sep{height:1px;background:var(--border);margin:0 0 16px}
+        .sd-sep{height:1px;background:var(--border);margin:0 0 22px}
         .sd-chips{display:flex;gap:5px;flex-wrap:wrap}
         .sd-chip{padding:6px 11px;border-radius:8px;font-size:11px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--txt3);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
         .sd-chip:hover{border-color:var(--txt2);background:var(--surface2)}
         .sd-chip-on{border-width:2px}
-        .sd-canal-chips{display:flex;gap:4px;flex-wrap:wrap}
-        .sd-canal{padding:5px 9px;border-radius:7px;font-size:10px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--txt4);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
-        .sd-canal:hover{border-color:var(--txt3)}
+        .sd-canal-chips{display:flex;gap:6px;flex-wrap:wrap}
+        .sd-canal{padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--txt2);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+        .sd-canal:hover{border-color:var(--txt3);background:var(--surface2)}
         .sd-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);transition:border-color .15s}
         .sd-toggle:hover{border-color:var(--txt3)}
         .sd-switch{width:36px;height:20px;border-radius:99px;position:relative;transition:background .2s;flex-shrink:0}
@@ -441,16 +441,16 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
           .sd-panel{top:auto;left:0;right:0;bottom:0;width:100vw;max-height:92vh;border-left:none;border-radius:20px 20px 0 0;animation:sd-sheet-up .28s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.18)}
           .sd-panel::before{content:'';display:block;width:36px;height:4px;border-radius:4px;background:var(--border);margin:10px auto 0;flex-shrink:0}
           .sd-header{padding:6px 16px 8px}
-          .sd-body{padding:4px 16px 16px}
+          .sd-body{padding:6px 16px 16px}
           .sd-footer{padding:10px 16px max(12px,env(safe-area-inset-bottom))}
-          .sd-group{margin-bottom:12px}
-          .sd-fg{margin-bottom:6px}
-          .sd-lbl{font-size:10px;margin-bottom:2px}
-          .sd-row{gap:6px}
-          .sd-sep{margin:0 0 12px}
+          .sd-group{margin-bottom:16px}
+          .sd-fg{margin-bottom:10px}
+          .sd-lbl{font-size:10px;margin-bottom:3px}
+          .sd-row{gap:8px}
+          .sd-sep{margin:0 0 16px}
           .sd-inp{min-height:42px;font-size:14px;padding:9px 12px}
           .sd-chip{padding:6px 10px;font-size:11px;min-height:32px}
-          .sd-canal{padding:5px 8px;font-size:10px;min-height:26px}
+          .sd-canal{padding:6px 10px;font-size:11px;min-height:30px}
           .sd-btn{min-height:44px;font-size:13px}
           .sd-toggle{padding:8px 10px;min-height:36px}
           .sd-sug{max-height:150px}
