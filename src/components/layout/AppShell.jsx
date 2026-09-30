@@ -23,7 +23,7 @@ import RouteFallback from './RouteFallback'
 // Code splitting + prefetch caching centralizados en lib/routes.js
 import {
   Historial, PedidoNuevo, Clientes, Catalogo, Proveedores, Logistica,
-  Mensajes, Insumos, Config, Admin, Importador, MiCuenta, NotFound, Guia, Ventas,
+  Mensajes, Insumos, Config, Admin, Importador, MiCuenta, NotFound, Guia, Ventas, Compras,
 } from '../../lib/routes'
 
 // Corte de Fase 3: /presupuesto redirige a /pedido. El wizard viejo
@@ -361,6 +361,7 @@ function AppShellInner() {
               <Route path="/importador" element={<Guard perm="config.access"><Importador /></Guard>} />
               <Route path="/mi-cuenta" element={<MiCuenta />} />
               <Route path="/ventas" element={<Guard perm="dashboard.view"><Ventas /></Guard>} />
+              <Route path="/compras" element={<Guard perm="dashboard.view"><Compras /></Guard>} />
               <Route path="/guia" element={<Guia />} />
               <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
               <Route path="*" element={<NotFound />} />
