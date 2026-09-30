@@ -301,6 +301,7 @@ export default function PedidoNuevo() {
 
   // ── Client picker inline ──
   const [showClientList, setShowClientList] = useState(false)
+  const [ocasionExpanded, setOcasionExpanded] = useState(false)
   const clientBoxRef = useRef(null)
   useEffect(() => {
     const close = (e) => { if (clientBoxRef.current && !clientBoxRef.current.contains(e.target)) setShowClientList(false) }
@@ -413,15 +414,19 @@ export default function PedidoNuevo() {
               })
             }}
           />
-          {pedido.id && (
-            <button onClick={() => nav('/pedido')} className="btn btn-primary btn-sm"
-              title="Empezar otro pedido">
-              <i className="fa fa-plus" /> Nuevo
-            </button>
-          )}
-          <button onClick={() => nav('/')} className="btn btn-ghost btn-sm" style={{ borderRadius: 10 }}>
+          <button onClick={() => nav('/')} className="btn btn-ghost btn-sm" style={{ borderRadius: 10 }}
+            title="Volver a Dashboard">
             <i className="fa fa-arrow-left" /> Volver
           </button>
+          {pedido.id && (
+            <>
+              <span style={{ width: 1, height: 22, background: 'var(--border)', margin: '0 4px' }} />
+              <button onClick={() => nav('/pedido')} className="btn btn-primary btn-sm"
+                title="Empezar otro pedido">
+                <i className="fa fa-plus" /> Nuevo
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -522,9 +527,25 @@ export default function PedidoNuevo() {
             </div>
             <div>
               <label style={labelStyle}>Ocasión</label>
-              <input type="text" value={pedido.ocasion}
-                onChange={e => update({ ocasion: e.target.value })}
-                placeholder="Fin de año, cumpleaños…" style={inputStyle} />
+              {(pedido.ocasion && pedido.ocasion.trim()) || ocasionExpanded ? (
+                <input type="text" value={pedido.ocasion} autoFocus={ocasionExpanded && !pedido.ocasion}
+                  onChange={e => update({ ocasion: e.target.value })}
+                  onBlur={() => { if (!(pedido.ocasion && pedido.ocasion.trim())) setOcasionExpanded(false) }}
+                  placeholder="Fin de año, cumpleaños…" style={inputStyle} />
+              ) : (
+                <button type="button" onClick={() => setOcasionExpanded(true)}
+                  style={{
+                    ...inputStyle,
+                    background: 'transparent', border: '1.5px dashed var(--border)',
+                    color: 'var(--txt4)', cursor: 'pointer', fontFamily: 'inherit',
+                    textAlign: 'left', display: 'inline-flex', alignItems: 'center', gap: 6,
+                    fontSize: 12.5,
+                  }}
+                  title="Agregar ocasión (cumpleaños, fin de año, etc)">
+                  <i className="fa fa-plus" style={{ fontSize: 10 }} />
+                  agregar ocasión
+                </button>
+              )}
             </div>
             <div>
               <label style={labelStyle}>WhatsApp</label>
@@ -549,6 +570,7 @@ export default function PedidoNuevo() {
           totalLineas={pedido.lineas.length}
           esKit={pedido.esKit}
           cantKits={pedido.cantKits}
+          showTotal={totales.total}
           extras={(pedido.alternativas?.length > 0) && (
             <AlternativasBar
               alternativas={pedido.alternativas}
@@ -794,10 +816,23 @@ export default function PedidoNuevo() {
 
 function SaveIndicator({ saving, lastSaved, pedido }) {
   const ready = hasMinimum(pedido)
+  // Compacto: solo icono con tooltip. Evita ruido en el header, mantiene reassurance
+  const tsLabel = lastSaved ? (() => {
+    try {
+      const d = new Date(lastSaved)
+      const hh = String(d.getHours()).padStart(2, '0')
+      const mm = String(d.getMinutes()).padStart(2, '0')
+      return `Guardado automáticamente a las ${hh}:${mm}`
+    } catch { return 'Guardado automáticamente' }
+  })() : ''
   return (
-    <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, minHeight: 16 }}>
-      {saving && (<><i className="fa fa-arrows-rotate fa-spin" style={{ fontSize: 10 }} />Guardando…</>)}
-      {!saving && lastSaved && (<><i className="fa fa-check" style={{ color: '#16a34a' }} />Guardado automáticamente</>)}
+    <div style={{ display: 'inline-flex', alignItems: 'center', minHeight: 16 }}>
+      {saving && (
+        <i className="fa fa-arrows-rotate fa-spin" title="Guardando..." style={{ fontSize: 11, color: 'var(--txt3)' }} />
+      )}
+      {!saving && lastSaved && (
+        <i className="fa fa-circle-check" title={tsLabel} style={{ fontSize: 12, color: '#16a34a' }} />
+      )}
       {!saving && !lastSaved && !ready && null}
     </div>
   )
@@ -881,7 +916,7 @@ function CollapsibleSection({ meta, defaultOpen, hint, children }) {
   )
 }
 
-function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint, hidePaneHead, esKit, cantKits }) {
+function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint, hidePaneHead, esKit, cantKits, showTotal }) {
   // Estado elevado: cuando cualquier fila abre su dropdown de catálogo, la
   // sección sube z-index para que no la tape la siguiente. Solución robusta
   // (el :focus-within CSS no alcanza por los stacking context de pgIn).
@@ -1018,6 +1053,22 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
       {lineas.length === 0 && (
         <div style={{ padding: '18px 4px 6px', fontSize: 12, color: 'var(--txt3)', lineHeight: 1.5 }}>
           {emptyHint || `Todavía no cargaste ${meta.title.toLowerCase()}. Tocá "+ Agregar" para sumar una línea.`}
+        </div>
+      )}
+
+      {/* Total del pedido — al final de la seccion Productos */}
+      {!isCostos && showTotal > 0 && lineas.length > 0 && (
+        <div style={{
+          marginTop: 10, padding: '10px 14px',
+          background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+            Total del pedido
+          </span>
+          <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em' }}>
+            {(typeof window !== 'undefined' && window.Intl) ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(showTotal) : `$${Math.round(showTotal).toLocaleString('es-AR')}`}
+          </span>
         </div>
       )}
     </div>
