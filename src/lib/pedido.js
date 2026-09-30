@@ -714,8 +714,8 @@ export function pedidoVacio(overrides = {}) {
     contact: '', company: '', wa: '', clientEmail: '', ocasion: '',
     estado: 'consulta',
     incompleto: true,
-    esKit: false,
-    cantKits: 0,
+    esKit: true,
+    cantKits: 10,
     lineas: [nuevaLinea()],
     margenObjetivo: 50,        // % de margen deseado — autocompleta Precio/u
     precioFinalManual: null,
