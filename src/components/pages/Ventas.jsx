@@ -66,7 +66,12 @@ export default function Ventas() {
   const mk = monthKey(year, month)
 
   const monthBudgets = useMemo(() =>
-    allBudgets.filter(b => budgetMonth(b) === mk).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)),
+    allBudgets.filter(b => budgetMonth(b) === mk).sort((a, b) => {
+      const da = a.date || ''
+      const db = b.date || ''
+      if (da !== db) return db.localeCompare(da)
+      return (b.updatedAt || 0) - (a.updatedAt || 0)
+    }),
     [allBudgets, mk]
   )
 
@@ -108,9 +113,10 @@ export default function Ventas() {
     return { name: e[0][0], total: e[0][1] }
   }, [monthBudgets])
 
-  const deltaCount = prevMonthData.count > 0 ? Math.round(((totals.count - prevMonthData.count) / prevMonthData.count) * 100) : null
+  const capDelta = (v) => v === null ? null : Math.max(-999, Math.min(999, v))
+  const deltaCount = prevMonthData.count >= 3 ? capDelta(Math.round(((totals.count - prevMonthData.count) / prevMonthData.count) * 100)) : null
   const prevAvgTicket = prevMonthData.count > 0 ? Math.round(prevMonthData.facturado / prevMonthData.count) : 0
-  const deltaTicket = prevAvgTicket > 0 ? Math.round(((avgTicket - prevAvgTicket) / prevAvgTicket) * 100) : null
+  const deltaTicket = prevMonthData.count >= 3 && prevAvgTicket > 0 ? capDelta(Math.round(((avgTicket - prevAvgTicket) / prevAvgTicket) * 100)) : null
 
   const sortedBudgets = useMemo(() => {
     if (!sortCol) return monthBudgets
@@ -377,7 +383,7 @@ export default function Ventas() {
         </div>
       </div>
 
-      <PendientesCobro budgets={allBudgets} hidden={hidden} nav={nav} saveBudget={saveBudget} toast={toast} />
+      <PendientesCobro budgets={monthBudgets} hidden={hidden} nav={nav} saveBudget={saveBudget} toast={toast} mesLabel={MESES[month]} />
 
       {/* TABLA */}
       <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 14 }}>
@@ -437,7 +443,6 @@ export default function Ventas() {
         )}
       </div>
 
-      {monthBudgets.length >= 2 && <InsightCard budgets={monthBudgets} month={MESES[month]} hidden={hidden} />}
 
       {/* DRAWER */}
       <SaleDrawer
@@ -748,38 +753,17 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
 }
 
 /* ════════════════════════════════════════════════════════════ */
-function InsightCard({ budgets, month, hidden }) {
-  const clientCounts = {}
-  budgets.forEach(b => { const n = b.company || b.contact || 'Sin nombre'; clientCounts[n] = (clientCounts[n] || 0) + 1 })
-  const topClient = Object.entries(clientCounts).sort((a, b) => b[1] - a[1])[0]
-  const totalFact = budgets.reduce((s, b) => s + (Number(b.total) || 0), 0)
-  const avgTicket = totalFact / budgets.length
-
-  return (
-    <div style={{ marginTop: 16, padding: '16px 20px', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 14 }}>
-      <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(124,58,237,.1)', color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
-        <i className="fa fa-lightbulb" />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>Inteligencia de {month}</div>
-        <div style={{ fontSize: 13, color: 'var(--txt2)', lineHeight: 1.5 }}>
-          {topClient && <><strong>{topClient[0]}</strong> es tu cliente mas activo ({topClient[1]} {topClient[1] === 1 ? 'venta' : 'ventas'}).</>}
-          {' '}Ticket promedio: <strong>{hidden ? '***' : fmt(avgTicket)}</strong>.
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
+function PendientesCobro({ budgets, hidden, nav, saveBudget, toast, mesLabel }) {
   const [justPaidId, setJustPaidId] = useState(null)
+  const ageDays = (b) => {
+    const ref = b.date ? new Date(b.date + 'T00:00:00').getTime() : (b.updatedAt || Date.now())
+    return Math.floor((Date.now() - ref) / 86400000)
+  }
   const pendientes = useMemo(() =>
     budgets.filter(b => b.payStatus !== 'paid' && (Number(b.total) || 0) > 0).sort((a, b) => {
-      const da = Math.floor((Date.now() - (a.updatedAt || Date.now())) / 86400000)
-      const db = Math.floor((Date.now() - (b.updatedAt || Date.now())) / 86400000)
-      if (da > 30 && db <= 30) return -1
-      if (db > 30 && da <= 30) return 1
-      return (a.updatedAt || 0) - (b.updatedAt || 0)
+      const da = ageDays(a)
+      const db = ageDays(b)
+      return db - da
     }),
     [budgets]
   )
@@ -833,13 +817,13 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast }) {
       <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <i className="fa fa-clock" style={{ color: '#b45309', fontSize: 12 }} />
-          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px' }}>Pendientes de cobro</span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.2px' }}>Pendientes de cobro{mesLabel ? ` · ${mesLabel}` : ''}</span>
           <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 99, background: '#fef3c7', color: '#92400e' }}>{pendientes.length}</span>
         </div>
         <span style={{ fontSize: 13, fontWeight: 800, color: '#b45309', fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(totalPend)}</span>
       </div>
       {pendientes.slice(0, 15).map(b => {
-        const days = Math.floor((Date.now() - (b.updatedAt || Date.now())) / 86400000)
+        const days = ageDays(b)
         const owed = b.payStatus === 'partial' ? (Number(b.total) || 0) - (Number(b.depositAmt) || 0) : Number(b.total) || 0
         const isFlash = justPaidId === b.id
         const urgency = days > 30 ? 'critical' : days > 7 ? 'warn' : 'normal'
