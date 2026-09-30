@@ -63,6 +63,7 @@ export default function Ventas() {
   const clients = get('clients') || []
   const products = get('products') || []
   const allBudgets = get('budgets') || []
+  const allCompras = get('compras') || []
   const mk = monthKey(year, month)
 
   const monthBudgets = useMemo(() =>
@@ -112,6 +113,17 @@ export default function Ventas() {
     e.sort((a, b) => b[1] - a[1])
     return { name: e[0][0], total: e[0][1] }
   }, [monthBudgets])
+
+  // Cross-KPI Ventas <-> Compras: ganancia real del mes = facturado - gastado
+  const gastadoDelMes = useMemo(() => {
+    return allCompras.reduce((s, c) => {
+      const d = c.fecha || new Date(c.updatedAt || Date.now()).toISOString().slice(0, 10)
+      if (d.slice(0, 7) !== mk) return s
+      return s + (Number(c.monto) || 0)
+    }, 0)
+  }, [allCompras, mk])
+  const gananciaReal = totals.facturado - gastadoDelMes
+  const hayCompras = gastadoDelMes > 0
 
   const capDelta = (v) => v === null ? null : Math.max(-999, Math.min(999, v))
   const deltaCount = prevMonthData.count >= 3 ? capDelta(Math.round(((totals.count - prevMonthData.count) / prevMonthData.count) * 100)) : null
@@ -391,6 +403,30 @@ export default function Ventas() {
                 )}
               </div>
             </div>
+            {hayCompras && (
+              <>
+                <div className="vt-hero-divider" />
+                <div className="vt-hero-stat" title="Facturado en Ventas menos gastado en Compras del mes">
+                  <div className="vt-hero-stat-icon" style={{
+                    background: gananciaReal >= 0 ? 'rgba(21,128,61,.1)' : 'rgba(220,38,38,.1)',
+                    color: gananciaReal >= 0 ? '#15803d' : '#DC2626',
+                  }}>
+                    <i className="fa fa-scale-balanced" />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="vt-hero-stat-lbl">Ganancia real</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                      <span className="vt-hero-stat-val" style={{ color: gananciaReal >= 0 ? '#15803d' : '#DC2626' }}>
+                        {hidden ? '***' : fmt(gananciaReal)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 9.5, color: 'var(--txt4)', fontWeight: 600, marginTop: 1, letterSpacing: '.02em' }}>
+                      {hidden ? '' : <>− {fmt(gastadoDelMes)} en Compras</>}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
