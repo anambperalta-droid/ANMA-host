@@ -559,29 +559,7 @@ export default function PedidoNuevo() {
           )}
         />
 
-        {/* ── COSTOS OPERATIVOS (colapsable, cerrado por default) ── */}
-        <CollapsibleSection
-          meta={SECCION_META.costos}
-          defaultOpen={pedido.lineas.some(l => TAGS_COSTOS.includes(l.tag) && l.descripcion)}
-          hint=""
-        >
-          <LineasSection
-            meta={SECCION_META.costos}
-            tags={TAGS_COSTOS}
-            defaultTag="manoDeObra"
-            lineas={pedido.lineas.filter(l => TAGS_COSTOS.includes(l.tag))}
-            products={costosPresets}
-            isCostos
-            onAdd={() => addLinea('manoDeObra')}
-            onChange={setCostoLinea}
-            onRemove={removeLineaById}
-            onPickProduct={(name) => toast(`${name} agregada`, 'ok')}
-            onCreatePreset={savePresetCosto}
-            totalLineas={pedido.lineas.length}
-            emptyHint=""
-            hidePaneHead
-          />
-        </CollapsibleSection>
+        {/* Costos operativos movidos a la seccion Proveedores (registro mensual global) */}
 
         {/* ── PRECIO ── */}
         <section className="pedido-pane">
