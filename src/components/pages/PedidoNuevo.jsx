@@ -346,6 +346,38 @@ export default function PedidoNuevo() {
             {pedido.id && <span style={{ fontSize: 11, color: 'var(--txt4)', fontWeight: 600 }}>{pedido.numero || `#${pedido.id}`}</span>}
             <SaveIndicator saving={saving} lastSaved={lastSaved} pedido={pedido} />
           </div>
+          {pedido.id && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
+              {pedido.createdAt && (
+                <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <i className="fa fa-calendar" style={{ fontSize: 10, opacity: .7 }} />
+                  {(() => {
+                    const [y, m, d] = pedido.createdAt.split('-')
+                    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+                    return `${Number(d)} ${meses[Number(m) - 1]} ${y}`
+                  })()}
+                </span>
+              )}
+              {pedido.canal && (
+                <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <i className={pedido.canal === 'whatsapp' ? 'fa-brands fa-whatsapp' : 'fa fa-store'} style={{ fontSize: 10, opacity: .8 }} />
+                  {pedido.canal.charAt(0).toUpperCase() + pedido.canal.slice(1)}
+                </span>
+              )}
+              {(() => {
+                const pay = pedido.payStatus || 'pending'
+                const cfg = pay === 'paid' ? { bg: '#dcfce7', fg: '#15803d', label: 'Cobrado', icon: 'fa-circle-check' }
+                  : pay === 'partial' ? { bg: '#fef3c7', fg: '#b45309', label: 'Señado', icon: 'fa-hand-holding' }
+                  : { bg: '#f1f5f9', fg: '#64748b', label: 'Pendiente', icon: 'fa-clock' }
+                return (
+                  <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: cfg.bg, color: cfg.fg, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <i className={`fa ${cfg.icon}`} style={{ fontSize: 9 }} />
+                    {cfg.label}
+                  </span>
+                )
+              })()}
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <MenuMore
@@ -399,29 +431,52 @@ export default function PedidoNuevo() {
       )}
 
       {/* ── RESUMEN RÁPIDO (visible siempre arriba) ── */}
-      {pedido.id && (
-        <div className="pedido-quick-summary" style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 10,
-        }}>
-          {[
-            { label: 'Facturado', value: fmt(totales.total), icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
-            { label: 'Costo', value: fmt(totales.costoTotal), icon: 'fa-lock', color: '#b45309' },
-            { label: 'Ganancia', value: fmt(totales.ganancia), icon: 'fa-arrow-trend-up', color: totales.ganancia >= 0 ? '#15803d' : '#DC2626' },
-            { label: 'Margen', value: `${totales.total > 0 ? Math.round((totales.ganancia / totales.total) * 100) : 0}%`, icon: 'fa-bullseye', color: '#6366f1' },
-          ].map(c => (
-            <div key={c.label} style={{
-              background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10,
-              padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8,
-            }}>
-              <i className={`fa ${c.icon}`} style={{ color: c.color, fontSize: 11, opacity: .7 }} />
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{c.label}</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.2px' }}>{c.value}</div>
+      {pedido.id && (() => {
+        const facturado = Number(totales.total) || 0
+        const costo = Number(totales.costoTotal) || 0
+        const ganancia = Number(totales.ganancia) || 0
+        const costosDesbordados = facturado > 0 && costo > facturado * 3
+        const margenBruto = facturado > 0 ? Math.round((ganancia / facturado) * 100) : 0
+        const margenAbsurdo = Math.abs(margenBruto) > 999
+        const alertaCostos = costosDesbordados || margenAbsurdo
+        const margenLabel = alertaCostos ? '—' : `${margenBruto}%`
+        const gananciaLabel = alertaCostos ? '—' : fmt(ganancia)
+        const gananciaColor = alertaCostos ? '#b45309' : (ganancia >= 0 ? '#15803d' : '#DC2626')
+
+        return (
+          <div className="pedido-quick-summary" style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 10,
+          }}>
+            {[
+              { label: 'Facturado', value: fmt(facturado), icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
+              { label: 'Costo', value: fmt(costo), icon: 'fa-lock', color: '#b45309' },
+              { label: 'Ganancia', value: gananciaLabel, icon: 'fa-arrow-trend-up', color: gananciaColor },
+              { label: 'Margen', value: margenLabel, icon: 'fa-bullseye', color: alertaCostos ? '#b45309' : '#6366f1' },
+            ].map(c => (
+              <div key={c.label} style={{
+                background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10,
+                padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <i className={`fa ${c.icon}`} style={{ color: c.color, fontSize: 11, opacity: .7 }} />
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{c.label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.2px' }}>{c.value}</div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+            {alertaCostos && (
+              <div style={{
+                gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8,
+                background: 'rgba(180,83,9,.06)', border: '1px solid rgba(180,83,9,.2)', borderRadius: 10,
+                padding: '8px 12px', fontSize: 11.5, color: '#b45309', fontWeight: 600,
+              }}>
+                <i className="fa fa-triangle-exclamation" style={{ fontSize: 11 }} />
+                <span>Los costos superan por mucho lo facturado. Revisá si están cargados por unidad o por lote{pedido.esKit ? ' (recordá que el modo kit multiplica cada línea por la cantidad de kits)' : ''}.</span>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       <div className="pedido-form" style={{ display: 'grid', gap: 10, gridTemplateColumns: 'minmax(0,1fr)' }}>
 
@@ -859,7 +914,7 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
       {lineas.length > 0 && (
         <div style={{ ...(isCostos ? gridCostos : gridProd), marginBottom: 6, fontSize: 10, fontWeight: 600, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.03em' }}
              className="pedido-linea-header">
-          <span>Descripción</span>
+          <span>{isCostos ? 'Descripción' : 'Producto'}</span>
           {isCostos ? (
             <>
               <span style={{ textAlign: 'center' }}>Tipo</span>
@@ -903,7 +958,7 @@ function LineaRow({ linea, products, tags, isCostos, onChange, onRemove, canRemo
   return (
     <div className={`pedido-linea-row ${isCostos ? 'is-costos' : ''}`} style={{ ...(isCostos ? gridCostos : gridProd), alignItems: 'center' }}>
       <div className="l-desc" style={{ minWidth: 0 }}>
-        <span className="l-mob-label">Descripción</span>
+        <span className="l-mob-label">{isCostos ? 'Descripción' : 'Producto'}</span>
         <DescripcionInput value={linea.descripcion} products={products}
           onChange={patch => onChange(patch)} onPick={onPickProduct}
           isCostos={isCostos} tag={linea.tag || 'producto'}
