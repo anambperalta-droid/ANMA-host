@@ -58,6 +58,7 @@ export default function Ventas() {
   const [savedCount, setSavedCount] = useState(0)
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('desc')
+  const [viewMode, setViewMode] = useState('cliente') // 'cliente' | 'producto'
   const inputRef = useRef(null)
 
   const clients = get('clients') || []
@@ -113,6 +114,46 @@ export default function Ventas() {
     e.sort((a, b) => b[1] - a[1])
     return { name: e[0][0], total: e[0][1] }
   }, [monthBudgets])
+
+  // Pivot analitico: agrupar ventas del mes por producto
+  const productoRollup = useMemo(() => {
+    const map = new Map()
+    monthBudgets.forEach(b => {
+      // Preferimos items[0] (que es donde vive el producto principal en quickEntry
+      // y en la tabla actual). Si no hay items, usamos '(sin producto)'.
+      const name = (b.items?.[0]?.name || '').trim() || '(sin producto)'
+      const qty = Number(b.items?.[0]?.qty) || 1
+      const total = Number(b.total) || 0
+      const cobrado = b.payStatus === 'paid' ? total : (b.payStatus === 'partial' ? (Number(b.depositAmt) || 0) : 0)
+      const cur = map.get(name) || { name, unidades: 0, facturado: 0, cobrado: 0, ventas: 0 }
+      cur.unidades += qty
+      cur.facturado += total
+      cur.cobrado += cobrado
+      cur.ventas += 1
+      map.set(name, cur)
+    })
+    const arr = Array.from(map.values())
+    arr.sort((a, b) => b.facturado - a.facturado) // default: mas facturado arriba
+    return arr
+  }, [monthBudgets])
+
+  const [sortColProd, setSortColProd] = useState('facturado')
+  const [sortDirProd, setSortDirProd] = useState('desc')
+  const toggleSortProd = (col) => {
+    if (sortColProd === col) setSortDirProd(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortColProd(col); setSortDirProd('desc') }
+  }
+  const sortedProducto = useMemo(() => {
+    const dir = sortDirProd === 'asc' ? 1 : -1
+    const arr = [...productoRollup]
+    arr.sort((a, b) => {
+      if (sortColProd === 'producto') return dir * a.name.localeCompare(b.name)
+      if (sortColProd === 'unidades') return dir * (a.unidades - b.unidades)
+      if (sortColProd === 'ventas') return dir * (a.ventas - b.ventas)
+      return dir * (a.facturado - b.facturado)
+    })
+    return arr
+  }, [productoRollup, sortColProd, sortDirProd])
 
   // Cross-KPI Ventas <-> Compras: ganancia real del mes = facturado - gastado
   const gastadoDelMes = useMemo(() => {
@@ -433,63 +474,159 @@ export default function Ventas() {
 
       <PendientesCobro budgets={monthBudgets} hidden={hidden} nav={nav} saveBudget={saveBudget} toast={toast} mesLabel={MESES[month]} />
 
-      {/* TABLA */}
-      <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 14 }}>
-        <div className="vt-row vt-hdr">
-          {[
-            { key: 'cliente', label: 'Cliente', cls: '' },
-            { key: 'producto', label: 'Producto', cls: '' },
-            { key: 'cant', label: 'Cant', cls: 'vt-cell-r' },
-            { key: 'facturado', label: 'Facturado', cls: 'vt-cell-r' },
-          ].map(h => (
-            <span key={h.key} className={h.cls} onClick={() => toggleSort(h.key)} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-              {h.label}
-              {sortCol === h.key && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
-            </span>
-          ))}
-          <span className="vt-cell-r vt-hide-m">IVA</span>
-          <span onClick={() => toggleSort('cobro')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-            Cobro
-            {sortCol === 'cobro' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
-          </span>
-        </div>
-
-        {monthBudgets.length === 0 && (
-          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(124,58,237,.08)', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 10 }}><i className="fa fa-receipt" /></div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 4 }}>Sin ventas en {MESES[month].toLowerCase()}</div>
-            <div style={{ fontSize: 12, color: 'var(--txt3)' }}>Hacé click en <strong>Nueva venta</strong> para agregar la primera</div>
-          </div>
-        )}
-
-        {sortedBudgets.map(b => {
-          const pi = payInfo(b)
-          const isPending = b.payStatus === 'pending'
-          const isPartial = b.payStatus === 'partial'
+      {/* TABS Por cliente / Por producto */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 14, marginBottom: 0, padding: '0 2px' }}>
+        {[
+          { key: 'cliente', label: 'Por cliente', icon: 'fa-users' },
+          { key: 'producto', label: 'Por producto', icon: 'fa-box' },
+        ].map(t => {
+          const active = viewMode === t.key
           return (
-            <div key={b.id} className="vt-row" style={{ cursor: 'pointer', borderLeft: isPending ? '3px solid #DC2626' : isPartial ? '3px solid #b45309' : '3px solid transparent' }} onClick={() => nav(`/pedido/${b.id}`)}>
-              <span className="vt-cell" style={{ fontWeight: 600, color: 'var(--txt)' }}>{b.company || b.contact || '—'}</span>
-              <span className="vt-cell" style={{ color: 'var(--txt2)' }}>{b.items?.[0]?.name || '—'}</span>
-              <span className="vt-cell vt-cell-r" style={{ color: 'var(--txt3)' }}>{b.items?.[0]?.qty || 1}</span>
-              <span className="vt-cell vt-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(b.total || 0)}</span>
-              <span className="vt-cell vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : (b._quickIva ? fmt(b._quickIva) : '—')}</span>
-              <span style={{ textAlign: 'center' }} onClick={e => { e.stopPropagation(); const nx = b.payStatus === 'pending' ? 'partial' : b.payStatus === 'partial' ? 'paid' : 'pending'; updatePayStatus(b.id, nx) }}>
-                <span className="vt-pay-chip" style={{ background: pi.bg, color: pi.color }}>{pi.label}</span>
-              </span>
-            </div>
+            <button key={t.key} onClick={() => setViewMode(t.key)}
+              style={{
+                padding: '7px 14px', border: 'none', background: 'transparent', cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: 12, fontWeight: 700,
+                color: active ? 'var(--brand)' : 'var(--txt3)',
+                borderBottom: active ? '2px solid var(--brand)' : '2px solid transparent',
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                transition: 'color .15s, border-color .15s',
+              }}>
+              <i className={`fa ${t.icon}`} style={{ fontSize: 11 }} />
+              {t.label}
+            </button>
           )
         })}
-
-        {monthBudgets.length > 0 && (
-          <div className="vt-row" style={{ background: 'var(--surface2)', fontWeight: 800, borderBottom: 'none', borderRadius: '0 0 12px 12px' }}>
-            <span style={{ color: 'var(--txt3)', fontSize: 11, textTransform: 'uppercase' }}>Total</span>
-            <span /><span />
-            <span className="vt-cell-r" style={{ color: 'var(--txt)', fontSize: 15 }}>{hidden ? '***' : fmt(totals.facturado)}</span>
-            <span className="vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : fmt(totals.iva)}</span>
-            <span />
-          </div>
-        )}
       </div>
+
+      {/* TABLA — Por cliente (default) */}
+      {viewMode === 'cliente' && (
+        <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 6 }}>
+          <div className="vt-row vt-hdr">
+            {[
+              { key: 'cliente', label: 'Cliente', cls: '' },
+              { key: 'producto', label: 'Producto', cls: '' },
+              { key: 'cant', label: 'Cant', cls: 'vt-cell-r' },
+              { key: 'facturado', label: 'Facturado', cls: 'vt-cell-r' },
+            ].map(h => (
+              <span key={h.key} className={h.cls} onClick={() => toggleSort(h.key)} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                {h.label}
+                {sortCol === h.key && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+              </span>
+            ))}
+            <span className="vt-cell-r vt-hide-m">IVA</span>
+            <span onClick={() => toggleSort('cobro')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+              Cobro
+              {sortCol === 'cobro' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
+          </div>
+
+          {monthBudgets.length === 0 && (
+            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(124,58,237,.08)', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 10 }}><i className="fa fa-receipt" /></div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 4 }}>Sin ventas en {MESES[month].toLowerCase()}</div>
+              <div style={{ fontSize: 12, color: 'var(--txt3)' }}>Hacé click en <strong>Nueva venta</strong> para agregar la primera</div>
+            </div>
+          )}
+
+          {sortedBudgets.map(b => {
+            const pi = payInfo(b)
+            const isPending = b.payStatus === 'pending'
+            const isPartial = b.payStatus === 'partial'
+            return (
+              <div key={b.id} className="vt-row" style={{ cursor: 'pointer', borderLeft: isPending ? '3px solid #DC2626' : isPartial ? '3px solid #b45309' : '3px solid transparent' }} onClick={() => nav(`/pedido/${b.id}`)}>
+                <span className="vt-cell" style={{ fontWeight: 600, color: 'var(--txt)' }}>{b.company || b.contact || '—'}</span>
+                <span className="vt-cell" style={{ color: 'var(--txt2)' }}>{b.items?.[0]?.name || '—'}</span>
+                <span className="vt-cell vt-cell-r" style={{ color: 'var(--txt3)' }}>{b.items?.[0]?.qty || 1}</span>
+                <span className="vt-cell vt-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(b.total || 0)}</span>
+                <span className="vt-cell vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : (b._quickIva ? fmt(b._quickIva) : '—')}</span>
+                <span style={{ textAlign: 'center' }} onClick={e => { e.stopPropagation(); const nx = b.payStatus === 'pending' ? 'partial' : b.payStatus === 'partial' ? 'paid' : 'pending'; updatePayStatus(b.id, nx) }}>
+                  <span className="vt-pay-chip" style={{ background: pi.bg, color: pi.color }}>{pi.label}</span>
+                </span>
+              </div>
+            )
+          })}
+
+          {monthBudgets.length > 0 && (
+            <div className="vt-row" style={{ background: 'var(--surface2)', fontWeight: 800, borderBottom: 'none', borderRadius: '0 0 12px 12px' }}>
+              <span style={{ color: 'var(--txt3)', fontSize: 11, textTransform: 'uppercase' }}>Total</span>
+              <span /><span />
+              <span className="vt-cell-r" style={{ color: 'var(--txt)', fontSize: 15 }}>{hidden ? '***' : fmt(totals.facturado)}</span>
+              <span className="vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : fmt(totals.iva)}</span>
+              <span />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TABLA — Por producto (pivot analitico) */}
+      {viewMode === 'producto' && (
+        <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 6 }}>
+          <style>{`
+            .vpr-row{display:grid;grid-template-columns:1.8fr .5fr .5fr .9fr .5fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
+            .vpr-row:hover{background:var(--surface2)}
+            .vpr-hdr{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;padding:8px 14px;background:var(--surface2)}
+            .vpr-hdr:hover{background:var(--surface2)}
+            .vpr-cell-r{text-align:right;font-variant-numeric:tabular-nums}
+            .vpr-bar{position:relative;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:2px}
+            .vpr-bar-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#7C3AED,#a78bfa);border-radius:3px;transition:width .3s}
+            @media(max-width:600px){
+              .vpr-row,.vpr-hdr{grid-template-columns:1.5fr .5fr .8fr .3fr;font-size:12px}
+              .vpr-hide-m{display:none}
+            }
+          `}</style>
+          <div className="vpr-row vpr-hdr">
+            <span onClick={() => toggleSortProd('producto')} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              Producto {sortColProd === 'producto' && <i className={`fa fa-caret-${sortDirProd === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
+            <span className="vpr-cell-r vpr-hide-m" onClick={() => toggleSortProd('ventas')} style={{ cursor: 'pointer' }}>
+              Ventas {sortColProd === 'ventas' && <i className={`fa fa-caret-${sortDirProd === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
+            <span className="vpr-cell-r" onClick={() => toggleSortProd('unidades')} style={{ cursor: 'pointer' }}>
+              Unid {sortColProd === 'unidades' && <i className={`fa fa-caret-${sortDirProd === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
+            <span className="vpr-cell-r" onClick={() => toggleSortProd('facturado')} style={{ cursor: 'pointer' }}>
+              Facturado {sortColProd === 'facturado' && <i className={`fa fa-caret-${sortDirProd === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
+            <span className="vpr-cell-r">% mes</span>
+          </div>
+
+          {productoRollup.length === 0 && (
+            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(124,58,237,.08)', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 10 }}><i className="fa fa-box" /></div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 4 }}>Sin ventas para agrupar</div>
+              <div style={{ fontSize: 12, color: 'var(--txt3)' }}>Cargá ventas del mes para ver el desglose por producto</div>
+            </div>
+          )}
+
+          {sortedProducto.map(p => {
+            const pct = totals.facturado > 0 ? Math.round((p.facturado / totals.facturado) * 100) : 0
+            return (
+              <div key={p.name} className="vpr-row">
+                <span style={{ fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                <span className="vpr-cell-r vpr-hide-m" style={{ color: 'var(--txt3)' }}>{p.ventas}</span>
+                <span className="vpr-cell-r" style={{ color: 'var(--txt3)' }}>{p.unidades}</span>
+                <span className="vpr-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(p.facturado)}</span>
+                <span className="vpr-cell-r" style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)' }}>{pct}%</div>
+                  <div className="vpr-bar"><div className="vpr-bar-fill" style={{ width: `${Math.min(100, pct)}%` }} /></div>
+                </span>
+              </div>
+            )
+          })}
+
+          {sortedProducto.length > 0 && (
+            <div className="vpr-row" style={{ background: 'var(--surface2)', fontWeight: 800, borderBottom: 'none', borderRadius: '0 0 12px 12px' }}>
+              <span style={{ color: 'var(--txt3)', fontSize: 11, textTransform: 'uppercase' }}>Total</span>
+              <span className="vpr-cell-r vpr-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{totals.count}</span>
+              <span className="vpr-cell-r" style={{ color: 'var(--txt3)', fontSize: 12 }}>
+                {sortedProducto.reduce((s, p) => s + p.unidades, 0)}
+              </span>
+              <span className="vpr-cell-r" style={{ color: 'var(--txt)', fontSize: 15 }}>{hidden ? '***' : fmt(totals.facturado)}</span>
+              <span className="vpr-cell-r" style={{ color: 'var(--brand)', fontSize: 11 }}>100%</span>
+            </div>
+          )}
+        </div>
+      )}
 
 
       {/* DRAWER */}
