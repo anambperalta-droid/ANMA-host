@@ -719,7 +719,7 @@ export function pedidoVacio(overrides = {}) {
     lineas: [nuevaLinea()],
     margenObjetivo: 50,        // % de margen deseado — autocompleta Precio/u
     precioFinalManual: null,
-    aplicaIva: false,
+    aplicaIva: true,
     fechaEntrega: '',
     horarioEntrega: '',
     direccionEntrega: '',
