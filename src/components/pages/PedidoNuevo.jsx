@@ -8,7 +8,7 @@
    Menú "⋯" (Estado / Alternativas / Kit mode / Duplicar / Eliminar)
    queda para Parte 2.
 ═══════════════════════════════════════════════════════════════════ */
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
@@ -421,6 +421,8 @@ export default function PedidoNuevo() {
           cantidad={pedido.cantKits}
           onChange={v => update({ cantKits: Math.max(1, Number(v) || 1) })}
           onOff={() => update({ esKit: false, cantKits: 0 })}
+          costoTotal={totales.costoTotal}
+          facturado={totales.total}
         />
       )}
 
@@ -535,6 +537,8 @@ export default function PedidoNuevo() {
           onRemove={removeLineaById}
           onPickProduct={(name) => toast(`${name} cargado del catálogo`, 'ok')}
           totalLineas={pedido.lineas.length}
+          esKit={pedido.esKit}
+          cantKits={pedido.cantKits}
           extras={(pedido.alternativas?.length > 0) && (
             <AlternativasBar
               alternativas={pedido.alternativas}
@@ -889,13 +893,70 @@ function CollapsibleSection({ meta, defaultOpen, hint, children }) {
   )
 }
 
-function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint, hidePaneHead }) {
+function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove, onPickProduct, onCreatePreset, isCostos, totalLineas, extras, emptyHint, hidePaneHead, esKit, cantKits }) {
   // Estado elevado: cuando cualquier fila abre su dropdown de catálogo, la
   // sección sube z-index para que no la tape la siguiente. Solución robusta
   // (el :focus-within CSS no alcanza por los stacking context de pgIn).
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState({})
+
+  // Agrupamos líneas por prefijo "<Padre> · <Componente>" cuando estamos en
+  // modo kit. La línea que se llama "<Padre>" a secas se toma como padre; las
+  // que llevan " · <algo>" son componentes de ese padre. Un grupo se muestra
+  // como jerarquía solo si tiene 2+ componentes (así no molesta a pedidos
+  // simples).
+  const grupos = useMemo(() => {
+    if (isCostos || !esKit) return null
+    const map = new Map()
+    const orden = []
+    lineas.forEach(l => {
+      const d = l.descripcion || ''
+      const sepIdx = d.indexOf(' · ')
+      if (sepIdx > 0) {
+        const prefix = d.slice(0, sepIdx)
+        if (!map.has(prefix)) { map.set(prefix, { prefix, parent: null, children: [] }); orden.push(prefix) }
+        map.get(prefix).children.push(l)
+      } else {
+        const prefix = d || `__solo_${l.id}`
+        if (!map.has(prefix)) { map.set(prefix, { prefix, parent: null, children: [] }); orden.push(prefix) }
+        const g = map.get(prefix)
+        if (!g.parent) g.parent = l
+        else g.children.push(l)
+      }
+    })
+    const arr = orden.map(p => map.get(p))
+    const tieneJerarquia = arr.some(g => g.parent && g.children.length >= 1)
+    return tieneJerarquia ? arr : null
+  }, [lineas, isCostos, esKit])
+
+  const toggleGroup = (prefix) => setCollapsedGroups(s => ({ ...s, [prefix]: !s[prefix] }))
+
+  const renderLinea = (linea) => (
+    <LineaRow key={linea.id}
+      linea={linea}
+      products={products}
+      tags={tags}
+      isCostos={isCostos}
+      onChange={patch => onChange(linea.id, patch)}
+      onRemove={() => onRemove(linea.id)}
+      canRemove={totalLineas > 1 || !!linea.descripcion}
+      onPickProduct={onPickProduct}
+      onCreatePreset={onCreatePreset}
+      onDropdownOpen={setDropdownOpen} />
+  )
+
   return (
     <div className={hidePaneHead ? '' : 'pedido-pane'} style={{ position: 'relative', zIndex: dropdownOpen ? 200 : undefined }}>
+      <style>{`
+        .pln-grp{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;background:var(--surface)}
+        .pln-grp-parent{background:var(--brand-xlt);border-left:3px solid var(--brand);padding:0 4px}
+        .pln-grp-parent .pedido-linea-row{background:transparent}
+        .pln-grp-toggle{background:none;border:none;color:var(--brand);cursor:pointer;padding:0 6px;font-size:11px;font-weight:800;font-family:inherit;display:inline-flex;align-items:center;gap:4px;height:100%}
+        .pln-grp-toggle:hover{opacity:.75}
+        .pln-grp-children{padding-left:18px;border-left:2px solid var(--brand-xlt);margin-left:12px}
+        .pln-grp-children .pedido-linea-row{opacity:.92}
+        .pln-grp-count{font-size:10px;font-weight:700;color:var(--txt4);padding:0 8px 6px 18px}
+      `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         {!hidePaneHead && <PaneHead meta={meta} />}
         <button onClick={onAdd} className="btn btn-primary btn-sm" style={{ flexShrink: 0, marginLeft: hidePaneHead ? 'auto' : undefined }}>
@@ -925,19 +986,46 @@ function LineasSection({ meta, tags, lineas, products, onAdd, onChange, onRemove
         </div>
       )}
 
-      {lineas.map(linea => (
-        <LineaRow key={linea.id}
-          linea={linea}
-          products={products}
-          tags={tags}
-          isCostos={isCostos}
-          onChange={patch => onChange(linea.id, patch)}
-          onRemove={() => onRemove(linea.id)}
-          canRemove={totalLineas > 1 || !!linea.descripcion}
-          onPickProduct={onPickProduct}
-          onCreatePreset={onCreatePreset}
-          onDropdownOpen={setDropdownOpen} />
-      ))}
+      {grupos ? (
+        grupos.map(g => {
+          const soloUno = !g.parent && g.children.length === 0
+          const sinPadre = !g.parent && g.children.length > 0
+          const jerarquico = g.parent && g.children.length > 0
+          const collapsed = collapsedGroups[g.prefix]
+          if (soloUno) return null
+          if (!jerarquico) {
+            // grupo suelto (sin padre) o padre sin hijos → render normal
+            return (
+              <React.Fragment key={g.prefix}>
+                {g.parent && renderLinea(g.parent)}
+                {sinPadre && g.children.map(renderLinea)}
+              </React.Fragment>
+            )
+          }
+          return (
+            <div key={g.prefix} className="pln-grp">
+              <div className="pln-grp-parent" style={{ display: 'flex', alignItems: 'stretch' }}>
+                <button className="pln-grp-toggle" onClick={() => toggleGroup(g.prefix)} title={collapsed ? 'Expandir componentes' : 'Colapsar componentes'}>
+                  <i className={`fa fa-chevron-${collapsed ? 'right' : 'down'}`} style={{ fontSize: 9 }} />
+                </button>
+                <div style={{ flex: 1, minWidth: 0 }}>{renderLinea(g.parent)}</div>
+              </div>
+              {!collapsed && (
+                <div className="pln-grp-children">
+                  {g.children.map(renderLinea)}
+                </div>
+              )}
+              {collapsed && (
+                <div className="pln-grp-count">
+                  {g.children.length} {g.children.length === 1 ? 'componente' : 'componentes'} ocultos
+                </div>
+              )}
+            </div>
+          )
+        })
+      ) : (
+        lineas.map(renderLinea)
+      )}
 
       {lineas.length === 0 && (
         <div style={{ padding: '18px 4px 6px', fontSize: 12, color: 'var(--txt3)', lineHeight: 1.5 }}>
@@ -1309,31 +1397,46 @@ function EstadoCompraChip({ value, onChange, className, mini }) {
   )
 }
 
-function KitChip({ cantidad, onChange, onOff }) {
+function KitChip({ cantidad, onChange, onOff, costoTotal = 0, facturado = 0 }) {
+  const n = Math.max(1, Number(cantidad) || 1)
+  const costoPorKit = costoTotal > 0 ? costoTotal / n : 0
+  const precioPorKit = facturado > 0 ? facturado / n : 0
   return (
     <div style={{
-      display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-      padding: '10px 14px', marginBottom: 14,
+      display: 'inline-flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+      padding: '8px 14px', marginBottom: 12,
       background: 'var(--brand-xlt)',
       border: '1.5px solid var(--brand)',
       borderRadius: 12,
-      fontSize: 13, fontWeight: 600, color: 'var(--brand)',
-    }}>
-      <i className="fa fa-gift" />
-      <span>Modo kit — cada línea es <b>1 componente por unidad</b>, se multiplica ×</span>
+      fontSize: 12.5, fontWeight: 600, color: 'var(--brand)',
+    }}
+    title="Modo kit: cada componente que cargues se multiplica por la cantidad de kits">
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <i className="fa fa-gift" />
+        <b>Kit ×</b>
+      </span>
       <input type="number" min={1} value={cantidad}
         onChange={e => onChange(e.target.value)}
         style={{
-          width: 70, textAlign: 'center', fontWeight: 800, fontSize: 14,
-          padding: '5px 8px', border: '1.5px solid var(--brand)', borderRadius: 8,
+          width: 62, textAlign: 'center', fontWeight: 800, fontSize: 14,
+          padding: '4px 6px', border: '1.5px solid var(--brand)', borderRadius: 8,
           background: 'var(--surface)', color: 'var(--brand)', fontFamily: 'inherit', outline: 'none',
         }} />
-      <span>unidades</span>
+      {(costoPorKit > 0 || precioPorKit > 0) && (
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          paddingLeft: 10, marginLeft: 2, borderLeft: '1px solid rgba(124,58,237,.25)',
+          fontSize: 11.5, fontWeight: 700, color: 'var(--brand)', opacity: .9,
+        }}>
+          {precioPorKit > 0 && <span>Precio: {fmt(Math.round(precioPorKit))}/kit</span>}
+          {costoPorKit > 0 && <span style={{ opacity: .75 }}>· Costo: {fmt(Math.round(costoPorKit))}/kit</span>}
+        </span>
+      )}
       <button onClick={onOff}
         title="Salir de modo kit"
         style={{
-          marginLeft: 4, background: 'transparent', border: 'none', color: 'var(--brand)',
-          cursor: 'pointer', padding: 4, fontSize: 13,
+          marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--brand)',
+          cursor: 'pointer', padding: 4, fontSize: 13, opacity: .7,
         }}>
         <i className="fa fa-xmark" />
       </button>
