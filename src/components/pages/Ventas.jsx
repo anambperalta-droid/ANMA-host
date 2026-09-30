@@ -220,15 +220,27 @@ export default function Ventas() {
 
     setSavedCount(c => c + 1)
 
+    const dm = (draft.fecha || '').slice(0, 7)
+    const offMonth = dm && dm !== mk
+    const draftY = offMonth ? Number(dm.slice(0, 4)) : null
+    const draftM = offMonth ? Number(dm.slice(5, 7)) - 1 : null
+    const offLabel = offMonth ? `${MESES[draftM]} ${draftY}` : ''
+
     if (keepOpen) {
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 1200)
+      if (offMonth) toast(`Cargada en ${offLabel}`, 'ok')
       setDraft({ ...EMPTY, fecha: draft.fecha, canal: draft.canal })
       setShowNota(false)
       setMatchedPrice(0)
       setTimeout(() => inputRef.current?.focus(), 50)
     } else {
-      toast('Venta registrada', 'ok')
+      if (offMonth) {
+        setYear(draftY); setMonth(draftM)
+        toast(`Cargada en ${offLabel}`, 'ok')
+      } else {
+        toast('Venta registrada', 'ok')
+      }
       closeDrawer()
     }
   }
@@ -458,6 +470,8 @@ export default function Ventas() {
         savedCount={savedCount}
         matchedPrice={matchedPrice}
         justSaved={justSaved}
+        visibleMk={mk}
+        meses={MESES}
       />
     </div>
   )
@@ -466,12 +480,16 @@ export default function Ventas() {
 /* ════════════════════════════════════════════════════════════
    DRAWER — Panel lateral de carga rapida (v3)
    ════════════════════════════════════════════════════════════ */
-function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestions, showClientSug, setShowClientSug, productSuggestions, showProdSug, setShowProdSug, selectProduct, showNota, setShowNota, saveEntry, savedCount, matchedPrice, justSaved }) {
+function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestions, showClientSug, setShowClientSug, productSuggestions, showProdSug, setShowProdSug, selectProduct, showNota, setShowNota, saveEntry, savedCount, matchedPrice, justSaved, visibleMk, meses }) {
   if (!open) return null
 
   const qty = Number(draft.cantidad) || 1
   const rawTotal = parseFmtValue(draft.facturado)
   const showBreakdown = matchedPrice > 0 && qty > 0 && rawTotal > 0
+
+  const draftMk = (draft.fecha || '').slice(0, 7)
+  const offMonth = draftMk && visibleMk && draftMk !== visibleMk
+  const offLabel = offMonth ? `${meses[Number(draftMk.slice(5, 7)) - 1]} ${draftMk.slice(0, 4)}` : ''
 
   const ivaCalc = () => {
     if (!draft.incluyeIva || !rawTotal) return 0
@@ -683,7 +701,14 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
                 <label className="sd-lbl">Fecha</label>
                 <input className="sd-inp" type="date" value={draft.fecha}
                   onChange={e => setDraft(d => ({ ...d, fecha: e.target.value }))}
+                  style={offMonth ? { borderColor: '#7C3AED' } : {}}
                 />
+                {offMonth && (
+                  <div style={{ marginTop: 5, fontSize: 10.5, fontWeight: 600, color: '#7C3AED', display: 'flex', alignItems: 'center', gap: 5, lineHeight: 1.3 }}>
+                    <i className="fa fa-arrow-turn-up" style={{ transform: 'rotate(90deg)', fontSize: 9 }} />
+                    Se guarda en {offLabel}
+                  </div>
+                )}
               </div>
               <div className="sd-fg" style={{ marginBottom: 0 }}>
                 <label className="sd-lbl">IVA</label>
