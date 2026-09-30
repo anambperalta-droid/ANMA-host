@@ -358,12 +358,6 @@ export default function PedidoNuevo() {
                   })()}
                 </span>
               )}
-              {pedido.canal && (
-                <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <i className={pedido.canal === 'whatsapp' ? 'fa-brands fa-whatsapp' : 'fa fa-store'} style={{ fontSize: 10, opacity: .8 }} />
-                  {pedido.canal.charAt(0).toUpperCase() + pedido.canal.slice(1)}
-                </span>
-              )}
               {(() => {
                 const pay = pedido.payStatus || 'pending'
                 const cfg = pay === 'paid' ? { bg: '#dcfce7', fg: '#15803d', label: 'Cobrado', icon: 'fa-circle-check' }
