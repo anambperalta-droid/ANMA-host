@@ -26,7 +26,7 @@ function parseFmtValue(v) {
   return Number(String(v).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-const EMPTY = { proveedor: '', concepto: '', monto: '', fecha: todayISO(), recurrente: false, nota: '' }
+const EMPTY = { proveedor: '', concepto: '', cantidad: '', monto: '', fecha: todayISO(), recurrente: false, nota: '' }
 
 export default function Compras() {
   const { get, saveEntity, deleteEntity } = useData()
@@ -116,6 +116,7 @@ export default function Compras() {
   const editCompra = (c) => {
     setDraft({
       proveedor: c.proveedor || '', concepto: c.concepto || '',
+      cantidad: c.cantidad ? String(c.cantidad) : '',
       monto: c.monto ? fmtLive(String(c.monto)) : '',
       fecha: c.fecha || todayISO(),
       recurrente: !!c.recurrente, nota: c.nota || '',
@@ -131,9 +132,10 @@ export default function Compras() {
     if (!proveedor) { toast('Completa el proveedor', 'er'); return }
     if (monto <= 0) { toast('Completa el monto', 'er'); return }
 
+    const cantidad = Number(draft.cantidad) || 0
     const payload = {
       id: editingId || undefined,
-      proveedor, concepto, monto,
+      proveedor, concepto, cantidad, monto,
       fecha: draft.fecha || todayISO(),
       recurrente: !!draft.recurrente,
       nota: draft.nota.trim(),
@@ -151,6 +153,8 @@ export default function Compras() {
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 1200)
       if (offMonth) toast(`Cargado en ${offLabel}`, 'ok')
+      // Mantenemos proveedor y fecha para carga en lote (ej: varias facturas del mismo día)
+      // pero limpiamos concepto/cantidad/monto (son distintos por gasto)
       setDraft({ ...EMPTY, fecha: draft.fecha, proveedor: draft.proveedor })
       setShowNota(false)
       setTimeout(() => inputRef.current?.focus(), 50)
@@ -398,7 +402,10 @@ export default function Compras() {
                 {c.proveedor || '---'}
                 {c.recurrente && <span className="cp-recur"><i className="fa fa-rotate" style={{ fontSize: 8 }} />recurrente</span>}
               </span>
-              <span className="cp-cell cp-hide-m" style={{ color: 'var(--txt2)' }}>{c.concepto || '---'}</span>
+              <span className="cp-cell cp-hide-m" style={{ color: 'var(--txt2)' }}>
+                {c.concepto || '---'}
+                {c.cantidad > 0 && <span style={{ marginLeft: 6, color: 'var(--txt4)', fontSize: 11, fontWeight: 600 }}>· {c.cantidad}u</span>}
+              </span>
               <span className="cp-cell cp-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(c.monto || 0)}</span>
               <span style={{ textAlign: 'center' }}>
                 <button className="cp-icon-btn" title="Eliminar" onClick={e => { e.stopPropagation(); removeCompra(c.id) }}>
@@ -414,7 +421,7 @@ export default function Compras() {
           {sortedCompras.map(c => {
             const [y, m, d] = (c.fecha || '').split('-')
             const fechaCorta = c.fecha ? `${Number(d)}/${Number(m)}` : ''
-            const sub = [fechaCorta, c.concepto].filter(Boolean).join(' · ')
+            const sub = [fechaCorta, c.concepto, c.cantidad > 0 ? `${c.cantidad}u` : ''].filter(Boolean).join(' · ')
             return (
               <div key={c.id} className="cp-card-item" style={{ borderLeftColor: c.recurrente ? 'var(--brand)' : 'transparent' }} onClick={() => editCompra(c)}>
                 <div className="cp-card-info">
@@ -590,7 +597,7 @@ function CompraDrawer({ open, onClose, draft, setDraft, inputRef, proveedorSugge
 
           <div className="cd-sep" />
 
-          {/* Concepto + monto */}
+          {/* Concepto + cantidad + monto */}
           <div className="cd-group">
             <div className="cd-fg">
               <label className="cd-lbl">Concepto</label>
@@ -599,14 +606,43 @@ function CompraDrawer({ open, onClose, draft, setDraft, inputRef, proveedorSugge
                 onChange={e => setDraft(d => ({ ...d, concepto: e.target.value }))}
               />
             </div>
-            <div className="cd-fg" style={{ marginBottom: 0 }}>
-              <label className="cd-lbl">Monto</label>
-              <input className="cd-inp" placeholder="$0"
-                value={draft.monto ? `$${draft.monto}` : ''}
-                onChange={handleMontoChange}
-                style={{ textAlign: 'right', fontWeight: 700, fontSize: 16 }}
-              />
+            <div className="cd-row" style={{ marginBottom: 0 }}>
+              <div className="cd-fg" style={{ flex: '.55', marginBottom: 0 }}>
+                <label className="cd-lbl">Cantidad</label>
+                <input className="cd-inp" type="number" min="0" placeholder="0"
+                  value={draft.cantidad}
+                  onChange={e => setDraft(d => ({ ...d, cantidad: e.target.value }))}
+                  style={{ textAlign: 'center', fontWeight: 700 }}
+                />
+              </div>
+              <div className="cd-fg" style={{ flex: 1, marginBottom: 0 }}>
+                <label className="cd-lbl">Monto total</label>
+                <input className="cd-inp" placeholder="$0"
+                  value={draft.monto ? `$${draft.monto}` : ''}
+                  onChange={handleMontoChange}
+                  style={{ textAlign: 'right', fontWeight: 700, fontSize: 16 }}
+                />
+              </div>
             </div>
+            {(() => {
+              const qty = Number(draft.cantidad) || 0
+              const total = parseFmtValue(draft.monto)
+              if (qty > 0 && total > 0) {
+                const pu = Math.round(total / qty)
+                return (
+                  <div style={{
+                    marginTop: 6, padding: '5px 10px', borderRadius: 7,
+                    background: 'rgba(124,58,237,.06)', border: '1px solid rgba(124,58,237,.12)',
+                    fontSize: 11, color: 'var(--txt2)', fontWeight: 600,
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                  }}>
+                    <i className="fa fa-calculator" style={{ color: 'var(--brand)', fontSize: 10 }} />
+                    <span>{qty} × <b style={{ color: 'var(--brand)' }}>{fmt(pu)}/u</b></span>
+                  </div>
+                )
+              }
+              return null
+            })()}
           </div>
 
           <div className="cd-sep" />

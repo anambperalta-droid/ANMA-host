@@ -337,9 +337,19 @@ export default function PedidoNuevo() {
       <div className="ph pedido-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: 'var(--txt)', letterSpacing: '-.3px' }}>
-              {pedido.clienteNombre || pedido.company || pedido.contact || (pedido.id ? 'Pedido' : 'Nuevo pedido')}
-            </h2>
+            {(() => {
+              const hasName = !!(pedido.clienteNombre || pedido.company || pedido.contact)
+              const label = hasName ? (pedido.clienteNombre || pedido.company || pedido.contact) : (pedido.id ? 'Pedido' : 'Nuevo pedido')
+              return (
+                <h2 style={{
+                  fontSize: hasName ? 17 : 14,
+                  fontWeight: hasName ? 700 : 600,
+                  margin: 0,
+                  color: hasName ? 'var(--txt)' : 'var(--txt3)',
+                  letterSpacing: '-.2px',
+                }}>{label}</h2>
+              )
+            })()}
             <EstadoSelect value={pedido.estado} onChange={v => update({ estado: v })} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
