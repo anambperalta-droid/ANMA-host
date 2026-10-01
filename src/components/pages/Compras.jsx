@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { usePrivacy } from '../../context/PrivacyContext'
@@ -26,11 +27,13 @@ function parseFmtValue(v) {
   return Number(String(v).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-const EMPTY = { proveedor: '', concepto: '', cantidad: '', monto: '', fecha: todayISO(), recurrente: false, nota: '' }
+const EMPTY = { proveedor: '', concepto: '', cantidad: '', monto: '', fecha: todayISO(), recurrente: false, nota: '', items: [], montoOverride: false }
 
 export default function Compras() {
   const { get, saveEntity, deleteEntity } = useData()
   const toast = useToast()
+  const nav = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { hidden } = usePrivacy()
 
   const now = new Date()
@@ -48,6 +51,7 @@ export default function Compras() {
 
   const suppliers = get('suppliers') || []
   const allCompras = get('compras') || []
+  const allProducts = get('products') || []
   const mk = monthKey(year, month)
 
   const monthCompras = useMemo(() =>
@@ -108,6 +112,21 @@ export default function Compras() {
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1) } else setMonth(m => m - 1) }
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1) } else setMonth(m => m + 1) }
 
+  // Match proveedor por nombre contra directorio (case-insensitive, trim)
+  const supplierByName = useMemo(() => {
+    const map = new Map()
+    suppliers.forEach(s => {
+      const key = String(s.name || '').toLowerCase().trim()
+      if (key && !map.has(key)) map.set(key, s)
+    })
+    return map
+  }, [suppliers])
+  const openProveedor = (name) => {
+    const s = supplierByName.get(String(name || '').toLowerCase().trim())
+    if (!s) { toast(`"${name}" no está en el directorio todavía`, 'in'); return }
+    nav(`/proveedores?open=${s.id}`)
+  }
+
   useEffect(() => { if (drawerOpen) setTimeout(() => inputRef.current?.focus(), 250) }, [drawerOpen])
 
   const openDrawer = () => {
@@ -120,25 +139,67 @@ export default function Compras() {
       monto: c.monto ? fmtLive(String(c.monto)) : '',
       fecha: c.fecha || todayISO(),
       recurrente: !!c.recurrente, nota: c.nota || '',
+      items: Array.isArray(c.items) ? c.items.map(i => ({ ...i })) : [],
+      montoOverride: !!c.montoOverride,
     })
     setShowNota(!!c.nota); setSavedCount(0); setEditingId(c.id); setDrawerOpen(true)
   }
   const closeDrawer = () => { setDrawerOpen(false); setEditingId(null) }
 
+  // Deep-link: ?prov=<nombre>&new=1 abre drawer con proveedor fijo
+  //            ?mes=YYYY-MM&edit=<id> salta al mes y abre edición
+  useEffect(() => {
+    const prov = searchParams.get('prov')
+    const isNew = searchParams.get('new') === '1'
+    const mes = searchParams.get('mes')
+    const editId = searchParams.get('edit')
+    if (mes && /^\d{4}-\d{2}$/.test(mes)) {
+      const [yy, mm] = mes.split('-').map(Number)
+      setYear(yy); setMonth(mm - 1)
+    }
+    if (editId) {
+      const c = allCompras.find(x => String(x.id) === String(editId))
+      if (c) {
+        editCompra(c)
+        setSearchParams({}, { replace: true })
+        return
+      }
+    }
+    if (prov && isNew) {
+      setDraft({ ...EMPTY, proveedor: prov })
+      setShowNota(false); setSavedCount(0); setEditingId(null); setDrawerOpen(true)
+      setSearchParams({}, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const saveEntry = (keepOpen) => {
     const proveedor = draft.proveedor.trim()
     const concepto = draft.concepto.trim()
-    const monto = parseFmtValue(draft.monto)
+    const items = Array.isArray(draft.items) ? draft.items.filter(i => (Number(i.qty) || 0) > 0 && (Number(i.pu) || 0) > 0) : []
+    const itemsTotal = items.reduce((s, i) => s + (Number(i.qty) || 0) * (Number(i.pu) || 0), 0)
+    // Si hay items y no se forzó override manual, el monto se deriva de los items
+    const monto = (items.length > 0 && !draft.montoOverride) ? itemsTotal : parseFmtValue(draft.monto)
     if (!proveedor) { toast('Completa el proveedor', 'er'); return }
-    if (monto <= 0) { toast('Completa el monto', 'er'); return }
+    if (monto <= 0) { toast(items.length > 0 ? 'Completá cantidad y precio en al menos un producto' : 'Completa el monto', 'er'); return }
 
-    const cantidad = Number(draft.cantidad) || 0
+    const cantidad = items.length > 0
+      ? items.reduce((s, i) => s + (Number(i.qty) || 0), 0)
+      : (Number(draft.cantidad) || 0)
     const payload = {
       id: editingId || undefined,
       proveedor, concepto, cantidad, monto,
       fecha: draft.fecha || todayISO(),
       recurrente: !!draft.recurrente,
       nota: draft.nota.trim(),
+      items: items.map(i => ({
+        productId: i.productId || null,
+        name: String(i.name || '').trim(),
+        qty: Number(i.qty) || 0,
+        pu: Number(i.pu) || 0,
+        subtotal: (Number(i.qty) || 0) * (Number(i.pu) || 0),
+      })),
+      montoOverride: !!draft.montoOverride,
     }
     saveEntity('compras', payload)
     setSavedCount(c => c + 1)
@@ -399,7 +460,13 @@ export default function Compras() {
             <div key={c.id} className="cp-row" style={{ cursor: 'pointer' }} onClick={() => editCompra(c)}>
               <span className="cp-cell" style={{ color: 'var(--txt3)', fontSize: 12 }}>{fechaCorta}</span>
               <span className="cp-cell" style={{ fontWeight: 600, color: 'var(--txt)' }}>
-                {c.proveedor || '---'}
+                {c.proveedor ? (
+                  <span
+                    onClick={e => { e.stopPropagation(); openProveedor(c.proveedor) }}
+                    style={{ cursor: 'pointer', borderBottom: '1px dotted var(--txt4)' }}
+                    title="Ver proveedor"
+                  >{c.proveedor}</span>
+                ) : '---'}
                 {c.recurrente && <span className="cp-recur"><i className="fa fa-rotate" style={{ fontSize: 8 }} />recurrente</span>}
               </span>
               <span className="cp-cell cp-hide-m" style={{ color: 'var(--txt2)' }}>
@@ -475,22 +542,69 @@ export default function Compras() {
         isEdit={!!editingId}
         visibleMk={mk}
         meses={MESES}
+        suppliers={suppliers}
+        allProducts={allProducts}
+        onCreateProduct={(name, supplier) => {
+          const created = saveEntity('products', {
+            name: name.trim(),
+            supplierId: supplier?.id || null,
+            cost: 0,
+          })
+          toast(supplier ? `"${created.name}" agregado al catálogo de ${supplier.name}` : `"${created.name}" agregado al catálogo`, 'ok')
+          return created
+        }}
       />
     </div>
   )
 }
 
-function CompraDrawer({ open, onClose, draft, setDraft, inputRef, proveedorSuggestions, showProvSug, setShowProvSug, showNota, setShowNota, saveEntry, savedCount, justSaved, isEdit, visibleMk, meses }) {
-  if (!open) return null
+function CompraDrawer(props) {
+  const [itemSearch, setItemSearch] = useState('')
+  const [showItemSug, setShowItemSug] = useState(false)
+  const [sugIndex, setSugIndex] = useState(0)
+  // Reset del autocomplete cuando el drawer se cierra
+  useEffect(() => { if (!props.open) { setItemSearch(''); setShowItemSug(false); setSugIndex(0) } }, [props.open])
+  if (!props.open) return null
+  const { onClose, draft, setDraft, inputRef, proveedorSuggestions, showProvSug, setShowProvSug, showNota, setShowNota, saveEntry, savedCount, justSaved, isEdit, visibleMk, meses, suppliers, allProducts, onCreateProduct } = props
 
   const handleMontoChange = (e) => {
     const raw = e.target.value.replace(/[^\d]/g, '')
-    setDraft(d => ({ ...d, monto: raw ? fmtLive(raw) : '' }))
+    setDraft(d => ({ ...d, monto: raw ? fmtLive(raw) : '', montoOverride: true }))
   }
 
   const draftMk = (draft.fecha || '').slice(0, 7)
   const offMonth = draftMk && visibleMk && draftMk !== visibleMk
   const offLabel = offMonth ? `${meses[Number(draftMk.slice(5, 7)) - 1]} ${draftMk.slice(0, 4)}` : ''
+
+  // Match proveedor → productos del catálogo asociados
+  const matchedSupplier = (() => {
+    const key = String(draft.proveedor || '').toLowerCase().trim()
+    if (!key) return null
+    return (suppliers || []).find(s => String(s.name || '').toLowerCase().trim() === key) || null
+  })()
+  const supplierProducts = matchedSupplier
+    ? (allProducts || []).filter(p => String(p.supplierId) === String(matchedSupplier.id))
+    : []
+  const items = Array.isArray(draft.items) ? draft.items : []
+  const derivedTotal = items.reduce((s, i) => s + (Number(i.qty) || 0) * (Number(i.pu) || 0), 0)
+  const useItemsTotal = items.length > 0 && !draft.montoOverride
+
+  const updateItem = (idx, patch) => {
+    setDraft(d => {
+      const curr = Array.isArray(d.items) ? [...d.items] : []
+      curr[idx] = { ...curr[idx], ...patch }
+      return { ...d, items: curr, montoOverride: false }
+    })
+  }
+  const removeItem = (idx) => {
+    setDraft(d => {
+      const curr = (d.items || []).filter((_, i) => i !== idx)
+      return { ...d, items: curr, montoOverride: false }
+    })
+  }
+  const addFreeItem = () => {
+    setDraft(d => ({ ...d, items: [...(d.items || []), { productId: null, name: '', qty: 1, pu: 0 }], montoOverride: false }))
+  }
 
   return createPortal(
     <>
@@ -597,34 +711,252 @@ function CompraDrawer({ open, onClose, draft, setDraft, inputRef, proveedorSugge
 
           <div className="cd-sep" />
 
+          {/* ─── Autocomplete de productos (sólo si hay proveedor identificado) ─── */}
+          {matchedSupplier && (() => {
+            const q = itemSearch.trim().toLowerCase()
+            const normalizeName = (s) => String(s || '').toLowerCase().trim()
+            // Matches: productos del catálogo del proveedor que incluyen el texto
+            const matches = q
+              ? supplierProducts
+                  .filter(p => normalizeName(p.name).includes(q))
+                  .slice(0, 6)
+              : []
+            const exactMatch = q
+              ? supplierProducts.some(p => normalizeName(p.name) === q)
+              : false
+            const canCreate = q.length >= 2 && !exactMatch
+            const dropdownRows = [...matches, ...(canCreate ? [{ __new: true, name: itemSearch.trim() }] : [])]
+            const commitPick = (row) => {
+              if (!row) return
+              if (row.__new) {
+                const created = onCreateProduct(row.name, matchedSupplier)
+                if (created) {
+                  setDraft(d => ({
+                    ...d,
+                    items: [...(d.items || []), { productId: created.id, name: created.name, qty: 1, pu: Number(created.cost) || 0 }],
+                    montoOverride: false,
+                  }))
+                }
+              } else {
+                // match existente
+                setDraft(d => {
+                  const curr = Array.isArray(d.items) ? [...d.items] : []
+                  const idx = curr.findIndex(x => String(x.productId) === String(row.id))
+                  if (idx > -1) {
+                    curr[idx] = { ...curr[idx], qty: (Number(curr[idx].qty) || 0) + 1 }
+                  } else {
+                    curr.push({ productId: row.id, name: row.name, qty: 1, pu: Number(row.cost) || 0 })
+                  }
+                  return { ...d, items: curr, montoOverride: false }
+                })
+              }
+              setItemSearch('')
+              setShowItemSug(false)
+              setSugIndex(0)
+            }
+            return (
+              <>
+                <div className="cd-group">
+                  <label className="cd-lbl" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="fa fa-cart-shopping" style={{ fontSize: 10, color: 'var(--brand)' }} />
+                    ¿Qué compraste a {matchedSupplier.name}?
+                  </label>
+                  <div className="cd-inp-icon" style={{ position: 'relative' }}>
+                    <i className="fa fa-magnifying-glass" />
+                    <input
+                      className="cd-inp"
+                      placeholder="Buscar producto del catálogo o escribir uno nuevo..."
+                      value={itemSearch}
+                      onChange={e => { setItemSearch(e.target.value); setShowItemSug(true); setSugIndex(0) }}
+                      onFocus={() => setShowItemSug(true)}
+                      onBlur={() => setTimeout(() => setShowItemSug(false), 180)}
+                      onKeyDown={e => {
+                        if (e.key === 'ArrowDown') { e.preventDefault(); setSugIndex(i => Math.min(i + 1, dropdownRows.length - 1)); setShowItemSug(true) }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); setSugIndex(i => Math.max(i - 1, 0)) }
+                        else if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const row = dropdownRows[sugIndex] || dropdownRows[0]
+                          commitPick(row)
+                        }
+                        else if (e.key === 'Escape') { setShowItemSug(false); setItemSearch('') }
+                      }}
+                    />
+                    {showItemSug && dropdownRows.length > 0 && (
+                      <div className="cd-sug">
+                        {dropdownRows.map((row, i) => (
+                          <div
+                            key={row.__new ? '__new' : row.id}
+                            className="cd-sug-item"
+                            onMouseDown={() => commitPick(row)}
+                            onMouseEnter={() => setSugIndex(i)}
+                            style={{
+                              background: i === sugIndex ? 'var(--surface2)' : 'transparent',
+                              borderTop: row.__new ? '1px solid var(--border)' : 'none',
+                            }}
+                          >
+                            {row.__new ? (
+                              <>
+                                <span style={{ fontWeight: 700, color: 'var(--brand)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                  <i className="fa fa-plus" style={{ fontSize: 10 }} />
+                                  Agregar “{row.name}” al catálogo
+                                </span>
+                                <span style={{ fontSize: 9.5, color: 'var(--txt4)' }}>nuevo</span>
+                              </>
+                            ) : (
+                              <>
+                                <span style={{ fontWeight: 600, color: 'var(--txt)' }}>{row.name}</span>
+                                {row.cost > 0 && <span style={{ fontSize: 11, color: 'var(--txt3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(row.cost)}</span>}
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 5 }}>
+                    <i className="fa fa-lightbulb" style={{ marginRight: 4 }} />
+                    Lo que agregues queda guardado como producto del proveedor automáticamente.
+                  </div>
+                </div>
+                <div className="cd-sep" />
+              </>
+            )
+          })()}
+
+          {/* ─── Items agregados (si los hay) ─── */}
+          {items.length > 0 && (
+            <>
+              <div className="cd-group">
+                <label className="cd-lbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Qué compraste ({items.length})</span>
+                  <button type="button" onClick={addFreeItem} className="cd-nota-link" style={{ color: 'var(--brand)' }}>
+                    <i className="fa fa-plus" style={{ fontSize: 9 }} /> otro
+                  </button>
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {items.map((it, idx) => {
+                    const sub = (Number(it.qty) || 0) * (Number(it.pu) || 0)
+                    const catalogProduct = it.productId ? supplierProducts.find(p => String(p.id) === String(it.productId)) : null
+                    const catalogCost = catalogProduct ? Number(catalogProduct.cost) || 0 : 0
+                    const subio = catalogCost > 0 && Number(it.pu) > catalogCost
+                    return (
+                      <div key={idx} style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+                          {it.productId ? (
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {it.name}
+                            </span>
+                          ) : (
+                            <input className="cd-inp" placeholder="Nombre del item..."
+                              value={it.name}
+                              onChange={e => updateItem(idx, { name: e.target.value })}
+                              style={{ flex: 1, padding: '6px 10px', fontSize: 12 }}
+                            />
+                          )}
+                          <button type="button" onClick={() => removeItem(idx)}
+                            style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--txt4)', cursor: 'pointer', fontSize: 11 }}
+                            title="Quitar"
+                          >
+                            <i className="fa fa-xmark" />
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <input type="number" min="0" step="0.01" value={it.qty}
+                            onChange={e => updateItem(idx, { qty: e.target.value })}
+                            placeholder="Cant"
+                            style={{ width: 70, padding: '6px 8px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 13, fontWeight: 700, textAlign: 'center', fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--txt)' }}
+                          />
+                          <span style={{ fontSize: 11, color: 'var(--txt4)' }}>×</span>
+                          <input type="number" min="0" step="1" value={it.pu}
+                            onChange={e => updateItem(idx, { pu: e.target.value })}
+                            placeholder="Precio u."
+                            style={{ flex: 1, padding: '6px 10px', border: `1.5px solid ${subio ? '#F59E0B' : 'var(--border)'}`, borderRadius: 8, fontSize: 13, fontWeight: 700, textAlign: 'right', fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--txt)' }}
+                          />
+                          <span style={{ fontSize: 11, color: 'var(--txt4)' }}>=</span>
+                          <span style={{ minWidth: 90, textAlign: 'right', fontSize: 13, fontWeight: 800, color: 'var(--brand)', fontVariantNumeric: 'tabular-nums' }}>
+                            {fmt(sub)}
+                          </span>
+                        </div>
+                        {subio && (
+                          <div style={{ marginTop: 6, fontSize: 10.5, color: '#B45309', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <i className="fa fa-arrow-up" style={{ fontSize: 9 }} />
+                            Subió respecto al precio acordado ({fmt(catalogCost)})
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="cd-sep" />
+            </>
+          )}
+
           {/* Concepto + cantidad + monto */}
           <div className="cd-group">
             <div className="cd-fg">
-              <label className="cd-lbl">Concepto</label>
-              <input className="cd-inp" placeholder="Ej: serigrafia septiembre, buzos varios..."
+              <label className="cd-lbl">
+                {items.length > 0 ? 'Concepto / referencia' : 'Concepto'}
+                {items.length > 0 && <span style={{ color: 'var(--txt4)', fontWeight: 500, marginLeft: 4 }}>(opcional)</span>}
+              </label>
+              <input className="cd-inp" placeholder={items.length > 0 ? 'Ej: pedido septiembre, lote 23...' : 'Ej: serigrafia septiembre, buzos varios...'}
                 value={draft.concepto}
                 onChange={e => setDraft(d => ({ ...d, concepto: e.target.value }))}
               />
             </div>
-            <div className="cd-row" style={{ marginBottom: 0 }}>
-              <div className="cd-fg" style={{ flex: '.55', marginBottom: 0 }}>
-                <label className="cd-lbl">Cantidad</label>
-                <input className="cd-inp" type="number" min="0" placeholder="0"
-                  value={draft.cantidad}
-                  onChange={e => setDraft(d => ({ ...d, cantidad: e.target.value }))}
-                  style={{ textAlign: 'center', fontWeight: 700 }}
-                />
+            {items.length === 0 && (
+              <div className="cd-row" style={{ marginBottom: 0 }}>
+                <div className="cd-fg" style={{ flex: '.55', marginBottom: 0 }}>
+                  <label className="cd-lbl">Cantidad</label>
+                  <input className="cd-inp" type="number" min="0" placeholder="0"
+                    value={draft.cantidad}
+                    onChange={e => setDraft(d => ({ ...d, cantidad: e.target.value }))}
+                    style={{ textAlign: 'center', fontWeight: 700 }}
+                  />
+                </div>
+                <div className="cd-fg" style={{ flex: 1, marginBottom: 0 }}>
+                  <label className="cd-lbl">Monto total</label>
+                  <input className="cd-inp" placeholder="$0"
+                    value={draft.monto ? `$${draft.monto}` : ''}
+                    onChange={handleMontoChange}
+                    style={{ textAlign: 'right', fontWeight: 700, fontSize: 16 }}
+                  />
+                </div>
               </div>
-              <div className="cd-fg" style={{ flex: 1, marginBottom: 0 }}>
-                <label className="cd-lbl">Monto total</label>
-                <input className="cd-inp" placeholder="$0"
-                  value={draft.monto ? `$${draft.monto}` : ''}
-                  onChange={handleMontoChange}
-                  style={{ textAlign: 'right', fontWeight: 700, fontSize: 16 }}
-                />
+            )}
+            {items.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', background: 'var(--brand-xlt)', borderRadius: 10, border: '1px solid rgba(124,58,237,.18)' }}>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--brand)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                    Total · {items.reduce((s, i) => s + (Number(i.qty) || 0), 0)} unidades
+                  </div>
+                  {draft.montoOverride && Math.round(parseFmtValue(draft.monto)) !== Math.round(derivedTotal) && (
+                    <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 2 }}>
+                      Items suman {fmt(derivedTotal)} — ajustaste manual
+                    </div>
+                  )}
+                </div>
+                {draft.montoOverride ? (
+                  <input className="cd-inp" placeholder="$0"
+                    value={draft.monto ? `$${draft.monto}` : ''}
+                    onChange={handleMontoChange}
+                    style={{ textAlign: 'right', fontWeight: 800, fontSize: 16, maxWidth: 160, color: 'var(--brand)' }}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--brand)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.03em' }}>
+                      {fmt(derivedTotal)}
+                    </div>
+                    <button type="button" onClick={() => setDraft(d => ({ ...d, monto: fmtLive(String(Math.round(derivedTotal))), montoOverride: true }))}
+                      style={{ background: 'none', border: 'none', color: 'var(--txt3)', fontSize: 10.5, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}
+                      title="Editar monto manualmente (ej: descuento, redondeo)">
+                      ajustar
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-            {(() => {
+            )}
+            {items.length === 0 && (() => {
               const qty = Number(draft.cantidad) || 0
               const total = parseFmtValue(draft.monto)
               if (qty > 0 && total > 0) {
