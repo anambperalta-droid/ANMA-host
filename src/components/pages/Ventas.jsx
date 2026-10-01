@@ -41,7 +41,7 @@ function parseFmtValue(v) {
   return Number(String(v).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', incluyeIva: false, canal: '' }
+const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', incluyeIva: true, canal: '' }
 
 export default function Ventas() {
   const { get, saveBudget } = useData()

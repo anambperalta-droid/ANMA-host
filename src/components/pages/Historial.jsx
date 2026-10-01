@@ -881,6 +881,34 @@ export default function Historial() {
     return budgets
   }, [budgets, period, customFrom, customTo]) // eslint-disable-line
 
+  // ── Compras del periodo (cross-source Ventas <-> Compras) ──
+  const allCompras = get('compras') || []
+  const periodCompras = useMemo(() => {
+    const n = now
+    const ym = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`
+    const prevYM = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
+    const dateOf = c => c.fecha || new Date(c.updatedAt || Date.now()).toISOString().slice(0, 10)
+    if (period === 'custom' && customFrom && customTo) {
+      const from = new Date(customFrom); const to = new Date(customTo + 'T23:59:59')
+      return allCompras.filter(c => { const d = dateOf(c); return d && new Date(d) >= from && new Date(d) <= to })
+    }
+    if (period === 'thismonth') return allCompras.filter(c => dateOf(c).startsWith(ym))
+    if (period === 'prevmonth') return allCompras.filter(c => dateOf(c).startsWith(prevYM))
+    if (period === 'year') return allCompras.filter(c => dateOf(c).startsWith(String(n.getFullYear())))
+    if (period === '3m') { const s = new Date(n.getFullYear(), n.getMonth() - 3, 1); return allCompras.filter(c => new Date(dateOf(c)) >= s) }
+    if (period === '6m') { const s = new Date(n.getFullYear(), n.getMonth() - 6, 1); return allCompras.filter(c => new Date(dateOf(c)) >= s) }
+    return allCompras
+  }, [allCompras, period, customFrom, customTo]) // eslint-disable-line
+  const totGastado = useMemo(() => periodCompras.reduce((s, c) => s + (Number(c.monto) || 0), 0), [periodCompras])
+  const topProveedor = useMemo(() => {
+    const rev = {}
+    periodCompras.forEach(c => { const n = c.proveedor || ''; if (n) rev[n] = (rev[n] || 0) + (Number(c.monto) || 0) })
+    const e = Object.entries(rev)
+    if (!e.length) return null
+    e.sort((a, b) => b[1] - a[1])
+    return { name: e[0][0], total: e[0][1] }
+  }, [periodCompras])
+
   // ── KPIs (memoized on period slice) ──
   const {
     totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate,
@@ -917,8 +945,12 @@ export default function Historial() {
     const prevPagados      = prevPeriodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
     const prevTotBudgeted  = prevPeriodBudgets.reduce((s, b) => s + (b.total || 0), 0)
     const prevTotCobrado   = prevPagados.reduce((s, b) => s + cobrado(b), 0)
-    const deltaBrutas      = prevTotBudgeted > 0 ? Math.round((totBudgeted - prevTotBudgeted) / prevTotBudgeted * 100) : null
-    const deltaCaja        = prevTotCobrado  > 0 ? Math.round((totCobrado  - prevTotCobrado)  / prevTotCobrado  * 100) : null
+    // Guardrail: si la base del período anterior es chica (<3 presupuestos), los deltas
+    // se disparan a valores absurdos (+10961%). Ocultar hasta tener muestra minima.
+    const capDelta = (v) => v === null ? null : Math.max(-999, Math.min(999, v))
+    const enoughBase = prevPeriodBudgets.length >= 3
+    const deltaBrutas      = enoughBase && prevTotBudgeted > 0 ? capDelta(Math.round((totBudgeted - prevTotBudgeted) / prevTotBudgeted * 100)) : null
+    const deltaCaja        = enoughBase && prevTotCobrado  > 0 ? capDelta(Math.round((totCobrado  - prevTotCobrado)  / prevTotCobrado  * 100)) : null
     return { totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate, deltaBrutas, deltaCaja, prevPeriodBudgets, prevTotBudgeted }
   }, [periodBudgets, budgets, period]) // eslint-disable-line
 
@@ -1391,10 +1423,11 @@ export default function Historial() {
     if (cobrosVencidos.length >= 3) {
       out.push({ tone: 'warning', icon: 'fa-hand-holding-dollar', label: 'Cobros vencidos', value: money(cobrosVencidosMonto), title: `${cobrosVencidos.length} cobros vencidos · ${money(cobrosVencidosMonto)}`, desc: `Hay dinero pendiente que ya debería estar en caja. Empezá por los más antiguos.` })
     }
-    if (period === 'thismonth' && prevPeriodBudgets.length > 0 && periodBudgets.length > 0) {
+    if (period === 'thismonth' && prevPeriodBudgets.length >= 3 && periodBudgets.length > 0) {
       const prevAvg = Math.round(prevTotBudgeted / prevPeriodBudgets.length)
       if (prevAvg > 0) {
-        const ticketDelta = Math.round((avgTicket - prevAvg) / prevAvg * 100)
+        const rawTicketDelta = Math.round((avgTicket - prevAvg) / prevAvg * 100)
+        const ticketDelta = Math.max(-999, Math.min(999, rawTicketDelta))
         if (ticketDelta >= 20) {
           out.push({ tone: 'success', icon: 'fa-arrow-up-right-dots', label: 'Ticket promedio', value: `+${ticketDelta}%`, title: `Ticket promedio creció ${ticketDelta}%`, desc: `Pasaste de ${money(prevAvg)} a ${money(avgTicket)}. Estás vendiendo más por venta.` })
         } else if (ticketDelta <= -20) {
@@ -1614,6 +1647,15 @@ export default function Historial() {
             <div className="bento sk-fade-in">
               {!opHideMetrics && <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} sparkData={hidden ? null : sparkBrutas} sparkColor="var(--brand)" icon="fa-chart-column" />}
               {!opHideMetrics && <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} sparkData={hidden ? null : sparkCaja} sparkColor="var(--green)" isKey icon="fa-wallet" />}
+              {!opHideMetrics && totGastado > 0 && <KpiCard label="Gastos" value={money(totGastado)} icon="fa-cart-shopping" />}
+              {!opHideMetrics && totGastado > 0 && (
+                <KpiCard
+                  label="Ganancia Real"
+                  value={money(totCobrado - totGastado)}
+                  icon="fa-scale-balanced"
+                  sparkColor={(totCobrado - totGastado) >= 0 ? 'var(--green)' : '#DC2626'}
+                />
+              )}
               {!opHideMetrics && <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} sparkData={hidden ? null : sparkTicket} icon="fa-receipt" />}
               <KpiCard label="Presupuestos" value={String(periodBudgets.length)} icon="fa-file-invoice" />
 
@@ -2210,6 +2252,10 @@ export default function Historial() {
               { l: 'Total presupuestado', v: money(totBudgeted), delta: deltaBrutas },
               { l: 'Total cobrado', v: money(totCobrado), tip: 'Suma de pagos recibidos (totales + señas)', delta: deltaCaja },
               { l: 'Ganancia cobrada', v: money(totGain), tip: 'Ganancia proporcional a lo cobrado — precio menos el costo de los productos y tareas cargados en cada pedido', neg: totGain < 0, accent: totGain > 0 },
+              ...(totGastado > 0 ? [
+                { l: 'Total gastado en Compras', v: money(totGastado), tip: 'Suma de gastos con proveedores registrados en Compras', neg: true, divider: true },
+                { l: 'Ganancia real del período', v: money(totCobrado - totGastado), tip: 'Ingresos Caja menos Total gastado en Compras — la ganancia neta de verdad', neg: (totCobrado - totGastado) < 0, accent: (totCobrado - totGastado) > 0 },
+              ] : []),
               { l: 'Ticket promedio', v: money(avgTicket) },
               { l: 'Tasa de conversión', v: convRate },
               { l: 'N° de presupuestos', v: periodBudgets.length },
