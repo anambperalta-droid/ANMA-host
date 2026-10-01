@@ -5,6 +5,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { fmt } from '../../lib/storage'
+import { gananciaBudget } from '../../lib/pedido'
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const PAY_OPTS = [
@@ -155,7 +156,7 @@ export default function Ventas() {
     return arr
   }, [productoRollup, sortColProd, sortDirProd])
 
-  // Cross-KPI Ventas <-> Compras: ganancia real del mes = facturado - gastado
+  // Cross-KPI Ventas <-> Compras: resultado operativo del mes = ganancia cobrada - compras
   const gastadoDelMes = useMemo(() => {
     return allCompras.reduce((s, c) => {
       const d = c.fecha || new Date(c.updatedAt || Date.now()).toISOString().slice(0, 10)
@@ -163,7 +164,16 @@ export default function Ventas() {
       return s + (Number(c.monto) || 0)
     }, 0)
   }, [allCompras, mk])
-  const gananciaReal = totals.facturado - gastadoDelMes
+  const gananciaCobradaMes = useMemo(() => {
+    return monthBudgets.reduce((s, b) => {
+      if (b.payStatus !== 'paid' && b.payStatus !== 'partial') return s
+      const g = gananciaBudget(b) || 0
+      if (b.payStatus === 'paid') return s + g
+      const pct = (Number(b.depositAmt) || 0) / (Number(b.total) || 1)
+      return s + Math.round(g * pct)
+    }, 0)
+  }, [monthBudgets])
+  const resultadoOperativo = gananciaCobradaMes - gastadoDelMes
   const hayCompras = gastadoDelMes > 0
 
   const capDelta = (v) => v === null ? null : Math.max(-999, Math.min(999, v))
@@ -447,22 +457,22 @@ export default function Ventas() {
             {hayCompras && (
               <>
                 <div className="vt-hero-divider" />
-                <div className="vt-hero-stat" title="Facturado en Ventas menos gastado en Compras del mes">
+                <div className="vt-hero-stat" title="Ganancia cobrada menos lo gastado en Compras del mes — tu ganancia neta real">
                   <div className="vt-hero-stat-icon" style={{
-                    background: gananciaReal >= 0 ? 'rgba(21,128,61,.1)' : 'rgba(220,38,38,.1)',
-                    color: gananciaReal >= 0 ? '#15803d' : '#DC2626',
+                    background: resultadoOperativo >= 0 ? 'rgba(21,128,61,.1)' : 'rgba(220,38,38,.1)',
+                    color: resultadoOperativo >= 0 ? '#15803d' : '#DC2626',
                   }}>
                     <i className="fa fa-scale-balanced" />
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div className="vt-hero-stat-lbl">Ganancia real</div>
+                    <div className="vt-hero-stat-lbl">Resultado operativo</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                      <span className="vt-hero-stat-val" style={{ color: gananciaReal >= 0 ? '#15803d' : '#DC2626' }}>
-                        {hidden ? '***' : fmt(gananciaReal)}
+                      <span className="vt-hero-stat-val" style={{ color: resultadoOperativo >= 0 ? '#15803d' : '#DC2626' }}>
+                        {hidden ? '***' : fmt(resultadoOperativo)}
                       </span>
                     </div>
                     <div style={{ fontSize: 9.5, color: 'var(--txt4)', fontWeight: 600, marginTop: 1, letterSpacing: '.02em' }}>
-                      {hidden ? '' : <>− {fmt(gastadoDelMes)} en Compras</>}
+                      {hidden ? '' : <>{fmt(gananciaCobradaMes)} ganancia − {fmt(gastadoDelMes)} compras</>}
                     </div>
                   </div>
                 </div>

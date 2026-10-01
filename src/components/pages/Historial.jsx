@@ -185,7 +185,8 @@ function Sparkline({ data, color = 'var(--brand)', height = 22 }) {
 }
 
 function KpiCard({ label, value, delta, isKey, sparkData, sparkColor, icon }) {
-  const hasDelta = delta !== null && delta !== undefined
+  // Ocultar deltas cuando pegan el cap ±999% (comparación poco confiable: base previa muy chica).
+  const hasDelta = delta !== null && delta !== undefined && Math.abs(delta) < 999
   const accentColor = sparkColor || 'var(--brand)'
   return (
     <div className={`bento-kpi ${isKey ? 'bento-kpi-key' : ''}`} style={{ position: 'relative' }}>
@@ -991,19 +992,20 @@ export default function Historial() {
     return { cobrosVencidos, cobrosVencidosMonto, entregasHoy, aConfirmar }
   }, [budgets])
 
-  // Insight banner
-  const insightIcon = deltaBrutas !== null && deltaBrutas > 20 ? 'fa-rocket' : deltaBrutas !== null && deltaBrutas > 0 ? 'fa-chart-line' : deltaBrutas !== null && deltaBrutas < -20 ? 'fa-triangle-exclamation' : deltaBrutas !== null && deltaBrutas < 0 ? 'fa-arrow-trend-down' : convRate !== '—' && parseInt(convRate) >= 60 ? 'fa-star' : periodBudgets.length === 0 ? 'fa-circle-info' : 'fa-chart-bar'
-  const insightColor = deltaBrutas !== null && deltaBrutas > 0 ? 'var(--green)' : deltaBrutas !== null && deltaBrutas < 0 ? 'var(--amber)' : 'var(--brand)'
+  // Insight banner — ignoramos deltas al cap ±999% (comparación poco confiable).
+  const deltaConfiable = deltaBrutas !== null && Math.abs(deltaBrutas) < 999 ? deltaBrutas : null
+  const insightIcon = deltaConfiable !== null && deltaConfiable > 20 ? 'fa-rocket' : deltaConfiable !== null && deltaConfiable > 0 ? 'fa-chart-line' : deltaConfiable !== null && deltaConfiable < -20 ? 'fa-triangle-exclamation' : deltaConfiable !== null && deltaConfiable < 0 ? 'fa-arrow-trend-down' : convRate !== '—' && parseInt(convRate) >= 60 ? 'fa-star' : periodBudgets.length === 0 ? 'fa-circle-info' : 'fa-chart-bar'
+  const insightColor = deltaConfiable !== null && deltaConfiable > 0 ? 'var(--green)' : deltaConfiable !== null && deltaConfiable < 0 ? 'var(--amber)' : 'var(--brand)'
   const insightText = periodBudgets.length === 0
     ? 'Todavía no hay datos para este período. Registrá presupuestos para ver tus métricas.'
-    : deltaBrutas !== null && deltaBrutas > 20
-      ? `Las ventas crecieron un ${deltaBrutas}% respecto al período anterior. ¡Excelente momento!`
-      : deltaBrutas !== null && deltaBrutas > 0
-        ? `Crecimiento del ${deltaBrutas}% en ventas vs. el período anterior. Buen ritmo.`
-        : deltaBrutas !== null && deltaBrutas < -20
-          ? `Las ventas bajaron un ${Math.abs(deltaBrutas)}% vs. el período anterior. Momento de reforzar el seguimiento.`
-          : deltaBrutas !== null && deltaBrutas < 0
-            ? `Leve caída del ${Math.abs(deltaBrutas)}% en ventas respecto al período anterior.`
+    : deltaConfiable !== null && deltaConfiable > 20
+      ? `Las ventas crecieron un ${deltaConfiable}% respecto al período anterior. ¡Excelente momento!`
+      : deltaConfiable !== null && deltaConfiable > 0
+        ? `Crecimiento del ${deltaConfiable}% en ventas vs. el período anterior. Buen ritmo.`
+        : deltaConfiable !== null && deltaConfiable < -20
+          ? `Las ventas bajaron un ${Math.abs(deltaConfiable)}% vs. el período anterior. Momento de reforzar el seguimiento.`
+          : deltaConfiable !== null && deltaConfiable < 0
+            ? `Leve caída del ${Math.abs(deltaConfiable)}% en ventas respecto al período anterior.`
             : convRate !== '—' && parseInt(convRate) >= 60
               ? `Conversión del ${convRate} — cerrás más de la mitad de los presupuestos que enviás.`
               : `${periodBudgets.length} presupuesto${periodBudgets.length !== 1 ? 's' : ''} en el período · Ticket promedio ${money(avgTicket)} · Conversión ${convRate}`
@@ -1395,7 +1397,7 @@ export default function Historial() {
         out.push({ tone: 'info', icon: 'fa-circle-info', label: 'Cliente principal', value: `${topPct}%`, title: `${topClients[0][0]} es tu clienta más fuerte (${topPct}%)`, desc: `Cuidala bien — representa ${topPct}% de tus ventas confirmadas en el período.` })
       }
     }
-    if (deltaBrutas !== null) {
+    if (deltaBrutas !== null && Math.abs(deltaBrutas) < 999) {
       if (deltaBrutas >= 25) {
         out.push({ tone: 'success', icon: 'fa-rocket', label: 'Crecimiento del período', value: `+${deltaBrutas}%`, title: `Crecimiento fuerte: +${deltaBrutas}% vs período anterior`, desc: `Estás vendiendo ${deltaBrutas}% más. Identificá qué cambió y duplicá esa apuesta.` })
       } else if (deltaBrutas <= -20) {
@@ -1428,7 +1430,9 @@ export default function Historial() {
       if (prevAvg > 0) {
         const rawTicketDelta = Math.round((avgTicket - prevAvg) / prevAvg * 100)
         const ticketDelta = Math.max(-999, Math.min(999, rawTicketDelta))
-        if (ticketDelta >= 20) {
+        if (Math.abs(ticketDelta) >= 999) {
+          // comparación poco confiable, omitir
+        } else if (ticketDelta >= 20) {
           out.push({ tone: 'success', icon: 'fa-arrow-up-right-dots', label: 'Ticket promedio', value: `+${ticketDelta}%`, title: `Ticket promedio creció ${ticketDelta}%`, desc: `Pasaste de ${money(prevAvg)} a ${money(avgTicket)}. Estás vendiendo más por venta.` })
         } else if (ticketDelta <= -20) {
           out.push({ tone: 'warning', icon: 'fa-arrow-trend-down', label: 'Ticket promedio', value: `-${Math.abs(ticketDelta)}%`, title: `Ticket promedio cayó ${Math.abs(ticketDelta)}%`, desc: `Estás vendiendo más chico (${money(avgTicket)} vs ${money(prevAvg)}). ¿Cambió el mix de productos?` })
@@ -1650,10 +1654,10 @@ export default function Historial() {
               {!opHideMetrics && totGastado > 0 && <KpiCard label="Gastos" value={money(totGastado)} icon="fa-cart-shopping" />}
               {!opHideMetrics && totGastado > 0 && (
                 <KpiCard
-                  label="Ganancia Real"
-                  value={money(totCobrado - totGastado)}
+                  label="Resultado operativo"
+                  value={money(totGain - totGastado)}
                   icon="fa-scale-balanced"
-                  sparkColor={(totCobrado - totGastado) >= 0 ? 'var(--green)' : '#DC2626'}
+                  sparkColor={(totGain - totGastado) >= 0 ? 'var(--green)' : '#DC2626'}
                 />
               )}
               {!opHideMetrics && <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} sparkData={hidden ? null : sparkTicket} icon="fa-receipt" />}
@@ -2248,39 +2252,60 @@ export default function Historial() {
         <div className="analysis-grid">
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-chart-pie" style={{ color: 'var(--brand)', marginRight: 6 }} />Métricas globales</span></div>
-            {[
-              { l: 'Total presupuestado', v: money(totBudgeted), delta: deltaBrutas },
-              { l: 'Total cobrado', v: money(totCobrado), tip: 'Suma de pagos recibidos (totales + señas)', delta: deltaCaja },
-              { l: 'Ganancia cobrada', v: money(totGain), tip: 'Ganancia proporcional a lo cobrado — precio menos el costo de los productos y tareas cargados en cada pedido', neg: totGain < 0, accent: totGain > 0 },
-              ...(totGastado > 0 ? [
-                { l: 'Total gastado en Compras', v: money(totGastado), tip: 'Suma de gastos con proveedores registrados en Compras', neg: true, divider: true },
-                { l: 'Ganancia real del período', v: money(totCobrado - totGastado), tip: 'Ingresos Caja menos Total gastado en Compras — la ganancia neta de verdad', neg: (totCobrado - totGastado) < 0, accent: (totCobrado - totGastado) > 0 },
-              ] : []),
-              { l: 'Ticket promedio', v: money(avgTicket) },
-              { l: 'Tasa de conversión', v: convRate },
-              { l: 'N° de presupuestos', v: periodBudgets.length },
-            ].map((m, i) => (
-              <div key={i} className="metric-row">
-                <span className="mr-label">
-                  {m.l}
-                  {m.tip && <i className="fa fa-circle-info" title={m.tip} style={{ marginLeft: 5, color: 'var(--txt4)', fontSize: 10, cursor: 'help' }} />}
-                </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-                  {m.delta != null && !hidden && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
-                      color: m.delta >= 0 ? 'var(--green)' : '#DC2626',
-                      background: m.delta >= 0 ? 'var(--green-lt)' : 'rgba(220,38,38,.1)',
-                      display: 'inline-flex', alignItems: 'center', gap: 3,
-                    }} title="vs. período anterior">
-                      <i className={`fa fa-arrow-${m.delta >= 0 ? 'up' : 'down'}`} style={{ fontSize: 8 }} />
-                      {Math.abs(m.delta)}%
-                    </span>
-                  )}
-                  <span className="mr-val" style={m.neg ? { color: '#DC2626' } : m.accent ? { color: 'var(--green)' } : undefined}>{m.v}</span>
-                </span>
-              </div>
-            ))}
+            {(() => {
+              const resultadoOp = totGain - totGastado
+              const sections = [
+                {
+                  title: 'Facturación',
+                  rows: [
+                    { l: 'Total presupuestado', v: money(totBudgeted), delta: deltaBrutas, tip: 'Suma de todos los presupuestos cargados en el período (confirmados y no confirmados)' },
+                    { l: 'Total cobrado', v: money(totCobrado), tip: 'Pagos recibidos (totales + señas)', delta: deltaCaja },
+                    { l: 'Ticket promedio', v: money(avgTicket), tip: 'Monto promedio por presupuesto cargado' },
+                    { l: 'Tasa de conversión', v: convRate, tip: 'Presupuestos cobrados ÷ presupuestos cargados' },
+                    { l: 'N° de presupuestos', v: periodBudgets.length },
+                  ],
+                },
+                {
+                  title: 'Rentabilidad',
+                  rows: [
+                    { l: 'Ganancia cobrada', v: money(totGain), tip: 'Lo cobrado menos el costo de productos y tareas cargados en cada pedido', neg: totGain < 0 },
+                    ...(totGastado > 0 ? [
+                      { l: 'Gastado en Compras', v: `− ${money(totGastado)}`, tip: 'Compras a proveedores registradas en el período', neg: true },
+                      { l: 'Resultado operativo', v: money(resultadoOp), tip: 'Ganancia cobrada menos Compras del período — tu ganancia neta real', neg: resultadoOp < 0, accent: resultadoOp > 0, highlight: true },
+                    ] : [
+                      { l: 'Gastado en Compras', v: money(0), tip: 'Todavía no registraste Compras en este período', muted: true },
+                    ]),
+                  ],
+                },
+              ]
+              return sections.map((sec, si) => (
+                <div key={si} className="metric-section">
+                  <div className="metric-section-title">{sec.title}</div>
+                  {sec.rows.map((m, i) => (
+                    <div key={i} className={`metric-row${m.highlight ? ' is-highlight' : ''}`}>
+                      <span className="mr-label" style={m.muted ? { color: 'var(--txt4)' } : undefined}>
+                        {m.l}
+                        {m.tip && <i className="fa fa-circle-info" title={m.tip} style={{ marginLeft: 5, color: 'var(--txt4)', fontSize: 10, cursor: 'help' }} />}
+                      </span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                        {m.delta != null && !hidden && Math.abs(m.delta) < 999 && (
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+                            color: m.delta >= 0 ? 'var(--green)' : '#DC2626',
+                            background: m.delta >= 0 ? 'var(--green-lt)' : 'rgba(220,38,38,.1)',
+                            display: 'inline-flex', alignItems: 'center', gap: 3,
+                          }} title="vs. período anterior">
+                            <i className={`fa fa-arrow-${m.delta >= 0 ? 'up' : 'down'}`} style={{ fontSize: 8 }} />
+                            {Math.abs(m.delta)}%
+                          </span>
+                        )}
+                        <span className="mr-val" style={m.muted ? { color: 'var(--txt4)' } : m.neg ? { color: '#DC2626' } : m.accent ? { color: 'var(--green)' } : undefined}>{m.v}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))
+            })()}
           </div>
           <div className="card">
             <div className="card-header"><span className="card-title"><i className="fa fa-trophy" style={{ color: 'var(--amber)', marginRight: 6 }} />Clientes top</span></div>
@@ -2298,7 +2323,7 @@ export default function Historial() {
                           <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: i === 0 ? 'var(--amber)' : 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800 }}>{i + 1}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n}</div>
-                            <div style={{ fontSize: 10.5, color: 'var(--txt3)' }}>{d.count} pedido{d.count !== 1 ? 's' : ''} · {share}% del total</div>
+                            <div style={{ fontSize: 10.5, color: 'var(--txt3)' }} title={`${d.count} pedido${d.count !== 1 ? 's' : ''} · ${share}% de las ventas del top`}>{d.count} pedido{d.count !== 1 ? 's' : ''} · {share}% de las ventas</div>
                           </div>
                           <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--money)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{money(d.total)}</span>
                         </div>

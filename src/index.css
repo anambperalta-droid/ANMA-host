@@ -805,8 +805,14 @@ td b{color:var(--txt);font-weight:600}
 /* ─── METRIC ROW ─── */
 .metric-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
 .metric-row:last-child{border-bottom:none}
+.metric-row.is-highlight{background:var(--brand-xlt);margin:4px -16px 0;padding:10px 16px;border-radius:8px;border-bottom:none}
+.metric-row.is-highlight .mr-label{color:var(--txt);font-weight:600}
+.metric-row.is-highlight .mr-val{font-size:14px}
 .mr-label{font-size:12px;color:var(--txt2)}
 .mr-val{font-size:13px;font-weight:700;color:var(--txt)}
+.metric-section{margin-top:14px;padding-top:10px;border-top:1px dashed var(--border2)}
+.metric-section:first-of-type{margin-top:6px;padding-top:0;border-top:none}
+.metric-section-title{font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
 
 /* ─── WA TEMPLATES ─── */
 .wa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
