@@ -33,6 +33,41 @@ const CANAL_OPTS = [
   { value: 'otro',       label: 'Otro',        icon: 'fa-ellipsis',           color: '#64748b' },
 ]
 
+// Medio de pago — Fase 1 auditoria 02/10/26. Separado del canal de venta.
+const PAY_METHOD_OPTS = [
+  { value: 'efectivo',       label: 'Efectivo',       icon: 'fa-money-bill-wave' },
+  { value: 'transferencia',  label: 'Transferencia',  icon: 'fa-building-columns' },
+  { value: 'mp',             label: 'Mercado Pago',   icon: 'fa-wallet' },
+  { value: 'tarjeta',        label: 'Tarjeta',        icon: 'fa-credit-card' },
+  { value: 'cheque',         label: 'Cheque',         icon: 'fa-money-check' },
+  { value: 'otro',           label: 'Otro',           icon: 'fa-ellipsis' },
+]
+const PAY_METHOD_LABEL = Object.fromEntries(PAY_METHOD_OPTS.map(o => [o.value, o.label]))
+
+function payMethodOf(b) {
+  const pays = Array.isArray(b.payments) ? b.payments : []
+  if (pays.length > 0) {
+    const last = pays[pays.length - 1]
+    if (last.method) return last.method
+  }
+  return b.payMethod || null
+}
+
+function capitalizeName(s) {
+  if (!s) return s
+  return String(s).trim().split(/\s+/).map(w => {
+    if (/^[A-Z]{2,4}$/.test(w)) return w
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  }).join(' ')
+}
+
+function fmtDateShort(iso) {
+  if (!iso) return ''
+  const parts = iso.split('-')
+  if (parts.length < 3) return iso
+  return `${parts[2]}-${parts[1]}`
+}
+
 function fmtLive(v) {
   if (!v) return ''
   const clean = String(v).replace(/[^\d]/g, '')
@@ -43,7 +78,7 @@ function parseFmtValue(v) {
   return Number(String(v).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', incluyeIva: true, canal: '' }
+const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', incluyeIva: true, canal: '', payMethod: '' }
 
 export default function Ventas() {
   const { get, saveBudget } = useData()
@@ -60,6 +95,7 @@ export default function Ventas() {
   const [savedCount, setSavedCount] = useState(0)
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('desc')
+  const [tab, setTab] = useState('all')  // Smart Tab filter 02/10/26
   const [viewMode, setViewMode] = useState('cliente') // 'cliente' | 'producto'
   const inputRef = useRef(null)
 
@@ -190,6 +226,7 @@ export default function Ventas() {
       if (sortCol === 'producto') return dir * ((a.items?.[0]?.name || '').localeCompare(b.items?.[0]?.name || ''))
       if (sortCol === 'cant') return dir * ((a.items?.[0]?.qty || 1) - (b.items?.[0]?.qty || 1))
       if (sortCol === 'facturado') return dir * ((Number(a.total) || 0) - (Number(b.total) || 0))
+      if (sortCol === 'fecha') return dir * ((a.date || '').localeCompare(b.date || ''))
       if (sortCol === 'cobro') {
         const ord = { pending: 0, partial: 1, paid: 2 }
         return dir * ((ord[a.payStatus] || 0) - (ord[b.payStatus] || 0))
@@ -197,6 +234,18 @@ export default function Ventas() {
       return 0
     })
   }, [monthBudgets, sortCol, sortDir])
+
+  // Smart Tabs: Todas / Cobradas / Pendientes.
+  const tabCounts = useMemo(() => ({
+    all:     monthBudgets.length,
+    paid:    monthBudgets.filter(b => b.payStatus === 'paid').length,
+    pending: monthBudgets.filter(b => b.payStatus !== 'paid').length,
+  }), [monthBudgets])
+  const filteredBudgets = useMemo(() => {
+    if (tab === 'paid')    return sortedBudgets.filter(b => b.payStatus === 'paid')
+    if (tab === 'pending') return sortedBudgets.filter(b => b.payStatus !== 'paid')
+    return sortedBudgets
+  }, [sortedBudgets, tab])
 
   const toggleSort = (col) => {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -250,7 +299,8 @@ export default function Ventas() {
   const [justSaved, setJustSaved] = useState(false)
 
   const saveEntry = (keepOpen) => {
-    const cliente = draft.cliente.trim()
+    // Capitalize automatico (Fase 1 auditoria 02/10/26).
+    const cliente = capitalizeName(draft.cliente)
     const producto = draft.producto.trim()
     const cantidad = Number(draft.cantidad) || 1
     const rawFact = parseFmtValue(draft.facturado)
@@ -275,6 +325,7 @@ export default function Ventas() {
       status: 'confirmed', estado: 'confirmado',
       payStatus: draft.payStatus,
       canal: draft.canal || '',
+      payMethod: draft.payMethod || '',   // Medio de pago — Fase 1 auditoria 02/10/26
       total: facturado, aplicaIva: ivaAmt > 0, _quickIva: ivaAmt, _quickEntry: true,
       items: producto ? [{ name: producto, qty: cantidad }] : [],
       alternatives: [{ id: 1, label: 'Principal', approved: true, kits: [{ id: 1, name: 'Pedido', qty: 1, priceUnit: 0, costUnit: 0, packaging: [], products: producto ? [{ name: producto, qty: cantidad, costUnit: 0, priceUnit: facturado / (cantidad || 1) }] : [], personalizacion: { desc: '', costUnit: 0 } }] }],
@@ -354,7 +405,13 @@ export default function Ventas() {
   return (
     <div style={{ padding: '10px 20px 80px', maxWidth: 1000, margin: '0 auto' }}>
       <style>{`
-        .vt-row{display:grid;grid-template-columns:1fr .7fr .4fr .7fr .5fr .35fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
+        .vt-row{display:grid;grid-template-columns:.45fr 1fr .7fr .3fr .7fr .4fr .55fr .5fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
+        /* Smart Tabs — Fase 1 auditoria 02/10/26 */
+        .vt-smarttabs{display:flex;gap:0;padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+        .vt-stab{background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;font-size:12px;font-weight:700;color:var(--txt3);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:color .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
+        .vt-stab:hover{color:var(--txt2)}
+        .vt-stab-on{color:var(--brand)}
+        .vt-stab-ct{font-size:10px;font-weight:800;padding:1px 7px;border-radius:99px;background:var(--surface);color:var(--txt3)}
         .vt-row:hover{background:var(--surface2)}
         .vt-hdr{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;padding:8px 14px;background:var(--surface2);border-radius:10px 10px 0 0;border:none}
         .vt-hdr:hover{background:var(--surface2)}
@@ -373,7 +430,7 @@ export default function Ventas() {
         .vt-hero-stat-lbl{font-size:9px;font-weight:700;color:var(--txt4);text-transform:uppercase;letter-spacing:.06em}
         .vt-hero-divider{width:1px;background:var(--border);margin:0 4px;align-self:stretch}
         @media(max-width:700px){
-          .vt-row,.vt-hdr{grid-template-columns:1fr .6fr .5fr .3fr;font-size:12px}
+          .vt-row,.vt-hdr{grid-template-columns:1fr .7fr .6fr .35fr;font-size:12px}
           .vt-hide-m{display:none}
         }
         @media(max-width:600px){
@@ -483,9 +540,10 @@ export default function Ventas() {
         </div>
       </div>
 
-      <PendientesCobro budgets={monthBudgets} hidden={hidden} nav={nav} saveBudget={saveBudget} toast={toast} mesLabel={MESES[month]} />
-
-      {/* TABS Por cliente / Por producto */}
+      {/* TABS Por cliente / Por producto
+          Nota 02/10/26: el bloque <PendientesCobro> se eliminó aquí
+          (duplicaba lo que ahora se filtra con los Smart Tabs encima
+          de la tabla "Por cliente"). */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 14, marginBottom: 0, padding: '0 2px' }}>
         {[
           { key: 'cliente', label: 'Por cliente', icon: 'fa-users' },
@@ -512,11 +570,29 @@ export default function Ventas() {
       {/* TABLA — Por cliente (default) */}
       {viewMode === 'cliente' && (
         <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 6 }}>
+          {/* Smart Tabs (Todas / Cobradas / Pendientes) — reemplaza al bloque Pendientes de cobro separado */}
+          <div className="vt-smarttabs">
+            {[
+              { k: 'all',     label: 'Todas',      count: tabCounts.all,     color: 'var(--brand)' },
+              { k: 'paid',    label: 'Cobradas',   count: tabCounts.paid,    color: '#15803d' },
+              { k: 'pending', label: 'Pendientes', count: tabCounts.pending, color: '#b45309' },
+            ].map(t => (
+              <button key={t.k} className={`vt-stab ${tab === t.k ? 'vt-stab-on' : ''}`}
+                onClick={() => setTab(t.k)}
+                style={tab === t.k ? { color: t.color, borderBottomColor: t.color } : undefined}>
+                {t.label}
+                <span className="vt-stab-ct" style={tab === t.k ? { background: t.color + '20', color: t.color } : undefined}>{t.count}</span>
+              </button>
+            ))}
+          </div>
           <div className="vt-row vt-hdr">
+            <span className="vt-hide-m" onClick={() => toggleSort('fecha')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+              Fecha {sortCol === 'fecha' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
             {[
               { key: 'cliente', label: 'Cliente', cls: '' },
               { key: 'producto', label: 'Producto', cls: '' },
-              { key: 'cant', label: 'Cant', cls: 'vt-cell-r' },
+              { key: 'cant', label: 'Cant', cls: 'vt-cell-r vt-hide-m' },
               { key: 'facturado', label: 'Facturado', cls: 'vt-cell-r' },
             ].map(h => (
               <span key={h.key} className={h.cls} onClick={() => toggleSort(h.key)} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
@@ -525,44 +601,67 @@ export default function Ventas() {
               </span>
             ))}
             <span className="vt-cell-r vt-hide-m">IVA</span>
+            <span className="vt-hide-m" style={{ textAlign: 'center' }}>Medio pago</span>
             <span onClick={() => toggleSort('cobro')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
               Cobro
               {sortCol === 'cobro' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
             </span>
           </div>
 
-          {monthBudgets.length === 0 && (
+          {filteredBudgets.length === 0 && monthBudgets.length === 0 && (
             <div style={{ padding: '40px 20px', textAlign: 'center' }}>
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(124,58,237,.08)', color: '#7C3AED', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 10 }}><i className="fa fa-receipt" /></div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt2)', marginBottom: 4 }}>Sin ventas en {MESES[month].toLowerCase()}</div>
               <div style={{ fontSize: 12, color: 'var(--txt3)' }}>Hacé click en <strong>Nueva venta</strong> para agregar la primera</div>
             </div>
           )}
+          {filteredBudgets.length === 0 && monthBudgets.length > 0 && (
+            <div style={{ padding: '32px 24px', textAlign: 'center', fontSize: 12, color: 'var(--txt3)' }}>Sin ventas en esta pestaña.</div>
+          )}
 
-          {sortedBudgets.map(b => {
+          {filteredBudgets.map(b => {
             const pi = payInfo(b)
             const isPending = b.payStatus === 'pending'
             const isPartial = b.payStatus === 'partial'
+            // Desglose parcial — Fase 1 auditoria 02/10/26.
+            const totalDue = Number(b.total) || 0
+            const paid = b.payStatus === 'paid' ? totalDue
+                       : isPartial ? (Number(b.depositAmt) || 0)
+                       : 0
+            const owed = Math.max(0, totalDue - paid)
+            const method = payMethodOf(b)
             return (
               <div key={b.id} className="vt-row" style={{ cursor: 'pointer', borderLeft: isPending ? '3px solid #DC2626' : isPartial ? '3px solid #b45309' : '3px solid transparent' }} onClick={() => nav(`/pedido/${b.id}`)}>
+                <span className="vt-cell vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 11.5, fontVariantNumeric: 'tabular-nums' }}>{fmtDateShort(b.date) || '—'}</span>
                 <span className="vt-cell" style={{ fontWeight: 600, color: 'var(--txt)' }}>{b.company || b.contact || '—'}</span>
                 <span className="vt-cell" style={{ color: 'var(--txt2)' }}>{b.items?.[0]?.name || '—'}</span>
-                <span className="vt-cell vt-cell-r" style={{ color: 'var(--txt3)' }}>{b.items?.[0]?.qty || 1}</span>
+                <span className="vt-cell vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)' }}>{b.items?.[0]?.qty || 1}</span>
                 <span className="vt-cell vt-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(b.total || 0)}</span>
                 <span className="vt-cell vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : (b._quickIva ? fmt(b._quickIva) : '—')}</span>
+                <span className="vt-cell vt-hide-m" style={{ textAlign: 'center', color: 'var(--txt3)', fontSize: 11 }}>
+                  {method ? PAY_METHOD_LABEL[method] || method : '—'}
+                </span>
                 <span style={{ textAlign: 'center' }} onClick={e => { e.stopPropagation(); const nx = b.payStatus === 'pending' ? 'partial' : b.payStatus === 'partial' ? 'paid' : 'pending'; updatePayStatus(b.id, nx) }}>
                   <span className="vt-pay-chip" style={{ background: pi.bg, color: pi.color }}>{pi.label}</span>
+                  {isPartial && !hidden && (
+                    <div style={{ fontSize: 9.5, color: 'var(--txt4)', marginTop: 3, fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
+                      {fmt(paid)} / <span style={{ color: '#b45309', fontWeight: 700 }}>{fmt(owed)}</span>
+                    </div>
+                  )}
                 </span>
               </div>
             )
           })}
 
-          {monthBudgets.length > 0 && (
+          {filteredBudgets.length > 0 && (
             <div className="vt-row" style={{ background: 'var(--surface2)', fontWeight: 800, borderBottom: 'none', borderRadius: '0 0 12px 12px' }}>
+              <span className="vt-hide-m" />
               <span style={{ color: 'var(--txt3)', fontSize: 11, textTransform: 'uppercase' }}>Total</span>
-              <span /><span />
-              <span className="vt-cell-r" style={{ color: 'var(--txt)', fontSize: 15 }}>{hidden ? '***' : fmt(totals.facturado)}</span>
-              <span className="vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12 }}>{hidden ? '***' : fmt(totals.iva)}</span>
+              <span />
+              <span className="vt-hide-m" />
+              <span className="vt-cell-r" style={{ color: 'var(--txt)', fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(filteredBudgets.reduce((s, b) => s + (Number(b.total) || 0), 0))}</span>
+              <span className="vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(filteredBudgets.reduce((s, b) => s + (Number(b._quickIva) || 0), 0))}</span>
+              <span className="vt-hide-m" />
               <span />
             </div>
           )}
@@ -903,6 +1002,25 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
                     {draft.incluyeIva && ivaCalc() > 0 && <div style={{ fontSize: 10, color: 'var(--brand)', marginTop: 1 }}>{fmt(ivaCalc())}</div>}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="sd-sep" />
+
+          {/* Medio de pago — Fase 1 auditoria 02/10/26 */}
+          <div className="sd-group" style={{ marginBottom: 10 }}>
+            <div className="sd-fg" style={{ marginBottom: 0 }}>
+              <label className="sd-lbl">Medio de pago</label>
+              <div className="sd-canal-chips">
+                {PAY_METHOD_OPTS.map(m => (
+                  <button key={m.value}
+                    className="sd-canal"
+                    style={draft.payMethod === m.value ? { borderColor: 'var(--brand)', color: 'var(--brand)', borderWidth: 2 } : {}}
+                    onClick={() => setDraft(d => ({ ...d, payMethod: d.payMethod === m.value ? '' : m.value }))}>
+                    <i className={`fa ${m.icon}`} style={{ fontSize: 10 }} /> {m.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
