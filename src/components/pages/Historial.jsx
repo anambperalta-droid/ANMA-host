@@ -2722,6 +2722,7 @@ export default function Historial() {
         onEdit={() => { const b = drawerBudget; setDrawerBudget(null); if (b) nav(pedidoRoute(b)) }}
         onWA={() => { if (drawerBudget) copyWA(drawerBudget) }}
         onCobrarWA={() => { if (drawerBudget) cobrarPorWA(drawerBudget) }}
+        onSharePC={() => { if (drawerBudget) sharePC(drawerBudget) }}
         onVerCliente={() => {
           const b = drawerBudget
           const cli = (clients || []).find(c => (b?.company && c.company === b.company) || (b?.contact && c.contact === b.contact))

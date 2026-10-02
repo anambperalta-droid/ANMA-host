@@ -53,7 +53,7 @@ const fmtEvento = (ts) => {
   return `${fecha} · ${rel}`
 }
 
-export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerCliente, onRegistrarPago, onCobrarWA }) {
+export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerCliente, onRegistrarPago, onCobrarWA, onSharePC }) {
   useEffect(() => {
     if (!budget) return
     const onEsc = (e) => { if (e.key === 'Escape') onClose() }
@@ -253,6 +253,19 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
                   </button>
                 )}
               </div>
+            )}
+            {onSharePC && (
+              <button onClick={() => onSharePC(budget)}
+                title="Genera un link con el estado del pedido para compartir con el cliente"
+                style={{
+                  marginTop: 8, width: '100%', padding: '9px 12px',
+                  background: 'var(--brand-xlt)', color: 'var(--brand)',
+                  border: '1px solid rgba(124,58,237,.25)', borderRadius: 9,
+                  cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                  fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                }}>
+                <i className="fa fa-share-nodes" /> Compartir pedido con el cliente
+              </button>
             )}
           </div>
 
