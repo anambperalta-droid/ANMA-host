@@ -150,21 +150,30 @@ export function openWAFor(b, { onNoNumber, onSent } = {}) {
  * Expira a los 60 días. Backward-compatible con el patrón del PortalProveedor.
  */
 export function buildClientePortalLink(b, cfg = {}) {
-  const items = (Array.isArray(b.items) ? b.items : []).map(i => ({
-    n: String(i.name || '').slice(0, 60),
-    q: Number(i.qty) || 0,
-    pu: Number(i.pu ?? i.price ?? 0),
-  }))
+  // Precio unitario con múltiples fallbacks: pu, price, unitPrice, precio.
+  // Si no hay ninguno pero el item trae su subtotal/total, lo derivamos de qty.
+  const items = (Array.isArray(b.items) ? b.items : []).map(i => {
+    const qty = Number(i.qty ?? i.cantidad ?? 1) || 0
+    const puRaw = Number(i.pu ?? i.price ?? i.unitPrice ?? i.precio ?? i.precioUnit ?? 0)
+    const sub = Number(i.subtotal ?? i.total ?? 0)
+    const pu = puRaw > 0 ? puRaw : (qty > 0 && sub > 0 ? Math.round(sub / qty) : 0)
+    return { n: String(i.name || '').slice(0, 60), q: qty, pu }
+  })
+  // Saldo honesto según payStatus — un pedido 'paid' NO tiene saldo pendiente.
+  const total = Number(b.total) || 0
+  const depAmt = Number(b.depositAmt) || 0
+  const pay = b.payStatus || 'pending'
+  const seniaReal = pay === 'paid' ? total : (pay === 'partial' ? depAmt : 0)
   const payload = {
     n: b.contact || '',
     co: b.company || '',
     neg: cfg.businessName || 'ANMA',
     it: items,
-    t: Number(b.total) || 0,
-    s: Number(b.depositAmt) || 0,
+    t: total,
+    s: seniaReal,
     d: b.deliveryDate || null,
     st: b.status || 'draft',
-    ps: b.payStatus || 'pending',
+    ps: pay,
     wa: cfg.ownerWa || cfg.wa || '',
     cbu: cfg.cbu || '',
     al: cfg.alias || '',
