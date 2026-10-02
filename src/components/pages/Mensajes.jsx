@@ -248,13 +248,24 @@ function ClientSelector({ clients, selected, onSelect, onClear }) {
 /* ── Panel de variables sticky ── */
 function VariablesPanel({ client, config, budget }) {
   const c = config
+  const senia = budget ? (Number(budget.depositAmt) || 0) : 0
+  const total = budget ? (Number(budget.total) || 0) : 0
+  const saldo = Math.max(0, total - senia)
+  const deliveryISO = budget?.deliveryDate
+  const dd = deliveryISO ? Math.ceil((new Date(deliveryISO + 'T00:00') - new Date()) / 86400000) : null
+  const diasVencido = dd !== null && dd < 0 ? Math.abs(dd) : null
+  const linkPago = c.linkPago || c.mpLink || null
   const vars = [
     { key: 'nombre', icon: 'fa-user', value: client?.contact },
     { key: 'empresa', icon: 'fa-building', value: client?.company },
     { key: 'negocio', icon: 'fa-store', value: c.businessName || 'ANMA' },
     { key: 'precio', icon: 'fa-coins', value: budget ? fmt(budget.total) : null },
+    { key: 'saldo', icon: 'fa-scale-balanced', value: budget && saldo > 0 ? fmt(saldo) : null },
+    { key: 'seña', icon: 'fa-hand-holding-dollar', value: budget && senia > 0 ? fmt(senia) : null },
     { key: 'producto', icon: 'fa-box-open', value: budget?.items?.length ? budget.items.map(i => i.name).filter(Boolean).join(', ') : null },
     { key: 'fecha', icon: 'fa-calendar', value: formatFechaAR(budget?.deliveryDate || budget?.date) || null },
+    { key: 'diasVencido', icon: 'fa-triangle-exclamation', value: diasVencido !== null ? `${diasVencido}` : null },
+    { key: 'linkPago', icon: 'fa-link', value: linkPago },
   ]
 
   return (
@@ -364,6 +375,15 @@ export default function Mensajes() {
     const precio = clientBudget ? fmt(clientBudget.total) : ''
     const producto = clientBudget?.items?.length ? clientBudget.items.map(i => i.name).filter(Boolean).join(', ') : ''
     const fecha = formatFechaAR(clientBudget?.deliveryDate || clientBudget?.date)
+    // Variables de cobro: saldo pendiente, seña recibida, días vencidos, link de pago.
+    const seniaN = clientBudget ? (Number(clientBudget.depositAmt) || 0) : 0
+    const totalN = clientBudget ? (Number(clientBudget.total) || 0) : 0
+    const saldo = clientBudget && (totalN - seniaN) > 0 ? fmt(totalN - seniaN) : ''
+    const seña = clientBudget && seniaN > 0 ? fmt(seniaN) : ''
+    const deliveryISO = clientBudget?.deliveryDate
+    const dd = deliveryISO ? Math.ceil((new Date(deliveryISO + 'T00:00') - new Date()) / 86400000) : null
+    const diasVencido = dd !== null && dd < 0 ? String(Math.abs(dd)) : ''
+    const linkPago = c.linkPago || c.mpLink || ''
     return text
       .replace(/{{nombre}}/gi, nombre)
       .replace(/{{empresa}}/gi, empresa)
@@ -372,6 +392,10 @@ export default function Mensajes() {
       .replace(/{{producto}}/gi, producto)
       .replace(/{{fecha}}/gi, fecha)
       .replace(/{{wa}}/gi, wa)
+      .replace(/{{saldo}}/gi, saldo)
+      .replace(/{{se[ñn]a}}/gi, seña)
+      .replace(/{{diasVencido}}/gi, diasVencido)
+      .replace(/{{linkPago}}/gi, linkPago)
   }
 
   const unresolvedCount = (text) => {
@@ -482,7 +506,7 @@ export default function Mensajes() {
         </div>
         <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 14px', marginTop: 4, fontSize: 11, color: P.textSoft, border: '1px solid #f1f5f9' }}>
           <b style={{ color: P.text }}>Variables:</b>{' '}
-          {['nombre', 'empresa', 'negocio', 'producto', 'precio', 'fecha'].map((v, i) => (
+          {['nombre', 'empresa', 'negocio', 'producto', 'precio', 'saldo', 'seña', 'fecha', 'diasVencido', 'linkPago'].map((v, i) => (
             <span key={v}>{i > 0 && ' · '}<code style={{ color: P.varTag, fontFamily: "'SF Mono','Fira Code',monospace", fontSize: 10, background: P.varBg, padding: '1px 4px', borderRadius: 3 }}>{`{{${v}}}`}</code></span>
           ))}
         </div>
