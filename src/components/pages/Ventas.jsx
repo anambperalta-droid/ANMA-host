@@ -993,6 +993,8 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast, mesLabel }) 
     const url = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`
     const w = window.open(url, '_blank', 'noopener')
     if (!w) window.location.href = url
+    // Registramos lastContact para el seguimiento (hace Xd / sin contactar en N días).
+    if (saveBudget) saveBudget({ ...b, lastContactAt: Date.now(), lastContactChannel: 'wa' })
   }
 
   return (

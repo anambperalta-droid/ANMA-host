@@ -130,13 +130,35 @@ export function buildWAMsg(b) {
  * openWAFor(b) — Abre WhatsApp con el mensaje contextual.
  * Fallback a window.location si popups están bloqueados.
  * Si no hay número cargado, abre WA en vacío con mensaje precargado.
+ * `onSent(b)` se dispara después de abrir WA — útil para registrar
+ * lastContactAt en el budget sin acoplar la lib a DataContext.
  */
-export function openWAFor(b, { onNoNumber } = {}) {
+export function openWAFor(b, { onNoNumber, onSent } = {}) {
   const text = buildWAMsg(b)
   const num = (b.wa || '').replace(/\D/g, '')
   const encoded = encodeURIComponent(text)
   const url = num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`
   const w = window.open(url, '_blank')
-  if (!w) { window.location.href = url; return }
+  if (!w) { window.location.href = url }
   if (!num && typeof onNoNumber === 'function') onNoNumber(b)
+  if (typeof onSent === 'function') onSent(b)
+}
+
+/**
+ * relTimeShort(ts) — "hace 2d" / "hace 3h" / "hace 5min" / "ahora".
+ * Usado para mostrar "Último contacto" en el drawer / tabla sin ocupar espacio.
+ */
+export function relTimeShort(ts) {
+  if (!ts) return ''
+  const diff = Date.now() - Number(ts)
+  if (diff < 0) return ''
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return 'ahora'
+  if (min < 60) return `hace ${min}min`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `hace ${h}h`
+  const d = Math.floor(h / 24)
+  if (d < 30) return `hace ${d}d`
+  const mo = Math.floor(d / 30)
+  return `hace ${mo}m`
 }

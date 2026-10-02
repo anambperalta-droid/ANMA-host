@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
 import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, registrarEvento } from '../../lib/pedido'
-import { buildWAMsg, openWAFor } from '../../lib/waMsg'
+import { buildWAMsg, openWAFor, relTimeShort } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
@@ -608,19 +608,36 @@ function SeguimientoCard({ b, onView, onWA, hasWA }) {
               <i className="fa fa-truck-fast" /> entrega {dd === 0 ? 'hoy' : `en ${dd}d`}
             </span>
           )}
+          {b.lastContactAt && (
+            <span style={{ color: 'var(--txt3)', fontSize: 10.5 }} title={new Date(b.lastContactAt).toLocaleString('es-AR')}>
+              <i className="fa-brands fa-whatsapp" style={{ color: '#25D366', marginRight: 3 }} />
+              WA {relTimeShort(b.lastContactAt)}
+            </span>
+          )}
         </div>
       </div>
 
       {/* Monto */}
       <div className="seg-amount">{money(b.total)}</div>
 
-      {/* Acción WA — botón circular compacto (no compite con el chip de urgencia) */}
-      <button
-        onClick={e => { e.stopPropagation(); onWA(b) }}
-        title={hasWA ? 'Recontactar por WhatsApp' : 'Sin WhatsApp — copiar mensaje'}
-        className="seg-wa-btn">
-        <i className="fa-brands fa-whatsapp" />
-      </button>
+      {/* Acción WA — tick verde chico si contactado reciente (<7d) */}
+      {(() => {
+        const contactedRecent = b.lastContactAt && (Date.now() - b.lastContactAt < 7 * 86400000)
+        return (
+          <button
+            onClick={e => { e.stopPropagation(); onWA(b) }}
+            title={
+              contactedRecent
+                ? `Ya contactado ${relTimeShort(b.lastContactAt)} — mandar otro mensaje`
+                : (hasWA ? 'Recontactar por WhatsApp' : 'Sin WhatsApp — abrir en vacío')
+            }
+            className="seg-wa-btn"
+            style={contactedRecent ? { background: 'rgba(37,211,102,.12)', borderColor: 'rgba(37,211,102,.3)' } : undefined}>
+            <i className="fa-brands fa-whatsapp" />
+            {contactedRecent && <span style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: '50%', background: '#25D366', border: '2px solid var(--surface)' }} />}
+          </button>
+        )
+      })()}
     </div>
   )
 }
@@ -1169,13 +1186,13 @@ export default function Historial() {
   // para que el usuario elija el contacto. Nunca copia (eso no sirve, el
   // objetivo es llegarle al cliente al toque).
   const copyWA = (b) => {
-    const text = buildWAMsg(b)
-    const num = (b.wa || '').replace(/\D/g, '')
-    const encoded = encodeURIComponent(text)
-    const url = num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`
-    const w = window.open(url, '_blank')
-    if (!w) { window.location.href = url; return }
-    if (!num) toast(`${b.contact || 'El cliente'} no tiene WhatsApp cargado — elegí contacto`, 'in')
+    openWAFor(b, {
+      onNoNumber: (bb) => toast(`${bb.contact || 'El cliente'} no tiene WhatsApp cargado — elegí contacto`, 'in'),
+      onSent: (bb) => {
+        // Registramos último contacto (para "sin contactar en 7 días" y "hace Xd").
+        saveBudget({ ...bb, lastContactAt: Date.now(), lastContactChannel: 'wa' })
+      },
+    })
   }
 
   // ── COBRO por WhatsApp ──────────────────────────────────────────

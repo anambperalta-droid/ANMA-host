@@ -637,7 +637,7 @@ td b{color:var(--txt);font-weight:600}
 .seg-amount{font-size:15px;font-weight:800;color:var(--money);flex-shrink:0;font-variant-numeric:tabular-nums;font-family:'Space Grotesk','Inter',sans-serif;white-space:nowrap;text-align:right;min-width:90px}
 /* Botón WA circular compacto — no compite con el chip de urgencia */
 /* WA con tint verde suave (patrón app: no fill dominante que compita) */
-.seg-wa-btn{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1.5px solid transparent;background:#DCFCE7;color:#16A34A;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.seg-wa-btn{position:relative;flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1.5px solid transparent;background:#DCFCE7;color:#16A34A;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s;font-family:inherit;-webkit-tap-highlight-color:transparent}
 .seg-wa-btn:hover{background:#BBF7D0;color:#15803D}
 .seg-wa-btn:active{transform:scale(.94)}
 /* Mobile: ocultar contact secundario, achicar monto, chip un poco más chico */
