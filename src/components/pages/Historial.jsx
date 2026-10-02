@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
 import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, registrarEvento } from '../../lib/pedido'
+import { buildWAMsg, openWAFor } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
@@ -52,30 +53,6 @@ function budgetSearchText(b) {
   return text
 }
 
-// Mensaje de RECONTACTO — comercial: cálido, con CTA claro y urgencia por
-// fecha de entrega. Reemplaza el pasivo "quedamos a disposición". El fin es
-// conseguir respuesta y avanzar a confirmación, NO cobrar (eso va aparte).
-function buildReengageMsg(b) {
-  const nombre = b.contact || ''
-  const monto  = b.total ? ` por ${fmt(b.total)}` : ''
-  const lines = [
-    `Hola ${nombre}! ¿Cómo estás?`,
-    ``,
-    `Te escribo por el presupuesto ${b.num || ''}${monto} que te pasamos${b.date ? ` el ${fmtDate(b.date)}` : ''}.`,
-    `¿Pudiste verlo? Si querés ajustar algo —cantidades, opciones o presupuesto— lo vemos sin problema.`,
-  ]
-  if (b.deliveryDate) {
-    const dd = Math.ceil((new Date(b.deliveryDate + 'T00:00') - new Date()) / 86400000)
-    lines.push('')
-    lines.push(dd > 0
-      ? `Para llegar a la entrega del ${fmtDate(b.deliveryDate)} lo ideal sería confirmar esta semana. ¿Avanzamos?`
-      : `¿Avanzamos con el pedido?`)
-  } else {
-    lines.push('')
-    lines.push(`¿Avanzamos?`)
-  }
-  return lines.join('\n')
-}
 
 // Formato "hace X" para timestamps — se usa en la tabla de Actividad reciente
 function relTime(ts) {
@@ -1187,18 +1164,18 @@ export default function Historial() {
     dbW('presupDuplicate', { source: b, at: Date.now() })
     nav('/pedido')
   }
+  // openWA — SIEMPRE abre WhatsApp con el mensaje contextual según estado.
+  // Sin número cargado: abre WA Web/App en vacío con el mensaje precargado
+  // para que el usuario elija el contacto. Nunca copia (eso no sirve, el
+  // objetivo es llegarle al cliente al toque).
   const copyWA = (b) => {
-    const text = buildReengageMsg(b)
+    const text = buildWAMsg(b)
     const num = (b.wa || '').replace(/\D/g, '')
-    if (num) {
-      // Redirige directo al chat del cliente con el mensaje de recontacto.
-      window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank')
-      return
-    }
-    // Sin número guardado → no hay a quién abrir; copiamos como respaldo.
-    navigator.clipboard.writeText(text).then(() =>
-      toast('Este cliente no tiene WhatsApp cargado — mensaje copiado', 'in')
-    )
+    const encoded = encodeURIComponent(text)
+    const url = num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`
+    const w = window.open(url, '_blank')
+    if (!w) { window.location.href = url; return }
+    if (!num) toast(`${b.contact || 'El cliente'} no tiene WhatsApp cargado — elegí contacto`, 'in')
   }
 
   // ── COBRO por WhatsApp ──────────────────────────────────────────
@@ -1442,11 +1419,8 @@ export default function Historial() {
     return out
   }, [budgets, periodBudgets, prevPeriodBudgets, deltaBrutas, topClients, confirmed, cobrosVencidos, avgTicket, period, prevTotBudgeted, totBudgeted])
 
-  const openWADirect = (b) => {
-    if (!b.wa) { copyWA(b); return }
-    const num = b.wa.replace(/\D/g, '')
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(buildReengageMsg(b))}`, '_blank')
-  }
+  // Alias — mismo comportamiento que copyWA (siempre abre WA, mensaje contextual).
+  const openWADirect = (b) => copyWA(b)
 
   return (
     <div className="page active" style={{ animation: 'pgIn .25s ease both' }}>

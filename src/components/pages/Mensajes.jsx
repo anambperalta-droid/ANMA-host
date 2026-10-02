@@ -7,7 +7,7 @@ import { fmt } from '../../lib/storage'
 /* Version de los defaults — subir cada vez que cambia DEFAULT_TEMPLATES.
    El componente lo compara contra lo guardado y auto-migra sin perder
    los mensajes custom del usuario. */
-const DEFAULTS_VERSION = 2
+const DEFAULTS_VERSION = 3
 
 /* ── Formato fecha ANMA: d-m-aa (ej: 2-10-26) ──
    Acepta ISO yyyy-mm-dd o Date. Si no reconoce, devuelve string tal cual. */
@@ -413,10 +413,34 @@ export default function Mensajes() {
   }
 
   const sendWA = (text) => {
+    // 1) Sin cliente activo → guiamos y evitamos abrir WA con "{{nombre}}" literal.
+    if (!activeClient) {
+      toast('Elegí un cliente primero (arriba, "Cliente activo")', 'in')
+      // scroll al selector + flash visual
+      const sel = document.querySelector('.msg-cli-block')
+      if (sel) {
+        sel.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        sel.classList.add('cli-flash')
+        setTimeout(() => sel.classList.remove('cli-flash'), 1200)
+      }
+      return
+    }
     const final = replaceVars(text)
+    const pending = unresolvedCount(text)
+    // 2) Variables sin completar → avisamos sin bloquear (si el usuario insiste, abrimos igual)
+    if (pending > 0) {
+      const lista = (final.match(/{{[^}]+}}/g) || []).map(v => v.replace(/[{}]/g, '')).join(', ')
+      const ok = window.confirm(`Faltan ${pending} dato${pending > 1 ? 's' : ''} del cliente/presupuesto: ${lista}.\n\n¿Enviar igual?`)
+      if (!ok) return
+    }
+    // 3) Abrir WhatsApp con número si lo tenemos, o en vacío con mensaje precargado.
     const waNum = activeClient?.wa ? activeClient.wa.replace(/\D/g, '') : ''
     const encoded = encodeURIComponent(final)
-    window.open(waNum ? `https://wa.me/${waNum}?text=${encoded}` : `https://wa.me/?text=${encoded}`, '_blank')
+    const url = waNum ? `https://wa.me/${waNum}?text=${encoded}` : `https://wa.me/?text=${encoded}`
+    const w = window.open(url, '_blank')
+    // Fallback: popup blocker. Navegamos en la misma pestaña.
+    if (!w) { window.location.href = url; return }
+    if (!waNum) toast('El cliente no tiene WhatsApp cargado — elegí contacto en la pantalla de WhatsApp', 'in')
   }
 
   /* ── Botón de icono genérico (gris por defecto, color en hover) ── */

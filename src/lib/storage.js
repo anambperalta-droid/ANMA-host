@@ -98,11 +98,12 @@ export const fmt = (v) => {
   return cur + (Number(v) || 0).toLocaleString(locale, { maximumFractionDigits: 0 })
 }
 
+// Formato ANMA: d-m-aa (sin ceros a la izquierda, con guiones). Ej: 2-10-26
 export const fmtDate = (iso) => {
   if (!iso) return '—'
   const p = String(iso).slice(0, 10).split('-')
   if (p.length < 3) return iso
-  return `${p[2]}/${p[1]}/${p[0].slice(2)}`
+  return `${Number(p[2])}-${Number(p[1])}-${p[0].slice(2)}`
 }
 
 export const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
