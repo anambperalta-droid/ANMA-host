@@ -9,6 +9,7 @@ import ErrorBoundary from './components/layout/ErrorBoundary'
 // así el bundle inicial solo carga Login + AppShell.
 const Bienvenida      = lazy(() => import('./components/pages/Bienvenida'))
 const PortalProveedor = lazy(() => import('./components/pages/PortalProveedor'))
+const PortalCliente   = lazy(() => import('./components/pages/PortalCliente'))
 const Alta            = lazy(() => import('./components/pages/Alta'))
 const Activar         = lazy(() => import('./components/pages/Activar'))
 const PagoResultado   = lazy(() => import('./components/pages/PagoResultado'))
@@ -35,6 +36,7 @@ export default function App() {
       <Suspense fallback={<div className="sk sk-kpi" style={{ height: '100vh' }} />}>
       <Routes>
         <Route path="/portal-proveedor" element={<PortalProveedor />} />
+        <Route path="/portal-cliente" element={<PortalCliente />} />
         <Route path="/alta" element={<Alta appName="ANMA Regalos" />} />
         <Route path="/bienvenida" element={<Bienvenida />} />
         <Route path="/login" element={

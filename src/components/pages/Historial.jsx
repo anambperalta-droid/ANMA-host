@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
 import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, registrarEvento } from '../../lib/pedido'
-import { buildWAMsg, openWAFor, relTimeShort } from '../../lib/waMsg'
+import { buildWAMsg, openWAFor, relTimeShort, sharePortalCliente } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
@@ -1195,6 +1195,12 @@ export default function Historial() {
     })
   }
 
+  // Compartir portal del cliente — genera link + copia + abre WA con mensaje.
+  const sharePC = (b) => {
+    sharePortalCliente(b, c, { toast })
+    saveBudget({ ...b, lastContactAt: Date.now(), lastContactChannel: 'wa' })
+  }
+
   // ── COBRO por WhatsApp ──────────────────────────────────────────
   // Complementa al recontacto: acá el pedido YA está confirmado y el fin es
   // cobrar. Arma un mensaje cálido + la forma de pago (link MP si está
@@ -1732,6 +1738,7 @@ export default function Historial() {
                                       { icon: 'fa-pen', label: 'Editar', action: () => { editB(b.id); setOpenMenuId(null) } },
                                       { icon: 'fa-copy', label: 'Duplicar', action: () => { duplicateBudget(b); setOpenMenuId(null) } },
                                       { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', action: () => { copyWA(b); setOpenMenuId(null) } },
+                                      { icon: 'fa-share-nodes', label: 'Compartir con cliente', action: () => { sharePC(b); setOpenMenuId(null) } },
                                       { icon: 'fa-paper-plane', label: 'Re-enviar', action: () => { handleResend(b); setOpenMenuId(null) } },
                                     ].map((item, idx) => (
                                       <button key={idx} onClick={item.action}
@@ -2167,6 +2174,7 @@ export default function Historial() {
                                 { icon: 'fa-eye', label: 'Ver detalle', action: () => { setDrawerBudget(b); setOpenMenuId(null) } },
                                 { icon: 'fa-pen', label: 'Editar', action: () => { editB(b.id); setOpenMenuId(null) } },
                                 { icon: 'fa-copy', label: 'Duplicar', action: () => { duplicateBudget(b); setOpenMenuId(null) } },
+                                { icon: 'fa-share-nodes', label: 'Compartir con cliente', action: () => { sharePC(b); setOpenMenuId(null) } },
                                 { icon: 'fa-trash', label: 'Eliminar', danger: true, action: () => { handleDelete(b); setOpenMenuId(null) } },
                               ].map((item, idx) => (
                                 <button key={idx} onClick={item.action}

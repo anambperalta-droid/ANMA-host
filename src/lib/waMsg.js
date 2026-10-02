@@ -145,6 +145,87 @@ export function openWAFor(b, { onNoNumber, onSent } = {}) {
 }
 
 /**
+ * buildClientePortalLink(b, cfg) — Genera link público /portal-cliente?d=BASE64
+ * con un payload compacto (keys cortas) para que la URL no sea gigante.
+ * Expira a los 60 días. Backward-compatible con el patrón del PortalProveedor.
+ */
+export function buildClientePortalLink(b, cfg = {}) {
+  const items = (Array.isArray(b.items) ? b.items : []).map(i => ({
+    n: String(i.name || '').slice(0, 60),
+    q: Number(i.qty) || 0,
+    pu: Number(i.pu ?? i.price ?? 0),
+  }))
+  const payload = {
+    n: b.contact || '',
+    co: b.company || '',
+    neg: cfg.businessName || 'ANMA',
+    it: items,
+    t: Number(b.total) || 0,
+    s: Number(b.depositAmt) || 0,
+    d: b.deliveryDate || null,
+    st: b.status || 'draft',
+    ps: b.payStatus || 'pending',
+    wa: cfg.ownerWa || cfg.wa || '',
+    cbu: cfg.cbu || '',
+    al: cfg.alias || '',
+    tit: cfg.titular || '',
+    mp: cfg.linkPago || cfg.mpLink || '',
+    e: Date.now() + 60 * 86400000, // 60 días
+  }
+  const json = JSON.stringify(payload)
+  // base64 URL-safe (igual que PortalProveedor)
+  const b64 = btoa(unescape(encodeURIComponent(json)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  // En Hub el app está bajo /app; portal es público bajo /portal-cliente
+  const base = typeof window !== 'undefined' && window.location.pathname.startsWith('/app')
+    ? origin + '/app/portal-cliente'
+    : origin + '/portal-cliente'
+  return `${base}?d=${b64}`
+}
+
+/**
+ * sharePortalCliente(b, cfg, { toast }) — genera el link, copia al clipboard
+ * y abre WhatsApp con un mensaje corto + el link. Si no hay número, abre WA
+ * en vacío para que el usuario elija contacto.
+ */
+export function sharePortalCliente(b, cfg = {}, { toast } = {}) {
+  const link = buildClientePortalLink(b, cfg)
+  try { navigator.clipboard?.writeText(link) } catch { /* ignore */ }
+  const nombre = b.contact || ''
+  const neg = cfg.businessName || 'nosotros'
+  const text = [
+    `Hola ${nombre}!`,
+    ``,
+    `Te comparto el estado de tu pedido con ${neg}. Lo podés abrir desde este link (se actualiza solo):`,
+    link,
+  ].join('\n')
+  const num = (b.wa || '').replace(/\D/g, '')
+  const encoded = encodeURIComponent(text)
+  const url = num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`
+  const w = window.open(url, '_blank')
+  if (!w) { window.location.href = url }
+  if (typeof toast === 'function') toast('Link del cliente copiado al portapapeles', 'ok')
+  return link
+}
+
+/**
+ * decodeClientePortal(d) — Decodifica el payload desde ?d=BASE64.
+ * Devuelve null si no es válido o venció.
+ */
+export function decodeClientePortal(d) {
+  try {
+    const b64 = d.replace(/-/g, '+').replace(/_/g, '/')
+    const json = decodeURIComponent(escape(atob(b64)))
+    const raw = JSON.parse(json)
+    if (raw.e && Date.now() > raw.e) return { expired: true }
+    return raw
+  } catch {
+    return null
+  }
+}
+
+/**
  * relTimeShort(ts) — "hace 2d" / "hace 3h" / "hace 5min" / "ahora".
  * Usado para mostrar "Último contacto" en el drawer / tabla sin ocupar espacio.
  */
