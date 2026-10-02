@@ -19,7 +19,10 @@ export function buildWAMsg(b) {
   const nombre = b.contact || ''
   const empresa = b.company ? ` para ${b.company}` : ''
   const monto = b.total ? fmt(b.total) : ''
-  const num = b.num ? ` ${b.num}` : ''
+  // Nota: no incluimos el número interno de presupuesto (ej. P-0018) en el
+  // mensaje al cliente — no le aporta nada. Lo identificamos por el monto
+  // y la fecha, que para el cliente sí es claro.
+  const num = ''
   const deliveryISO = b.deliveryDate
   const deliveryStr = deliveryISO ? fmtDate(deliveryISO) : ''
   const senia = Number(b.depositAmt) || 0

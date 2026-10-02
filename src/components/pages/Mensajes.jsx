@@ -505,9 +505,8 @@ export default function Mensajes() {
           <h2>Mensajes</h2>
         </div>
         <div className="ph-right">
-          <button className="btn btn-ghost btn-sm msg-btn-restore" onClick={restoreDefaults} style={{ borderRadius: 10 }} title="Restaurar mensajes originales">
-            <i className="fa fa-rotate-left" /><span className="desc-txt"> Restaurar</span>
-          </button>
+          {/* Botón "Restaurar" removido — la auto-migración por DEFAULTS_VERSION
+              se corre sola al cargar y preserva los mensajes custom del usuario. */}
           <button className="btn btn-sm msg-btn-new" onClick={openNew}
             style={{ background: P.accent, color: '#fff', border: 'none', borderRadius: 10, boxShadow: '0 4px 12px rgba(37,211,102,.2)' }}>
             <i className="fa fa-plus" /><span className="msg-btn-new-lbl"> Nuevo mensaje</span>
