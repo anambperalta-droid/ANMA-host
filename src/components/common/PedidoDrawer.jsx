@@ -32,6 +32,10 @@ const ESTADO_COLOR = {
 const PAY_LABEL = { pending: 'Pendiente', partial: 'Parcial', paid: 'Pagado' }
 const PAY_COLOR = { pending: '#DC2626', partial: '#D97706', paid: '#16A34A' }
 
+// Estados donde aún no hay compromiso de cobro: no mostrar saldo en rojo.
+// Un pedido en Consulta/Presupuestado/Pausado/Perdido NO tiene deuda real.
+const SIN_COMPROMISO = new Set(['consulta', 'presupuestado', 'pausado', 'perdido'])
+
 const TAGS_PROD  = new Set(['producto', 'packaging'])
 const TAGS_COSTO = new Set(['manoDeObra', 'diseno', 'envio', 'otro'])
 
@@ -166,13 +170,25 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
             ))}
           </div>
 
-          {/* Info clave */}
-          <div className="pd-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
-            <MiniKpi icon="fa-calendar-day" label="Fecha" value={fmtFecha(budget.date)} />
-            <MiniKpi icon="fa-gift" label="Ocasion" value={budget.ocasion || '—'} />
-            <MiniKpi icon="fa-truck-fast" label="Entrega" value={fmtFecha(budget.deliveryDate)} />
-            <MiniKpi icon="fa-comment-dots" label="WhatsApp" value={budget.wa || '—'} />
-          </div>
+          {/* Info clave — SOLO campos con valor (sin ruido de "—") */}
+          {(() => {
+            const cards = [
+              { icon: 'fa-calendar-day', label: 'Fecha', value: budget.date ? fmtFecha(budget.date) : null },
+              { icon: 'fa-gift', label: 'Ocasion', value: budget.ocasion || null },
+              { icon: 'fa-truck-fast', label: 'Entrega', value: budget.deliveryDate ? fmtFecha(budget.deliveryDate) : null },
+              { icon: 'fa-comment-dots', label: 'WhatsApp', value: budget.wa || null },
+            ].filter(c => c.value)
+            if (cards.length === 0) return null
+            return (
+              <div className="pd-info-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: cards.length === 1 ? '1fr' : 'repeat(2, 1fr)',
+                gap: 10, marginBottom: 18,
+              }}>
+                {cards.map(c => <MiniKpi key={c.label} icon={c.icon} label={c.label} value={c.value} />)}
+              </div>
+            )
+          })()}
 
           {/* ── PRODUCTOS ── */}
           <SectionHead icon="fa-list-check" title="Productos" count={productos.length} />
@@ -208,25 +224,47 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
             </div>
           </div>
 
-          {/* ── COBRO ── */}
+          {/* ── COBRO ── (contextual al estado: sin alarma en Consulta/Presupuestado/Pausado/Perdido) */}
+          {(() => {
+            const sinCompromiso = SIN_COMPROMISO.has(estado)
+            return (
+          <>
           <SectionHead icon="fa-hand-holding-dollar" title="Cobro" />
           <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', marginBottom: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 12, color: 'var(--txt3)' }}>Estado</span>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                padding: '2px 9px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                background: PAY_COLOR[payStatus] + '15', color: PAY_COLOR[payStatus],
-                border: `1px solid ${PAY_COLOR[payStatus]}30`,
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: PAY_COLOR[payStatus] }} />
-                {PAY_LABEL[payStatus]}
-              </span>
+              {sinCompromiso ? (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '2px 9px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  background: '#F1F5F9', color: '#64748B', border: '1px solid #E2E8F0',
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#94A3B8' }} />
+                  Sin cobros aún
+                </span>
+              ) : (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '2px 9px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  background: PAY_COLOR[payStatus] + '15', color: PAY_COLOR[payStatus],
+                  border: `1px solid ${PAY_COLOR[payStatus]}30`,
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: PAY_COLOR[payStatus] }} />
+                  {PAY_LABEL[payStatus]}
+                </span>
+              )}
             </div>
             {pedido.seniaMonto > 0 && <MoneyRow label="Seña" value={fmt(pedido.seniaMonto)} />}
             {cobrado > 0 && <MoneyRow label={`Cobrado (${pagos.length} pago${pagos.length > 1 ? 's' : ''})`} value={fmt(cobrado)} />}
-            <MoneyRow label="Saldo pendiente" value={fmt(saldo)} strong={saldo > 0} />
-            {payStatus !== 'paid' && (onRegistrarPago || onCobrarWA) && (
+            {!sinCompromiso && (
+              <MoneyRow label="Saldo pendiente" value={fmt(saldo)} strong={saldo > 0 && payStatus !== 'paid'} />
+            )}
+            {sinCompromiso && cobrado === 0 && pedido.seniaMonto === 0 && (
+              <div style={{ fontSize: 11, color: 'var(--txt4)', fontStyle: 'italic', textAlign: 'center', padding: '6px 0' }}>
+                Confirmá el pedido para activar el cobro
+              </div>
+            )}
+            {!sinCompromiso && payStatus !== 'paid' && (onRegistrarPago || onCobrarWA) && (
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 {onCobrarWA && (
                   <button onClick={() => onCobrarWA(budget)}
@@ -268,6 +306,9 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
               </button>
             )}
           </div>
+          </>
+            )
+          })()}
 
           {/* ── ENTREGA ── */}
           <SectionHead icon="fa-truck-fast" title="Entrega" />
