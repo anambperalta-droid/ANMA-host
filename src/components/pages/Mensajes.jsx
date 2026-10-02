@@ -4,6 +4,11 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
 
+/* Version de los defaults — subir cada vez que cambia DEFAULT_TEMPLATES.
+   El componente lo compara contra lo guardado y auto-migra sin perder
+   los mensajes custom del usuario. */
+const DEFAULTS_VERSION = 2
+
 /* ── Formato fecha ANMA: d-m-aa (ej: 2-10-26) ──
    Acepta ISO yyyy-mm-dd o Date. Si no reconoce, devuelve string tal cual. */
 function formatFechaAR(iso) {
@@ -300,14 +305,37 @@ export default function Mensajes() {
   const clients = get('clients')
   const budgets = get('budgets')
 
-  const templates = useMemo(() => {
-    const stored = get('waTemplates')
-    if (!stored.length) {
-      const withIds = DEFAULT_TEMPLATES.map((t, i) => ({ ...t, id: Date.now() + i }))
-      set('waTemplates', withIds)
-      return withIds
+  // Auto-migración de defaults al cargar: si la version de los defaults
+  // guardados no coincide con DEFAULTS_VERSION, reemplazamos los default
+  // (los que tienen isDefault:true) por los nuevos y preservamos los custom.
+  // Esto limpia duplicados viejos y aplica mejoras sin que el usuario tenga
+  // que apretar "Restaurar" a mano.
+  useEffect(() => {
+    const storedVersion = Number(localStorage.getItem('waTemplatesVersion') || 0)
+    const stored = get('waTemplates') || []
+    if (stored.length === 0) {
+      const base = Date.now()
+      set('waTemplates', DEFAULT_TEMPLATES.map((t, i) => ({ ...t, id: base + i })))
+      localStorage.setItem('waTemplatesVersion', String(DEFAULTS_VERSION))
+      return
     }
-    return stored
+    if (storedVersion >= DEFAULTS_VERSION) return
+    // Migración: conservamos los custom del usuario
+    const userMade = stored.filter(t => !t.isDefault)
+    const base = Date.now()
+    const fresh = DEFAULT_TEMPLATES.map((t, i) => ({ ...t, id: base + i }))
+    set('waTemplates', [...fresh, ...userMade])
+    localStorage.setItem('waTemplatesVersion', String(DEFAULTS_VERSION))
+    if (userMade.length > 0) {
+      toast(`Plantillas actualizadas · ${userMade.length} mensajes propios conservados`, 'ok')
+    } else {
+      toast('Plantillas actualizadas con nuevas variantes de cobro', 'ok')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const templates = useMemo(() => {
+    return get('waTemplates') || []
   }, [get('waTemplates').length])
 
   useEffect(() => {
