@@ -4,6 +4,19 @@ import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt } from '../../lib/storage'
 
+/* ── Formato fecha ANMA: d-m-aa (ej: 2-10-26) ──
+   Acepta ISO yyyy-mm-dd o Date. Si no reconoce, devuelve string tal cual. */
+function formatFechaAR(iso) {
+  if (!iso) return ''
+  if (iso instanceof Date) {
+    return `${iso.getDate()}-${iso.getMonth() + 1}-${String(iso.getFullYear()).slice(2)}`
+  }
+  const str = String(iso).trim()
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (m) return `${Number(m[3])}-${Number(m[2])}-${m[1].slice(2)}`
+  return str
+}
+
 /* ═══ 5 Solapas de venta ═══ */
 const STAGES = ['Captación', 'Presupuestos', 'Pagos', 'Logística', 'Post-Venta']
 const STAGE_ICONS = {
@@ -33,27 +46,43 @@ const DEFAULT_TEMPLATES = [
   { stage: 'Captación', title: '❄️ Frio · Ocasion especifica', isDefault: true,
     text: 'Hola {{nombre}}! Que tal?\n\nTe escribo de *{{negocio}}*. Estamos cerrando agenda para regalos del Dia de la Empresa / cumple del equipo / cierre de año.\n\nSi en {{empresa}} estan pensando algo, te puedo mandar 2-3 opciones armadas con precios. Sin compromiso 🙌' },
 
-  // ─────── PRESUPUESTOS (5) ───────
+  // ─────── PRESUPUESTOS (7) ───────
   { stage: 'Presupuestos', title: 'Envio de presupuesto', isDefault: true,
     text: 'Hola {{nombre}}!\n\nTe envio el presupuesto para {{empresa}}:\n\n- {{producto}}\n*Total:* {{precio}}\n*Entrega estimada:* {{fecha}}\n\nQuedamos a disposicion para cualquier ajuste. Esperamos tu confirmacion!' },
   { stage: 'Presupuestos', title: 'Presupuesto con opciones', isDefault: true,
     text: 'Hola {{nombre}}!\n\nTe arme las opciones que charlamos para {{empresa}}:\n\n- Opcion A: {{producto}} -- {{precio}}\n- Opcion B: [completar]\n\nAmbas incluyen personalizacion con logo. Cual te cierra mas?' },
   { stage: 'Presupuestos', title: 'Contrapropuesta', isDefault: true,
     text: 'Hola {{nombre}}!\n\nRevise los numeros para {{empresa}} y puedo ofrecerte:\n\n- {{producto}} x {{precio}} (con descuento del 5% por cantidad)\n- Envio bonificado\n\nEs nuestro mejor precio. Confirmamos?' },
-  { stage: 'Presupuestos', title: 'Recordatorio suave', isDefault: true,
+  { stage: 'Presupuestos', title: 'Recordatorio suave · 3 dias', isDefault: true,
     text: 'Hola {{nombre}}! Como estas?\n\nTe llego el presupuesto que te mande el {{fecha}}? Quiero confirmar que no haya quedado en spam.\n\nCualquier duda sobre {{producto}} o el armado del kit, te respondo al toque.\n\nSaludos!' },
+  { stage: 'Presupuestos', title: 'Seguimiento · 7+ dias sin respuesta', isDefault: true,
+    text: 'Hola {{nombre}}, como va?\n\nTe escribo para retomar el presupuesto de {{empresa}} que te pase el {{fecha}} ({{precio}}).\n\nQuedo a tu disposicion si necesitas ajustar algo del armado o del plazo. Avisame por donde seguimos.\n\nSaludos!' },
+  { stage: 'Presupuestos', title: 'Ultimo contacto antes de archivar', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nAntes de archivar el presupuesto de {{empresa}} ({{precio}}) queria hacer un ultimo intento por si quedo en pausa.\n\nSi este mes no es, no hay drama — contame cuando sea un buen momento y lo retomamos.\n\nQuedo atento. Gracias por tu tiempo!' },
   { stage: 'Presupuestos', title: 'Stock confirmado · listo para producir', isDefault: true,
     text: 'Hola {{nombre}}!\n\nTengo el stock disponible para arrancar con tu pedido de {{empresa}}:\n\n- {{producto}}\n*Total:* {{precio}}\n\nSi me confirmas hoy, lo ponemos en produccion y llegamos a {{fecha}} sin problema. Avisame!' },
 
-  // ─────── PAGOS (4) ───────
-  { stage: 'Pagos', title: 'Confirmacion de pedido', isDefault: true,
-    text: 'Excelente {{nombre}}!\n\nQueda confirmado el pedido para {{empresa}}:\n\n- {{producto}}\n*Total:* {{precio}}\n*Seña:* [monto seña]\n*Entrega:* {{fecha}}\n\nTe paso los datos para la transferencia. Gracias por confiar en *{{negocio}}*!' },
-  { stage: 'Pagos', title: 'Recordatorio de pago', isDefault: true,
-    text: 'Hola {{nombre}}!\n\nTe escribo para recordarte que queda pendiente el saldo del pedido de {{empresa}} por {{precio}}.\n\nNecesitas los datos bancarios de nuevo? Estamos para ayudarte.\n\nSaludos!' },
-  { stage: 'Pagos', title: 'Pago recibido · gracias', isDefault: true,
-    text: 'Hola {{nombre}}! ✅\n\nRecibimos tu pago de {{precio}}. Todo en orden.\n\nYa pasamos el pedido de {{empresa}} a produccion. Te aviso cuando este listo para despachar.\n\nGracias por elegirnos! 🙌' },
+  // ─────── PAGOS (10) — una variante por situacion real ───────
+  { stage: 'Pagos', title: 'Confirmacion de pedido · seña 50%', isDefault: true,
+    text: 'Excelente {{nombre}}!\n\nQueda confirmado el pedido para {{empresa}}:\n\n- {{producto}}\n*Total:* {{precio}}\n*Seña 50%:* [calcular]\n*Saldo contra entrega:* [calcular]\n*Entrega:* {{fecha}}\n\nTe paso los datos para la seña y arrancamos. Gracias por confiar en *{{negocio}}*!' },
+  { stage: 'Pagos', title: 'Confirmacion de pedido · pago contado', isDefault: true,
+    text: 'Perfecto {{nombre}}!\n\nQueda confirmado el pedido para {{empresa}}:\n\n- {{producto}}\n*Total a abonar:* {{precio}}\n*Entrega:* {{fecha}}\n\nCon el pago arrancamos produccion. Te paso los datos bancarios ahora mismo.' },
   { stage: 'Pagos', title: 'Datos para transferencia', isDefault: true,
-    text: 'Hola {{nombre}}!\n\nTe paso los datos para que puedas hacer la transferencia de la seña de {{empresa}}:\n\n*CBU:* [cargar]\n*Alias:* [cargar]\n*Titular:* [cargar]\n*Monto:* {{precio}}\n\nCuando lo hagas, mandame el comprobante y arrancamos!' },
+    text: 'Hola {{nombre}}!\n\nTe paso los datos para la transferencia de {{empresa}}:\n\n*CBU:* [cargar]\n*Alias:* [cargar]\n*Titular:* [cargar]\n*Monto:* {{precio}}\n\nCuando lo hagas, mandame el comprobante y confirmo recepcion. Gracias!' },
+  { stage: 'Pagos', title: 'Link de pago (MercadoPago)', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nSi preferis pagar con tarjeta o Mercado Pago, te paso el link:\n[pegar link]\n\n*Monto:* {{precio}}\n\nQueda a tu nombre y una vez acreditado arrancamos con el pedido de {{empresa}}. Avisame cualquier cosa!' },
+  { stage: 'Pagos', title: 'Pago recibido · completo', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nRecibimos tu pago de {{precio}}. Todo en orden.\n\nPasamos el pedido de {{empresa}} a produccion. Te aviso cuando este listo para despachar el {{fecha}}.\n\nGracias por elegirnos!' },
+  { stage: 'Pagos', title: 'Pago parcial recibido · resta saldo', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nConfirmo que recibimos la seña del pedido de {{empresa}}. Ya arrancamos produccion.\n\n*Saldo pendiente:* [completar]\n*Fecha de entrega:* {{fecha}}\n\nEl saldo lo abonas contra entrega. Cualquier duda, me escribis.' },
+  { stage: 'Pagos', title: 'Recordatorio · seña pendiente antes de producir', isDefault: true,
+    text: 'Hola {{nombre}}! Como va?\n\nQuedo pendiente la seña del pedido de {{empresa}} ({{precio}}) para que podamos arrancar produccion.\n\nLa idea es llegar a {{fecha}} tranquilos. Si avanzamos esta semana no hay drama con la fecha, mas tarde empezamos a ajustado.\n\nAvisame cuando lo tengas!' },
+  { stage: 'Pagos', title: 'Recordatorio pago · saldo vencido (suave)', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nTe recuerdo que quedo pendiente el saldo del pedido de {{empresa}} que entregamos el {{fecha}}.\n\n*Saldo a abonar:* {{precio}}\n\nSi necesitas los datos bancarios de nuevo o preferis link de pago, decime y te paso al toque. Gracias!' },
+  { stage: 'Pagos', title: 'Recordatorio pago · 2do aviso con fecha limite', isDefault: true,
+    text: 'Hola {{nombre}},\n\nTe vuelvo a escribir por el saldo del pedido de {{empresa}} entregado el {{fecha}}.\n\n*Monto pendiente:* {{precio}}\n\nAgradezco si podemos cerrar el pago esta semana. Si necesitas coordinar fecha o preferis dividir el pago, hablemoslo. Quedo atento!' },
+  { stage: 'Pagos', title: 'Solicitar comprobante de transferencia', isDefault: true,
+    text: 'Hola {{nombre}}!\n\nTodo bien? Si ya hiciste la transferencia de {{precio}} por el pedido de {{empresa}}, podrias mandarme el comprobante para registrarlo?\n\nGracias!' },
 
   // ─────── LOGÍSTICA (4) ───────
   { stage: 'Logística', title: 'Aviso de despacho', isDefault: true,
@@ -220,7 +249,7 @@ function VariablesPanel({ client, config, budget }) {
     { key: 'negocio', icon: 'fa-store', value: c.businessName || 'ANMA' },
     { key: 'precio', icon: 'fa-coins', value: budget ? fmt(budget.total) : null },
     { key: 'producto', icon: 'fa-box-open', value: budget?.items?.length ? budget.items.map(i => i.name).filter(Boolean).join(', ') : null },
-    { key: 'fecha', icon: 'fa-calendar', value: budget?.deliveryDate || budget?.date || null },
+    { key: 'fecha', icon: 'fa-calendar', value: formatFechaAR(budget?.deliveryDate || budget?.date) || null },
   ]
 
   return (
@@ -306,7 +335,7 @@ export default function Mensajes() {
     const negocio = c.businessName || 'ANMA'
     const precio = clientBudget ? fmt(clientBudget.total) : ''
     const producto = clientBudget?.items?.length ? clientBudget.items.map(i => i.name).filter(Boolean).join(', ') : ''
-    const fecha = clientBudget?.deliveryDate || clientBudget?.date || ''
+    const fecha = formatFechaAR(clientBudget?.deliveryDate || clientBudget?.date)
     return text
       .replace(/{{nombre}}/gi, nombre)
       .replace(/{{empresa}}/gi, empresa)
@@ -336,9 +365,15 @@ export default function Mensajes() {
 
   const deleteMsg = (id) => confirm('¿Eliminar este mensaje?', () => { deleteEntity('waTemplates', id); toast('Mensaje eliminado', 'in') })
 
-  const restoreDefaults = () => confirm('¿Restaurar los mensajes originales?', () => {
-    const withIds = DEFAULT_TEMPLATES.map((t, i) => ({ ...t, id: Date.now() + i }))
-    set('waTemplates', withIds); toast('Mensajes restaurados', 'ok')
+  const restoreDefaults = () => confirm('¿Restaurar los mensajes originales de ANMA? Tus mensajes personalizados se mantienen.', () => {
+    const stored = get('waTemplates') || []
+    // Conservamos los que el usuario creó (sin flag isDefault)
+    const userMade = stored.filter(t => !t.isDefault)
+    // Reinyectamos defaults frescos con IDs nuevos — así se eliminan duplicados viejos
+    const base = Date.now()
+    const fresh = DEFAULT_TEMPLATES.map((t, i) => ({ ...t, id: base + i }))
+    set('waTemplates', [...fresh, ...userMade])
+    toast(`Plantillas restablecidas · ${userMade.length} mensajes propios conservados`, 'ok')
   })
 
   const copyText = (text) => {
