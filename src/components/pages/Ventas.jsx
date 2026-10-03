@@ -7,6 +7,7 @@ import { usePrivacy } from '../../context/PrivacyContext'
 import { fmt } from '../../lib/storage'
 import { gananciaBudget } from '../../lib/pedido'
 import { buildWAMsg } from '../../lib/waMsg'
+import PedidoDrawer from '../common/PedidoDrawer'
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const PAY_OPTS = [
@@ -115,6 +116,12 @@ export default function Ventas() {
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [previewBudget, setPreviewBudget] = useState(null)
+  useEffect(() => {
+    if (!previewBudget) return
+    const fresh = (get('budgets') || []).find(x => x.id === previewBudget.id)
+    if (fresh && fresh !== previewBudget) setPreviewBudget(fresh)
+  }, [get('budgets')]) // eslint-disable-line react-hooks/exhaustive-deps
   const [draft, setDraft] = useState({ ...EMPTY })
   const [showNota, setShowNota] = useState(false)
   const [savedCount, setSavedCount] = useState(0)
@@ -674,7 +681,7 @@ export default function Ventas() {
             const owed = Math.max(0, totalDue - paid)
             const method = payMethodOf(b)
             return (
-              <div key={b.id} className="vt-row" style={{ cursor: 'pointer', borderLeft: isPending ? '3px solid #DC2626' : isPartial ? '3px solid #b45309' : '3px solid transparent' }} onClick={() => nav(`/pedido/${b.id}`)}>
+              <div key={b.id} className="vt-row" style={{ cursor: 'pointer', borderLeft: isPending ? '3px solid #DC2626' : isPartial ? '3px solid #b45309' : '3px solid transparent' }} onClick={() => setPreviewBudget(b)}>
                 <span className="vt-cell vt-hide-m" style={{ color: 'var(--txt2)', fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums', letterSpacing: '.02em' }}>{b.num || '—'}</span>
                 <span className="vt-cell vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 11.5, fontVariantNumeric: 'tabular-nums' }}>{fmtDateShort(b.date) || '—'}</span>
                 <span className="vt-cell" style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
@@ -807,6 +814,29 @@ export default function Ventas() {
         visibleMk={mk}
         meses={MESES}
       />
+
+      {/* PedidoDrawer — side-sheet lectura rápida al click en fila */}
+      {previewBudget && (
+        <PedidoDrawer
+          budget={previewBudget}
+          onClose={() => setPreviewBudget(null)}
+          onEdit={() => { const id = previewBudget.id; setPreviewBudget(null); nav(`/pedido/${id}`) }}
+          onWA={() => {
+            const b = previewBudget
+            const text = buildWAMsg(b)
+            if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(()=>{})
+            if (b.wa) window.open(`https://wa.me/${String(b.wa).replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank')
+            toast('WhatsApp preparado', 'ok')
+          }}
+          onCobrarWA={() => {
+            const b = previewBudget
+            const text = buildWAMsg({ ...b, _intent: 'cobro' })
+            if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(()=>{})
+            if (b.wa) window.open(`https://wa.me/${String(b.wa).replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank')
+            toast('Mensaje de cobro preparado', 'ok')
+          }}
+        />
+      )}
     </div>
   )
 }

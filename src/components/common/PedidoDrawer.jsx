@@ -135,13 +135,18 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
               )}
             </div>
           </div>
-          <button onClick={onClose}
-            title="Cerrar (Esc)"
+          <button onClick={(e) => { e.stopPropagation(); onClose() }}
+            title="Cerrar (Esc)" aria-label="Cerrar"
             style={{
-              width: 32, height: 32, borderRadius: 8, border: 'none',
-              background: 'var(--surface2)', color: 'var(--txt2)',
-              cursor: 'pointer', fontSize: 14, flexShrink: 0,
-            }}>
+              width: 40, height: 40, borderRadius: 10, border: '1.5px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--txt)',
+              cursor: 'pointer', fontSize: 18, flexShrink: 0,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all .15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#FEE2E2'; e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.borderColor = '#FCA5A5' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--txt)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+          >
             <i className="fa fa-xmark" />
           </button>
         </header>
