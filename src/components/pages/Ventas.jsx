@@ -820,7 +820,7 @@ export default function Ventas() {
         <PedidoDrawer
           budget={previewBudget}
           onClose={() => setPreviewBudget(null)}
-          onEdit={() => { const id = previewBudget.id; setPreviewBudget(null); nav(`/pedido/${id}`) }}
+          onEdit={() => { const id = previewBudget.id; setPreviewBudget(null); nav(`/pedido/${id}?from=ventas`) }}
           onWA={() => {
             const b = previewBudget
             const text = buildWAMsg(b)

@@ -9,7 +9,7 @@
    queda para Parte 2.
 ═══════════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
@@ -89,6 +89,16 @@ const DEFAULT_COSTOS_PRESETS = [
 export default function PedidoNuevo() {
   const { id } = useParams()
   const nav = useNavigate()
+  const loc = useLocation()
+  const fromParam = new URLSearchParams(loc.search).get('from')
+  const backRoutes = { ventas: { label: 'Ventas', to: '/historial?tab=ventas' }, historial: { label: 'Pedidos', to: '/historial' }, dashboard: { label: 'Dashboard', to: '/historial' } }
+  const backTo = backRoutes[fromParam] || null
+  useEffect(() => {
+    if (!backTo) return
+    const h = (e) => { if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); nav(backTo.to) } }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [backTo, nav])
   const { get, set, saveBudget, deleteBudget, config } = useData()
   const toast = useToast()
   const confirm = useConfirm()
@@ -333,6 +343,28 @@ export default function PedidoNuevo() {
 
   return (
     <div className="page active" style={{ animation: 'pgIn .2s ease both' }}>
+
+      {/* Back chevron contextual — aparece solo si viene con ?from= */}
+      {backTo && (
+        <button
+          type="button"
+          onClick={() => nav(backTo.to)}
+          title={`Volver a ${backTo.label} (Alt+←)`}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px 6px 8px', marginBottom: 10,
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 999, cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: 12.5, fontWeight: 600, color: 'var(--txt2)',
+            transition: 'all .15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.color = 'var(--brand)'; e.currentTarget.style.borderColor = 'var(--brand)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--txt2)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+        >
+          <i className="fa fa-chevron-left" style={{ fontSize: 11 }} />
+          <span>{backTo.label}</span>
+        </button>
+      )}
 
       {/* ── HEADER ── */}
       <div className="ph pedido-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18, gap: 12, flexWrap: 'wrap' }}>
