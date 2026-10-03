@@ -156,6 +156,35 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
         {/* ── BODY scrolleable ── */}
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '18px 22px', WebkitOverflowScrolling: 'touch' }}>
 
+          {/* GUARDRAIL — Alertas estado × pago */}
+          {(() => {
+            const payStatus = budget.payStatus || 'pending'
+            const alerts = []
+            if (estado === 'entregado' && payStatus !== 'paid' && saldo > 0) {
+              alerts.push({ color: '#DC2626', bg: '#FEE2E2', border: '#FCA5A5', icon: 'fa-circle-exclamation', title: 'Entregado sin cobrar', msg: `Debe ${fmt(saldo)}. Enviale un recordatorio por WhatsApp.` })
+            }
+            if (estado === 'produccion' && payStatus === 'pending') {
+              alerts.push({ color: '#B45309', bg: '#FEF3C7', border: '#FCD34D', icon: 'fa-triangle-exclamation', title: 'En producción sin seña', msg: 'Riesgo: estás produciendo sin reserva. Pedí una seña antes de continuar.' })
+            }
+            if (estado === 'perdido' && cobrado > 0) {
+              const kept = budget.keptDeposit === true
+              alerts.push({ color: kept ? '#15803D' : '#DC2626', bg: kept ? '#F0FDF4' : '#FEE2E2', border: kept ? '#86EFAC' : '#FCA5A5', icon: kept ? 'fa-circle-check' : 'fa-rotate-left', title: kept ? 'Perdido · seña preservada' : 'Perdido · falta devolución', msg: kept ? `Te quedaste con ${fmt(cobrado)} como compensación.` : `Debés devolver ${fmt(cobrado)} al cliente.` })
+            }
+            return alerts.length === 0 ? null : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                {alerts.map((a, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 12px', background: a.bg, border: `1.5px solid ${a.border}`, borderRadius: 10, alignItems: 'flex-start' }}>
+                    <i className={`fa ${a.icon}`} style={{ color: a.color, fontSize: 15, marginTop: 2 }} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: a.color, letterSpacing: '.02em' }}>{a.title}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--txt2)', marginTop: 2, lineHeight: 1.4 }}>{a.msg}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+
           {/* KPI cards — sync con PedidoNuevo */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
             {[
