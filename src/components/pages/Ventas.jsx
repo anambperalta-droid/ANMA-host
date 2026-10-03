@@ -45,6 +45,7 @@ const PAY_METHOD_OPTS = [
   { value: 'otro',           label: 'Otro',           icon: 'fa-ellipsis' },
 ]
 const PAY_METHOD_LABEL = Object.fromEntries(PAY_METHOD_OPTS.map(o => [o.value, o.label]))
+const CANAL_LABEL = Object.fromEntries(CANAL_OPTS.map(o => [o.value, o.label]))
 
 function payMethodOf(b) {
   const pays = Array.isArray(b.payments) ? b.payments : []
@@ -128,6 +129,9 @@ export default function Ventas() {
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('desc')
   const [tab, setTab] = useState('all')  // Smart Tab filter 02/10/26
+  const [filterCanal, setFilterCanal] = useState('')
+  const [filterMedio, setFilterMedio] = useState('')
+  const [filterFiscal, setFilterFiscal] = useState('')
   const [viewMode, setViewMode] = useState('cliente') // 'cliente' | 'producto'
   const inputRef = useRef(null)
 
@@ -279,10 +283,59 @@ export default function Ventas() {
     pending: monthBudgets.filter(b => b.payStatus !== 'paid').length,
   }), [monthBudgets])
   const filteredBudgets = useMemo(() => {
-    if (tab === 'paid')    return sortedBudgets.filter(b => b.payStatus === 'paid')
-    if (tab === 'pending') return sortedBudgets.filter(b => b.payStatus !== 'paid')
-    return sortedBudgets
-  }, [sortedBudgets, tab])
+    let out = sortedBudgets
+    if (tab === 'paid')    out = out.filter(b => b.payStatus === 'paid')
+    if (tab === 'pending') out = out.filter(b => b.payStatus !== 'paid')
+    if (filterCanal)  out = out.filter(b => (b.canal || '') === filterCanal)
+    if (filterMedio)  out = out.filter(b => (payMethodOf(b) || '') === filterMedio)
+    if (filterFiscal) out = out.filter(b => {
+      const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null) || 'consumidor'
+      return fc === filterFiscal
+    })
+    return out
+  }, [sortedBudgets, tab, filterCanal, filterMedio, filterFiscal, clients])
+
+  const availableFilters = useMemo(() => {
+    const canales = new Set(), medios = new Set(), fiscales = new Set()
+    monthBudgets.forEach(b => {
+      if (b.canal) canales.add(b.canal)
+      const m = payMethodOf(b); if (m) medios.add(m)
+      const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null)
+      if (fc) fiscales.add(fc)
+    })
+    return { canales: [...canales], medios: [...medios], fiscales: [...fiscales] }
+  }, [monthBudgets, clients])
+
+  const exportCSV = () => {
+    const csvEsc = (v) => {
+      let s = String(v ?? '')
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const headers = ['N°','Fecha','Cliente','Empresa','Condición Fiscal','Producto','Cantidad','Facturado (sin IVA)','IVA','Total','Medio Pago','Canal','Estado Pago']
+    const rows = filteredBudgets.map(b => {
+      const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null) || 'consumidor'
+      const item1 = b.items?.[0] || {}
+      const total = Number(b.total) || 0
+      const iva   = Number(b._quickIva) || 0
+      const neto  = total - iva
+      return [
+        b.num || '', b.date || '',
+        csvEsc(b.contact || ''), csvEsc(b.company || ''),
+        csvEsc(FISCAL_MAP[fc]?.label || fc),
+        csvEsc(item1.name || ''), item1.qty || 1,
+        neto, iva, total,
+        csvEsc(PAY_METHOD_LABEL[payMethodOf(b)] || ''),
+        csvEsc(CANAL_LABEL[b.canal] || ''),
+        csvEsc(b.payStatus === 'paid' ? 'Cobrado' : b.payStatus === 'partial' ? 'Parcial' : 'Pendiente'),
+      ].join(',')
+    })
+    const content = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8;' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+    a.download = `ventas-${MESES[month].toLowerCase()}-${year}.csv`; a.click()
+    toast(`${rows.length} venta${rows.length === 1 ? '' : 's'} exportada${rows.length === 1 ? '' : 's'}`, 'ok')
+  }
 
   const toggleSort = (col) => {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -618,7 +671,7 @@ export default function Ventas() {
       {viewMode === 'cliente' && (
         <div style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginTop: 6 }}>
           {/* Smart Tabs (Todas / Cobradas / Pendientes) — reemplaza al bloque Pendientes de cobro separado */}
-          <div className="vt-smarttabs">
+          <div className="vt-smarttabs" style={{ display: 'flex', alignItems: 'center' }}>
             {[
               { k: 'all',     label: 'Todas',      count: tabCounts.all,     color: 'var(--brand)' },
               { k: 'paid',    label: 'Cobradas',   count: tabCounts.paid,    color: '#15803d' },
@@ -631,7 +684,40 @@ export default function Ventas() {
                 <span className="vt-stab-ct" style={tab === t.k ? { background: t.color + '20', color: t.color } : undefined}>{t.count}</span>
               </button>
             ))}
+            <button onClick={exportCSV} disabled={!filteredBudgets.length}
+              title="Descargar como CSV (Excel)"
+              style={{ marginLeft: 'auto', marginRight: 10, padding: '5px 12px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--txt2)', borderRadius: 999, cursor: filteredBudgets.length ? 'pointer' : 'not-allowed', fontSize: 11.5, fontWeight: 600, fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5, opacity: filteredBudgets.length ? 1 : .5 }}>
+              <i className="fa fa-arrow-down-to-line" style={{ fontSize: 10 }} /> Exportar
+            </button>
           </div>
+          {(availableFilters.canales.length + availableFilters.medios.length + availableFilters.fiscales.length) > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 12px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+              {availableFilters.canales.map(v => (
+                <button key={`c-${v}`} onClick={() => setFilterCanal(filterCanal === v ? '' : v)}
+                  style={{ padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterCanal === v ? 'var(--brand)' : 'var(--border)'), background: filterCanal === v ? 'var(--brand)' : 'var(--surface)', color: filterCanal === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {CANAL_LABEL[v] || v}
+                </button>
+              ))}
+              {availableFilters.medios.map(v => (
+                <button key={`m-${v}`} onClick={() => setFilterMedio(filterMedio === v ? '' : v)}
+                  style={{ padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterMedio === v ? '#15803d' : 'var(--border)'), background: filterMedio === v ? '#15803d' : 'var(--surface)', color: filterMedio === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {PAY_METHOD_LABEL[v] || v}
+                </button>
+              ))}
+              {availableFilters.fiscales.map(v => (
+                <button key={`f-${v}`} onClick={() => setFilterFiscal(filterFiscal === v ? '' : v)}
+                  style={{ padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterFiscal === v ? '#b45309' : 'var(--border)'), background: filterFiscal === v ? '#b45309' : 'var(--surface)', color: filterFiscal === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {FISCAL_MAP[v]?.label || v}
+                </button>
+              ))}
+              {(filterCanal || filterMedio || filterFiscal) && (
+                <button onClick={() => { setFilterCanal(''); setFilterMedio(''); setFilterFiscal('') }}
+                  style={{ padding: '3px 8px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
+                  limpiar
+                </button>
+              )}
+            </div>
+          )}
           <div className="vt-row vt-hdr">
             <span className="vt-hide-m" onClick={() => toggleSort('num')} style={{ cursor: 'pointer', userSelect: 'none' }}>
               N° {sortCol === 'num' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
