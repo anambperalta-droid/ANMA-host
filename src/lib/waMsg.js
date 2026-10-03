@@ -1,8 +1,30 @@
 import { fmt, fmtDate } from './storage'
 
 /**
- * buildWAMsg(b) — Genera un mensaje de WhatsApp contextual según el estado
- * de un presupuesto/pedido. Nunca devuelve "{{var}}" literales.
+ * Firma de cierre por rubro — personalidad de marca ligera + override manual.
+ * cfg.waSignoff > RUBRO_SIGNOFF[cfg.rubro] > default.
+ */
+export const RUBRO_SIGNOFF = {
+  indumentaria: (neg) => `¡Un beso! · ${neg || 'Equipo ANMA'}`,
+  tecnologia:   (neg) => `Saludos,\n${neg || 'ANMA'}`,
+  decoracion:   (neg) => `¡Gracias!\nEquipo ${neg || 'ANMA'}`,
+  almacen:      (neg) => `¡Abrazo! · ${neg || 'ANMA'}`,
+  gastronomia:  (neg) => `¡Gracias! · ${neg || 'ANMA'}`,
+  servicios:    (neg) => `Saludos cordiales,\n${neg || 'ANMA'}`,
+  default:      (neg) => `¡Saludos!\n${neg || 'ANMA'}`,
+}
+
+function pickSignoff(cfg) {
+  if (!cfg) return null
+  if (typeof cfg.waSignoff === 'string' && cfg.waSignoff.trim()) return cfg.waSignoff.trim()
+  const neg = cfg.businessName || ''
+  const builder = RUBRO_SIGNOFF[cfg.rubro] || RUBRO_SIGNOFF.default
+  return builder(neg)
+}
+
+/**
+ * buildWAMsg(b, { cfg } = {}) — Genera un mensaje de WhatsApp contextual según
+ * el estado de un presupuesto/pedido. Nunca devuelve "{{var}}" literales.
  *
  * Rutea por combinación status + payStatus:
  *   delivered + paid                       → agradecimiento post-venta
@@ -15,8 +37,10 @@ import { fmt, fmtDate } from './storage'
  *
  * Se usa desde Historial, Ventas y cualquier botón contextual WA de pedido.
  */
-export function buildWAMsg(b) {
+export function buildWAMsg(b, { cfg } = {}) {
   const nombre = b.contact || ''
+  const signoff = pickSignoff(cfg)
+  const withSignoff = (lines) => signoff ? [...lines, '', signoff].join('\n') : lines.join('\n')
   const empresa = b.company ? ` para ${b.company}` : ''
   const monto = b.total ? fmt(b.total) : ''
   // Nota: no incluimos el número interno de presupuesto (ej. P-0018) en el
@@ -37,93 +61,36 @@ export function buildWAMsg(b) {
   const status = b.status || 'draft'
   const pay = b.payStatus || 'pending'
 
-  // 1) Entregado + pagado completo → agradecimiento post-venta
   if (status === 'delivered' && pay === 'paid' && !sinComprobante) {
-    return [
-      `Hola ${nombre}!`,
-      ``,
-      `Esperamos que el pedido${empresa} haya quedado buenísimo. Cualquier devolución, feedback o próximo armado, nos escribís al toque.`,
-      ``,
-      `¡Gracias por elegirnos!`,
-    ].join('\n')
+    return withSignoff([`Hola ${nombre}!`, ``, `Esperamos que el pedido${empresa} haya quedado buenísimo. Cualquier devolución, feedback o próximo armado, nos escribís al toque.`, ``, `¡Gracias por elegirnos!`])
   }
-
-  // 2) Pagado pero sin comprobante registrado → pedir comprobante
   if (sinComprobante) {
-    return [
-      `Hola ${nombre}!`,
-      ``,
-      `Tenemos registrado el pago del pedido${num}${monto ? ` por ${monto}` : ''}, pero nos falta el comprobante para dejarlo cerrado.`,
-      ``,
-      `¿Nos lo podés mandar por acá? Mil gracias.`,
-    ].join('\n')
+    return withSignoff([`Hola ${nombre}!`, ``, `Tenemos registrado el pago del pedido${num}${monto ? ` por ${monto}` : ''}, pero nos falta el comprobante para dejarlo cerrado.`, ``, `¿Nos lo podés mandar por acá? Mil gracias.`])
   }
-
-  // 3) Entregado con saldo pendiente → recordatorio de cobro
   if (status === 'delivered' && (pay === 'pending' || pay === 'partial')) {
     const amt = saldo > 0 ? fmt(saldo) : monto
     const linea2 = vencido
       ? `El pedido${num}${empresa} fue entregado el ${deliveryStr} y queda pendiente el saldo de ${amt} (${diasVencido} día${diasVencido !== 1 ? 's' : ''} de atraso).`
       : `Queda pendiente el saldo de ${amt} del pedido${num}${empresa}${deliveryStr ? ` entregado el ${deliveryStr}` : ''}.`
-    return [
-      `Hola ${nombre}!`,
-      ``,
-      linea2,
-      ``,
-      `Si necesitás los datos bancarios o preferís link de pago, decime y te paso al toque. ¡Gracias!`,
-    ].join('\n')
+    return withSignoff([`Hola ${nombre}!`, ``, linea2, ``, `Si necesitás los datos bancarios o preferís link de pago, decime y te paso al toque. ¡Gracias!`])
   }
-
-  // 4) En producción → aviso de progreso + fecha estimada
   if (status === 'production' || status === 'En producción' || status === 'inprogress' || status === 'En preparación') {
-    return [
-      `Hola ${nombre}!`,
-      ``,
-      `Te cuento que el pedido${num}${empresa} está en producción.${deliveryStr ? ` Fecha estimada de entrega: ${deliveryStr}.` : ''}`,
-      ``,
-      `Te aviso cuando esté listo para despachar. Cualquier consulta, me escribís.`,
-    ].join('\n')
+    return withSignoff([`Hola ${nombre}!`, ``, `Te cuento que el pedido${num}${empresa} está en producción.${deliveryStr ? ` Fecha estimada de entrega: ${deliveryStr}.` : ''}`, ``, `Te aviso cuando esté listo para despachar. Cualquier consulta, me escribís.`])
   }
-
-  // 5) Confirmado sin seña → pedir seña para arrancar producción
   if (status === 'confirmed' && pay === 'pending') {
     const linea2 = deliveryStr && dd !== null && dd > 0
       ? `Para llegar al ${deliveryStr} tranquilos, lo ideal es cerrar la seña esta semana.`
       : `Para arrancar producción necesitaríamos cerrar la seña.`
-    return [
-      `Hola ${nombre}!`,
-      ``,
-      `Quedó confirmado el pedido${num}${empresa}${monto ? ` (${monto})` : ''}. ${linea2}`,
-      ``,
-      `Te paso los datos bancarios o te mando link de pago, lo que prefieras.`,
-    ].join('\n')
+    return withSignoff([`Hola ${nombre}!`, ``, `Quedó confirmado el pedido${num}${empresa}${monto ? ` (${monto})` : ''}. ${linea2}`, ``, `Te paso los datos bancarios o te mando link de pago, lo que prefieras.`])
   }
-
-  // 6) Confirmado con seña parcial → avisar que arrancamos + resta saldo
   if (status === 'confirmed' && pay === 'partial') {
     const amt = saldo > 0 ? fmt(saldo) : monto
-    return [
-      `Hola ${nombre}!`,
-      ``,
-      `Confirmamos la seña del pedido${num}${empresa}. ¡Ya arrancamos!`,
-      ``,
-      `El saldo pendiente es de ${amt}${deliveryStr ? ` y lo coordinamos para la entrega del ${deliveryStr}` : ''}. Cualquier cosa me escribís.`,
-    ].join('\n')
+    return withSignoff([`Hola ${nombre}!`, ``, `Confirmamos la seña del pedido${num}${empresa}. ¡Ya arrancamos!`, ``, `El saldo pendiente es de ${amt}${deliveryStr ? ` y lo coordinamos para la entrega del ${deliveryStr}` : ''}. Cualquier cosa me escribís.`])
   }
-
-  // 7) Default (sent/draft) → recontacto comercial
-  const lines = [
-    `Hola ${nombre}! ¿Cómo estás?`,
-    ``,
-    `Te escribo por el presupuesto${num}${monto ? ` (${monto})` : ''}${b.date ? ` que te pasamos el ${fmtDate(b.date)}` : ''}.`,
-    `¿Pudiste verlo? Si querés ajustar algo —cantidades, opciones o presupuesto— lo vemos sin problema.`,
-  ]
-  if (deliveryStr && dd !== null && dd > 0) {
-    lines.push('', `Para llegar a la entrega del ${deliveryStr} lo ideal sería confirmar esta semana. ¿Avanzamos?`)
-  } else {
-    lines.push('', `¿Avanzamos?`)
-  }
-  return lines.join('\n')
+  const lines = [`Hola ${nombre}! ¿Cómo estás?`, ``, `Te escribo por el presupuesto${num}${monto ? ` (${monto})` : ''}${b.date ? ` que te pasamos el ${fmtDate(b.date)}` : ''}.`, `¿Pudiste verlo? Si querés ajustar algo —cantidades, opciones o presupuesto— lo vemos sin problema.`]
+  if (deliveryStr && dd !== null && dd > 0) lines.push('', `Para llegar a la entrega del ${deliveryStr} lo ideal sería confirmar esta semana. ¿Avanzamos?`)
+  else lines.push('', `¿Avanzamos?`)
+  return withSignoff(lines)
 }
 
 /**
@@ -133,8 +100,8 @@ export function buildWAMsg(b) {
  * `onSent(b)` se dispara después de abrir WA — útil para registrar
  * lastContactAt en el budget sin acoplar la lib a DataContext.
  */
-export function openWAFor(b, { onNoNumber, onSent } = {}) {
-  const text = buildWAMsg(b)
+export function openWAFor(b, { onNoNumber, onSent, cfg } = {}) {
+  const text = buildWAMsg(b, { cfg })
   const num = (b.wa || '').replace(/\D/g, '')
   const encoded = encodeURIComponent(text)
   const url = num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`

@@ -108,7 +108,8 @@ function sumLines(lines) {
 }
 
 export default function Ventas() {
-  const { get, saveBudget, saveEntity } = useData()
+  const { get, saveBudget, saveEntity, config } = useData()
+  const _cfg = typeof config === 'function' ? config() : (config || {})
   const toast = useToast()
   const nav = useNavigate()
   const { hidden } = usePrivacy()
@@ -928,14 +929,14 @@ export default function Ventas() {
           onEdit={() => { const id = previewBudget.id; setPreviewBudget(null); nav(`/pedido/${id}?from=ventas`) }}
           onWA={() => {
             const b = previewBudget
-            const text = buildWAMsg(b)
+            const text = buildWAMsg(b, { cfg: _cfg })
             if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(()=>{})
             if (b.wa) window.open(`https://wa.me/${String(b.wa).replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank')
             toast('WhatsApp preparado', 'ok')
           }}
           onCobrarWA={() => {
             const b = previewBudget
-            const text = buildWAMsg({ ...b, _intent: 'cobro' })
+            const text = buildWAMsg(b, { cfg: _cfg })
             if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(()=>{})
             if (b.wa) window.open(`https://wa.me/${String(b.wa).replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank')
             toast('Mensaje de cobro preparado', 'ok')
