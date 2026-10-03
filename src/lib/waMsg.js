@@ -154,7 +154,8 @@ export function buildClientePortalLink(b, cfg = {}) {
   // Si no hay ninguno pero el item trae su subtotal/total, lo derivamos de qty.
   const items = (Array.isArray(b.items) ? b.items : []).map(i => {
     const qty = Number(i.qty ?? i.cantidad ?? 1) || 0
-    const puRaw = Number(i.pu ?? i.price ?? i.unitPrice ?? i.precio ?? i.precioUnit ?? 0)
+    // priceUnit = Hub. precioUnit = Regalos (schema actual). Resto = legacy/edge.
+    const puRaw = Number(i.priceUnit ?? i.precioUnit ?? i.pu ?? i.price ?? i.unitPrice ?? i.precio ?? 0)
     const sub = Number(i.subtotal ?? i.total ?? 0)
     const pu = puRaw > 0 ? puRaw : (qty > 0 && sub > 0 ? Math.round(sub / qty) : 0)
     return { n: String(i.name || '').slice(0, 60), q: qty, pu }

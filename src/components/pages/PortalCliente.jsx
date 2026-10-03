@@ -162,7 +162,10 @@ export default function PortalCliente() {
             <div style={S.sectionLabel}>Tu pedido</div>
             <div style={S.card}>
               {items.map((it, i) => {
-                const sub = (Number(it.q) || 0) * (Number(it.pu) || 0)
+                const qty = Number(it.q) || 1
+                const pu  = Number(it.pu) || 0
+                const sub = qty * pu
+                const hasPrice = pu > 0
                 return (
                   <div key={i} style={{
                     ...S.item,
@@ -171,10 +174,12 @@ export default function PortalCliente() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.n}</div>
                       <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
-                        {it.q || 1}u × {fmt(it.pu)}
+                        {hasPrice ? `${qty}u × ${fmt(pu)}` : `${qty}u`}
                       </div>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#111', fontVariantNumeric: 'tabular-nums' }}>{fmt(sub)}</div>
+                    {hasPrice && (
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#111', fontVariantNumeric: 'tabular-nums' }}>{fmt(sub)}</div>
+                    )}
                   </div>
                 )
               })}
