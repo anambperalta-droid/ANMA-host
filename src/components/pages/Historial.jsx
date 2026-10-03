@@ -8,6 +8,7 @@ import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATU
 import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, registrarEvento } from '../../lib/pedido'
 import { buildWAMsg, openWAFor, relTimeShort, sharePortalCliente } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
+import RecordatoriosPanel from '../common/RecordatoriosPanel'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
 
@@ -1969,6 +1970,7 @@ export default function Historial() {
       {/* ═══ LISTA ═══ */}
       {tab === 'lista' && (
         <>
+          <RecordatoriosPanel budgets={budgets} cfg={config()} onSaveBudget={saveBudget} onOpenBudget={setDrawerBudget} toast={toast} />
           <style>{`
             .hist-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
             .hist-tbl table{border-collapse:collapse;min-width:860px;font-size:13px}
