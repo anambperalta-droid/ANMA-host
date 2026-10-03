@@ -814,6 +814,7 @@ export default function Historial() {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatus, setBulkStatus] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [menuAnchor, setMenuAnchor] = useState(null) // {top, right} para fixed-position dropdown (evita clipping por overflow)
   const [carouselSlide, setCarouselSlide] = useState(0)
   const [quickFilter, setQuickFilter] = useState('')
   const [pendingLossId, setPendingLossId] = useState(null)
@@ -1371,12 +1372,17 @@ export default function Historial() {
     return () => window.removeEventListener('keydown', handleEsc)
   }, [resendBudget])
 
-  // Cierra menu de 3 puntos al click fuera
+  // Cierra menu de 3 puntos al click fuera (también limpia anchor)
   useEffect(() => {
     if (!openMenuId) return
-    const h = () => setOpenMenuId(null)
+    const h = () => { setOpenMenuId(null); setMenuAnchor(null) }
+    const hScroll = () => { setOpenMenuId(null); setMenuAnchor(null) }
     document.addEventListener('click', h)
-    return () => document.removeEventListener('click', h)
+    window.addEventListener('scroll', hScroll, true)
+    return () => {
+      document.removeEventListener('click', h)
+      window.removeEventListener('scroll', hScroll, true)
+    }
   }, [openMenuId])
 
   const handleResend = (b) => setResendBudget(b)
@@ -1724,14 +1730,20 @@ export default function Historial() {
                               <td className="c-act" style={{ position: 'relative' }}>
                                 <button
                                   style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}
-                                  onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === b.id ? null : b.id) }}
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    if (openMenuId === b.id) { setOpenMenuId(null); setMenuAnchor(null); return }
+                                    const r = e.currentTarget.getBoundingClientRect()
+                                    setMenuAnchor({ top: r.bottom + 4, right: window.innerWidth - r.right })
+                                    setOpenMenuId(b.id)
+                                  }}
                                   title="Acciones"
                                 >
                                   <i className="fa fa-ellipsis-vertical" />
                                 </button>
-                                {openMenuId === b.id && (
+                                {openMenuId === b.id && menuAnchor && (
                                   <div
-                                    style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 24px rgba(0,0,0,.13)' }}
+                                    style={{ position: 'fixed', top: menuAnchor.top, right: menuAnchor.right, zIndex: 10000, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 24px rgba(0,0,0,.13)' }}
                                     onClick={e => e.stopPropagation()}
                                   >
                                     {[
@@ -2164,10 +2176,16 @@ export default function Historial() {
                         <div className="acts" style={{ gap: 6, position: 'relative' }}>
                           <button className="hist-act" onClick={() => copyWA(b)} title="WhatsApp"
                             onMouseEnter={e => e.currentTarget.style.color = '#25D366'} onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}><i className="fa-brands fa-whatsapp" style={{ fontSize: 14 }} /></button>
-                          <button className="hist-act" onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === b.id ? null : b.id) }} title="Más acciones"><i className="fa fa-ellipsis-vertical" style={{ fontSize: 14 }} /></button>
-                          {openMenuId === b.id && (
+                          <button className="hist-act" onClick={e => {
+                            e.stopPropagation()
+                            if (openMenuId === b.id) { setOpenMenuId(null); setMenuAnchor(null); return }
+                            const r = e.currentTarget.getBoundingClientRect()
+                            setMenuAnchor({ top: r.bottom + 4, right: window.innerWidth - r.right })
+                            setOpenMenuId(b.id)
+                          }} title="Más acciones"><i className="fa fa-ellipsis-vertical" style={{ fontSize: 14 }} /></button>
+                          {openMenuId === b.id && menuAnchor && (
                             <div
-                              style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, zIndex: 200, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 12, padding: 6, minWidth: 184, boxShadow: '0 12px 30px rgba(0,0,0,.16)' }}
+                              style={{ position: 'fixed', top: menuAnchor.top, right: menuAnchor.right, zIndex: 10000, background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 12, padding: 6, minWidth: 184, boxShadow: '0 12px 30px rgba(0,0,0,.16)' }}
                               onClick={e => e.stopPropagation()}
                             >
                               {[
