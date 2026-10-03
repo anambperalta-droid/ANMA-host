@@ -165,10 +165,14 @@ export function buildClientePortalLink(b, cfg = {}) {
   const depAmt = Number(b.depositAmt) || 0
   const pay = b.payStatus || 'pending'
   const seniaReal = pay === 'paid' ? total : (pay === 'partial' ? depAmt : 0)
+  // Logo: solo si ≤8KB; fallback a iniciales en el portal (Linear/Slack-style).
+  const logoRaw = cfg.logo || cfg.logoDataUrl || ''
+  const lg = (typeof logoRaw === 'string' && logoRaw.length <= 8192) ? logoRaw : ''
   const payload = {
     n: b.contact || '',
     co: b.company || '',
     neg: cfg.businessName || 'ANMA',
+    lg,
     it: items,
     t: total,
     s: seniaReal,

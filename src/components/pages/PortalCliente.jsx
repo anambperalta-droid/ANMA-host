@@ -104,7 +104,15 @@ export default function PortalCliente() {
       <div style={S.container} className="pc-fade">
         {/* HERO */}
         <div style={S.hero}>
-          <div style={S.heroEye}><i className="fa fa-heart" /></div>
+          {data.lg ? (
+            <div style={{ ...S.heroEye, background: '#fff', overflow: 'hidden', padding: 0 }}>
+              <img src={data.lg} alt={data.neg || 'Logo'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+          ) : (
+            <div style={S.heroEye} aria-label={data.neg}>
+              {(data.neg || 'A').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'A'}
+            </div>
+          )}
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,.75)', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
             Tu pedido con {data.neg || 'nosotros'}
           </div>
@@ -339,7 +347,8 @@ const S = {
     width: 44, height: 44, borderRadius: 12,
     background: 'rgba(255,255,255,.18)',
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 18, marginBottom: 12, color: '#fff',
+    fontSize: 15, fontWeight: 800, letterSpacing: '-.02em',
+    marginBottom: 12, color: '#fff',
   },
   heroTitle: {
     fontSize: 26, fontWeight: 900, margin: '6px 0 10px', letterSpacing: '-.03em',
