@@ -95,7 +95,13 @@ function parseFmtValue(v) {
   return Number(String(v).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', incluyeIva: true, canal: '', payMethod: '', fiscalCondition: 'consumidor' }
+// Multi-item (02/10/26) — ver anma-app para rationale.
+const newLine = () => ({ id: Math.random().toString(36).slice(2, 9), name: '', productId: null, qty: '1', pu: 0, cost: 0 })
+const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', incluyeIva: true, canal: '', payMethod: '', fiscalCondition: 'consumidor', lines: [newLine()], ajuste: false }
+
+function sumLines(lines) {
+  return (lines || []).reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.pu) || 0), 0)
+}
 
 export default function Ventas() {
   const { get, saveBudget, saveEntity } = useData()
@@ -280,7 +286,6 @@ export default function Ventas() {
   useEffect(() => { if (drawerOpen) setTimeout(() => inputRef.current?.focus(), 250) }, [drawerOpen])
 
   const [showClientSug, setShowClientSug] = useState(false)
-  const [showProdSug, setShowProdSug] = useState(false)
 
   const clientSuggestions = useMemo(() => {
     if (!draft.cliente || draft.cliente.length < 1) return []
@@ -288,47 +293,37 @@ export default function Ventas() {
     return clients.filter(cl => (cl.company || cl.contact || '').toLowerCase().includes(q)).slice(0, 6)
   }, [draft.cliente, clients])
 
-  const productSuggestions = useMemo(() => {
-    if (!draft.producto || draft.producto.length < 1) return []
-    const q = draft.producto.toLowerCase()
-    return products.filter(p => (p.name || '').toLowerCase().includes(q)).slice(0, 6)
-  }, [draft.producto, products])
-
-  const [matchedPrice, setMatchedPrice] = useState(0)
-
-  const selectProduct = (p) => {
+  // Multi-item helpers — 02/10/26.
+  const setLine = (lineId, patch) => {
+    setDraft(d => ({ ...d, lines: (d.lines || []).map(l => l.id === lineId ? { ...l, ...patch } : l) }))
+  }
+  const addLine = () => setDraft(d => ({ ...d, lines: [...(d.lines || []), newLine()] }))
+  const removeLine = (lineId) => setDraft(d => {
+    const next = (d.lines || []).filter(l => l.id !== lineId)
+    return { ...d, lines: next.length ? next : [newLine()] }
+  })
+  const selectProductInLine = (lineId, p) => {
     const price = Number(p.price) || Number(p.priceUnit) || 0
-    const qty = Number(draft.cantidad) || 1
-    setMatchedPrice(price)
-    setDraft(d => ({ ...d, producto: p.name, facturado: price > 0 ? fmtLive(String(price * qty)) : d.facturado }))
-    setShowProdSug(false)
+    const cost  = Number(p.costUnit) || Number(p.cost) || 0
+    setLine(lineId, { name: p.name, productId: p.id || null, pu: price, cost })
   }
 
-  useEffect(() => {
-    if (!draft.producto) return
-    const match = products.find(p => p.name === draft.producto)
-    if (!match) return
-    const price = Number(match.price) || Number(match.priceUnit) || 0
-    if (price <= 0) return
-    const qty = Number(draft.cantidad) || 1
-    setMatchedPrice(price)
-    setDraft(d => ({ ...d, facturado: fmtLive(String(price * qty)) }))
-  }, [draft.cantidad])
-
-  const openDrawer = () => { setDraft({ ...EMPTY }); setShowNota(false); setSavedCount(0); setMatchedPrice(0); setDrawerOpen(true) }
+  const openDrawer = () => { setDraft({ ...EMPTY, lines: [newLine()] }); setShowNota(false); setSavedCount(0); setDrawerOpen(true) }
   const closeDrawer = () => { setDrawerOpen(false) }
 
   const [justSaved, setJustSaved] = useState(false)
 
   const saveEntry = (keepOpen) => {
-    // Capitalize automatico (Fase 1 auditoria 02/10/26).
     const cliente = capitalizeName(draft.cliente)
-    const producto = draft.producto.trim()
-    const cantidad = Number(draft.cantidad) || 1
-    const rawFact = parseFmtValue(draft.facturado)
+    const validLines = (draft.lines || []).filter(l => (l.name && l.name.trim()) || Number(l.pu) > 0)
+    const useMulti = validLines.length > 0
+    const computed = sumLines(validLines)
+    const rawFact = draft.ajuste && Number(parseFmtValue(draft.facturado)) > 0
+      ? parseFmtValue(draft.facturado)
+      : (useMulti ? computed : parseFmtValue(draft.facturado))
 
     if (!cliente) { toast('Completa el cliente', 'er'); return }
-    if (!rawFact && !producto) { toast('Completa al menos producto o monto', 'er'); return }
+    if (!rawFact && !useMulti) { toast('Completa al menos producto o monto', 'er'); return }
 
     let facturado = rawFact, ivaAmt = 0
     if (draft.incluyeIva && rawFact > 0) ivaAmt = Math.round(rawFact - rawFact / 1.21)
@@ -355,8 +350,16 @@ export default function Ventas() {
       payMethod: draft.payMethod || '',   // Medio de pago — Fase 1
       fiscalCondition: fcSnap,            // Condicion fiscal — Fase 2
       total: facturado, aplicaIva: ivaAmt > 0, _quickIva: ivaAmt, _quickEntry: true,
-      items: producto ? [{ name: producto, qty: cantidad }] : [],
-      alternatives: [{ id: 1, label: 'Principal', approved: true, kits: [{ id: 1, name: 'Pedido', qty: 1, priceUnit: 0, costUnit: 0, packaging: [], products: producto ? [{ name: producto, qty: cantidad, costUnit: 0, priceUnit: facturado / (cantidad || 1) }] : [], personalizacion: { desc: '', costUnit: 0 } }] }],
+      items: useMulti
+        ? validLines.map(l => ({ name: l.name.trim(), qty: Number(l.qty) || 1, priceUnit: Number(l.pu) || 0, cost: Number(l.cost) || 0, productId: l.productId || null }))
+        : (draft.producto.trim() ? [{ name: draft.producto.trim(), qty: Number(draft.cantidad) || 1 }] : []),
+      alternatives: [{ id: 1, label: 'Principal', approved: true, kits: [{
+        id: 1, name: 'Pedido', qty: 1, priceUnit: 0, costUnit: 0, packaging: [],
+        products: useMulti
+          ? validLines.map(l => ({ name: l.name.trim(), qty: Number(l.qty) || 1, costUnit: Number(l.cost) || 0, priceUnit: Number(l.pu) || 0 }))
+          : (draft.producto.trim() ? [{ name: draft.producto.trim(), qty: Number(draft.cantidad) || 1, costUnit: 0, priceUnit: facturado / (Number(draft.cantidad) || 1) }] : []),
+        personalizacion: { desc: '', costUnit: 0 },
+      }] }],
       approvedAltId: 1, date: draft.fecha, noteInt: draft.nota.trim(),
       deliveryDate: '', depositAmt: 0, deposit: 0, margin: 0, margenObjetivo: 0, discount: 0,
     })
@@ -373,9 +376,8 @@ export default function Ventas() {
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 1200)
       if (offMonth) toast(`Cargada en ${offLabel}`, 'ok')
-      setDraft({ ...EMPTY, fecha: draft.fecha, canal: draft.canal })
+      setDraft({ ...EMPTY, fecha: draft.fecha, canal: draft.canal, lines: [newLine()] })
       setShowNota(false)
-      setMatchedPrice(0)
       setTimeout(() => inputRef.current?.focus(), 50)
     } else {
       if (offMonth) {
@@ -770,12 +772,11 @@ export default function Ventas() {
         draft={draft} setDraft={setDraft}
         inputRef={inputRef}
         clientSuggestions={clientSuggestions} showClientSug={showClientSug} setShowClientSug={setShowClientSug}
-        productSuggestions={productSuggestions} showProdSug={showProdSug} setShowProdSug={setShowProdSug}
-        selectProduct={selectProduct}
+        products={products}
+        setLine={setLine} addLine={addLine} removeLine={removeLine} selectProductInLine={selectProductInLine}
         showNota={showNota} setShowNota={setShowNota}
         saveEntry={saveEntry}
         savedCount={savedCount}
-        matchedPrice={matchedPrice}
         justSaved={justSaved}
         visibleMk={mk}
         meses={MESES}
@@ -787,12 +788,12 @@ export default function Ventas() {
 /* ════════════════════════════════════════════════════════════
    DRAWER — Panel lateral de carga rapida (v3)
    ════════════════════════════════════════════════════════════ */
-function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestions, showClientSug, setShowClientSug, productSuggestions, showProdSug, setShowProdSug, selectProduct, showNota, setShowNota, saveEntry, savedCount, matchedPrice, justSaved, visibleMk, meses }) {
+function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestions, showClientSug, setShowClientSug, products, setLine, addLine, removeLine, selectProductInLine, showNota, setShowNota, saveEntry, savedCount, justSaved, visibleMk, meses }) {
   if (!open) return null
 
-  const qty = Number(draft.cantidad) || 1
-  const rawTotal = parseFmtValue(draft.facturado)
-  const showBreakdown = matchedPrice > 0 && qty > 0 && rawTotal > 0
+  const lines = draft.lines || []
+  const computedTotal = sumLines(lines)
+  const rawTotal = draft.ajuste && draft.facturado ? parseFmtValue(draft.facturado) : computedTotal
 
   const draftMk = (draft.fecha || '').slice(0, 7)
   const offMonth = draftMk && visibleMk && draftMk !== visibleMk
@@ -805,7 +806,7 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
 
   const handleFacturadoChange = (e) => {
     const raw = e.target.value.replace(/[^\d]/g, '')
-    setDraft(d => ({ ...d, facturado: raw ? fmtLive(raw) : '' }))
+    setDraft(d => ({ ...d, facturado: raw ? fmtLive(raw) : '', ajuste: !!raw }))
   }
 
   return createPortal(
@@ -957,78 +958,57 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
 
           <div className="sd-sep" />
 
-          {/* Producto + monto */}
+          {/* Multi-item (02/10/26) — ver anma-app para rationale */}
           <div className="sd-group">
-            <div className="sd-fg">
-              <label className="sd-lbl">Producto</label>
-              <div style={{ position: 'relative' }}>
-                <input className="sd-inp" placeholder="Nombre del producto"
-                  value={draft.producto}
-                  onChange={e => { setDraft(d => ({ ...d, producto: e.target.value })); setShowProdSug(true) }}
-                  onFocus={() => draft.producto.length >= 1 && setShowProdSug(true)}
-                  onBlur={() => setTimeout(() => setShowProdSug(false), 150)}
-                />
-                {showProdSug && productSuggestions.length > 0 && (
-                  <div className="sd-sug">
-                    {productSuggestions.map(p => {
-                      const price = Number(p.price) || Number(p.priceUnit) || 0
-                      return (
-                        <div key={p.id} className="sd-sug-item" onMouseDown={() => selectProduct(p)}>
-                          <span style={{ fontWeight: 600, color: 'var(--txt)' }}>{p.name}</span>
-                          {price > 0 && <span style={{ color: 'var(--brand)', fontSize: 12, fontWeight: 700 }}>{fmt(price)}</span>}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
+            <label className="sd-lbl" style={{ marginBottom: 8, display: 'block' }}>
+              Productos
+              {lines.length > 1 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'var(--surface2)', color: 'var(--txt3)' }}>{lines.length}</span>}
+            </label>
+            {lines.map((line, idx) => (
+              <LineRow key={line.id} line={line} idx={idx} products={products}
+                onSelectProduct={(p) => selectProductInLine(line.id, p)}
+                onChange={(patch) => setLine(line.id, patch)}
+                onRemove={() => removeLine(line.id)}
+                canRemove={lines.length > 1}
+              />
+            ))}
+            <button type="button" onClick={addLine}
+              style={{
+                marginTop: 4, padding: '7px 10px', width: '100%',
+                border: '1.5px dashed var(--border)', background: 'transparent',
+                borderRadius: 10, color: 'var(--brand)', fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+              <i className="fa fa-plus" style={{ fontSize: 10 }} /> Agregar producto
+            </button>
+            <div style={{
+              marginTop: 12, padding: '10px 12px', borderRadius: 10,
+              background: 'var(--surface2)', border: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                Total
+                {draft.ajuste && <span style={{ marginLeft: 6, fontSize: 9.5, padding: '1px 6px', borderRadius: 4, background: '#FEF3C7', color: '#78350F' }}>ajuste manual</span>}
               </div>
+              <input
+                className="sd-inp"
+                value={draft.facturado ? `$${draft.facturado}` : (computedTotal > 0 ? `$${fmtLive(String(computedTotal))}` : '')}
+                onChange={handleFacturadoChange}
+                placeholder="$0"
+                style={{ textAlign: 'right', fontWeight: 800, fontSize: 16, maxWidth: 160, border: 'none', background: 'transparent', padding: '2px 0' }}
+              />
             </div>
-            <div className="sd-row">
-              <div className="sd-fg" style={{ flex: '.6', marginBottom: 0 }}>
-                <label className="sd-lbl">Cant.</label>
-                <input className="sd-inp" type="number" min="1" value={draft.cantidad}
-                  onChange={e => setDraft(d => ({ ...d, cantidad: e.target.value }))}
-                  style={{ textAlign: 'center', fontWeight: 700 }}
-                />
-              </div>
-              <div className="sd-fg" style={{ marginBottom: 0 }}>
-                <label className="sd-lbl">Monto</label>
-                <input className="sd-inp" placeholder="$0"
-                  value={draft.facturado ? `$${draft.facturado}` : ''}
-                  onChange={handleFacturadoChange}
-                  style={{ textAlign: 'right', fontWeight: 700, fontSize: 16 }}
-                />
-              </div>
-            </div>
-            {showBreakdown && (() => {
-              // Lista oficial — Fase 2 auditoria 02/10/26 (>5% diff alerta).
-              const puInput = rawTotal / qty
-              const diff = (puInput - matchedPrice) / matchedPrice
-              const warn = Math.abs(diff) > 0.05
-              return (
-                <>
-                  <div className="sd-breakdown">
-                    <i className="fa fa-calculator" />
-                    <span>{fmt(matchedPrice)}/u</span>
-                    <span style={{ color: 'var(--txt4)' }}>x</span>
-                    <span>{qty}</span>
-                    <span style={{ color: 'var(--txt4)' }}>=</span>
-                    <span style={{ color: 'var(--brand)', fontWeight: 800 }}>{fmt(matchedPrice * qty)}</span>
-                  </div>
-                  {warn && (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 6, marginTop: 5,
-                      padding: '5px 10px', borderRadius: 7,
-                      background: '#FEF3C7', border: '1px solid #FDE68A',
-                      fontSize: 10.5, color: '#78350F', fontWeight: 600,
-                    }}>
-                      <i className="fa fa-triangle-exclamation" style={{ fontSize: 10 }} />
-                      <span>Lista oficial <b>{fmt(matchedPrice)}/u</b> · diferencia <b style={{ color: diff > 0 ? '#15803d' : '#dc2626' }}>{diff > 0 ? '+' : ''}{Math.round(diff * 100)}%</b></span>
-                    </div>
-                  )}
-                </>
-              )
-            })()}
+            {draft.ajuste && computedTotal > 0 && Math.abs(parseFmtValue(draft.facturado) - computedTotal) > 1 && (
+              <button type="button"
+                onClick={() => setDraft(d => ({ ...d, ajuste: false, facturado: '' }))}
+                style={{
+                  marginTop: 6, background: 'none', border: 'none', fontSize: 10.5, color: 'var(--txt3)',
+                  cursor: 'pointer', fontFamily: 'inherit', padding: 0, textDecoration: 'underline',
+                }}>
+                Volver al total calculado ({fmt(computedTotal)})
+              </button>
+            )}
           </div>
 
           <div className="sd-sep" />
@@ -1240,6 +1220,99 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast, mesLabel }) 
         )
       })}
       {pendientes.length > 15 && <div style={{ padding: '8px 14px', textAlign: 'center', fontSize: 11, color: 'var(--txt3)' }}>y {pendientes.length - 15} mas...</div>}
+    </div>
+  )
+}
+
+// LineRow — multi-item (02/10/26, paridad con anma-app).
+function LineRow({ line, idx, products, onSelectProduct, onChange, onRemove, canRemove }) {
+  const [showSug, setShowSug] = useState(false)
+  const sugs = useMemo(() => {
+    if (!line.name || line.name.length < 1) return []
+    const q = line.name.toLowerCase()
+    return products.filter(p => (p.name || '').toLowerCase().includes(q)).slice(0, 6)
+  }, [line.name, products])
+
+  const qty = Number(line.qty) || 0
+  const pu  = Number(line.pu)  || 0
+  const sub = qty * pu
+
+  const match = line.productId
+    ? products.find(p => p.id === line.productId)
+    : products.find(p => (p.name || '').toLowerCase() === (line.name || '').toLowerCase())
+  const matchedPrice = match ? (Number(match.price) || Number(match.priceUnit) || 0) : 0
+  const diff = matchedPrice > 0 && pu > 0 ? (pu - matchedPrice) / matchedPrice : 0
+  const warn = matchedPrice > 0 && pu > 0 && Math.abs(diff) > 0.05
+
+  return (
+    <div style={{
+      padding: '8px 10px', marginBottom: 6,
+      border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--bg)',
+    }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 110px 28px', gap: 6, alignItems: 'center' }}>
+        <div style={{ position: 'relative', minWidth: 0 }}>
+          <input className="sd-inp" placeholder={`Producto ${idx + 1}`}
+            value={line.name}
+            onChange={e => { onChange({ name: e.target.value, productId: null }); setShowSug(true) }}
+            onFocus={() => line.name.length >= 1 && setShowSug(true)}
+            onBlur={() => setTimeout(() => setShowSug(false), 150)}
+            style={{ padding: '7px 10px', fontSize: 12.5 }}
+          />
+          {showSug && sugs.length > 0 && (
+            <div className="sd-sug">
+              {sugs.map(p => {
+                const price = Number(p.price) || Number(p.priceUnit) || 0
+                return (
+                  <div key={p.id} className="sd-sug-item"
+                    onMouseDown={() => { onSelectProduct(p); setShowSug(false) }}>
+                    <span style={{ fontWeight: 600, color: 'var(--txt)' }}>{p.name}</span>
+                    {price > 0 && <span style={{ color: 'var(--brand)', fontSize: 11.5, fontWeight: 700 }}>{fmt(price)}</span>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+        <input className="sd-inp" type="number" min="1"
+          value={line.qty}
+          onChange={e => onChange({ qty: e.target.value })}
+          style={{ textAlign: 'center', fontWeight: 700, padding: '7px 4px', fontSize: 12.5 }}
+        />
+        <input className="sd-inp" placeholder="$0"
+          value={pu > 0 ? `$${fmtLive(String(pu))}` : ''}
+          onChange={e => {
+            const raw = e.target.value.replace(/[^\d]/g, '')
+            onChange({ pu: raw ? Number(raw) : 0 })
+          }}
+          style={{ textAlign: 'right', fontWeight: 700, padding: '7px 8px', fontSize: 12.5 }}
+        />
+        <button type="button" onClick={onRemove}
+          disabled={!canRemove}
+          title={canRemove ? 'Quitar linea' : 'Minimo una linea'}
+          style={{
+            width: 28, height: 28, borderRadius: 7, border: 'none',
+            background: canRemove ? 'var(--surface2)' : 'transparent',
+            color: canRemove ? 'var(--txt3)' : 'var(--txt4)',
+            cursor: canRemove ? 'pointer' : 'not-allowed', fontSize: 11, fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+          <i className="fa fa-xmark" />
+        </button>
+      </div>
+      {(sub > 0 || warn) && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5, gap: 6 }}>
+          {warn ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#78350F', fontWeight: 600, background: '#FEF3C7', border: '1px solid #FDE68A', padding: '2px 7px', borderRadius: 5 }}>
+              <i className="fa fa-triangle-exclamation" style={{ fontSize: 9 }} />
+              Lista <b>{fmt(matchedPrice)}</b>
+              <span style={{ color: diff > 0 ? '#15803d' : '#dc2626', fontWeight: 800 }}>{diff > 0 ? '+' : ''}{Math.round(diff * 100)}%</span>
+            </div>
+          ) : <span />}
+          <span style={{ fontSize: 11.5, color: 'var(--txt3)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            {qty} × {fmt(pu)} = <b style={{ color: 'var(--txt)' }}>{fmt(sub)}</b>
+          </span>
+        </div>
+      )}
     </div>
   )
 }
