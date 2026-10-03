@@ -98,8 +98,8 @@ function parseFmtValue(v) {
 
 // Multi-item (02/10/26) — ver anma-app para rationale.
 const newLine = () => ({ id: Math.random().toString(36).slice(2, 9), name: '', productId: null, qty: '1', pu: 0, cost: 0 })
-// ivaMode: 'sin' | 'incluido' | 'sumado'. cobradoHoy: requerido si payStatus=partial.
-const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', cobradoHoy: '', ivaMode: 'incluido', canal: '', payMethod: '', fiscalCondition: 'consumidor', lines: [newLine()], ajuste: false }
+// IVA siempre sumado (regla ANMA 02/10/26) — sin modos.
+const EMPTY = { cliente: '', producto: '', cantidad: '1', facturado: '', nota: '', fecha: todayISO(), payStatus: 'pending', cobradoHoy: '', canal: '', payMethod: '', fiscalCondition: 'consumidor', lines: [newLine()], ajuste: false }
 
 function sumLines(lines) {
   return (lines || []).reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.pu) || 0), 0)
@@ -340,11 +340,9 @@ export default function Ventas() {
       if (cHoy >= rawFact)    { toast('Lo cobrado es mayor o igual al total: marca como Cobrado', 'er'); return }
     }
 
-    // IVA tri-modo (02/10/26).
+    // IVA siempre sumado (regla ANMA 02/10/26).
     let facturado = rawFact, ivaAmt = 0
-    const mode = draft.ivaMode || (draft.incluyeIva === false ? 'sin' : 'incluido')
-    if (mode === 'incluido' && rawFact > 0) ivaAmt = Math.round(rawFact - rawFact / 1.21)
-    else if (mode === 'sumado' && rawFact > 0) {
+    if (rawFact > 0) {
       ivaAmt = Math.round(rawFact * 0.21)
       facturado = rawFact + ivaAmt
     }
@@ -827,15 +825,11 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
   const offMonth = draftMk && visibleMk && draftMk !== visibleMk
   const offLabel = offMonth ? `${meses[Number(draftMk.slice(5, 7)) - 1]} ${draftMk.slice(0, 4)}` : ''
 
+  // IVA siempre sumado (02/10/26). Desglose informativo.
   const ivaInfo = () => {
-    const mode = draft.ivaMode || (draft.incluyeIva === false ? 'sin' : 'incluido')
-    if (!rawTotal || mode === 'sin') return { mode, subtotal: rawTotal, iva: 0, total: rawTotal }
-    if (mode === 'sumado') {
-      const iva = Math.round(rawTotal * 0.21)
-      return { mode, subtotal: rawTotal, iva, total: rawTotal + iva }
-    }
-    const subtotal = Math.round(rawTotal / 1.21)
-    return { mode, subtotal, iva: rawTotal - subtotal, total: rawTotal }
+    if (!rawTotal) return { subtotal: 0, iva: 0, total: 0 }
+    const iva = Math.round(rawTotal * 0.21)
+    return { subtotal: rawTotal, iva, total: rawTotal + iva }
   }
 
   const handleFacturadoChange = (e) => {
@@ -955,7 +949,7 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
                       onMouseDown={() => {
                         const fc = cl.fiscalCondition || 'consumidor'
                         const op = FISCAL_MAP[fc] || FISCAL_MAP.consumidor
-                        setDraft(d => ({ ...d, cliente: cl.company || cl.contact, fiscalCondition: fc, ivaMode: op.iva ? 'incluido' : 'sin' }))
+                        setDraft(d => ({ ...d, cliente: cl.company || cl.contact, fiscalCondition: fc }))
                         setShowClientSug(false)
                       }}>
                       <div>
@@ -974,7 +968,7 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
                 const on = draft.fiscalCondition === f.value
                 return (
                   <button key={f.value}
-                    onClick={() => setDraft(d => ({ ...d, fiscalCondition: f.value, ivaMode: f.iva ? 'incluido' : 'sin' }))}
+                    onClick={() => setDraft(d => ({ ...d, fiscalCondition: f.value }))}
                     style={{
                       padding: '4px 9px', borderRadius: 7, fontSize: 10.5, fontWeight: 700,
                       border: `1.5px solid ${on ? f.color : 'var(--border)'}`,
@@ -1096,35 +1090,13 @@ function SaleDrawer({ open, onClose, draft, setDraft, inputRef, clientSuggestion
                   </div>
                 )}
               </div>
-              <div className="sd-fg" style={{ marginBottom: 0 }}>
-                <label className="sd-lbl">IVA</label>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {[
-                    { v: 'sin', label: 'Sin IVA' },
-                    { v: 'incluido', label: 'Incluido' },
-                    { v: 'sumado', label: 'Sumar' },
-                  ].map(x => {
-                    const on = (draft.ivaMode || 'incluido') === x.v
-                    return (
-                      <button key={x.v}
-                        onClick={() => setDraft(d => ({ ...d, ivaMode: x.v }))}
-                        style={{
-                          flex: 1, padding: '7px 6px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                          border: `1.5px solid ${on ? 'var(--brand)' : 'var(--border)'}`,
-                          background: on ? 'rgba(124,58,237,.08)' : 'var(--bg)',
-                          color: on ? 'var(--brand)' : 'var(--txt3)',
-                          cursor: 'pointer', fontFamily: 'inherit',
-                        }}>{x.label}</button>
-                    )
-                  })}
-                </div>
-              </div>
             </div>
-            {rawTotal > 0 && (draft.ivaMode || 'incluido') !== 'sin' && (() => {
+            {/* IVA siempre +21% (regla ANMA). Desglose informativo. */}
+            {rawTotal > 0 && (() => {
               const info = ivaInfo()
               return (
                 <div style={{
-                  marginTop: 8, padding: '7px 11px', borderRadius: 8,
+                  marginTop: 10, padding: '8px 11px', borderRadius: 8,
                   background: 'rgba(124,58,237,.06)', border: '1px solid rgba(124,58,237,.15)',
                   fontSize: 11, color: 'var(--txt2)', fontWeight: 600, display: 'flex',
                   justifyContent: 'space-between', gap: 8, alignItems: 'center',
