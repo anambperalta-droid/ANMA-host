@@ -11,6 +11,7 @@
      · calcularTotales(p)     → mismos números que el bloque Precio
 ═══════════════════════════════════════════════════════════════════ */
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { fmt } from '../../lib/storage'
 import {
   pedidoFromBudget, calcularTotales, eventosPedido,
@@ -85,14 +86,15 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
   const cobrado   = pagos.reduce((s, p) => s + (Number(p.amount) || 0), 0)
   const saldo     = Math.max(0, (totales.total || 0) - cobrado - (pedido.seniaMonto || 0))
 
-  return (
+  // Portal a <body> para evitar containing-block de ancestros con transform/filter.
+  return createPortal((
     <>
       {/* Overlay oscuro clickeable */}
       <div
         onClick={onClose}
         style={{
           position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)',
-          zIndex: 500, animation: 'drawerFade .2s ease both',
+          zIndex: 9998, animation: 'drawerFade .2s ease both',
         }}
       />
 
@@ -100,9 +102,9 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
       <aside
         className="pd-aside"
         style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0,
+          position: 'fixed', top: 0, right: 0, bottom: 0, height: '100vh',
           width: 'min(520px, 100vw)', background: 'var(--surface)',
-          zIndex: 501, display: 'flex', flexDirection: 'column',
+          zIndex: 9999, display: 'flex', flexDirection: 'column',
           boxShadow: '-12px 0 40px rgba(15,23,42,.15)',
           animation: 'drawerIn .28s cubic-bezier(.16,1,.3,1) both',
         }}
@@ -423,7 +425,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
         }
       `}</style>
     </>
-  )
+  ), document.body)
 }
 
 // ── Sub-componentes ────────────────────────────────────────────────
