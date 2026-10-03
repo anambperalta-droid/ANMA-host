@@ -1322,6 +1322,9 @@ function LineRow({ line, idx, products, onSelectProduct, onChange, onRemove, can
   const qty = Number(line.qty) || 0
   const pu  = Number(line.pu)  || 0
   const sub = qty * pu
+  const cost = Number(line.cost) || 0
+  const marginPct = pu > 0 && cost > 0 ? Math.round(((pu - cost) / pu) * 100) : null
+  const [editCost, setEditCost] = useState(false)
 
   const match = line.productId
     ? products.find(p => p.id === line.productId)
@@ -1397,6 +1400,44 @@ function LineRow({ line, idx, products, onSelectProduct, onChange, onRemove, can
           <span style={{ fontSize: 11.5, color: 'var(--txt3)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
             {qty} × {fmt(pu)} = <b style={{ color: 'var(--txt)' }}>{fmt(sub)}</b>
           </span>
+        </div>
+      )}
+      {/* Costo editable + margen — inline edit style Linear/Stripe */}
+      {pu > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 10.5, color: 'var(--txt3)', fontVariantNumeric: 'tabular-nums' }}>
+          <i className="fa fa-lock" style={{ fontSize: 9, color: 'var(--txt4)' }} />
+          <span>Costo</span>
+          {editCost ? (
+            <input
+              type="text" autoFocus
+              value={cost > 0 ? `$${fmtLive(String(cost))}` : ''}
+              placeholder="$0"
+              onChange={e => { const raw = e.target.value.replace(/[^\d]/g, ''); onChange({ cost: raw ? Number(raw) : 0 }) }}
+              onBlur={() => setEditCost(false)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditCost(false) }}
+              style={{ border: '1px solid var(--brand)', borderRadius: 5, padding: '1px 6px', fontSize: 10.5, width: 90, fontFamily: 'inherit', background: '#fff', color: 'var(--txt)' }}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditCost(true)}
+              title="Editar costo del catálogo"
+              style={{ background: 'none', border: '1px dashed var(--border2, #cbd5e1)', borderRadius: 5, padding: '1px 6px', cursor: 'pointer', fontSize: 10.5, color: cost > 0 ? 'var(--txt2)' : 'var(--txt4)', fontFamily: 'inherit' }}
+            >
+              {cost > 0 ? fmt(cost) : 'Agregar'}
+            </button>
+          )}
+          {marginPct !== null && (
+            <span style={{
+              marginLeft: 'auto',
+              padding: '1px 7px', borderRadius: 5, fontWeight: 800,
+              background: marginPct >= 40 ? '#DCFCE7' : marginPct >= 20 ? '#FEF3C7' : '#FEE2E2',
+              color:      marginPct >= 40 ? '#15803D' : marginPct >= 20 ? '#B45309' : '#DC2626',
+              fontSize: 10,
+            }}>
+              Margen {marginPct}%
+            </span>
+          )}
         </div>
       )}
     </div>
