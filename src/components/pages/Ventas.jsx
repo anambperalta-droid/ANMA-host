@@ -248,6 +248,7 @@ export default function Ventas() {
       if (sortCol === 'cant') return dir * ((a.items?.[0]?.qty || 1) - (b.items?.[0]?.qty || 1))
       if (sortCol === 'facturado') return dir * ((Number(a.total) || 0) - (Number(b.total) || 0))
       if (sortCol === 'fecha') return dir * ((a.date || '').localeCompare(b.date || ''))
+      if (sortCol === 'num')   return dir * ((a.num || '').localeCompare(b.num || '', undefined, { numeric: true }))
       if (sortCol === 'cobro') {
         const ord = { pending: 0, partial: 1, paid: 2 }
         return dir * ((ord[a.payStatus] || 0) - (ord[b.payStatus] || 0))
@@ -432,7 +433,7 @@ export default function Ventas() {
   return (
     <div style={{ padding: '10px 20px 80px', maxWidth: 1000, margin: '0 auto' }}>
       <style>{`
-        .vt-row{display:grid;grid-template-columns:.45fr 1fr .7fr .3fr .7fr .4fr .55fr .5fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
+        .vt-row{display:grid;grid-template-columns:.4fr .4fr 1fr .7fr .3fr .7fr .4fr .55fr .5fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
         /* Smart Tabs — Fase 1 auditoria 02/10/26 */
         .vt-smarttabs{display:flex;gap:0;padding:0 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
         .vt-stab{background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;font-size:12px;font-weight:700;color:var(--txt3);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:color .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
@@ -544,30 +545,9 @@ export default function Ventas() {
                 )}
               </div>
             </div>
-            {hayCompras && (
-              <>
-                <div className="vt-hero-divider" />
-                <div className="vt-hero-stat" title="Ganancia cobrada menos lo gastado en Compras del mes — tu ganancia neta real">
-                  <div className="vt-hero-stat-icon" style={{
-                    background: resultadoOperativo >= 0 ? 'rgba(21,128,61,.1)' : 'rgba(220,38,38,.1)',
-                    color: resultadoOperativo >= 0 ? '#15803d' : '#DC2626',
-                  }}>
-                    <i className="fa fa-scale-balanced" />
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div className="vt-hero-stat-lbl">Resultado operativo</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                      <span className="vt-hero-stat-val" style={{ color: resultadoOperativo >= 0 ? '#15803d' : '#DC2626' }}>
-                        {hidden ? '***' : fmt(resultadoOperativo)}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 9.5, color: 'var(--txt4)', fontWeight: 600, marginTop: 1, letterSpacing: '.02em' }}>
-                      {hidden ? '' : <>{fmt(gananciaCobradaMes)} ganancia − {fmt(gastadoDelMes)} compras</>}
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+            {/* Resultado Operativo removido del hero 02/10/26 (Fase 3 auditoria).
+                Mezcla datos de Ventas y Compras — pertenece al Dashboard /
+                modulo P&L, no al registro de ventas. */}
           </div>
         </div>
       </div>
@@ -618,6 +598,9 @@ export default function Ventas() {
             ))}
           </div>
           <div className="vt-row vt-hdr">
+            <span className="vt-hide-m" onClick={() => toggleSort('num')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+              N° {sortCol === 'num' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
+            </span>
             <span className="vt-hide-m" onClick={() => toggleSort('fecha')} style={{ cursor: 'pointer', userSelect: 'none' }}>
               Fecha {sortCol === 'fecha' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
             </span>
@@ -664,6 +647,7 @@ export default function Ventas() {
             const method = payMethodOf(b)
             return (
               <div key={b.id} className="vt-row" style={{ cursor: 'pointer', borderLeft: isPending ? '3px solid #DC2626' : isPartial ? '3px solid #b45309' : '3px solid transparent' }} onClick={() => nav(`/pedido/${b.id}`)}>
+                <span className="vt-cell vt-hide-m" style={{ color: 'var(--txt2)', fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums', letterSpacing: '.02em' }}>{b.num || '—'}</span>
                 <span className="vt-cell vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 11.5, fontVariantNumeric: 'tabular-nums' }}>{fmtDateShort(b.date) || '—'}</span>
                 <span className="vt-cell" style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                   {(() => {
@@ -694,6 +678,7 @@ export default function Ventas() {
 
           {filteredBudgets.length > 0 && (
             <div className="vt-row" style={{ background: 'var(--surface2)', fontWeight: 800, borderBottom: 'none', borderRadius: '0 0 12px 12px' }}>
+              <span className="vt-hide-m" />
               <span className="vt-hide-m" />
               <span style={{ color: 'var(--txt3)', fontSize: 11, textTransform: 'uppercase' }}>Total</span>
               <span />
