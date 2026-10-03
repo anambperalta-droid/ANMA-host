@@ -407,6 +407,25 @@ export default function Ventas() {
       facturado = rawFact + ivaAmt
     }
 
+    // Validación duplicados — mismo cliente + fecha + monto exacto.
+    // Previene doble carga por accidente.
+    const liveBudgets = get('budgets') || []
+    const dup = liveBudgets.find(b =>
+      b.date === draft.fecha &&
+      Math.abs((Number(b.total) || 0) - facturado) < 1 &&
+      ((b.company || '').toLowerCase() === cliente.toLowerCase() ||
+       (b.contact || '').toLowerCase() === cliente.toLowerCase())
+    )
+    if (dup) {
+      const ok = window.confirm(
+        `Ya existe una venta igual:\n\n` +
+        `• ${dup.num || 'Sin N°'} · ${cliente}\n` +
+        `• ${draft.fecha} · ${fmt(facturado)}\n\n` +
+        `¿Guardar de todos modos?`
+      )
+      if (!ok) return
+    }
+
     const matchClient = clients.find(cl =>
       (cl.company || '').toLowerCase() === cliente.toLowerCase() ||
       (cl.contact || '').toLowerCase() === cliente.toLowerCase()
