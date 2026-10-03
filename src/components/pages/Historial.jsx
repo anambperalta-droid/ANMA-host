@@ -1275,6 +1275,36 @@ export default function Historial() {
   const handlePayStatusChange = (id, payStatus) => {
     const b = budgets.find(x => x.id === id)
     if (!b) return
+    const totalDue = b.totalFinal || b.total || 0
+    const curPayments = Array.isArray(b.payments) ? b.payments : []
+    const paidSum = curPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+
+    // Correlación con payments[]: si marcan 'paid' sin cobros registrados,
+    // generamos un pago sintético por el saldo pendiente para que las KPIs,
+    // el drawer y los reportes mantengan correspondencia exacta.
+    if (payStatus === 'paid') {
+      const diff = Math.max(0, totalDue - paidSum)
+      if (diff > 0 && totalDue > 0) {
+        const stub = { id: Date.now(), amount: diff, date: new Date().toISOString().slice(0, 10), method: '', notes: 'Marcado como pagado' }
+        saveBudget({ ...b, payStatus: 'paid', payments: [...curPayments, stub] })
+      } else {
+        saveBudget({ ...b, payStatus: 'paid' })
+      }
+      toast('Marcado como pagado', 'ok')
+      return
+    }
+    // 'partial' sin cobros → abrir modal para que el usuario cargue el monto real
+    if (payStatus === 'partial' && paidSum === 0) {
+      setPaymentsBudget(b)
+      return
+    }
+    // 'pending' con cobros → confirmar antes de limpiar
+    if (payStatus === 'pending' && paidSum > 0) {
+      if (!confirm(`Hay ${fmt(paidSum)} ya registrado. ¿Querés remover todos los cobros?`)) return
+      saveBudget({ ...b, payStatus: 'pending', payments: [] })
+      toast('Cobros removidos', 'ok')
+      return
+    }
     saveBudget({ ...b, payStatus })
     toast('Pago actualizado', 'ok')
   }
@@ -1384,6 +1414,24 @@ export default function Historial() {
       window.removeEventListener('scroll', hScroll, true)
     }
   }, [openMenuId])
+
+  // ── Sync drawer/preview/payments con budgets live para que un cambio
+  // de pago o estado en la tabla se refleje automáticamente en el side-sheet
+  // abierto (sin que Ana vea datos stale).
+  useEffect(() => {
+    if (drawerBudget) {
+      const fresh = budgets.find(x => x.id === drawerBudget.id)
+      if (fresh && fresh !== drawerBudget) setDrawerBudget(fresh)
+    }
+    if (previewBudget) {
+      const fresh = budgets.find(x => x.id === previewBudget.id)
+      if (fresh && fresh !== previewBudget) setPreviewBudget(fresh)
+    }
+    if (paymentsBudget) {
+      const fresh = budgets.find(x => x.id === paymentsBudget.id)
+      if (fresh && fresh !== paymentsBudget) setPaymentsBudget(fresh)
+    }
+  }, [budgets]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleResend = (b) => setResendBudget(b)
   const handleResendSent = () => { toast('Mensaje copiado / enviado', 'ok'); setResendBudget(null) }
