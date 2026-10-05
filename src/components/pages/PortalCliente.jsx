@@ -79,18 +79,18 @@ export default function PortalCliente() {
     const nm = data.nm ? ` *${data.nm}*` : ''
     const hint = (saldo > 0 && (data.cbu || data.al))
       ? { label: 'Avisar que ya transferí',
-          icon: 'fa-circle-check',
           msg: `Hola! Ya hice la transferencia de ${fmt(saldo)} por el pedido${nm}. Te paso el comprobante.` }
+      : (saldo > 0)
+      // Saldo pero sin CBU/Alias cargados → el cliente necesita coordinar el pago.
+      ? { label: 'Pedir datos de pago',
+          msg: `Hola! Querría coordinar el pago de ${fmt(saldo)} del pedido${nm}. ¿Me pasás los datos para transferir?` }
       : (payStatus === 'paid' && estado !== 'delivered' && estado !== 'lost')
       ? { label: 'Consultar estado del pedido',
-          icon: 'fa-truck-fast',
           msg: `Hola! Quería consultar por el estado del pedido${nm}.` }
       : (estado === 'delivered')
       ? { label: 'Confirmar que recibí',
-          icon: 'fa-circle-check',
           msg: `Confirmo que recibí el pedido${nm}. ¡Gracias!` }
       : { label: 'Consultar al negocio',
-          icon: 'fa-comment-dots',
           msg: `Hola! Tengo una consulta sobre mi pedido${nm}.` }
     return hint
   }, [data, saldo, payStatus, estado])
@@ -124,19 +124,6 @@ export default function PortalCliente() {
     setTimeout(() => URL.revokeObjectURL(url), 2000)
   }
 
-  // Compartir el link del portal — Web Share API en mobile, copy fallback.
-  const sharePortal = async () => {
-    const url = typeof window !== 'undefined' ? window.location.href : ''
-    const title = `Pedido${data?.nm ? ' ' + data.nm : ''} · ${data?.neg || 'ANMA Regalos'}`
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, text: title, url })
-      } else {
-        await navigator.clipboard.writeText(url)
-        setCopied(true); setTimeout(() => setCopied(false), 1800)
-      }
-    } catch { /* usuario canceló el share — nada que hacer */ }
-  }
 
   if (error) return (
     <div style={S.errorWrap}>
@@ -293,6 +280,42 @@ export default function PortalCliente() {
           </div>
         </div>
 
+        {/* DATOS DE PAGO (si hay saldo) — ubicado JUSTO después de "SALDO
+            PENDIENTE": el cliente ve el monto en rojo y abajo cómo pagarlo,
+            sin tener que scrollear. */}
+        {hasPaymentData && (
+          <div style={S.section}>
+            <div style={S.sectionLabel}>Para abonar el saldo</div>
+            <div style={S.card}>
+              {data.mp && (
+                <a href={data.mp} target="_blank" rel="noopener noreferrer" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  background: 'linear-gradient(135deg, #009EE3, #00B4FF)', color: '#fff',
+                  padding: '12px 16px', borderRadius: 12, textDecoration: 'none',
+                  fontSize: 14, fontWeight: 800, marginBottom: (data.cbu || data.al || data.tit) ? 12 : 0,
+                  boxShadow: '0 4px 12px rgba(0,158,227,.3)',
+                }} className="pc-pay-btn">
+                  <i className="fa fa-credit-card" /> Pagar con Mercado Pago
+                </a>
+              )}
+              {data.cbu && (
+                <PayRow label="CBU" value={data.cbu} onCopy={() => copyCbu(data.cbu)} />
+              )}
+              {data.al && (
+                <PayRow label="Alias" value={data.al} onCopy={() => copyCbu(data.al)} />
+              )}
+              {data.tit && (
+                <PayRow label="Titular" value={data.tit} />
+              )}
+              {copied && (
+                <div style={{ fontSize: 11, color: '#15803D', textAlign: 'center', marginTop: 8, fontWeight: 700 }}>
+                  <i className="fa fa-circle-check" style={{ marginRight: 4 }} />¡Copiado!
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* FECHA */}
         {data.d && (
           <div style={S.section}>
@@ -304,40 +327,6 @@ export default function PortalCliente() {
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginTop: 2 }}>{fmtDate(data.d)}</div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* DATOS DE PAGO (si hay saldo) */}
-        {hasPaymentData && (
-          <div style={S.section}>
-            <div style={S.sectionLabel}>Para abonar el saldo</div>
-            <div style={S.card}>
-              {data.cbu && (
-                <PayRow label="CBU" value={data.cbu} onCopy={() => copyCbu(data.cbu)} />
-              )}
-              {data.al && (
-                <PayRow label="Alias" value={data.al} onCopy={() => copyCbu(data.al)} />
-              )}
-              {data.tit && (
-                <PayRow label="Titular" value={data.tit} />
-              )}
-              {data.mp && (
-                <a href={data.mp} target="_blank" rel="noopener noreferrer" style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  background: 'linear-gradient(135deg, #009EE3, #00B4FF)', color: '#fff',
-                  padding: '12px 16px', borderRadius: 12, textDecoration: 'none',
-                  fontSize: 14, fontWeight: 800, marginTop: 10,
-                  boxShadow: '0 4px 12px rgba(0,158,227,.3)',
-                }} className="pc-pay-btn">
-                  <i className="fa fa-credit-card" /> Pagar con Mercado Pago
-                </a>
-              )}
-              {copied && (
-                <div style={{ fontSize: 11, color: '#15803D', textAlign: 'center', marginTop: 8, fontWeight: 700 }}>
-                  <i className="fa fa-circle-check" style={{ marginRight: 4 }} />¡Copiado!
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -357,36 +346,22 @@ export default function PortalCliente() {
           </div>
         )}
 
-        {/* UTILIDADES: calendario + compartir — íconos secundarios */}
-        {(data.d || typeof window !== 'undefined') && (
-          <div style={{ ...S.section, display: 'flex', gap: 10 }}>
-            {data.d && (
-              <button
-                onClick={downloadICS}
-                className="pc-pay-btn"
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  background: '#fff', color: '#111', border: '1.5px solid #E5E7EB',
-                  padding: '12px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                }}
-                title="Descargar evento para tu calendario"
-              >
-                <i className="fa fa-calendar-plus" style={{ color: '#be185d' }} /> Agendar entrega
-              </button>
-            )}
+        {/* UTILIDAD: agendar entrega. "Compartir" se quitó — si el cliente
+            ya está viendo el portal, ya recibió el link, es redundante. */}
+        {data.d && (
+          <div style={S.section}>
             <button
-              onClick={sharePortal}
+              onClick={downloadICS}
               className="pc-pay-btn"
               style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 background: '#fff', color: '#111', border: '1.5px solid #E5E7EB',
                 padding: '12px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
-              title="Compartir el link del pedido"
+              title="Descargar evento para tu calendario"
             >
-              <i className="fa fa-share-nodes" style={{ color: '#be185d' }} /> {copied ? '¡Copiado!' : 'Compartir'}
+              <i className="fa fa-calendar-plus" style={{ color: '#be185d' }} /> Agendar entrega en mi calendario
             </button>
           </div>
         )}
