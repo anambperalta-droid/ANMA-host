@@ -142,14 +142,15 @@ export default function Ventas() {
   const allCompras = get('compras') || []
   const mk = monthKey(year, month)
 
-  // Keep drawer in sync when the budgets array actually changes. Guarded
-  // against the "new array each render" trap by firing only when the
-  // selected budget's reference changes within the collection.
+  // Re-sync del drawer con budgets live. IMPORTANTE: comparamos por updatedAt
+  // y no por ref. allBudgets es una ref nueva cada render → fresh !== previewBudget
+  // era siempre true, setPreviewBudget en loop, y podía sobreescribir el null
+  // que seteaba onClose dejando el drawer visible aunque clickearas la X.
   useEffect(() => {
     if (!previewBudget) return
     const fresh = allBudgets.find(x => x.id === previewBudget.id)
-    if (fresh && fresh !== previewBudget) setPreviewBudget(fresh)
-  }, [allBudgets, previewBudget])
+    if (fresh && fresh.updatedAt !== previewBudget.updatedAt) setPreviewBudget(fresh)
+  }, [allBudgets, previewBudget?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const monthBudgets = useMemo(() =>
     allBudgets.filter(b => budgetMonth(b) === mk).sort((a, b) => {
