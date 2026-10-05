@@ -578,7 +578,7 @@ export default function Clientes() {
 
   const openRevincul = (c, e) => {
     e.stopPropagation()
-    const msg = `Hola ${c.contact || c.company}! 👋 Te escribo desde ANMA Regalos. ¿Tenés algún evento próximo? ¡Podemos ayudarte con regalos y souvenirs personalizados! 🎁`
+    const msg = `Hola ${c.contact || c.company}, ¿cómo estás? Te escribo desde ANMA Regalos. ¿Tenés algún evento próximo? Podemos ayudarte con regalos y souvenirs personalizados.`
     setRevinculMsg(msg)
     setRevinculModal(c)
   }
