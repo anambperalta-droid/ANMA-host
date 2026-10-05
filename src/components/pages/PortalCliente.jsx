@@ -202,7 +202,10 @@ export default function PortalCliente() {
               <span style={{ fontSize: 13, color: '#64748b' }}>Total del pedido</span>
               <span style={{ fontSize: 15, fontWeight: 700, color: '#111', fontVariantNumeric: 'tabular-nums' }}>{fmt(data.t)}</span>
             </div>
-            {Number(data.s) > 0 && (
+            {/* "Seña recibida" solo tiene sentido cuando hay un pago parcial Y
+                queda saldo. Si está pagado al 100%, el banner de abajo ya dice
+                todo — mostrar "Seña recibida: $total" confunde. */}
+            {Number(data.s) > 0 && payStatus === 'partial' && saldo > 0 && (
               <div style={S.totalRow}>
                 <span style={{ fontSize: 13, color: '#15803D' }}>Seña recibida</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#15803D', fontVariantNumeric: 'tabular-nums' }}>− {fmt(data.s)}</span>
