@@ -133,7 +133,6 @@ export default function Ventas() {
   const [tab, setTab] = useState('all')  // Smart Tab filter 02/10/26
   const [filterCanal, setFilterCanal] = useState('')
   const [filterMedio, setFilterMedio] = useState('')
-  const [filterFiscal, setFilterFiscal] = useState('')
   const [viewMode, setViewMode] = useState('cliente') // 'cliente' | 'producto'
   const inputRef = useRef(null)
 
@@ -314,23 +313,17 @@ export default function Ventas() {
     if (tab === 'pending') out = out.filter(b => b.payStatus !== 'paid')
     if (filterCanal)  out = out.filter(b => (b.canal || '') === filterCanal)
     if (filterMedio)  out = out.filter(b => (payMethodOf(b) || '') === filterMedio)
-    if (filterFiscal) out = out.filter(b => {
-      const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null) || 'consumidor'
-      return fc === filterFiscal
-    })
     return out
-  }, [sortedBudgets, tab, filterCanal, filterMedio, filterFiscal, clients])
+  }, [sortedBudgets, tab, filterCanal, filterMedio])
 
   const availableFilters = useMemo(() => {
-    const canales = new Set(), medios = new Set(), fiscales = new Set()
+    const canales = new Set(), medios = new Set()
     monthBudgets.forEach(b => {
       if (b.canal) canales.add(b.canal)
       const m = payMethodOf(b); if (m) medios.add(m)
-      const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null)
-      if (fc) fiscales.add(fc)
     })
-    return { canales: [...canales], medios: [...medios], fiscales: [...fiscales] }
-  }, [monthBudgets, clients])
+    return { canales: [...canales], medios: [...medios] }
+  }, [monthBudgets])
 
   const exportCSV = () => {
     const csvEsc = (v) => {
@@ -739,10 +732,12 @@ export default function Ventas() {
             </button>
           </div>
           {/* Chips de filtro secundario — agrupados por dimensión (canal / medio
-              de pago / condición fiscal). Cada chip lleva su propio ícono para
-              que el usuario sepa de qué dimensión es, sin recurrir a dropdowns
-              (más fricción). Separadores visuales entre grupos. */}
-          {(availableFilters.canales.length + availableFilters.medios.length + availableFilters.fiscales.length) > 0 && (
+              de pago). Cada chip lleva su propio ícono para que el usuario sepa
+              de qué dimensión es, sin recurrir a dropdowns (más fricción).
+              Separador visual entre grupos. El filtro por condición fiscal se
+              quitó: no se usa en el día a día — es info del cliente, no de la
+              venta, y el badge CF/RI/M ya la muestra en cada fila. */}
+          {(availableFilters.canales.length + availableFilters.medios.length) > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, padding: '8px 12px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
               {availableFilters.canales.length > 0 && (
                 <>
@@ -771,25 +766,8 @@ export default function Ventas() {
                   ))}
                 </>
               )}
-              {availableFilters.medios.length > 0 && availableFilters.fiscales.length > 0 && (
-                <span style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 4px' }} />
-              )}
-              {availableFilters.fiscales.length > 0 && (
-                <>
-                  <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.06em', marginRight: 2 }}>Fiscal</span>
-                  {availableFilters.fiscales.map(v => (
-                    <button key={`f-${v}`} onClick={() => setFilterFiscal(filterFiscal === v ? '' : v)}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterFiscal === v ? '#b45309' : 'var(--border)'), background: filterFiscal === v ? '#b45309' : 'var(--surface)', color: filterFiscal === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {FISCAL_MAP[v]?.badge && (
-                        <span style={{ fontSize: 8.5, fontWeight: 800, background: filterFiscal === v ? 'rgba(255,255,255,.25)' : (FISCAL_MAP[v].color + '20'), color: filterFiscal === v ? '#fff' : FISCAL_MAP[v].color, padding: '0 4px', borderRadius: 3, letterSpacing: '.02em' }}>{FISCAL_MAP[v].badge}</span>
-                      )}
-                      {FISCAL_MAP[v]?.label || v}
-                    </button>
-                  ))}
-                </>
-              )}
-              {(filterCanal || filterMedio || filterFiscal) && (
-                <button onClick={() => { setFilterCanal(''); setFilterMedio(''); setFilterFiscal('') }}
+              {(filterCanal || filterMedio) && (
+                <button onClick={() => { setFilterCanal(''); setFilterMedio('') }}
                   style={{ padding: '3px 8px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', marginLeft: 'auto' }}>
                   limpiar
                 </button>
