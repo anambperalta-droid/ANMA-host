@@ -8,7 +8,6 @@ import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATU
 import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, registrarEvento } from '../../lib/pedido'
 import { buildWAMsg, openWAFor, relTimeShort, sharePortalCliente } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
-import RecordatoriosPanel from '../common/RecordatoriosPanel'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from '../../lib/mercadopago'
 
@@ -1123,6 +1122,27 @@ export default function Historial() {
     return seguimiento.slice(0, 3)
   }, [seguimiento])
 
+  // Conteos para los chips de quick-filter de Pedidos. El monto adeudado en
+  // "Sin cobrar" es la señal que un comerciante necesita de un vistazo: no sirve
+  // saber "hay 7 pedidos" sin saber "me deben $200.000".
+  const quickFilterStats = useMemo(() => {
+    const atrasadosCount = periodBudgets.filter(b => {
+      const dd = deliveryDays(b.deliveryDate)
+      const e = getEstado(b)
+      return dd !== null && dd < 0 && !['entregado', 'perdido', 'cerrado'].includes(e)
+    }).length
+    const sinCobrarList = periodBudgets.filter(b =>
+      ['confirmado', 'produccion', 'entregado'].includes(getEstado(b)) &&
+      (!b.payStatus || b.payStatus === 'pending' || b.payStatus === 'partial')
+    )
+    const sinCobrarMonto = sinCobrarList.reduce((s, b) => s + ((b.totalFinal || b.total || 0) - cobrado(b)), 0)
+    return {
+      atrasados: atrasadosCount,
+      sin_cobrar: sinCobrarList.length,
+      sin_cobrar_monto: sinCobrarMonto,
+    }
+  }, [periodBudgets])
+
   // Próximas entregas para carousel (regalos no maneja stock)
   const upcomingDeliveries = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -1530,10 +1550,13 @@ export default function Historial() {
             )}
           </div>
           <div style={{ flex: 1 }} />
-          {/* "+ Nuevo" ya vive en el FAB circular del bottom nav — evitamos duplicar */}
-          <button className="dash-act-icon" onClick={exportCSV} title="Exportar CSV" aria-label="Exportar">
-            <i className="fa fa-download" />
-          </button>
+          {/* "+ Nuevo" ya vive en el FAB circular del bottom nav — evitamos duplicar.
+              Export: oculto en Seguimiento (no exporta). */}
+          {tab !== 'seguimiento' && (
+            <button className="dash-act-icon" onClick={exportCSV} title="Exportar CSV" aria-label="Exportar">
+              <i className="fa fa-download" />
+            </button>
+          )}
         </div>
         <div className="dash-ctrl-tabs">
           {[
@@ -1590,8 +1613,9 @@ export default function Historial() {
                 style={{ padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'inherit', color: 'var(--txt)' }} />
             </div>
           )}
-          <button className="btn btn-ghost ph-export-btn" onClick={exportCSV} style={{ height: 34, padding: '0 12px', fontSize: 12 }}><i className="fa fa-download" /><span>Exportar</span></button>
-          <button className="btn btn-primary ph-fab" onClick={() => nav('/pedido')} style={{ height: 34, padding: '0 14px', fontSize: 12.5 }}><i className="fa fa-plus" /><span>Nuevo pedido</span></button>
+          {tab !== 'seguimiento' && (
+            <button className="btn btn-ghost ph-export-btn" onClick={exportCSV} style={{ height: 34, padding: '0 12px', fontSize: 12 }}><i className="fa fa-download" /><span>Exportar</span></button>
+          )}
         </div>
       </div>
 
@@ -1690,6 +1714,26 @@ export default function Historial() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Scope strip: deja explícito qué período aplica a las métricas de abajo.
+              Resuelve la ambigüedad del selector "Este mes" en el header: ahora el
+              usuario ve el período junto a los KPIs que modifica. */}
+          {!opHideMetrics && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 12px', marginBottom: 12,
+              background: 'var(--brand-xlt)',
+              border: '1px solid var(--border)',
+              borderRadius: 10,
+              fontSize: 11.5, color: 'var(--txt3)', fontWeight: 500,
+            }}>
+              <i className="fa fa-calendar" style={{ fontSize: 11, color: 'var(--brand)' }} />
+              <span>Métricas y gráficos del período:</span>
+              <b style={{ color: 'var(--txt)', fontWeight: 700 }}>
+                {PERIODS.find(p => p.key === period)?.label || 'Este mes'}
+              </b>
             </div>
           )}
 
@@ -1970,7 +2014,9 @@ export default function Historial() {
       {/* ═══ LISTA ═══ */}
       {tab === 'lista' && (
         <>
-          <RecordatoriosPanel budgets={budgets} cfg={config()} onSaveBudget={saveBudget} onOpenBudget={setDrawerBudget} toast={toast} />
+          {/* "Para hoy" eliminado: duplicaba la campana (que ya tiene todas
+              las alertas con dismiss persistido cross-device y agrupamiento).
+              La campana es ahora el centro único de pendientes. */}
           <style>{`
             .hist-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
             .hist-tbl table{border-collapse:collapse;min-width:860px;font-size:13px}
@@ -2050,14 +2096,25 @@ export default function Historial() {
               { key: 'atrasados', label: 'Atrasados', icon: 'fa-fire', color: '#DC2626' },
               { key: 'sin_cobrar', label: 'Sin cobrar', icon: 'fa-hourglass-half', color: '#D97706' },
               { key: 'alta_ganancia', label: 'Alta ganancia', icon: 'fa-trophy', color: '#16A34A' },
-            ].map(chip => (
-              <button key={chip.key}
-                onClick={() => setQuickFilter(q => q === chip.key ? '' : chip.key)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', border: `1.5px solid ${quickFilter === chip.key ? chip.color : 'var(--border)'}`, background: quickFilter === chip.key ? chip.color + '12' : 'transparent', color: quickFilter === chip.key ? chip.color : 'var(--txt3)' }}>
-                <i className={`fa ${chip.icon}`} style={{ fontSize: 10 }} />
-                {chip.label}
-              </button>
-            ))}
+            ].map(chip => {
+              // Señal diaria: nº de pedidos atrasados, y monto adeudado en "Sin cobrar".
+              const count = quickFilterStats[chip.key]
+              const monto = chip.key === 'sin_cobrar' ? quickFilterStats.sin_cobrar_monto : 0
+              return (
+                <button key={chip.key}
+                  onClick={() => setQuickFilter(q => q === chip.key ? '' : chip.key)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', border: `1.5px solid ${quickFilter === chip.key ? chip.color : 'var(--border)'}`, background: quickFilter === chip.key ? chip.color + '12' : 'transparent', color: quickFilter === chip.key ? chip.color : 'var(--txt3)' }}>
+                  <i className={`fa ${chip.icon}`} style={{ fontSize: 10 }} />
+                  {chip.label}
+                  {chip.key === 'sin_cobrar' && monto > 0 && (
+                    <span style={{ color: chip.color, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>· {money(monto)}</span>
+                  )}
+                  {chip.key !== 'sin_cobrar' && count > 0 && (
+                    <span style={{ background: chip.color, color: '#fff', fontSize: 9.5, fontWeight: 800, padding: '1px 6px', borderRadius: 999, marginLeft: 1 }}>{count}</span>
+                  )}
+                </button>
+              )
+            })}
             {quickFilter && (
               <button onClick={() => setQuickFilter('')}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--txt3)' }}

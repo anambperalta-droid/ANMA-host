@@ -45,7 +45,9 @@ const PAY_METHOD_OPTS = [
   { value: 'otro',           label: 'Otro',           icon: 'fa-ellipsis' },
 ]
 const PAY_METHOD_LABEL = Object.fromEntries(PAY_METHOD_OPTS.map(o => [o.value, o.label]))
+const PAY_METHOD_ICON  = Object.fromEntries(PAY_METHOD_OPTS.map(o => [o.value, o.icon]))
 const CANAL_LABEL = Object.fromEntries(CANAL_OPTS.map(o => [o.value, o.label]))
+const CANAL_ICON  = Object.fromEntries(CANAL_OPTS.map(o => [o.value, o.icon]))
 
 function payMethodOf(b) {
   const pays = Array.isArray(b.payments) ? b.payments : []
@@ -169,7 +171,22 @@ export default function Ventas() {
     const pm = month === 0 ? 11 : month - 1
     const py = month === 0 ? year - 1 : year
     const pmk = monthKey(py, pm)
-    const pmBudgets = allBudgets.filter(b => budgetMonth(b) === pmk)
+    let pmBudgets = allBudgets.filter(b => budgetMonth(b) === pmk)
+
+    // Si estamos viendo el mes ACTUAL (ej. 5 de octubre), comparar contra los
+    // primeros 5 días del mes anterior → evita el fantasma "↓95%" al inicio
+    // del mes cuando se compara contra un mes completo.
+    const now = new Date()
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
+    if (isCurrentMonth) {
+      const todayDay = now.getDate()
+      pmBudgets = pmBudgets.filter(b => {
+        const d = b.date || (b.updatedAt ? new Date(b.updatedAt).toISOString().slice(0, 10) : '')
+        const day = parseInt(d.slice(8, 10), 10)
+        return day > 0 && day <= todayDay
+      })
+    }
+
     const facturado = pmBudgets.reduce((s, b) => s + (Number(b.total) || 0), 0)
     return { count: pmBudgets.length, facturado }
   }, [allBudgets, month, year])
@@ -636,23 +653,26 @@ export default function Ventas() {
                 )}
               </div>
             </div>
-            <div className="vt-hero-divider" />
-            <div className="vt-hero-stat">
-              <div className="vt-hero-stat-icon" style={{ background: 'rgba(124,58,237,.1)', color: '#7C3AED' }}>
-                <i className="fa fa-crown" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="vt-hero-stat-lbl">Mejor cliente</div>
-                {topClient ? (
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topClient.name}</span>
-                    <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600, flexShrink: 0 }}>{hidden ? '' : fmt(topClient.total)}</span>
+            {/* "Mejor cliente" solo cuando hay señal real: con <5 ventas en el
+                mes, el "mejor" es trivial (puede ser 50% o 100% por tener 1-2
+                clientes) y ocupa espacio sin dar insight accionable. */}
+            {totals.count >= 5 && topClient && (
+              <>
+                <div className="vt-hero-divider" />
+                <div className="vt-hero-stat">
+                  <div className="vt-hero-stat-icon" style={{ background: 'rgba(124,58,237,.1)', color: '#7C3AED' }}>
+                    <i className="fa fa-crown" />
                   </div>
-                ) : (
-                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--txt4)' }}>—</span>
-                )}
-              </div>
-            </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="vt-hero-stat-lbl">Mejor cliente</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topClient.name}</span>
+                      <span style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600, flexShrink: 0 }}>{hidden ? '' : fmt(topClient.total)}</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
             {/* Resultado Operativo removido del hero 02/10/26 (Fase 3 auditoria).
                 Mezcla datos de Ventas y Compras — pertenece al Dashboard /
                 modulo P&L, no al registro de ventas. */}
@@ -710,29 +730,59 @@ export default function Ventas() {
               <i className="fa fa-arrow-down-to-line" style={{ fontSize: 10 }} /> Exportar
             </button>
           </div>
+          {/* Chips de filtro secundario — agrupados por dimensión (canal / medio
+              de pago / condición fiscal). Cada chip lleva su propio ícono para
+              que el usuario sepa de qué dimensión es, sin recurrir a dropdowns
+              (más fricción). Separadores visuales entre grupos. */}
           {(availableFilters.canales.length + availableFilters.medios.length + availableFilters.fiscales.length) > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 12px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
-              {availableFilters.canales.map(v => (
-                <button key={`c-${v}`} onClick={() => setFilterCanal(filterCanal === v ? '' : v)}
-                  style={{ padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterCanal === v ? 'var(--brand)' : 'var(--border)'), background: filterCanal === v ? 'var(--brand)' : 'var(--surface)', color: filterCanal === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  {CANAL_LABEL[v] || v}
-                </button>
-              ))}
-              {availableFilters.medios.map(v => (
-                <button key={`m-${v}`} onClick={() => setFilterMedio(filterMedio === v ? '' : v)}
-                  style={{ padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterMedio === v ? '#15803d' : 'var(--border)'), background: filterMedio === v ? '#15803d' : 'var(--surface)', color: filterMedio === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  {PAY_METHOD_LABEL[v] || v}
-                </button>
-              ))}
-              {availableFilters.fiscales.map(v => (
-                <button key={`f-${v}`} onClick={() => setFilterFiscal(filterFiscal === v ? '' : v)}
-                  style={{ padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterFiscal === v ? '#b45309' : 'var(--border)'), background: filterFiscal === v ? '#b45309' : 'var(--surface)', color: filterFiscal === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  {FISCAL_MAP[v]?.label || v}
-                </button>
-              ))}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, padding: '8px 12px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)' }}>
+              {availableFilters.canales.length > 0 && (
+                <>
+                  <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.06em', marginRight: 2 }}>Canal</span>
+                  {availableFilters.canales.map(v => (
+                    <button key={`c-${v}`} onClick={() => setFilterCanal(filterCanal === v ? '' : v)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterCanal === v ? 'var(--brand)' : 'var(--border)'), background: filterCanal === v ? 'var(--brand)' : 'var(--surface)', color: filterCanal === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {CANAL_ICON[v] && <i className={`fa ${CANAL_ICON[v]}`} style={{ fontSize: 9.5 }} />}
+                      {CANAL_LABEL[v] || v}
+                    </button>
+                  ))}
+                </>
+              )}
+              {availableFilters.canales.length > 0 && availableFilters.medios.length > 0 && (
+                <span style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 4px' }} />
+              )}
+              {availableFilters.medios.length > 0 && (
+                <>
+                  <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.06em', marginRight: 2 }}>Pago</span>
+                  {availableFilters.medios.map(v => (
+                    <button key={`m-${v}`} onClick={() => setFilterMedio(filterMedio === v ? '' : v)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterMedio === v ? '#15803d' : 'var(--border)'), background: filterMedio === v ? '#15803d' : 'var(--surface)', color: filterMedio === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {PAY_METHOD_ICON[v] && <i className={`fa ${PAY_METHOD_ICON[v]}`} style={{ fontSize: 9.5 }} />}
+                      {PAY_METHOD_LABEL[v] || v}
+                    </button>
+                  ))}
+                </>
+              )}
+              {availableFilters.medios.length > 0 && availableFilters.fiscales.length > 0 && (
+                <span style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 4px' }} />
+              )}
+              {availableFilters.fiscales.length > 0 && (
+                <>
+                  <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.06em', marginRight: 2 }}>Fiscal</span>
+                  {availableFilters.fiscales.map(v => (
+                    <button key={`f-${v}`} onClick={() => setFilterFiscal(filterFiscal === v ? '' : v)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: '1px solid ' + (filterFiscal === v ? '#b45309' : 'var(--border)'), background: filterFiscal === v ? '#b45309' : 'var(--surface)', color: filterFiscal === v ? '#fff' : 'var(--txt2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {FISCAL_MAP[v]?.badge && (
+                        <span style={{ fontSize: 8.5, fontWeight: 800, background: filterFiscal === v ? 'rgba(255,255,255,.25)' : (FISCAL_MAP[v].color + '20'), color: filterFiscal === v ? '#fff' : FISCAL_MAP[v].color, padding: '0 4px', borderRadius: 3, letterSpacing: '.02em' }}>{FISCAL_MAP[v].badge}</span>
+                      )}
+                      {FISCAL_MAP[v]?.label || v}
+                    </button>
+                  ))}
+                </>
+              )}
               {(filterCanal || filterMedio || filterFiscal) && (
                 <button onClick={() => { setFilterCanal(''); setFilterMedio(''); setFilterFiscal('') }}
-                  style={{ padding: '3px 8px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
+                  style={{ padding: '3px 8px', fontSize: 10.5, fontWeight: 600, borderRadius: 999, border: 'none', background: 'transparent', color: 'var(--txt3)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', marginLeft: 'auto' }}>
                   limpiar
                 </button>
               )}
@@ -746,17 +796,17 @@ export default function Ventas() {
               Fecha {sortCol === 'fecha' && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
             </span>
             {[
-              { key: 'cliente', label: 'Cliente', cls: '' },
-              { key: 'producto', label: 'Producto', cls: '' },
-              { key: 'cant', label: 'Cant', cls: 'vt-cell-r vt-hide-m' },
-              { key: 'facturado', label: 'Facturado', cls: 'vt-cell-r' },
+              { key: 'cliente', label: 'Cliente', cls: '', title: '' },
+              { key: 'producto', label: 'Producto', cls: '', title: '' },
+              { key: 'cant', label: 'Cant', cls: 'vt-cell-r vt-hide-m', title: '' },
+              { key: 'facturado', label: 'Total', cls: 'vt-cell-r', title: 'Monto total con IVA incluido' },
             ].map(h => (
-              <span key={h.key} className={h.cls} onClick={() => toggleSort(h.key)} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <span key={h.key} className={h.cls} onClick={() => toggleSort(h.key)} title={h.title} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                 {h.label}
                 {sortCol === h.key && <i className={`fa fa-caret-${sortDir === 'asc' ? 'up' : 'down'}`} style={{ fontSize: 9, opacity: .7 }} />}
               </span>
             ))}
-            <span className="vt-cell-r vt-hide-m">IVA</span>
+            <span className="vt-cell-r vt-hide-m" title="Porción de IVA incluida en el Total">IVA</span>
             <span className="vt-hide-m" style={{ textAlign: 'center' }}>Medio pago</span>
             <span onClick={() => toggleSort('cobro')} style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
               Cobro
