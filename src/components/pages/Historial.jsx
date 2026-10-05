@@ -2149,7 +2149,7 @@ export default function Historial() {
                 <th style={{ width: 32 }}>
                   <input type="checkbox" checked={filteredBudgets.length > 0 && filteredBudgets.every(b => selectedIds.has(b.id))} onChange={() => toggleSelectAll(filteredBudgets)} />
                 </th>
-                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')}>Pedido · Fecha{sortArrow('date')}</th>
+                <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => toggleSort('date')} title="N° del pedido y última actividad (último contacto, cambio de estado o pago). La fecha de creación va en el tooltip de cada fila.">Pedido · Actividad{sortArrow('date')}</th>
                 <th>Cliente / Empresa</th>
                 <th className="col-hide-mobile">Entrega</th>
                 <th style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => toggleSort('total')}>
@@ -2165,10 +2165,29 @@ export default function Historial() {
                   return (
                     <tr key={b.id} className={selectedIds.has(b.id) ? 'selected' : ''} style={selectedIds.has(b.id) ? { background: 'var(--brand-xlt)' } : undefined}>
                       <td data-cell="sel"><input type="checkbox" checked={selectedIds.has(b.id)} onChange={() => toggleSelect(b.id)} /></td>
-                      <td data-cell="num" style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--txt)' }}>
-                        <div>{b.num || '—'}</div>
-                        <div className="col-hide-mobile" style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 500, marginTop: 2 }}>{fmtDate(b.date)}</div>
-                      </td>
+                      {(() => {
+                        // Última actividad real del pedido: lo más reciente entre
+                        // último contacto (WA), último save, último pago. Sirve
+                        // para priorizar seguimientos — mucho más útil para el día
+                        // a día que la fecha de creación.
+                        const pays = Array.isArray(b.payments) ? b.payments : []
+                        const lastPayTs = pays.reduce((m, p) => Math.max(m, Number(p.ts) || 0), 0)
+                        const lastActivityTs = Math.max(
+                          Number(b.lastContactAt) || 0,
+                          Number(b.updatedAt)     || 0,
+                          lastPayTs,
+                        )
+                        const relLabel = lastActivityTs
+                          ? relTimeShort(lastActivityTs)
+                          : (b.date ? `creado ${fmtDate(b.date)}` : '—')
+                        const title = `Pedido ${b.num || '—'} · creado ${fmtDate(b.date) || 's/f'}${lastActivityTs ? ` · última actividad ${new Date(lastActivityTs).toLocaleString('es-AR')}` : ''}`
+                        return (
+                          <td data-cell="num" title={title} style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--txt)' }}>
+                            <div>{b.num || '—'}</div>
+                            <div className="col-hide-mobile" style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 500, marginTop: 2 }}>{relLabel}</div>
+                          </td>
+                        )
+                      })()}
                       <td data-cell="cli" style={{ maxWidth: 200 }}>
                         <button
                           type="button"
