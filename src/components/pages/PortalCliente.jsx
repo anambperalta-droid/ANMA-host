@@ -71,6 +71,73 @@ export default function PortalCliente() {
     return num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`
   }
 
+  // CTA WhatsApp contextual — cambia según estado del pedido/pago. Más útil
+  // que un genérico "Consultar al negocio": el cliente abre WA con el mensaje
+  // ya escrito, solo adjunta comprobante o toca enviar.
+  const ctaWA = useMemo(() => {
+    if (!data) return null
+    const nm = data.nm ? ` *${data.nm}*` : ''
+    const hint = (saldo > 0 && (data.cbu || data.al))
+      ? { label: 'Avisar que ya transferí',
+          icon: 'fa-circle-check',
+          msg: `Hola! Ya hice la transferencia de ${fmt(saldo)} por el pedido${nm}. Te paso el comprobante.` }
+      : (payStatus === 'paid' && estado !== 'delivered' && estado !== 'lost')
+      ? { label: 'Consultar estado del pedido',
+          icon: 'fa-truck-fast',
+          msg: `Hola! Quería consultar por el estado del pedido${nm}.` }
+      : (estado === 'delivered')
+      ? { label: 'Confirmar que recibí',
+          icon: 'fa-circle-check',
+          msg: `Confirmo que recibí el pedido${nm}. ¡Gracias!` }
+      : { label: 'Consultar al negocio',
+          icon: 'fa-comment-dots',
+          msg: `Hola! Tengo una consulta sobre mi pedido${nm}.` }
+    return hint
+  }, [data, saldo, payStatus, estado])
+
+  // Agregar a calendario: genera un .ics descargable con la fecha de entrega.
+  const downloadICS = () => {
+    if (!data?.d) return
+    const d = String(data.d).slice(0, 10)
+    const dateStamp = d.replace(/-/g, '')
+    const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '')
+    const uid = `anma-${data.nm || Date.now()}@anma.local`
+    const title = `Entrega ${data.nm ? data.nm + ' · ' : ''}${data.neg || 'ANMA Regalos'}`
+    const desc = `Entrega del pedido${data.nm ? ' ' + data.nm : ''} de ${data.neg || 'ANMA Regalos'}.`
+    const ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ANMA//Portal Cliente//ES', 'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${now}`,
+      `DTSTART;VALUE=DATE:${dateStamp}`,
+      `DTEND;VALUE=DATE:${dateStamp}`,
+      `SUMMARY:${title}`,
+      `DESCRIPTION:${desc}`,
+      'END:VEVENT', 'END:VCALENDAR',
+    ].join('\r\n')
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `entrega-${data.nm || 'pedido'}.ics`
+    document.body.appendChild(a); a.click(); a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 2000)
+  }
+
+  // Compartir el link del portal — Web Share API en mobile, copy fallback.
+  const sharePortal = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const title = `Pedido${data?.nm ? ' ' + data.nm : ''} · ${data?.neg || 'ANMA Regalos'}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: title, url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        setCopied(true); setTimeout(() => setCopied(false), 1800)
+      }
+    } catch { /* usuario canceló el share — nada que hacer */ }
+  }
+
   if (error) return (
     <div style={S.errorWrap}>
       <div style={S.errorCard}>
@@ -275,18 +342,52 @@ export default function PortalCliente() {
           </div>
         )}
 
-        {/* CTA WHATSAPP */}
-        {data.wa && (
+        {/* CTA WHATSAPP contextual — label y mensaje cambian según estado */}
+        {data.wa && ctaWA && (
           <div style={S.section}>
             <a
-              href={waLink(`Hola! Tengo una consulta sobre mi pedido.`)}
+              href={waLink(ctaWA.msg)}
               target="_blank"
               rel="noopener noreferrer"
               style={S.ctaWa}
               className="pc-pay-btn"
             >
-              <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} /> Consultar al negocio
+              <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }} /> {ctaWA.label}
             </a>
+          </div>
+        )}
+
+        {/* UTILIDADES: calendario + compartir — íconos secundarios */}
+        {(data.d || typeof window !== 'undefined') && (
+          <div style={{ ...S.section, display: 'flex', gap: 10 }}>
+            {data.d && (
+              <button
+                onClick={downloadICS}
+                className="pc-pay-btn"
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  background: '#fff', color: '#111', border: '1.5px solid #E5E7EB',
+                  padding: '12px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+                title="Descargar evento para tu calendario"
+              >
+                <i className="fa fa-calendar-plus" style={{ color: '#be185d' }} /> Agendar entrega
+              </button>
+            )}
+            <button
+              onClick={sharePortal}
+              className="pc-pay-btn"
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                background: '#fff', color: '#111', border: '1.5px solid #E5E7EB',
+                padding: '12px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+              title="Compartir el link del pedido"
+            >
+              <i className="fa fa-share-nodes" style={{ color: '#be185d' }} /> {copied ? '¡Copiado!' : 'Compartir'}
+            </button>
           </div>
         )}
 

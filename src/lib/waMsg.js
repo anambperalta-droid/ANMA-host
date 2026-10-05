@@ -136,6 +136,7 @@ export function buildClientePortalLink(b, cfg = {}) {
   const logoRaw = cfg.logo || cfg.logoDataUrl || ''
   const lg = (typeof logoRaw === 'string' && logoRaw.length <= 8192) ? logoRaw : ''
   const payload = {
+    nm: b.num || '',      // número del pedido (P-NNNN) — para mensajes contextuales en el portal
     n: b.contact || '',
     co: b.company || '',
     neg: cfg.businessName || 'ANMA',
