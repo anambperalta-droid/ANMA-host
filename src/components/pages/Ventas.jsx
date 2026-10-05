@@ -121,11 +121,10 @@ export default function Ventas() {
   const [month, setMonth] = useState(now.getMonth())
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [previewBudget, setPreviewBudget] = useState(null)
-  useEffect(() => {
-    if (!previewBudget) return
-    const fresh = (get('budgets') || []).find(x => x.id === previewBudget.id)
-    if (fresh && fresh !== previewBudget) setPreviewBudget(fresh)
-  }, [get('budgets')]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Sync drawer con cambios en budgets. Dep estable: usa `allBudgets` (que
+  // se re-deriva más abajo) en vez de llamar get('budgets') inline — eso
+  // causaba renders en cascada y, en Regalos, bloqueaba el cierre del drawer
+  // cuando el usuario hacía click en la X.
   const [draft, setDraft] = useState({ ...EMPTY })
   const [showNota, setShowNota] = useState(false)
   const [savedCount, setSavedCount] = useState(0)
@@ -143,6 +142,15 @@ export default function Ventas() {
   const allBudgets = get('budgets') || []
   const allCompras = get('compras') || []
   const mk = monthKey(year, month)
+
+  // Keep drawer in sync when the budgets array actually changes. Guarded
+  // against the "new array each render" trap by firing only when the
+  // selected budget's reference changes within the collection.
+  useEffect(() => {
+    if (!previewBudget) return
+    const fresh = allBudgets.find(x => x.id === previewBudget.id)
+    if (fresh && fresh !== previewBudget) setPreviewBudget(fresh)
+  }, [allBudgets, previewBudget])
 
   const monthBudgets = useMemo(() =>
     allBudgets.filter(b => budgetMonth(b) === mk).sort((a, b) => {
