@@ -4,6 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, STATUS_MAP, STATUS_CLS } from '../../lib/storage'
+import { openWAFor } from '../../lib/waMsg'
 import { triggerMilestone, triggerEncouragement } from '../layout/MilestoneToast'
 
 /* ── Modal de vista previa de presupuesto (solo lectura, mobile-first) ── */
@@ -549,6 +550,73 @@ export default function Clientes() {
   const clientTotalVendido = (c) => clientBudgets(c)
     .filter(b => ['confirmed', 'paid', 'partial'].includes(b.status))
     .reduce((s, b) => s + (Number(b.total) || 0), 0)
+
+  const budgetSaldo = (b) => {
+    const total = Number(b.total) || 0
+    const pagos = Array.isArray(b.payments) ? b.payments : []
+    const cobradoPagos = pagos.reduce((s, p) => s + (Number(p.amount) || 0), 0)
+    const cobrado = cobradoPagos > 0 ? cobradoPagos : (Number(b.depositAmt) || 0)
+    return Math.max(0, total - cobrado)
+  }
+
+  const clientPedidosConSaldo = (c) => clientBudgets(c)
+    .filter(b => ['confirmed', 'delivered', 'production', 'inprogress'].includes(b.status) && b.payStatus !== 'paid')
+    .map(b => ({ ...b, _saldo: budgetSaldo(b) }))
+    .filter(b => b._saldo > 0)
+
+  const clientSaldoTotal = (c) => clientPedidosConSaldo(c).reduce((s, b) => s + b._saldo, 0)
+
+  const clientTicketPromedio = (c) => {
+    const bs = clientBudgets(c).filter(b => ['confirmed', 'paid', 'partial', 'delivered'].includes(b.status))
+    if (!bs.length) return 0
+    return bs.reduce((s, b) => s + (Number(b.total) || 0), 0) / bs.length
+  }
+
+  const vipThreshold = useMemo(() => {
+    const totales = clients.map(c => clientTotalVendido(c)).filter(t => t > 0).sort((a, b) => b - a)
+    if (totales.length < 5) return Infinity
+    return totales[Math.floor(totales.length * 0.2)] || Infinity
+  }, [clients, budgets])
+
+  const clientEstado = (c) => {
+    const bs = clientBudgets(c).filter(b => ['confirmed', 'paid', 'partial', 'delivered'].includes(b.status))
+    if (!bs.length) return 'lead'
+    const total = clientTotalVendido(c)
+    const lastDays = clientLastBudgetDays(c)
+    if (bs.length >= 3 && total >= vipThreshold) return 'vip'
+    if (lastDays !== null && lastDays > 60) return 'dormido'
+    if (bs.length <= 1 && (lastDays === null || lastDays <= 30)) return 'nuevo'
+    return 'activo'
+  }
+
+  const ESTADO_META = {
+    vip:     { label: 'VIP',      color: '#B45309', bg: '#FEF3C7', icon: 'fa-star' },
+    activo:  { label: 'Activo',   color: '#047857', bg: '#D1FAE5', icon: 'fa-circle-check' },
+    dormido: { label: 'Dormido',  color: '#B45309', bg: '#FEF3C7', icon: 'fa-moon' },
+    nuevo:   { label: 'Nuevo',    color: '#BE185D', bg: '#FCE7F3', icon: 'fa-seedling' },
+    lead:    { label: 'Sin pedidos', color: '#64748B', bg: '#F1F5F9', icon: 'fa-user-plus' },
+  }
+
+  const nuevoPedidoParaCliente = (c) => {
+    const b = saveEntity('budgets', {
+      company: c.company || '',
+      contact: c.contact || '',
+      wa: c.wa || '',
+      email: c.email || '',
+      status: 'draft',
+      payStatus: 'pending',
+      items: [],
+      date: new Date().toISOString().slice(0, 10),
+    })
+    setDetailClient(null)
+    nav(`/pedido/${b.id}`)
+  }
+
+  const cobrarWA = (c) => {
+    const pendientes = clientPedidosConSaldo(c).sort((a, b) => b._saldo - a._saldo)
+    if (!pendientes.length) return
+    openWAFor(pendientes[0], { cfg: config() })
+  }
 
   const clientLastBudgetDays = (c) => {
     const sorted = clientBudgets(c).filter(b => b.date).sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -1285,20 +1353,32 @@ export default function Clientes() {
             {/* Header */}
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
                   <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                     {(detailClient.company || '?')[0].toUpperCase()}
                   </div>
-                  <div>
-                    <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailClient.company}</h3>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailClient.company}</h3>
+                      {(() => {
+                        const e = clientEstado(detailClient)
+                        const m = ESTADO_META[e]
+                        return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: m.bg, color: m.color, fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '.5px' }}><i className={`fa ${m.icon}`} />{m.label}</span>
+                      })()}
+                    </div>
                     <div style={{ fontSize: 13, color: 'var(--txt3)', marginTop: 3 }}>
                       {detailClient.contact && <span>{detailClient.contact}</span>}
                       {detailClient.rubro && <span style={{ color: 'var(--txt4)' }}>{detailClient.contact ? ' · ' : ''}{detailClient.rubro}</span>}
+                      {detailClient.lastContactAt && (() => {
+                        const d = Math.floor((Date.now() - new Date(detailClient.lastContactAt)) / 86400000)
+                        return <span style={{ color: 'var(--txt4)' }}> · últ. contacto {d === 0 ? 'hoy' : `hace ${d}d`}</span>
+                      })()}
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(detailClient)}><i className="fa fa-pen" /> Editar</button>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => nuevoPedidoParaCliente(detailClient)} title="Crear pedido para este cliente"><i className="fa fa-plus" /> Nuevo pedido</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(detailClient)}><i className="fa fa-pen" /></button>
                   <button className="mclose" onClick={() => setDetailClient(null)}><i className="fa fa-xmark" /></button>
                 </div>
               </div>
@@ -1315,6 +1395,26 @@ export default function Clientes() {
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '20px 24px', WebkitOverflowScrolling: 'touch' }}>
               {detailTab === 'info' && (
                 <div>
+                  {(() => {
+                    const saldo = clientSaldoTotal(detailClient)
+                    const pends = clientPedidosConSaldo(detailClient)
+                    if (saldo <= 0) return null
+                    return (
+                      <div style={{ background: 'linear-gradient(135deg,#FEE2E2,#FEF2F2)', border: '1.5px solid #FCA5A5', borderRadius: 12, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#DC2626', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><i className="fa fa-circle-exclamation" /></div>
+                        <div style={{ flex: 1, minWidth: 140 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '.5px' }}>Saldo pendiente</div>
+                          <div style={{ fontSize: 22, fontWeight: 900, color: '#991B1B', letterSpacing: '-.5px', lineHeight: 1.1 }}>{fmt(saldo)}</div>
+                          <div style={{ fontSize: 11, color: '#991B1B', marginTop: 2 }}>{pends.length} pedido{pends.length !== 1 ? 's' : ''} sin cobrar</div>
+                        </div>
+                        {detailClient.wa && (
+                          <button onClick={() => cobrarWA(detailClient)} style={{ background: '#DC2626', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '9px 14px', borderRadius: 9, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
+                            <i className="fa-brands fa-whatsapp" /> Enviar recordatorio
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })()}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                     {detailClient.wa && (
                       <a href="#" onClick={e => { e.preventDefault(); openWA(detailClient) }}
@@ -1339,21 +1439,26 @@ export default function Clientes() {
                     const bgs = clientBudgets(detailClient)
                     const totalVendido = clientTotalVendido(detailClient)
                     const lastDays = clientLastBudgetDays(detailClient)
+                    const ticket = clientTicketPromedio(detailClient)
                     if (bgs.length > 0) return (
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(totalVendido)}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
+                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--money)' }}>{fmt(totalVendido)}</div>
                           <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Total vendido</div>
                         </div>
-                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>
+                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)' }}>{ticket > 0 ? fmt(ticket) : '—'}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Ticket promedio</div>
+                        </div>
+                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)' }}>
                             {lastDays === null ? '—' : lastDays === 0 ? 'Hoy' : `hace ${lastDays}d`}
                           </div>
                           <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Último pedido</div>
                         </div>
-                        <div style={{ flex: 1, background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{bgs.length}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Presupuestos</div>
+                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)' }}>{bgs.length}</div>
+                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Pedidos</div>
                         </div>
                       </div>
                     )
@@ -1383,9 +1488,16 @@ export default function Clientes() {
                             <i className="fa fa-file-invoice-dollar" />
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)' }}>{b.num || '—'}</span>
                               <span className={`badge ${STATUS_CLS[b.status] || 'b-draft'}`}>{STATUS_MAP[b.status] || 'Borrador'}</span>
+                              {(() => {
+                                const s = budgetSaldo(b)
+                                if (s > 0 && b.payStatus !== 'paid' && ['confirmed', 'delivered', 'production', 'inprogress'].includes(b.status)) {
+                                  return <span style={{ fontSize: 10, fontWeight: 700, background: '#FEE2E2', color: '#991B1B', padding: '2px 7px', borderRadius: 10 }}>Debe {fmt(s)}</span>
+                                }
+                                return null
+                              })()}
                             </div>
                             <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{b.date || '—'}</div>
                           </div>
