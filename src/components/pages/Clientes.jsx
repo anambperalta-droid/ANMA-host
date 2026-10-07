@@ -389,8 +389,10 @@ export default function Clientes() {
     }
   }
   const del = (id) => confirm('¿Eliminar cliente?', () => {
-    deleteEntity('clients', id); toast('Cliente eliminado', 'in')
+    const snap = clients.find(c => c.id === id)
+    deleteEntity('clients', id)
     if (detailClient?.id === id) setDetailClient(null)
+    toast('Cliente eliminado', 'in', snap ? { undo: () => { saveEntity('clients', snap); toast('Cliente restaurado', 'ok') } } : {})
   })
 
   const exportCSV = () => {
@@ -682,10 +684,12 @@ export default function Clientes() {
   const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(c => c.id)))
   const bulkDelete = () => {
     confirm({ body: `¿Eliminar ${selectedIds.size} cliente${selectedIds.size > 1 ? 's' : ''}?`, danger: true, confirmLabel: 'Eliminar' }, () => {
-      selectedIds.forEach(id => deleteEntity('clients', id))
-      toast(`${selectedIds.size} clientes eliminados`, 'in')
+      const snaps = clients.filter(c => selectedIds.has(c.id))
+      const n = selectedIds.size
+      snaps.forEach(c => deleteEntity('clients', c.id))
       if (detailClient && selectedIds.has(detailClient.id)) setDetailClient(null)
       setSelectedIds(new Set())
+      toast(`${n} cliente${n > 1 ? 's' : ''} eliminado${n > 1 ? 's' : ''}`, 'in', { undo: () => { snaps.forEach(c => saveEntity('clients', c)); toast(`${n} restaurado${n > 1 ? 's' : ''}`, 'ok') } })
     })
   }
   const bulkExportCSV = () => {

@@ -241,8 +241,10 @@ export default function Proveedores() {
     if (isNew) triggerEncouragement('supplier')
   }
   const del = (id) => confirm('¿Eliminar proveedor?', () => {
-    deleteEntity('suppliers', id); toast('Proveedor eliminado', 'in')
+    const snap = suppliers.find(s => s.id === id)
+    deleteEntity('suppliers', id)
     if (detailSupplier?.id === id) setDetailSupplier(null)
+    toast('Proveedor eliminado', 'in', snap ? { undo: () => { saveEntity('suppliers', snap); toast('Proveedor restaurado', 'ok') } } : {})
   })
 
   /* ── Helper: O(1) lookup using the precomputed map ── */
