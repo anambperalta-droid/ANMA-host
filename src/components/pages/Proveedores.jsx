@@ -440,11 +440,13 @@ export default function Proveedores() {
   const toggleSelect = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleSelectAll = () => setSelectedIds(isAllSelected ? new Set() : new Set(filtered.map(s => s.id)))
   const bulkDelete = () => {
-    confirm({ body: `¿Eliminar ${selectedIds.size} proveedor(es)?`, danger: true, confirmLabel: 'Eliminar' }, () => {
-      selectedIds.forEach(id => deleteEntity('suppliers', id))
-      toast(`${selectedIds.size} proveedores eliminados`, 'ok')
+    confirm({ body: `¿Eliminar ${selectedIds.size} proveedor${selectedIds.size > 1 ? 'es' : ''}?`, danger: true, confirmLabel: 'Eliminar' }, () => {
+      const snaps = suppliers.filter(s => selectedIds.has(s.id))
+      const n = selectedIds.size
+      snaps.forEach(s => deleteEntity('suppliers', s.id))
       if (detailSupplier && selectedIds.has(detailSupplier.id)) setDetailSupplier(null)
       setSelectedIds(new Set())
+      toast(`${n} proveedor${n > 1 ? 'es' : ''} eliminado${n > 1 ? 's' : ''}`, 'in', { undo: () => { snaps.forEach(s => saveEntity('suppliers', s)); toast(`${n} restaurado${n > 1 ? 's' : ''}`, 'ok') } })
     })
   }
   const bulkExportCSV = () => {
@@ -457,15 +459,31 @@ export default function Proveedores() {
   }
   const bulkCopyWA = () => {
     const nums = suppliers.filter(s => selectedIds.has(s.id) && s.wa).map(s => s.wa)
-    if (!nums.length) { toast('Ninguno tiene WhatsApp', 'warn'); return }
+    if (!nums.length) { toast('Ninguno tiene WhatsApp', 'in'); return }
     navigator.clipboard.writeText(nums.join('\n')).then(() => toast(`${nums.length} números copiados`, 'ok'))
   }
   const bulkMailto = () => {
     const emails = suppliers.filter(s => selectedIds.has(s.id) && s.email).map(s => s.email)
-    if (!emails.length) { toast('Ninguno tiene email', 'warn'); return }
+    if (!emails.length) { toast('Ninguno tiene email', 'in'); return }
     window.open(`mailto:?bcc=${emails.join(',')}`)
     toast(`Email abierto con ${emails.length} destinatarios`, 'ok')
   }
+
+  /* ── Pedir reposición masiva ── */
+  const reorderCandidates = useMemo(() => {
+    return suppliers
+      .filter(s => selectedIds.has(s.id))
+      .map(s => ({ s, items: supplierProducts(s).filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock) }))
+  }, [suppliers, selectedIds, productsBySupplier])
+  const [bulkReorderModal, setBulkReorderModal] = useState(false)
+  const [reorderSent, setReorderSent] = useState(new Set())
+  const openBulkReorder = () => {
+    const conWA = reorderCandidates.filter(r => r.s.wa && r.items.length)
+    if (!conWA.length) { toast('Ninguno tiene WhatsApp + productos bajo stock', 'in'); return }
+    setReorderSent(new Set())
+    setBulkReorderModal(true)
+  }
+  const sendReorderToSupplier = (r) => { sendReorderWA(r.s, r.items); setReorderSent(prev => new Set(prev).add(r.s.id)) }
 
   /* ── Generar link de portal para la proveedora ── */
   const sharePortalLink = async (s) => {
@@ -1678,30 +1696,74 @@ export default function Proveedores() {
         </div>
       )}
 
-      {/* Bulk action bar — vertical right side */}
+      {/* Bulk action bar — con etiquetas, mismo patrón que Clientes */}
       {selectedIds.size > 0 && (
-        <div style={{ position:'fixed', right:12, top:'50%', transform:'translateY(-50%)', background:'rgba(12,10,40,.88)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:10, display:'flex', flexDirection:'column', alignItems:'center', gap:2, padding:'6px 4px', boxShadow:'0 4px 18px rgba(0,0,0,.2)', zIndex:200, animation:'pgIn .15s ease both', border:'1px solid rgba(255,255,255,.08)' }}>
-          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.55)', paddingBottom:6, borderBottom:'1px solid rgba(255,255,255,.1)', marginBottom:2, width:'100%', textAlign:'center' }}>{selectedIds.size}</span>
+        <div style={{ position:'fixed', right:14, top:'50%', transform:'translateY(-50%)', background:'rgba(12,10,40,.93)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', color:'#fff', borderRadius:14, display:'flex', flexDirection:'column', gap:2, padding:'10px 10px', boxShadow:'0 12px 32px rgba(0,0,0,.32)', zIndex:200, animation:'pgIn .15s ease both', border:'1px solid rgba(255,255,255,.1)', width:216 }}>
+          <div style={{ fontSize:10.5, fontWeight:700, color:'rgba(255,255,255,.55)', padding:'2px 8px 9px', borderBottom:'1px solid rgba(255,255,255,.12)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.6px' }}>{selectedIds.size} seleccionado{selectedIds.size>1?'s':''}</div>
           {[
-            { fn: bulkExportCSV, icon:'fa fa-download',        tip:'Exportar CSV',             hBg:'rgba(255,255,255,.1)',   hCol:'#fff' },
-            { fn: bulkCopyWA,    icon:'fa-brands fa-whatsapp', tip:'Copiar números WhatsApp',  hBg:'rgba(74,222,128,.14)',   hCol:'#4ADE80' },
-            { fn: bulkMailto,    icon:'fa fa-envelope',         tip:'Enviar email',             hBg:'rgba(96,165,250,.14)',   hCol:'#93C5FD' },
-            { fn: bulkDelete,    icon:'fa fa-trash',            tip:'Eliminar seleccionados',   hBg:'rgba(220,38,38,.18)',    hCol:'#FCA5A5' },
-          ].map(({ fn, icon, tip, hBg, hCol }) => (
-            <button key={tip} onClick={fn} title={tip}
-              onMouseOver={e=>{e.currentTarget.style.background=hBg;e.currentTarget.style.color=hCol}}
-              onMouseOut={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,.65)'}}
-              style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.65)', borderRadius:7, width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, transition:'all .12s' }}>
-              <i className={icon} />
+            { fn: openBulkReorder, icon:'fa-brands fa-whatsapp', label:'Pedir reposición',    hCol:'#4ADE80' },
+            { fn: bulkCopyWA,      icon:'fa fa-mobile-screen',   label:'Copiar WhatsApp',     hCol:'#4ADE80' },
+            { fn: bulkMailto,      icon:'fa fa-envelope',        label:'Enviar email',        hCol:'#93C5FD' },
+            { fn: bulkExportCSV,   icon:'fa fa-download',        label:'Exportar CSV',        hCol:'#fff' },
+            { fn: bulkDelete,      icon:'fa fa-trash',           label:'Eliminar',            hCol:'#FCA5A5' },
+          ].map(({ fn, icon, label, hCol }) => (
+            <button key={label} onClick={fn}
+              onMouseOver={e=>{e.currentTarget.style.background='rgba(255,255,255,.08)';e.currentTarget.querySelector('i').style.color=hCol}}
+              onMouseOut={e=>{e.currentTarget.style.background='transparent';e.currentTarget.querySelector('i').style.color='rgba(255,255,255,.7)'}}
+              style={{ display:'flex', alignItems:'center', gap:11, background:'transparent', border:'none', color:'#fff', borderRadius:9, padding:'10px 10px', cursor:'pointer', fontFamily:'inherit', fontSize:12.5, fontWeight:600, textAlign:'left', transition:'background .12s', whiteSpace:'nowrap' }}>
+              <i className={icon} style={{ width:18, textAlign:'center', fontSize:14, color:'rgba(255,255,255,.7)', transition:'color .12s', flexShrink:0 }} />
+              {label}
             </button>
           ))}
-          <div style={{ width:12, height:1, background:'rgba(255,255,255,.1)', margin:'2px 0' }} />
-          <button onClick={() => setSelectedIds(new Set())} title="Cancelar"
-            onMouseOver={e=>e.currentTarget.style.color='rgba(255,255,255,.8)'}
-            onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.3)'}
-            style={{ background:'transparent', border:'none', color:'rgba(255,255,255,.3)', borderRadius:7, width:26, height:26, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, transition:'color .12s' }}>
-            <i className="fa fa-xmark" />
+          <button onClick={() => setSelectedIds(new Set())}
+            style={{ display:'flex', alignItems:'center', gap:11, background:'transparent', border:'none', color:'rgba(255,255,255,.45)', borderRadius:9, padding:'9px 10px', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:500, textAlign:'left', marginTop:3, borderTop:'1px solid rgba(255,255,255,.1)' }}>
+            <i className="fa fa-xmark" style={{ width:18, textAlign:'center', flexShrink:0 }} /> Cancelar
           </button>
+        </div>
+      )}
+
+      {/* Modal: pedir reposición masiva */}
+      {bulkReorderModal && (
+        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setBulkReorderModal(false) }}>
+          <div className="modal-form-card" style={{ maxWidth: 560, maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding:'18px 24px 14px', borderBottom:'1px solid var(--border)' }}>
+              <div className="mh" style={{ margin:0, paddingBottom:0, borderBottom:'none' }}>
+                <h3><i className="fa-brands fa-whatsapp" style={{ marginRight:8, color:'#16A34A' }} />Pedir reposición</h3>
+                <button className="mclose" onClick={() => setBulkReorderModal(false)}><i className="fa fa-xmark" /></button>
+              </div>
+            </div>
+            <div style={{ padding:'18px 24px 22px' }}>
+              <p style={{ fontSize:12.5, color:'var(--txt2)', margin:'0 0 14px', lineHeight:1.55 }}>
+                Tocá <b>Enviar</b> en cada proveedor: se abre WhatsApp con la lista de productos bajo stock pre-cargada.
+              </p>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                <span style={{ fontSize:12.5, fontWeight:800, color:'var(--txt)' }}>{reorderSent.size} de {reorderCandidates.filter(r => r.s.wa && r.items.length).length} enviados</span>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:360, overflowY:'auto' }}>
+                {reorderCandidates.map(r => {
+                  const sent = reorderSent.has(r.s.id)
+                  const canSend = r.s.wa && r.items.length > 0
+                  return (
+                    <div key={r.s.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'var(--surface2)', borderRadius:10, border:'1px solid var(--border)', opacity: canSend ? 1 : .55 }}>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontWeight:700, fontSize:13, color:'var(--txt)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.s.name}</div>
+                        <div style={{ fontSize:11, color:'var(--txt3)' }}>
+                          {!r.s.wa ? 'Sin WhatsApp' : r.items.length === 0 ? 'Sin productos bajo stock' : `${r.items.length} producto${r.items.length !== 1 ? 's' : ''} bajo stock`}
+                        </div>
+                      </div>
+                      <button onClick={() => sendReorderToSupplier(r)} disabled={!canSend}
+                        style={{ flexShrink:0, display:'inline-flex', alignItems:'center', gap:6, background: sent ? 'var(--surface)' : (canSend ? '#16A34A' : 'var(--surface)'), color: sent || !canSend ? 'var(--txt3)' : '#fff', border: sent || !canSend ? '1px solid var(--border)' : 'none', borderRadius:8, padding:'8px 14px', fontSize:12.5, fontWeight:700, cursor: canSend ? 'pointer' : 'not-allowed', fontFamily:'inherit' }}>
+                        <i className={sent ? 'fa fa-check' : 'fa-brands fa-whatsapp'} /> {sent ? 'Enviado' : 'Enviar'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="mfooter" style={{ marginTop:16 }}>
+                <button className="btn btn-secondary" onClick={() => setBulkReorderModal(false)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
