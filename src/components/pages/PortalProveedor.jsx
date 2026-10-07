@@ -100,13 +100,39 @@ export default function PortalProveedor() {
   const expDate = data?.exp ? new Date(data.exp).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' }) : null
   const daysLeft = data?.exp ? Math.max(0, Math.ceil((data.exp - Date.now()) / 86400000)) : null
 
+  const reorderUnits = useMemo(() => reorder.reduce((s, p) => s + Math.max(1, (p.minStock || 0) - (p.stock || 0)), 0), [reorder])
+
   const buildMsg = type => {
     const owner = data?.ownerName || 'tu cliente'
     const lista = products.slice(0, 4).map(p => p.name).join(', ') + (products.length > 4 ? ` y ${products.length - 4} más` : '')
-    if (type === 'confirm') return encodeURIComponent(`Hola ${owner}! Revisé el portal y confirmo disponibilidad para: ${lista}. Podemos avanzar.`)
-    if (type === 'ask')     return encodeURIComponent(`Hola ${owner}! Revisé el portal del pedido y tengo una consulta antes de confirmar.`)
-    if (type === 'urgent')  return encodeURIComponent(`Hola ${owner}! Vi el aviso de re-orden para: ${reorder.map(p => p.name).join(', ')}. Confirmo disponibilidad.`)
+    if (type === 'confirm') {
+      if (reorder.length > 0) {
+        return encodeURIComponent(`Hola ${owner}! Confirmo la reposición: ${reorderUnits} u. de ${reorder.length} producto${reorder.length !== 1 ? 's' : ''}${reorderTotal > 0 ? ` (${fmt(reorderTotal)})` : ''}. Llego con los plazos acordados.`)
+      }
+      return encodeURIComponent(`Hola ${owner}! Confirmo precios y plazos del pedido${totalValue > 0 ? ` (${fmt(totalValue)}, ${products.length} producto${products.length !== 1 ? 's' : ''})` : ''}. Podemos avanzar.`)
+    }
+    if (type === 'ask')     return encodeURIComponent(`Hola ${owner}! Revisé el portal y quería ajustar algún precio o plazo antes de confirmar.`)
     return ''
+  }
+
+  /* Agendar entrega — genera un .ics con fecha estimada según leadTime. */
+  const agendarEntrega = () => {
+    const lt = Number(data?.leadTime) || 0
+    if (!lt) return
+    const d = new Date()
+    d.setDate(d.getDate() + lt)
+    const pad = (n) => String(n).padStart(2, '0')
+    const ymd = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`
+    const dayAfter = new Date(d); dayAfter.setDate(dayAfter.getDate() + 1)
+    const ymd2 = `${dayAfter.getFullYear()}${pad(dayAfter.getMonth() + 1)}${pad(dayAfter.getDate())}`
+    const uid = `anma-prov-${Date.now()}@anma`
+    const summary = `Entrega a ${data?.ownerName || 'cliente'}`
+    const desc = `Entrega estimada según lead time acordado (${lt} días). Productos: ${products.length}.`
+    const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//ANMA//Portal Proveedor//ES','BEGIN:VEVENT',
+      `UID:${uid}`, `DTSTAMP:${ymd}T000000Z`, `DTSTART;VALUE=DATE:${ymd}`, `DTEND;VALUE=DATE:${ymd2}`,
+      `SUMMARY:${summary}`, `DESCRIPTION:${desc}`, 'END:VEVENT','END:VCALENDAR'].join('\r\n')
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'entrega-anma.ics'; a.click()
   }
   const wa = type => data?.ownerWa
     ? `https://wa.me/${data.ownerWa.replace(/\D/g, '')}?text=${buildMsg(type)}`
@@ -247,15 +273,10 @@ export default function PortalProveedor() {
               })}
             </div>
             {reorderTotal > 0 && (
-              <div style={{ ...S.urgentTotal, borderColor: brandLine }}>
+              <div style={{ ...S.urgentTotal, borderColor: brandLine, marginBottom: 0 }}>
                 <span style={{ fontSize: 12, color: '#6B7280' }}>Total estimado de reposición</span>
                 <b style={{ fontSize: 16, color: '#111827', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>{fmt(reorderTotal)}</b>
               </div>
-            )}
-            {wa('urgent') && (
-              <a href={wa('urgent')} target="_blank" rel="noopener noreferrer" className="wa-confirm" style={{ ...S.btnUrgent, background: 'linear-gradient(135deg,#16A34A,#15803D)', boxShadow: '0 6px 18px rgba(22,163,74,.28)' }}>
-                <WaIcon size={18} /> Confirmar reposición por WhatsApp
-              </a>
             )}
           </div>
         )}
@@ -355,6 +376,11 @@ export default function PortalProveedor() {
                     : <span style={{ color: '#9CA3AF' }}>A coordinar</span>
                   }
                 </div>
+                {Number(data.leadTime) > 0 && (
+                  <button onClick={agendarEntrega} style={{ marginTop: 7, background: brandSoft, color: brandDark, border: `1.5px solid ${brandLine}`, fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 7, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'inherit' }}>
+                    <i className="fa fa-calendar-plus" /> Agendar entrega
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -384,7 +410,7 @@ export default function PortalProveedor() {
                   <a href={wa('confirm')} target="_blank" rel="noopener noreferrer"
                     onClick={() => setConfirmed(true)} className="wa-confirm" style={S.btnConfirm}>
                     <WaIcon size={18} />
-                    Confirmar disponibilidad
+                    {reorder.length > 0 ? 'Confirmo reposición' : 'Confirmo precios y plazos'}
                   </a>
                 ) : (
                   <button disabled style={{ ...S.btnConfirm, opacity: .45, cursor: 'not-allowed' }}>
@@ -395,7 +421,7 @@ export default function PortalProveedor() {
                   <a href={wa('ask')} target="_blank" rel="noopener noreferrer" className="wa-ask"
                     style={{ ...S.btnAsk, background: brandSoft, borderColor: brandLine, color: brandDark }}>
                     <WaIcon size={15} color={brandDark} />
-                    Tengo una consulta
+                    Ajustar precios o plazos
                   </a>
                 )}
               </div>
