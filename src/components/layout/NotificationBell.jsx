@@ -255,53 +255,9 @@ function buildAlerts(budgets, products) {
       })
     }
 
-    // 🟡 ALERTA: entrega próxima ≤3 días → logística
-    if (b.deliveryDate && delivDays !== null && delivDays >= 0 && delivDays <= 3 && active && e !== 'entregado') {
-      const whenLabel = delivDays === 0 ? 'HOY' : delivDays === 1 ? 'mañana' : `en ${delivDays} días`
-      alerts.push({
-        id: `soon-${b.id}`,
-        level: 'warning',
-        category: 'logistica',
-        icon: 'fa-truck-fast',
-        title: delivDays <= 1
-          ? `Debés entregar ${whenLabel} a ${cliente}`
-          : `Entregá el pedido de ${cliente} ${whenLabel}`,
-        body: `${b.num} · ${fmt(b.total)}`,
-        route: `/pedido/${b.id}`,
-        ts: b.id,
-        ...meta,
-      })
-    }
-
-    // 🟡 ALERTA: confirmado sin seña 2-14 días → pago
-    if (e === 'confirmado' && b.payStatus === 'pending' && sinceDays !== null && sinceDays >= 2 && sinceDays <= 14) {
-      alerts.push({
-        id: `nosena-${b.id}`,
-        level: 'warning',
-        category: 'pago',
-        icon: 'fa-clock-rotate-left',
-        title: `${b.num} lleva ${sinceDays}d sin la seña`,
-        body: `${cliente} — pedido confirmado pero sin cobrar depósito · ${fmt(b.total)}`,
-        route: `/pedido/${b.id}`,
-        ts: b.id,
-        ...meta,
-      })
-    }
-
-    // 🟡 ALERTA: seguimiento >7 días sin respuesta → comercial
-    if (e === 'presupuestado' && sinceDays !== null && sinceDays > 7) {
-      alerts.push({
-        id: `followup-${b.id}`,
-        level: 'warning',
-        category: 'comercial',
-        icon: 'fa-hourglass-half',
-        title: `Seguimiento necesario — ${b.num}`,
-        body: `${cliente} · ${sinceDays}d sin respuesta · ${fmt(b.total)}`,
-        route: '/',
-        ts: b.id,
-        ...meta,
-      })
-    }
+    // Warnings de pedidos (entrega próxima, sin seña, seguimiento) viven en el
+    // Dashboard "Hoy importa" + tab Seguimiento. La campana queda para fuego
+    // real (críticos del día + stock + admin) y evita duplicar la lectura.
   })
 
   const order = { critical: 0, warning: 1 }

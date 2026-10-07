@@ -332,7 +332,7 @@ export default function Ventas() {
       if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
       return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
     }
-    const headers = ['N°','Fecha','Cliente','Empresa','Condición Fiscal','Producto','Cantidad','Facturado (sin IVA)','IVA','Total','Medio Pago','Canal','Estado Pago']
+    const headers = ['N°','Fecha','Cliente','Empresa','Condición Fiscal','Producto','Cantidad','Subtotal (sin IVA)','IVA 21%','Total','Medio Pago','Canal','Estado Pago']
     const rows = filteredBudgets.map(b => {
       const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null) || 'consumidor'
       const item1 = b.items?.[0] || {}
@@ -662,7 +662,7 @@ export default function Ventas() {
               {hidden ? '***' : fmt(totals.cobrado)}
             </div>
             <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 3 }}>
-              {hidden ? '***' : <>de {fmt(totals.facturado)} facturado</>}
+              {hidden ? '***' : <>de {fmt(totals.facturado)} total facturado{totals.iva > 0 && <span style={{ color: 'var(--txt4)', fontWeight: 500 }}> · incluye {fmt(totals.iva)} de IVA</span>}</>}
               {totals.pendiente > 0 && !hidden && <> · <span style={{ color: '#b45309', fontWeight: 600 }}>{fmt(totals.pendiente)} pendiente</span></>}
             </div>
           </div>
@@ -824,7 +824,7 @@ export default function Ventas() {
               { key: 'cliente', label: 'Cliente', cls: '', title: '' },
               { key: 'producto', label: 'Producto', cls: '', title: '' },
               { key: 'cant', label: 'Cant', cls: 'vt-cell-r vt-hide-m', title: '' },
-              { key: 'facturado', label: 'Total', cls: 'vt-cell-r', title: 'Monto total con IVA incluido' },
+              { key: 'facturado', label: 'Total', cls: 'vt-cell-r', title: 'Total con IVA incluido' },
             ].map(h => (
               <span key={h.key} className={h.cls} onClick={() => toggleSort(h.key)} title={h.title} style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                 {h.label}

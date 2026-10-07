@@ -1627,7 +1627,7 @@ export default function Historial() {
       <div className="tab-bar tab-bar-dash" style={{ marginTop: 18, marginBottom: 20 }}>
         {[
           { key: 'resumen',     icon: 'fa-house',     lbl: 'Resumen',                           short: 'Inicio'   },
-          { key: 'lista',       icon: 'fa-list',      lbl: 'Presupuestos',                      short: 'Presup.'  },
+          { key: 'lista',       icon: 'fa-list',      lbl: 'Pedidos',                           short: 'Pedidos'  },
           { key: 'analisis',    icon: 'fa-chart-bar', lbl: 'Análisis',                          short: 'Stats'    },
           { key: 'seguimiento', icon: 'fa-bell',      lbl: `Seguimiento (${seguimiento.length})`, short: seguimiento.length > 0 ? `${seguimiento.length}` : 'Seguimiento' },
         ].map(t => (
@@ -1750,8 +1750,8 @@ export default function Historial() {
             </div>
           ) : (
             <div className="bento sk-fade-in">
-              {!opHideMetrics && <KpiCard label="Ventas Brutas" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} sparkData={hidden ? null : sparkBrutas} sparkColor="var(--brand)" icon="fa-chart-column" />}
-              {!opHideMetrics && <KpiCard label="Ingresos Caja" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} sparkData={hidden ? null : sparkCaja} sparkColor="var(--green)" isKey icon="fa-wallet" />}
+              {!opHideMetrics && <KpiCard label="Facturado" value={money(totBudgeted)} delta={hidden ? undefined : deltaBrutas} sparkData={hidden ? null : sparkBrutas} sparkColor="var(--brand)" icon="fa-chart-column" />}
+              {!opHideMetrics && <KpiCard label="Cobrado" value={money(totCobrado)} delta={hidden ? undefined : deltaCaja} sparkData={hidden ? null : sparkCaja} sparkColor="var(--green)" isKey icon="fa-wallet" />}
               {!opHideMetrics && totGastado > 0 && <KpiCard label="Gastos" value={money(totGastado)} icon="fa-cart-shopping" />}
               {!opHideMetrics && totGastado > 0 && (
                 <KpiCard
@@ -1761,8 +1761,8 @@ export default function Historial() {
                   sparkColor={(totGain - totGastado) >= 0 ? 'var(--green)' : '#DC2626'}
                 />
               )}
-              {!opHideMetrics && <KpiCard label="Ticket Promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} sparkData={hidden ? null : sparkTicket} icon="fa-receipt" />}
-              <KpiCard label="Presupuestos" value={String(periodBudgets.length)} icon="fa-file-invoice" />
+              {!opHideMetrics && <KpiCard label="Ticket promedio" value={avgTicket > 0 ? money(avgTicket) : '—'} sparkData={hidden ? null : sparkTicket} icon="fa-receipt" />}
+              <KpiCard label="Pedidos" value={String(periodBudgets.length)} icon="fa-file-invoice" />
 
               {/* ── Izquierda (gráfico + tabla) + Derecha (donut + seguimiento) ── */}
               {!opHideMetrics && <div className="bento-wide bento-chart-inner" style={{ display: 'flex', gap: 20, gridColumn: '1 / -1', flexWrap: 'wrap', alignItems: 'flex-start' }}>

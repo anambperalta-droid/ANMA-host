@@ -22,7 +22,6 @@ const NAV_GROUPS = [
     items: [
       { path: '/', icon: 'fa-chart-line', label: 'Dashboard', chipKey: 'budgets', perm: 'dashboard.view' },
       { path: '/ventas', icon: 'fa-receipt', label: 'Registro ventas', perm: 'dashboard.view' },
-      { path: '/compras', icon: 'fa-basket-shopping', label: 'Compras', chipKey: 'compras', perm: 'dashboard.view' },
       { path: '/pedido', icon: 'fa-cart-shopping', label: 'Nuevo pedido', perm: 'pedido.create' },
       { path: '/clientes', icon: 'fa-users', label: 'Clientes', chipKey: 'clients', perm: 'cliente.view' },
     ],
@@ -32,6 +31,7 @@ const NAV_GROUPS = [
     items: [
       { path: '/catalogo', icon: 'fa-box-open', label: 'Productos', chipKey: 'products', perm: 'catalogo.view' },
       { path: '/proveedores', icon: 'fa-industry', label: 'Proveedores', chipKey: 'suppliers', perm: 'proveedor.view' },
+      { path: '/compras', icon: 'fa-basket-shopping', label: 'Compras', chipKey: 'compras', perm: 'dashboard.view' },
       { path: '/logistica', icon: 'fa-truck-fast', label: 'Logística', perm: 'logistica.view' },
     ],
   },
