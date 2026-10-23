@@ -647,10 +647,35 @@ export default function PedidoNuevo() {
                 style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Contacto para coordinar</label>
-              <input type="text" value={pedido.contactoEntrega || ''}
-                onChange={e => update({ contactoEntrega: e.target.value })}
-                placeholder="Nombre y teléfono" style={inputStyle} />
+              {(() => {
+                // Datos del cliente comprador — para el botón "Usar mismo"
+                const cliName = (pedido.clienteNombre || pedido.contact || pedido.company || '').trim()
+                const cliWA = (pedido.wa || '').trim()
+                const cliCombo = [cliName, cliWA].filter(Boolean).join(' · ')
+                const yaUsaMismo = cliCombo && pedido.contactoEntrega === cliCombo
+                const puedeUsarMismo = cliCombo && !yaUsaMismo
+                return (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                      <label style={labelStyle}>Contacto para coordinar</label>
+                      {puedeUsarMismo && (
+                        <button type="button"
+                          onClick={() => update({ contactoEntrega: cliCombo })}
+                          title="Rellenar con los datos del cliente comprador"
+                          style={{ background: 'transparent', border: 'none', color: 'var(--brand)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: '0 0 4px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <i className="fa fa-user-check" style={{ fontSize: 9 }} /> Usar el mismo que el cliente
+                        </button>
+                      )}
+                    </div>
+                    <input type="text" value={pedido.contactoEntrega || ''}
+                      onChange={e => update({ contactoEntrega: e.target.value })}
+                      placeholder="Nombre y teléfono de quien recibe" style={inputStyle} />
+                    <div style={{ fontSize: 10.5, color: 'var(--txt4)', marginTop: 4, lineHeight: 1.4 }}>
+                      Suele ser otra persona cuando es un regalo — para evitar que llames a quien va a recibir la sorpresa.
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           </div>
           <div style={{ marginTop: 12 }}>
