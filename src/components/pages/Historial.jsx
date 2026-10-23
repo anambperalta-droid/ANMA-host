@@ -2024,6 +2024,26 @@ export default function Historial() {
       {/* ═══ LISTA ═══ */}
       {tab === 'lista' && (
         <>
+          {/* Subtítulo + atajo cruzado: deja explícito que esta vista es el
+              CICLO comercial del pedido (estados, entrega, seguimiento). Para
+              operar la COBRANZA — pagos, canales, medios — se cruza a /ventas. */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 10, flexWrap: 'wrap',
+            padding: '10px 14px', marginBottom: 12,
+            background: 'var(--brand-xlt)', border: '1px solid var(--border)', borderRadius: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <i className="fa fa-route" style={{ color: 'var(--brand)', fontSize: 12 }} />
+              <span style={{ fontSize: 11.5, color: 'var(--txt3)', fontWeight: 500 }}>
+                <b style={{ color: 'var(--txt)', fontWeight: 700 }}>Ciclo del pedido</b> · estados, entregas y seguimiento
+              </span>
+            </div>
+            <button onClick={() => nav('/ventas')}
+              style={{ background: 'transparent', border: 'none', color: 'var(--brand)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 4px' }}>
+              Ver registro de cobranza <i className="fa fa-arrow-right" style={{ fontSize: 9 }} />
+            </button>
+          </div>
           {/* "Para hoy" eliminado: duplicaba la campana (que ya tiene todas
               las alertas con dismiss persistido cross-device y agrupamiento).
               La campana es ahora el centro único de pendientes. */}

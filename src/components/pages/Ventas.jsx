@@ -650,6 +650,28 @@ export default function Ventas() {
         <button className="vt-nav-btn" onClick={nextMonth}><i className="fa fa-chevron-right" /></button>
       </div>
 
+      {/* Subtítulo + atajo cruzado: deja explícito que esta vista es la
+          COBRANZA (cobradas vs pendientes, canales, medios). Para operar el
+          ciclo comercial del pedido — estados, entrega, seguimiento — se
+          cruza a / (Dashboard · Pedidos). */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 10, flexWrap: 'wrap',
+        padding: '10px 14px', marginBottom: 10,
+        background: 'var(--brand-xlt)', border: '1px solid var(--border)', borderRadius: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <i className="fa fa-wallet" style={{ color: 'var(--brand)', fontSize: 12 }} />
+          <span style={{ fontSize: 11.5, color: 'var(--txt3)', fontWeight: 500 }}>
+            <b style={{ color: 'var(--txt)', fontWeight: 700 }}>Registro de cobranza</b> · cobradas vs pendientes, canales y medios de pago
+          </span>
+        </div>
+        <button onClick={() => nav('/')}
+          style={{ background: 'transparent', border: 'none', color: 'var(--brand)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 4px' }}>
+          Ver ciclo del pedido <i className="fa fa-arrow-right" style={{ fontSize: 9 }} />
+        </button>
+      </div>
+
       {/* HERO — cobro + stats */}
       <div className="vt-hero">
         <div className="vt-hero-main">
