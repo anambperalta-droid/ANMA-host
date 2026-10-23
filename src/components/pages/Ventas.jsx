@@ -939,8 +939,6 @@ export default function Ventas() {
             .vpr-hdr{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;padding:8px 14px;background:var(--surface2)}
             .vpr-hdr:hover{background:var(--surface2)}
             .vpr-cell-r{text-align:right;font-variant-numeric:tabular-nums}
-            .vpr-bar{position:relative;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:2px}
-            .vpr-bar-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#7C3AED,#a78bfa);border-radius:3px;transition:width .3s}
             @media(max-width:600px){
               .vpr-row,.vpr-hdr{grid-template-columns:1.5fr .5fr .8fr .3fr;font-size:12px}
               .vpr-hide-m{display:none}
@@ -978,10 +976,7 @@ export default function Ventas() {
                 <span className="vpr-cell-r vpr-hide-m" style={{ color: 'var(--txt3)' }}>{p.ventas}</span>
                 <span className="vpr-cell-r" style={{ color: 'var(--txt3)' }}>{p.unidades}</span>
                 <span className="vpr-cell-r" style={{ fontWeight: 700, color: 'var(--txt)' }}>{hidden ? '***' : fmt(p.facturado)}</span>
-                <span className="vpr-cell-r" style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)' }}>{pct}%</div>
-                  <div className="vpr-bar"><div className="vpr-bar-fill" style={{ width: `${Math.min(100, pct)}%` }} /></div>
-                </span>
+                <span className="vpr-cell-r" style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--brand)' }}>{pct}%</span>
               </div>
             )
           })}
