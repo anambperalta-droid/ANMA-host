@@ -2953,7 +2953,7 @@ export default function Presupuesto() {
                                     {k.image
                                       ? <img src={k.image} alt={k.name} loading="lazy" style={{ width: 42, height: 42, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
                                       : <div style={{ width: 42, height: 42, borderRadius: 8, background: 'linear-gradient(135deg,#FBF4F7,#FDF2F8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                          <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 16 }} />
+                                          <i className="fa fa-gift" style={{ color: 'var(--kit)', fontSize: 16 }} />
                                         </div>
                                     }
                                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -2963,7 +2963,7 @@ export default function Presupuesto() {
                                   </div>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
                                     <div style={{ display: 'flex', gap: 6, fontSize: 10, color: 'var(--txt3)' }}>
-                                      {compCount > 0 && <span><i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 3 }} />{compCount}</span>}
+                                      {compCount > 0 && <span><i className="fa fa-gift" style={{ color: 'var(--kit)', marginRight: 3 }} />{compCount}</span>}
                                       {packCount > 0 && <span><i className="fa fa-box" style={{ color: '#DB2777', marginRight: 3 }} />{packCount}</span>}
                                     </div>
                                     <span style={{ fontSize: 12, fontWeight: 800, color: '#059669' }}>{fmt(num(k.cost) || 0)}</span>

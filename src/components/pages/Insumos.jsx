@@ -596,7 +596,7 @@ export default function Insumos() {
                 {/* Costo de envío del pedido */}
                 <div className="fg" style={{ marginBottom: 10 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="fa fa-truck" style={{ color: '#8B5CF6', fontSize: 10 }} />
+                    <i className="fa fa-truck" style={{ color: 'var(--kit)', fontSize: 10 }} />
                     Envío del pedido
                     <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10 }}>(opcional — se suma al costo total)</span>
                   </label>
@@ -605,7 +605,7 @@ export default function Insumos() {
 
                 <div className="fg">
                   <label>
-                    <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 10, marginRight: 4 }} />
+                    <i className="fa fa-gift" style={{ color: 'var(--kit)', fontSize: 10, marginRight: 4 }} />
                     Uso por regalo / caja
                   </label>
                   <input type="number" value={form.qtyPerGift} onChange={e => setF('qtyPerGift', e.target.value)} onFocus={numFocus} placeholder="Ej: 0.5 metros por moño" min="0" step="any" />
@@ -627,7 +627,7 @@ export default function Insumos() {
                       <div style={{ fontSize: 10, color: 'rgba(99,102,241,.7)', marginTop: 3 }}>
                         {fmtDec((parseFloat(form.packCost) || 0) + (parseFloat(form.shippingCost) || 0))} ÷ {form.packQty} × {form.qtyPerGift} {form.unit || 'un'}
                         {parseFloat(form.shippingCost) > 0 && (
-                          <span style={{ display: 'block', color: '#8B5CF6', marginTop: 1 }}>
+                          <span style={{ display: 'block', color: 'var(--kit)', marginTop: 1 }}>
                             <i className="fa fa-truck" style={{ marginRight: 3 }} />
                             incl. {fmtDec(parseFloat(form.shippingCost))} de envío ({fmtDec((parseFloat(form.shippingCost) / (parseFloat(form.packQty) || 1)) * (parseFloat(form.qtyPerGift) || 1))} por regalo)
                           </span>
@@ -655,7 +655,7 @@ export default function Insumos() {
 
             {/* Fila 3: Proveedor */}
             <div className="fg" style={{ marginTop: 10 }}>
-              <label><i className="fa fa-truck" style={{ color: '#8B5CF6', fontSize: 10, marginRight: 4 }} />Proveedor</label>
+              <label><i className="fa fa-truck" style={{ color: 'var(--kit)', fontSize: 10, marginRight: 4 }} />Proveedor</label>
               <select value={form.supplierId || ''} onChange={e => setF('supplierId', e.target.value ? Number(e.target.value) : '')}>
                 <option value="">Sin proveedor asignado</option>
                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}

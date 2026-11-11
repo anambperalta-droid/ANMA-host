@@ -40,6 +40,8 @@
   --feria-azul:    #2E8BD6;
   --feria-naranja: #F2762E;
   --feria-violeta: #7C3AED;
+  /* Identidad de los Kits: un solo lugar, no 30 hex sueltos. */
+  --kit: var(--feria-violeta);
   --feria-ink:     #2A2118;
 
   /* ── Neutros (fijos) — base cálida "feria luminosa" ── */

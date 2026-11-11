@@ -33,7 +33,7 @@ const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
 })
 
 const CAT_PALETTE = [
-  { bg: '#FBF4F7', color: '#8B5CF6' },
+  { bg: '#FBF4F7', color: 'var(--kit)' },
   { bg: '#FBF4EC', color: '#60A5FA' },
   { bg: '#EFF6E9', color: '#34D399' },
   { bg: '#FFFBEB', color: '#F59E0B' },
@@ -49,7 +49,7 @@ function KitBadge({ small }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 3,
       background: 'linear-gradient(135deg, #FDF2F8, #FBF4F7)',
-      color: '#8B5CF6', border: '1px solid #EFD4E4',
+      color: 'var(--kit)', border: '1px solid #EFD4E4',
       fontSize: small ? 8.5 : 9.5, fontWeight: 800,
       padding: small ? '1px 5px' : '2px 7px',
       borderRadius: 20, letterSpacing: 0.3, flexShrink: 0,
@@ -699,7 +699,7 @@ export default function Catalogo() {
         <div className="prod-card-img" style={{ background: isKit ? '#FBF4F7' : cc.bg }}>
           {p.image
             ? <img src={p.image} alt={p.name} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ fontSize: 38, color: isKit ? '#8B5CF6' : cc.color, opacity: .5 }} />
+            : <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ fontSize: 38, color: isKit ? 'var(--kit)' : cc.color, opacity: .5 }} />
           }
           <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)}
             style={{ position: 'absolute', top: 8, left: 8, width: 16, height: 16, cursor: 'pointer' }}
@@ -708,7 +708,7 @@ export default function Catalogo() {
         </div>
         <div className="prod-card-body">
           <div className="prod-card-name" title={p.name}>{p.name}</div>
-          <span className="prod-card-cat qcat-badge" style={{ background: isKit ? '#FBF4F7' : cc.bg, color: isKit ? '#8B5CF6' : cc.color }}
+          <span className="prod-card-cat qcat-badge" style={{ background: isKit ? '#FBF4F7' : cc.bg, color: isKit ? 'var(--kit)' : cc.color }}
             onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setQuickCatPop({ prod: p, x: r.left, y: r.bottom + 4 }); setQuickCatInput('') }}>
             {p.cat || '—'} <i className="fa fa-pen" />
           </span>
@@ -754,7 +754,7 @@ export default function Catalogo() {
         <td>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {p.image && <img src={p.image} alt={p.name} loading="lazy" decoding="async" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />}
-            {!p.image && isKit && <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 16, flexShrink: 0 }} />}
+            {!p.image && isKit && <i className="fa fa-gift" style={{ color: 'var(--kit)', fontSize: 16, flexShrink: 0 }} />}
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <span style={{ fontWeight: 800 }}>{p.name}</span>
@@ -1031,7 +1031,7 @@ export default function Catalogo() {
                 {p.image
                   ? <img src={p.image} className="cat-mob-item-img" alt={p.name} loading="lazy" decoding="async" />
                   : <div className="cat-mob-item-noimg">
-                      <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ color: isKit ? '#8B5CF6' : cc.color, fontSize: 16, opacity: .6 }} />
+                      <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ color: isKit ? 'var(--kit)' : cc.color, fontSize: 16, opacity: .6 }} />
                     </div>
                 }
                 <div className="cat-mob-item-info">
@@ -1077,7 +1077,7 @@ export default function Catalogo() {
               {!collapsedGrps.prods && prodsFiltered.map(mobItem)}
               {kitsFiltered.length > 0 && (
                 <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
-                  <i className="fa fa-gift" style={{ color: '#8B5CF6' }} /> Kits
+                  <i className="fa fa-gift" style={{ color: 'var(--kit)' }} /> Kits
                   <span className="grp-badge">{kitsFiltered.length}</span>
                   <i className={`fa fa-chevron-${collapsedGrps.kits ? 'down' : 'up'} grp-chevron`} />
                 </div>
@@ -1144,7 +1144,7 @@ export default function Catalogo() {
                       <tr key="__hd_kit" style={{ background: 'var(--surface)' }}>
                         <td colSpan={5} style={{ paddingTop: 6, paddingBottom: 2, paddingLeft: 8 }}>
                           <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
-                            <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />
+                            <i className="fa fa-gift" style={{ color: 'var(--kit)', fontSize: 11 }} />
                             Kits & Boxes
                             <span className="grp-badge">{kitsFiltered.length}</span>
                             <i className={`fa fa-chevron-${collapsedGrps.kits ? 'right' : 'down'} grp-chevron`} />
@@ -1186,7 +1186,7 @@ export default function Catalogo() {
             ...(kitsFiltered.length > 0 ? [
               <div key="__ghd_kit" style={{ gridColumn: '1/-1' }}>
                 <div className="grp-section-hd" onClick={() => toggleGrp('kits')}>
-                  <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 11 }} />
+                  <i className="fa fa-gift" style={{ color: 'var(--kit)', fontSize: 11 }} />
                   Kits & Boxes
                   <span className="grp-badge">{kitsFiltered.length}</span>
                   <i className={`fa fa-chevron-${collapsedGrps.kits ? 'right' : 'down'} grp-chevron`} />
@@ -1249,7 +1249,7 @@ export default function Catalogo() {
             {/* ── HEADER FIJO ── */}
             <div className="mh" style={{ flexShrink: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-box'}`} style={{ color: productMode === 'kit' ? '#8B5CF6' : 'var(--brand)', fontSize: 15 }} />
+                <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-box'}`} style={{ color: productMode === 'kit' ? 'var(--kit)' : 'var(--brand)', fontSize: 15 }} />
                 {form.id ? 'Editar' : 'Nuevo'} {productMode === 'kit' ? 'Kit / Box' : 'producto'}
               </h3>
               <button className="mclose" onClick={() => setModal(false)}><i className="fa fa-xmark" /></button>
@@ -1306,7 +1306,7 @@ export default function Catalogo() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                   padding: '10px 16px', borderRadius: 9, border: 'none', fontFamily: 'inherit',
                   fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all .2s', whiteSpace: 'nowrap',
-                  background: productMode === 'kit' ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'transparent',
+                  background: productMode === 'kit' ? 'linear-gradient(135deg,var(--kit),#DB2777)' : 'transparent',
                   color: productMode === 'kit' ? '#fff' : 'var(--txt3)',
                   opacity: productMode === 'kit' ? 1 : .75,
                 }}>
@@ -1336,7 +1336,7 @@ export default function Catalogo() {
               {/* Kit: solo Ocasión (Stock se ingresa en la card Producción) | Producto: 3 cols */}
               {productMode === 'kit' ? (
                 <div className="fg" style={{ marginBottom: 0 }}>
-                  <label><i className="fa fa-calendar-star" style={{ marginRight: 5, color: '#8B5CF6', fontSize: 10 }} />Ocasión / Tipo de evento</label>
+                  <label><i className="fa fa-calendar-star" style={{ marginRight: 5, color: 'var(--kit)', fontSize: 10 }} />Ocasión / Tipo de evento</label>
                   <select tabIndex={2} value={form.cat} onChange={e => setF('cat', e.target.value)}>
                     {cats.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     {form.cat && !cats.includes(form.cat) && <option value={form.cat}>{form.cat}</option>}
@@ -1395,7 +1395,7 @@ export default function Catalogo() {
               <div style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#8B5CF6,#DB2777)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,var(--kit),#DB2777)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <i className="fa fa-gift" style={{ color: '#fff', fontSize: 13 }} />
                     </div>
                     <div style={{ minWidth: 0 }}>
@@ -1404,7 +1404,7 @@ export default function Catalogo() {
                     </div>
                   </div>
                   {kitItems.length > 0 && (
-                    <span style={{ background: '#F7E8F0', color: '#8B5CF6', fontSize: 10, padding: '3px 9px', borderRadius: 12, fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <span style={{ background: '#F7E8F0', color: 'var(--kit)', fontSize: 10, padding: '3px 9px', borderRadius: 12, fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {kitItems.length} {kitItems.length === 1 ? 'item' : 'items'}
                     </span>
                   )}
@@ -1436,7 +1436,7 @@ export default function Catalogo() {
                             width: 28, height: 26, borderRadius: 6,
                             border: `1px solid ${isPack ? '#FBCFE8' : '#C4B5FD'}`,
                             background: isPack ? '#FCE7F3' : '#F7E8F0',
-                            color: isPack ? '#DB2777' : '#8B5CF6',
+                            color: isPack ? '#DB2777' : 'var(--kit)',
                             fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             transition: 'all .15s',
@@ -1454,7 +1454,7 @@ export default function Catalogo() {
                           {lineCost > 0 && (
                             <div style={{ fontSize: 9, color: '#059669', fontWeight: 700, marginTop: 2, paddingLeft: 8 }}>
                               Subtotal: {fmt(lineCost)}
-                              {it.productId && <i className="fa fa-link" style={{ marginLeft: 4, color: '#8B5CF6', fontSize: 8 }} title="Vinculado al catálogo" />}
+                              {it.productId && <i className="fa fa-link" style={{ marginLeft: 4, color: 'var(--kit)', fontSize: 8 }} title="Vinculado al catálogo" />}
                             </div>
                           )}
                         </div>
@@ -1493,7 +1493,7 @@ export default function Catalogo() {
               {/* ── Formulario unificado para agregar un item nuevo ── */}
               <div style={{ background: 'rgba(255,255,255,.85)', borderRadius: 10, padding: '10px 12px', border: '1.5px dashed #C4B5FD' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--kit)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
                     <i className="fa fa-plus-circle" style={{ marginRight: 4 }} />Agregar item
                   </span>
                   {/* Toggle tipo: 🎁 Contenido / 📦 Packaging */}
@@ -1503,7 +1503,7 @@ export default function Catalogo() {
                       onClick={() => setCompForm(f => ({ ...f, _type: 'contenido' }))}
                       style={{
                         padding: '3px 10px', border: 'none',
-                        background: (compForm._type || 'contenido') === 'contenido' ? '#8B5CF6' : 'transparent',
+                        background: (compForm._type || 'contenido') === 'contenido' ? 'var(--kit)' : 'transparent',
                         color: (compForm._type || 'contenido') === 'contenido' ? '#fff' : 'var(--txt3)',
                         cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4,
                       }}
@@ -1626,7 +1626,7 @@ export default function Catalogo() {
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
                             <span style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <i className={`fa ${p._source === 'insumo' ? 'fa-wrench' : 'fa-box'}`} style={{ color: p._source === 'insumo' ? '#F59E0B' : '#8B5CF6', fontSize: 9 }} />
+                              <i className={`fa ${p._source === 'insumo' ? 'fa-wrench' : 'fa-box'}`} style={{ color: p._source === 'insumo' ? '#F59E0B' : 'var(--kit)', fontSize: 9 }} />
                               {p.name}
                               {p._source === 'insumo' && <span style={{ fontSize: 9, fontWeight: 700, background: '#FFFBEB', color: '#D97706', border: '1px solid #FDE68A', padding: '1px 5px', borderRadius: 8 }}>INSUMO</span>}
                             </span>
@@ -1671,7 +1671,7 @@ export default function Catalogo() {
                     style={{
                       height: 34, padding: '0 14px', borderRadius: 8, border: 'none',
                       background: ((compForm.nombre || compSearch) || '').trim()
-                        ? (compForm._type === 'packaging' ? 'linear-gradient(135deg,#DB2777,#9333EA)' : 'linear-gradient(135deg,#8B5CF6,#DB2777)')
+                        ? (compForm._type === 'packaging' ? 'linear-gradient(135deg,#DB2777,#9333EA)' : 'linear-gradient(135deg,var(--kit),#DB2777)')
                         : 'var(--surface3)',
                       color: ((compForm.nombre || compSearch) || '').trim() ? '#fff' : 'var(--txt4)',
                       fontSize: 11, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
@@ -1727,9 +1727,9 @@ export default function Catalogo() {
               }}>
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '.7px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--kit)', textTransform: 'uppercase', letterSpacing: '.7px', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <i className="fa fa-layer-group" /> Receta de 1 Kit
-                      <span style={{ background: '#F7E8F0', color: '#8B5CF6', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
+                      <span style={{ background: '#F7E8F0', color: 'var(--kit)', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
                         {componentes.length}
                       </span>
                     </div>
@@ -1741,7 +1741,7 @@ export default function Catalogo() {
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--txt4)', marginTop: 3 }}>
                     <i className="fa fa-circle-info" style={{ marginRight: 4, color: '#A78BFA' }} />
-                    Ingresá los insumos y packaging que lleva <strong style={{ color: '#8B5CF6' }}>1 sola unidad</strong> del kit
+                    Ingresá los insumos y packaging que lleva <strong style={{ color: 'var(--kit)' }}>1 sola unidad</strong> del kit
                   </div>
                 </div>
 
@@ -1766,7 +1766,7 @@ export default function Catalogo() {
                             {lineCost > 0 && (
                               <div style={{ fontSize: 9, color: 'var(--txt3)', marginTop: 1 }}>
                                 Subtotal: <span style={{ fontWeight: 700, color: '#059669' }}>{fmt(lineCost)}</span>
-                                {comp.productId && <span style={{ marginLeft: 4, color: '#8B5CF6' }}><i className="fa fa-link" /></span>}
+                                {comp.productId && <span style={{ marginLeft: 4, color: 'var(--kit)' }}><i className="fa fa-link" /></span>}
                               </div>
                             )}
                           </div>
@@ -1923,7 +1923,7 @@ export default function Catalogo() {
                   background: 'rgba(255,255,255,.7)', borderRadius: 10, padding: '10px 12px',
                   border: '1px dashed #EFD4E4', marginTop: componentes.length > 0 ? 8 : 0,
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', marginBottom: 7, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--kit)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     <i className="fa fa-plus-circle" style={{ marginRight: 4 }} />Agregar componente
                   </div>
                   <div className="comp-add-row">
@@ -1948,7 +1948,7 @@ export default function Catalogo() {
                           fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
                           background: 'var(--surface)', outline: 'none', boxSizing: 'border-box',
                         }}
-                        onFocusCapture={e => e.target.style.borderColor = '#8B5CF6'}
+                        onFocusCapture={e => e.target.style.borderColor = 'var(--kit)'}
                         onBlurCapture={e  => e.target.style.borderColor = '#EFD4E4'}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addComp() } }}
                       />
@@ -1983,7 +1983,7 @@ export default function Catalogo() {
                               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
                               <span style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <i className={`fa ${p._source === 'insumo' ? 'fa-wrench' : 'fa-box'}`} style={{ color: p._source === 'insumo' ? '#F59E0B' : '#8B5CF6', fontSize: 9 }} />
+                                <i className={`fa ${p._source === 'insumo' ? 'fa-wrench' : 'fa-box'}`} style={{ color: p._source === 'insumo' ? '#F59E0B' : 'var(--kit)', fontSize: 9 }} />
                                 {p.name}
                                 {p._source === 'insumo' && <span style={{ fontSize: 9, fontWeight: 700, background: '#FFFBEB', color: '#D97706', border: '1px solid #FDE68A', padding: '1px 5px', borderRadius: 8 }}>INSUMO</span>}
                               </span>
@@ -2028,7 +2028,7 @@ export default function Catalogo() {
                       disabled={!(compForm.nombre || compSearch).trim()}
                       style={{
                         height: 34, padding: '0 12px', borderRadius: 8, border: 'none',
-                        background: (compForm.nombre || compSearch).trim() ? 'linear-gradient(135deg,#8B5CF6,#DB2777)' : 'var(--surface3)',
+                        background: (compForm.nombre || compSearch).trim() ? 'linear-gradient(135deg,var(--kit),#DB2777)' : 'var(--surface3)',
                         color: (compForm.nombre || compSearch).trim() ? '#fff' : 'var(--txt4)',
                         fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                         whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4,
@@ -2182,7 +2182,7 @@ export default function Catalogo() {
                     {form.image
                       ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} />
                       : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: '#FBF4F7' }}>
-                          <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 20, opacity: .5 }} />
+                          <i className="fa fa-gift" style={{ color: 'var(--kit)', fontSize: 20, opacity: .5 }} />
                         </div>
                     }
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -2326,7 +2326,7 @@ export default function Catalogo() {
                 </button>
               )}
               <button className="btn btn-primary" onClick={() => save()}
-                style={productMode === 'kit' ? { background: 'linear-gradient(135deg,#8B5CF6,#DB2777)', border: 'none' } : {}}>
+                style={productMode === 'kit' ? { background: 'linear-gradient(135deg,var(--kit),#DB2777)', border: 'none' } : {}}>
                 <i className={`fa ${productMode === 'kit' ? 'fa-gift' : 'fa-floppy-disk'}`} />
                 {' '}{productMode === 'kit' ? 'Guardar Kit' : 'Guardar'}
               </button>
@@ -2634,7 +2634,7 @@ export default function Catalogo() {
               if (missing.length === 0) return null
               return (
                 <div style={{ marginTop: 14, padding: '12px 14px', background: 'linear-gradient(135deg,#FBF4F7,#FDF2F8)', borderRadius: 10, border: '1px solid #EFD4E4' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: .6, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--kit)', textTransform: 'uppercase', letterSpacing: .6, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <i className="fa fa-gift" /> Ocasiones sugeridas para kits
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
@@ -2644,7 +2644,7 @@ export default function Catalogo() {
                   </div>
                   <button
                     className="btn btn-ghost btn-sm"
-                    style={{ color: '#8B5CF6', borderColor: '#EFD4E4', width: '100%', justifyContent: 'center' }}
+                    style={{ color: 'var(--kit)', borderColor: '#EFD4E4', width: '100%', justifyContent: 'center' }}
                     onClick={() => {
                       const newCats = [...cats, ...missing]
                       updateConfig({ productCats: newCats })
