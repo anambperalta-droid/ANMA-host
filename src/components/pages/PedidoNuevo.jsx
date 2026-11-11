@@ -30,18 +30,18 @@ const ESTADO_COMPRA_LABELS = {
 
 // Paleta de estados — chips con color diferenciado por etapa del ciclo
 const ESTADO_COLOR = {
-  consulta:      { bg: '#f1f5f9', fg: '#475569', bd: '#cbd5e1' },
+  consulta:      { bg: '#F6F1E9', fg: '#4A4237', bd: '#DCD1C0' },
   presupuestado: { bg: '#dbeafe', fg: '#1d4ed8', bd: '#bfdbfe' },
   pausado:       { bg: '#fef3c7', fg: '#b45309', bd: '#fde68a' },
   confirmado:    { bg: '#dcfce7', fg: '#15803d', bd: '#bbf7d0' },
-  produccion:    { bg: '#ede9fe', fg: '#6d28d9', bd: '#ddd6fe' },
+  produccion:    { bg: '#F7E8F0', fg: '#6d28d9', bd: '#EFD4E4' },
   entregado:     { bg: '#d1fae5', fg: '#065f46', bd: '#a7f3d0' },
-  cerrado:       { bg: '#f1f5f9', fg: '#64748b', bd: '#cbd5e1' },
+  cerrado:       { bg: '#F6F1E9', fg: '#6E6355', bd: '#DCD1C0' },
   perdido:       { bg: '#fee2e2', fg: '#b91c1c', bd: '#fecaca' },
 }
 
 const ESTADO_COMPRA_COLOR = {
-  pendiente: { bg: '#f8fafc', fg: '#64748b', bd: '#e2e8f0' },
+  pendiente: { bg: '#FBF7F0', fg: '#6E6355', bd: '#ECE3D6' },
   pedido:    { bg: '#dbeafe', fg: '#1e40af', bd: '#bfdbfe' },
   recibido:  { bg: '#dcfce7', fg: '#166534', bd: '#bbf7d0' },
 }
@@ -51,9 +51,9 @@ const TAG_COLOR = {
   producto:   { bg: '#e0f2fe', fg: '#075985', bd: '#bae6fd' },
   packaging:  { bg: '#ffedd5', fg: '#9a3412', bd: '#fed7aa' },
   manoDeObra: { bg: '#fef3c7', fg: '#78350f', bd: '#fde68a' },
-  diseno:     { bg: '#ede9fe', fg: '#5b21b6', bd: '#ddd6fe' },
+  diseno:     { bg: '#F7E8F0', fg: '#5b21b6', bd: '#EFD4E4' },
   envio:      { bg: '#dbeafe', fg: '#1e3a8a', bd: '#bfdbfe' },
-  otro:       { bg: '#f1f5f9', fg: '#475569', bd: '#cbd5e1' },
+  otro:       { bg: '#F6F1E9', fg: '#4A4237', bd: '#DCD1C0' },
 }
 
 // Icono y subtítulo pregunta por sección — la estética base viene de .wiz-pane
@@ -405,7 +405,7 @@ export default function PedidoNuevo() {
                 const pay = pedido.payStatus || 'pending'
                 const cfg = pay === 'paid' ? { bg: '#dcfce7', fg: '#15803d', label: 'Cobrado', icon: 'fa-circle-check' }
                   : pay === 'partial' ? { bg: '#fef3c7', fg: '#b45309', label: 'Señado', icon: 'fa-hand-holding' }
-                  : { bg: '#f1f5f9', fg: '#64748b', label: 'Pendiente', icon: 'fa-clock' }
+                  : { bg: '#F6F1E9', fg: '#6E6355', label: 'Pendiente', icon: 'fa-clock' }
                 return (
                   <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: cfg.bg, color: cfg.fg, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <i className={`fa ${cfg.icon}`} style={{ fontSize: 9 }} />
@@ -1357,8 +1357,8 @@ function DescripcionInput({ value, products, onChange, onPick, onCreatePreset, i
         }}>
           {matches.map(p => (
             <div key={p.id} onClick={() => pick(p)}
-              style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border, #e2e8f0)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-xlt, #f5f3ff)'}
+              style={{ padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border, #ECE3D6)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-xlt, #FBF4F7)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
@@ -1639,7 +1639,7 @@ function MenuMore({ pedido, onSaveAlt, onToggleKit, onDuplicate, onDelete }) {
         <div style={{
           position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 200,
           background: 'var(--surface, #fff)',
-          border: '1px solid var(--border, #e2e8f0)',
+          border: '1px solid var(--border, #ECE3D6)',
           borderRadius: 10, minWidth: 200,
           boxShadow: '0 10px 30px rgba(0,0,0,.12)',
           overflow: 'hidden',
@@ -1653,7 +1653,7 @@ function MenuMore({ pedido, onSaveAlt, onToggleKit, onDuplicate, onDelete }) {
             icon={pedido.esKit ? 'fa-list-ul' : 'fa-gift'}
             label={pedido.esKit ? 'Salir de modo kit' : 'Convertir en kit'}
             onClick={() => { setOpen(false); onToggleKit() }} />
-          <div style={{ height: 1, background: 'var(--border, #e2e8f0)', margin: '4px 0' }} />
+          <div style={{ height: 1, background: 'var(--border, #ECE3D6)', margin: '4px 0' }} />
           <MenuItem icon="fa-copy" label="Duplicar pedido"
             onClick={() => { setOpen(false); onDuplicate() }}
             disabled={!pedido.id} />
@@ -1677,7 +1677,7 @@ function MenuItem({ icon, label, onClick, color, disabled }) {
         fontFamily: 'inherit', fontSize: 13, fontWeight: 500,
         textAlign: 'left', opacity: disabled ? 0.5 : 1,
       }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = 'var(--brand-xlt, #f5f3ff)' }}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = 'var(--brand-xlt, #FBF4F7)' }}
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
       <i className={`fa ${icon}`} style={{ width: 14, textAlign: 'center' }} />
       {label}

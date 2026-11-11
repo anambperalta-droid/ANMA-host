@@ -42,7 +42,7 @@ export default function PortalProveedor() {
         leadTime:     raw.lt || raw.leadTime || '',
         ownerName:    raw.o || raw.ownerName || '',
         ownerWa:      raw.w || raw.ownerWa || '',
-        brandColor:   raw.bc || raw.brandColor || '#1E293B',
+        brandColor:   raw.bc || raw.brandColor || '#2A2118',
         introCopy:    raw.cp || raw.portalIntroCopy || '',
         exp:          raw.e || raw.exp || 0,
         products:     (raw.p || raw.products || []).map(pr => ({
@@ -145,7 +145,7 @@ export default function PortalProveedor() {
   }
 
   // Brand-driven palette (sobrio, derivado del color del cliente)
-  const brand = data?.brandColor || '#1E293B'
+  const brand = data?.brandColor || '#2A2118'
   const brandDark = mix(brand, '#000000', 0.25)
   const brandSoft = alpha(brand, 0.08)
   const brandLine = alpha(brand, 0.18)
@@ -459,7 +459,7 @@ function WaIcon({ size = 16, color = '#fff' }) {
 const S = {
   wrap: {
     minHeight: '100vh',
-    background: '#F8FAFC',
+    background: '#FBF7F0',
     fontFamily: "'Inter',system-ui,-apple-system,sans-serif",
     padding: '20px 14px 48px',
   },
@@ -538,7 +538,7 @@ const S = {
   /* card genérica */
   card: {
     background: '#fff',
-    border: '1px solid #E5E7EB',
+    border: '1px solid #ECE3D6',
     borderRadius: 14, padding: '20px 22px',
     marginBottom: 12,
     boxShadow: '0 1px 3px rgba(0,0,0,.03)',
@@ -549,8 +549,8 @@ const S = {
   /* copy btn */
   copyBtn: {
     display: 'inline-flex', alignItems: 'center', gap: 5,
-    border: '1px solid #E5E7EB',
-    background: '#F9FAFB', color: '#374151',
+    border: '1px solid #ECE3D6',
+    background: '#FBF7F0', color: '#374151',
     fontSize: 11.5, fontWeight: 700,
     padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
     fontFamily: 'inherit', flexShrink: 0, transition: 'all .15s',
@@ -566,7 +566,7 @@ const S = {
   tr: { borderBottom: '1px solid var(--border)', transition: 'background .12s' },
   td: { padding: '15px 14px', verticalAlign: 'middle' },
   badgeOk: {
-    display: 'inline-block', background: '#F0FDF4', color: '#16A34A',
+    display: 'inline-block', background: '#F2F8EB', color: '#16A34A',
     fontSize: 10.5, fontWeight: 700, letterSpacing: '.3px',
     padding: '3px 9px', borderRadius: 6,
   },
@@ -581,7 +581,7 @@ const S = {
   condItem: { display: 'flex', alignItems: 'flex-start', gap: 14 },
   condIconWrap: {
     width: 34, height: 34, borderRadius: 8,
-    border: '1px solid #E5E7EB',
+    border: '1px solid #ECE3D6',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,
   },
@@ -591,7 +591,7 @@ const S = {
   /* CTA */
   ctaCard: {
     background: '#fff',
-    border: '1.5px solid #E5E7EB',
+    border: '1.5px solid #ECE3D6',
     borderRadius: 14, padding: '24px 22px',
     marginBottom: 12,
   },
@@ -608,14 +608,14 @@ const S = {
   },
   btnAsk: {
     flex: '1 1 160px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    border: '1.5px solid #E5E7EB',
+    border: '1.5px solid #ECE3D6',
     padding: '13px 18px', borderRadius: 10,
     textDecoration: 'none', fontWeight: 700, fontSize: 13.5,
   },
   ctaTip: {
     display: 'flex', alignItems: 'flex-start', gap: 7,
     fontSize: 11.5, color: '#9CA3AF', lineHeight: 1.5,
-    background: '#F9FAFB', padding: '9px 13px', borderRadius: 8,
+    background: '#FBF7F0', padding: '9px 13px', borderRadius: 8,
     border: '1px solid var(--border)',
   },
 
@@ -630,17 +630,17 @@ const S = {
   /* error / loading */
   fullCenter: {
     minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: 20, fontFamily: "'Inter',sans-serif", background: '#F8FAFC',
+    padding: 20, fontFamily: "'Inter',sans-serif", background: '#FBF7F0',
   },
   msgCard: {
     maxWidth: 400, textAlign: 'center', background: '#fff',
     padding: '36px 28px', borderRadius: 16,
     boxShadow: '0 8px 32px rgba(0,0,0,.07)',
-    border: '1px solid #E5E7EB',
+    border: '1px solid #ECE3D6',
   },
   spinner: {
     width: 30, height: 30, borderRadius: '50%',
-    border: '3px solid #E5E7EB', borderTopColor: '#1F2937',
+    border: '3px solid #ECE3D6', borderTopColor: '#1F2937',
     animation: 'pp-spin 1s linear infinite',
   },
 }

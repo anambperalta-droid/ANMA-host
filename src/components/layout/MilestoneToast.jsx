@@ -165,7 +165,7 @@ export default function MilestoneToast() {
           style={{
             position: 'relative',
             background: 'var(--surface, #fff)',
-            border: '1px solid var(--border, #E5E7EB)',
+            border: '1px solid var(--border, #ECE3D6)',
             borderRadius: 16,
             padding: '16px 18px 14px 68px',
             boxShadow: '0 20px 40px rgba(15,12,60,.22), 0 4px 12px rgba(15,12,60,.08)',

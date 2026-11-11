@@ -147,7 +147,7 @@ function ProductAutocomplete({ value, products, onChangeText, onPick, placeholde
               style={{
                 display: 'flex', alignItems: 'center', gap: 8, width: '100%',
                 padding: '8px 10px', border: 'none',
-                background: i === highlight ? 'var(--brand-xlt, #F5F3FF)' : 'transparent',
+                background: i === highlight ? 'var(--brand-xlt, #FBF4F7)' : 'transparent',
                 borderRadius: 6, cursor: 'pointer', textAlign: 'left',
                 color: 'var(--txt, #111)', fontFamily: 'inherit', fontSize: 12.5,
               }}
@@ -1370,7 +1370,7 @@ export default function Presupuesto() {
     // en la vista interna (Step 4 y panel del kit).
     // Mantenemos firma para no romper callers, pero ignoramos unitCost.
     const subRow = (label, _qtyIgnored, _unitCostIgnored, isLast = false) => {
-      const botBdr = isLast ? `2px solid ${bdr}` : `1px solid #E8EAF2`
+      const botBdr = isLast ? `2px solid ${bdr}` : `1px solid #ECE3D6`
       return `
         <tr>
           <td colspan="4" style="background:${bg2};border-left:3px solid ${bc};border-bottom:${botBdr};padding:5px 12px 5px 30px">
@@ -1462,7 +1462,7 @@ export default function Presupuesto() {
 
         /* ── Bloque A: Packaging / Insumos ── */
         const packItems = (i.packaging || []).filter(c => c.name)
-        const packHdr   = packItems.length ? blockHdrRow('📦', 'A. Packaging / Insumos', '#F5F3FF') : ''
+        const packHdr   = packItems.length ? blockHdrRow('📦', 'A. Packaging / Insumos', '#FBF4F7') : ''
         const packRowsHtml = packItems.map((c, ci, arr) => {
           const isLast = ci === arr.length - 1 && !(i.products || []).some(p => p.name) && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit) && !num(i.personalizacion?.designCost)
           // fixedQty: mostrar qty real sin multiplicar por kits
@@ -1473,7 +1473,7 @@ export default function Presupuesto() {
 
         /* ── Bloque B: Contenido del Kit ── */
         const prodItems = (i.products || []).filter(c => c.name)
-        const prodHdr   = prodItems.length ? blockHdrRow('✨', 'B. Contenido del Kit', '#F0FDF4') : ''
+        const prodHdr   = prodItems.length ? blockHdrRow('✨', 'B. Contenido del Kit', '#F2F8EB') : ''
         const prodRowsHtml = prodItems.map((c, ci, arr) => {
           const isLast = ci === arr.length - 1 && !i.personalizacion?.desc && !num(i.personalizacion?.costUnit)
           return subRow(c.name, num(c.qty || 1), num(c.costUnit), isLast)
@@ -1641,7 +1641,7 @@ export default function Presupuesto() {
         font-size:12px;color:#6B7280;line-height:1.65;
       }
       /* Cobro */
-      .cobro-block{margin-top:16px;padding:14px 18px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px}
+      .cobro-block{margin-top:16px;padding:14px 18px;background:#F2F8EB;border:1.5px solid #86EFAC;border-radius:10px}
       .cobro-title{font-size:13px;font-weight:800;color:#065F46;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
       .cobro-tbl{width:100%;border-collapse:collapse;font-size:14px}
       .cobro-tbl td{padding:5px 0;border:none}
@@ -1765,7 +1765,7 @@ export default function Presupuesto() {
          · Inputs invisibles que solo se "encienden" al focus
          ══════════════════════════════════════════════════════════════ */
       /* Card wrapper — compacto, sin padding excesivo */
-      .tbl-card{background:#fff;border:1px solid #E8EAF2;border-radius:12px;padding:10px 12px;margin-top:0;box-shadow:0 1px 2px rgba(15,12,46,.02)}
+      .tbl-card{background:#fff;border:1px solid #ECE3D6;border-radius:12px;padding:10px 12px;margin-top:0;box-shadow:0 1px 2px rgba(15,12,46,.02)}
       /* Header de columnas — minimal, solo cuando hay valores que etiquetar */
       .kit-tbl-hdr,.simple-tbl-hdr{display:grid;gap:6px;padding:2px 6px 4px;align-items:end}
       .kit-tbl-hdr{grid-template-columns:14px 1fr 64px 96px 90px 26px}
@@ -1794,7 +1794,7 @@ export default function Presupuesto() {
       }
       .kit-tbl-row input[type=text]:hover,.kit-tbl-row input[type=number]:hover,
       .simple-tbl-row input[type=text]:hover,.simple-tbl-row input[type=number]:hover{
-        background:rgba(15,12,46,.025)!important;border-color:#E8EAF2!important;
+        background:rgba(15,12,46,.025)!important;border-color:#ECE3D6!important;
       }
       .kit-tbl-row input[type=text]:focus,.kit-tbl-row input[type=number]:focus,.kit-tbl-row select:focus,
       .simple-tbl-row input[type=text]:focus,.simple-tbl-row input[type=number]:focus,.simple-tbl-row select:focus{
@@ -1893,7 +1893,7 @@ export default function Presupuesto() {
             "sub  sub  sub"!important;
           grid-template-columns:minmax(0,1fr) minmax(0,1fr) 38px!important;
           gap:8px!important;padding:9px 10px!important;
-          background:#fff!important;border:1px solid #E8EAF2!important;
+          background:#fff!important;border:1px solid #ECE3D6!important;
           border-radius:10px!important;align-items:center!important;
           margin:0!important;
         }
@@ -1967,7 +1967,7 @@ export default function Presupuesto() {
             "sub  sub  sub"!important;
           grid-template-columns:minmax(0,1fr) minmax(0,1fr) 38px!important;
           gap:8px!important;padding:9px 10px!important;
-          background:#fff!important;border:1px solid #E8EAF2!important;
+          background:#fff!important;border:1px solid #ECE3D6!important;
           border-radius:10px!important;align-items:center!important;margin-bottom:8px!important;
         }
         .simple-tbl-row > :nth-child(1){grid-area:name!important;min-width:0!important;width:100%!important}
@@ -2043,7 +2043,7 @@ export default function Presupuesto() {
         <div className="ph-left" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 800, letterSpacing: '.01em', color: 'var(--txt)' }}>{budgetNum}</span>
           {(form.status === 'draft' || !editId) && (
-            <span style={{ background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE', borderRadius: 9999, padding: '1px 7px', fontSize: 10, fontWeight: 700, lineHeight: 1.5, whiteSpace: 'nowrap' }}>Borrador</span>
+            <span style={{ background: '#FBF4F7', color: '#7C3AED', border: '1px solid #EFD4E4', borderRadius: 9999, padding: '1px 7px', fontSize: 10, fontWeight: 700, lineHeight: 1.5, whiteSpace: 'nowrap' }}>Borrador</span>
           )}
         </div>
         <div className="ph-right"><button className="btn btn-ghost btn-sm" onClick={() => { dbDel(DRAFT_KEY); setDraftRestored(false); nav('/') }}><i className="fa fa-xmark" /><span className="desc-txt"> Descartar</span></button></div>
@@ -2420,7 +2420,7 @@ export default function Presupuesto() {
                 {/* ── Tabs de alternativas ── */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
                   {alternatives.map((alt, ai) => (
-                    <div key={ai} style={{ display: 'flex', alignItems: 'center', gap: 0, borderRadius: 10, overflow: 'hidden', border: ai === activeAltIdx ? '1.5px solid var(--primary)' : '1.5px solid var(--border)', background: ai === activeAltIdx ? 'var(--primary-light, #F5F3FF)' : 'var(--surface2)', flexShrink: 0 }}>
+                    <div key={ai} style={{ display: 'flex', alignItems: 'center', gap: 0, borderRadius: 10, overflow: 'hidden', border: ai === activeAltIdx ? '1.5px solid var(--primary)' : '1.5px solid var(--border)', background: ai === activeAltIdx ? 'var(--primary-light, #FBF4F7)' : 'var(--surface2)', flexShrink: 0 }}>
                       <button
                         onClick={() => setActiveAltIdx(ai)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 4px 5px 10px', fontWeight: ai === activeAltIdx ? 700 : 500, fontSize: 12, color: ai === activeAltIdx ? 'var(--primary)' : 'var(--txt2)', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
@@ -2952,7 +2952,7 @@ export default function Presupuesto() {
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                     {k.image
                                       ? <img src={k.image} alt={k.name} loading="lazy" style={{ width: 42, height: 42, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
-                                      : <div style={{ width: 42, height: 42, borderRadius: 8, background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                      : <div style={{ width: 42, height: 42, borderRadius: 8, background: 'linear-gradient(135deg,#FBF4F7,#FDF2F8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                           <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 16 }} />
                                         </div>
                                     }
@@ -3071,7 +3071,7 @@ export default function Presupuesto() {
                       <span className="hint">opcional · suma al costo total</span>
                     </div>
                     {form.viajeId && (
-                      <span style={{ background: '#EDE9FE', color: '#5B21B6', padding: '3px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 700 }} title="Vinculado a un viaje registrado en Control de Viajes">
+                      <span style={{ background: '#F7E8F0', color: '#5B21B6', padding: '3px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 700 }} title="Vinculado a un viaje registrado en Control de Viajes">
                         <i className="fa fa-link" /> Viaje #{form.viajeId}
                       </span>
                     )}
@@ -3127,7 +3127,7 @@ export default function Presupuesto() {
 
                   {calc.viajesCost > 0 && (
                     <>
-                      <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px dashed #E5E7EB', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px dashed #ECE3D6', display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 9, cursor: 'pointer', fontSize: 12.5 }}>
                           <input type="checkbox" checked={form.logisticaCharged === true}
                             onChange={e => setF('logisticaCharged', e.target.checked)}
@@ -3153,7 +3153,7 @@ export default function Presupuesto() {
                           </label>
                         )}
                       </div>
-                      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #ECE3D6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 11.5, color: '#9CA3AF' }}>
                           Total logística ({(form.logisticaParadas || []).length} parada{(form.logisticaParadas || []).length !== 1 ? 's' : ''})
                           {form.logisticaCharged === true && <span style={{ color: 'var(--brand)', fontWeight: 700, marginLeft: 6 }}>· cobrada al cliente</span>}

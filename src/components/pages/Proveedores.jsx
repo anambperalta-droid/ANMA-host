@@ -208,7 +208,7 @@ export default function Proveedores() {
     activo:    { label: 'Activo',    color: '#047857', bg: '#D1FAE5', icon: 'fa-circle-check' },
     dormido:   { label: 'Dormido',   color: '#B45309', bg: '#FEF3C7', icon: 'fa-moon' },
     nuevo:     { label: 'Nuevo',     color: '#BE185D', bg: '#FCE7F3', icon: 'fa-seedling' },
-    sin_compras: { label: 'Sin compras', color: '#64748B', bg: '#F1F5F9', icon: 'fa-user-plus' },
+    sin_compras: { label: 'Sin compras', color: '#6E6355', bg: '#F6F1E9', icon: 'fa-user-plus' },
   }
 
   // Último precio pagado por producto, tomado de los items de compras (más reciente primero)
@@ -692,7 +692,7 @@ export default function Proveedores() {
         .zt-tbl thead tr{border-bottom:1px solid var(--border)}
         .zt-tbl tbody td{padding:9px 8px;font-size:13px;vertical-align:middle}
         .zt-tbl tbody tr{cursor:pointer;transition:background .12s}
-        .zt-tbl tbody tr:hover{background:#F8FAFC}
+        .zt-tbl tbody tr:hover{background:#FBF7F0}
         .zt-chk{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #D1D5DB;background:transparent;cursor:pointer;position:relative;display:block;margin:auto;transition:border-color .12s,background .12s}
         .zt-chk:hover{border-color:var(--brand)}
         .zt-chk:checked{border-color:var(--brand);background:var(--brand)}
@@ -705,7 +705,7 @@ export default function Proveedores() {
         .zt-tbl tbody tr:hover .zt-ci{opacity:1}
         .zt-ci:hover{transform:scale(1.12)}
         .zt-ph{align-items:center!important}
-        .zt-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;height:34px!important;border-radius:9999px!important}
+        .zt-search-row{background:#FBF7F0!important;border:1px solid #ECE3D6!important;box-shadow:none!important;height:34px!important;border-radius:9999px!important}
         .pill-row .pill{height:34px!important;border-radius:9999px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
         .cli-pill-group{display:inline-flex;align-items:center;gap:6px}
         .cli-pill{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 18px;border-radius:9999px;border:1.5px solid var(--border);background:var(--surface);color:var(--txt2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all .15s}
@@ -731,7 +731,7 @@ export default function Proveedores() {
         .prov-mob-ci{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;font-size:15px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
         .prov-mob-ci:active{opacity:.7}
         .prov-mob-ci-wa{background:#DCFCE7;color:#16A34A}
-        .prov-mob-ci-mail{background:#EFF6FF;color:#2563EB}
+        .prov-mob-ci-mail{background:#FBF4EC;color:#2563EB}
         .prov-mob-ci-ph{display:inline-block;width:28px;height:28px}
         .prov-mob-prods{font-size:10.5px;font-weight:600;color:var(--txt3);line-height:1;text-align:center;white-space:nowrap}
         .prov-mob-acts{flex-shrink:0;display:flex;gap:4px;align-items:center}
@@ -746,7 +746,7 @@ export default function Proveedores() {
         {loading ? [1,2,3,4].map(i => (
           <div key={i} className="prov-mob-card" style={{ cursor: 'default' }}>
             <div className="prov-mob-id">
-              <span className="prov-mob-dot" style={{ background: '#E5E7EB' }} />
+              <span className="prov-mob-dot" style={{ background: '#ECE3D6' }} />
               <div className="prov-mob-id-text">
                 <div className="sk sk-text" style={{ height: 13, width: '55%', marginBottom: 5 }} />
                 <div className="sk sk-text" style={{ height: 11, width: '35%' }} />
@@ -766,7 +766,7 @@ export default function Proveedores() {
           </div>
         )) : filtered.length ? filtered.map(s => {
           const days = supplierLastActivity(s)
-          const dotColor = days === null ? '#CBD5E1' : days <= 30 ? '#16A34A' : days <= 90 ? '#D97706' : '#DC2626'
+          const dotColor = days === null ? '#DCD1C0' : days <= 30 ? '#16A34A' : days <= 90 ? '#D97706' : '#DC2626'
           const np = supplierProducts(s).length
           return (
             <div key={s.id} className="prov-mob-card" onClick={() => openDetail(s)}>
@@ -864,7 +864,7 @@ export default function Proveedores() {
                   <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                     {s.email ? (
                       <a href={`mailto:${s.email}`} title={s.email}
-                        className="zt-ci" style={{ background: '#EFF6FF', color: '#2563EB' }}>
+                        className="zt-ci" style={{ background: '#FBF4EC', color: '#2563EB' }}>
                         <i className="fa fa-envelope" />
                       </a>
                     ) : <span style={{ color: 'var(--txt4)', fontSize: 11 }}>—</span>}
@@ -1105,7 +1105,7 @@ export default function Proveedores() {
                       </a>
                     )}
                     {detailSupplier.rubro && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#EDE9FE', color: '#7C3AED', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#F7E8F0', color: '#7C3AED', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20 }}>
                         <i className="fa fa-tag" /> Rubro: {detailSupplier.rubro}
                       </span>
                     )}

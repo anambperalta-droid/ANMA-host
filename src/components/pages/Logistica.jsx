@@ -20,7 +20,7 @@ const CARRIER_TRACKING = {
 const STATUS_SELECT_STYLE = {
   'Preparando':   { background: '#FEF3C7', color: '#92400E', border: '1.5px solid #FCD34D' },
   'Despachado':   { background: '#DBEAFE', color: '#1E40AF', border: '1.5px solid #93C5FD' },
-  'En tránsito':  { background: '#EDE9FE', color: '#5B21B6', border: '1.5px solid #C4B5FD' },
+  'En tránsito':  { background: '#F7E8F0', color: '#5B21B6', border: '1.5px solid #C4B5FD' },
   'Entregado':    { background: '#DCFCE7', color: '#14532D', border: '1.5px solid #86EFAC' },
   'Con problema': { background: '#FEF2F2', color: '#991B1B', border: '1.5px solid #FCA5A5' },
 }
@@ -429,7 +429,7 @@ export default function Logistica() {
         /* Tab bar — solo mobile */
         .logi-mob-tabs{display:none}
         /* Search row estilizado */
-        .logi-search-row{background:#F9FAFB!important;border:1px solid #E5E7EB!important;box-shadow:none!important;border-radius:9999px!important;height:34px!important}
+        .logi-search-row{background:#FBF7F0!important;border:1px solid #ECE3D6!important;box-shadow:none!important;border-radius:9999px!important;height:34px!important}
         .logi-pills-row{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center;padding-bottom:1px}
         .logi-pills-row::-webkit-scrollbar{display:none}
         /* Mobile cards */
@@ -446,7 +446,7 @@ export default function Logistica() {
         .logi-card-act{width:28px;height:28px;border-radius:50%;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:transform .1s}
         .logi-card-act:active{transform:scale(.88)}
         .logi-card-act-wa{background:#DCFCE7;color:#16A34A}
-        .logi-card-act-trk{background:#EFF6FF;color:#2563EB}
+        .logi-card-act-trk{background:#FBF4EC;color:#2563EB}
         .logi-card-act-edit{background:var(--surface2);color:var(--txt2)}
         .logi-card-act-del{background:#FEF2F2;color:#DC2626}
         /* Fila 2: metadatos tiny (presupuesto · ciudad · transporte) */
@@ -482,7 +482,7 @@ export default function Logistica() {
         .logi-act-circ:hover{box-shadow:0 2px 8px rgba(0,0,0,.14)}
         .logi-act-circ:active{transform:scale(.88)}
         .logi-act-circ.wa{background:#DCFCE7;color:#16A34A}
-        .logi-act-circ.trk{background:#EFF6FF;color:#2563EB}
+        .logi-act-circ.trk{background:#FBF4EC;color:#2563EB}
         .logi-act-circ.del{background:#FEF2F2;color:#DC2626}
         /* Status quick-select */
         .logi-status-sel{border-radius:20px;padding:3px 22px 3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;background-repeat:no-repeat;background-position:right 7px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%236B7280' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E")}
@@ -542,7 +542,7 @@ export default function Logistica() {
         @media(min-width:768px){.cotiz-layout{grid-template-columns:1fr 1.2fr;gap:16px;grid-template-areas:"cliente tools" "despacho tools"}}
         .cotiz-search-input{width:100%;box-sizing:border-box;padding:0 36px 0 38px;height:44px;font-size:14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt);outline:none;font-family:inherit;transition:border-color .15s}
         .cotiz-search-input:focus{border-color:var(--brand)}
-        .cotiz-vc-badge{display:flex;align-items:center;gap:12px;background:#F0FDF4;border:1.5px solid #A7F3D0;border-radius:14px;padding:12px 16px}
+        .cotiz-vc-badge{display:flex;align-items:center;gap:12px;background:#F2F8EB;border:1.5px solid #A7F3D0;border-radius:14px;padding:12px 16px}
         .cotiz-preview{margin:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--txt2);line-height:1.7;font-style:italic}
         .cotiz-wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:13px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;width:100%;font-family:inherit}
         .cotiz-wa-btn:hover{filter:brightness(1.06)}
@@ -607,8 +607,8 @@ export default function Logistica() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 14 }} className="viaje-stats-grid">
               {[
                 { key: 'Insumos',        icon: 'fa-box',          color: '#D97706', bg: '#FFFBEB' },
-                { key: 'Mercadería',     icon: 'fa-cart-shopping', color: '#2563EB', bg: '#EFF6FF' },
-                { key: 'Entrega Pedido', icon: 'fa-truck-fast',   color: '#7C3AED', bg: '#F5F3FF' },
+                { key: 'Mercadería',     icon: 'fa-cart-shopping', color: '#2563EB', bg: '#FBF4EC' },
+                { key: 'Entrega Pedido', icon: 'fa-truck-fast',   color: '#7C3AED', bg: '#FBF4F7' },
               ].map(c => {
                 const st = categoryStats[c.key] || { count: 0, total: 0 }
                 return (
@@ -707,7 +707,7 @@ export default function Logistica() {
             const tasks = viaje.tasks || []
             const doneTasks = tasks.filter(t => t.done).length
             const stateColor = { Planificado: '#D97706', 'En Curso': '#2563EB', Finalizado: '#059669' }[viaje.status] || 'var(--txt3)'
-            const stateBg = { Planificado: '#FFFBEB', 'En Curso': '#EFF6FF', Finalizado: '#DCFCE7' }[viaje.status] || 'var(--surface2)'
+            const stateBg = { Planificado: '#FFFBEB', 'En Curso': '#FBF4EC', Finalizado: '#DCFCE7' }[viaje.status] || 'var(--surface2)'
 
             return (
               <div key={viaje.id} style={{ background: 'var(--surface)', border: `1.5px solid ${isOpen ? 'var(--brand)' : 'var(--border)'}`, borderRadius: 20, marginBottom: 10, overflow: 'hidden', transition: 'border-color .15s', boxShadow: isOpen ? '0 4px 20px rgba(124,58,237,.1)' : 'var(--sh)' }}>
@@ -1098,7 +1098,7 @@ export default function Logistica() {
                         <td style={{ paddingTop: 10, paddingBottom: 10 }}>
                           <div style={{ fontWeight: 600, fontSize: 13 }}>{s.client || '—'}</div>
                           {(s.city || s.carrier) && (
-                            <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            <div style={{ fontSize: 10, color: '#A89A86', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                               {[s.city, s.carrier].filter(Boolean).join(' · ')}
                             </div>
                           )}
@@ -1115,7 +1115,7 @@ export default function Logistica() {
                             className="logi-status-sel"
                             value={s.status}
                             onChange={e => { saveEntity('shipments', { ...s, status: e.target.value }); toast('Estado actualizado', 'ok') }}
-                            style={STATUS_SELECT_STYLE[s.status] || { background: '#F9FAFB', color: '#374151', border: '1.5px solid #E5E7EB' }}
+                            style={STATUS_SELECT_STYLE[s.status] || { background: '#FBF7F0', color: '#374151', border: '1.5px solid #ECE3D6' }}
                           >
                             {statusList.map(st => <option key={st} value={st}>{st}</option>)}
                           </select>
@@ -1209,7 +1209,7 @@ export default function Logistica() {
 
             {/* Cliente seleccionado */}
             {cotizClient && (
-              <div style={{ background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: 14, padding: '14px 16px' }}>
+              <div style={{ background: '#F2F8EB', border: '1.5px solid #86EFAC', borderRadius: 14, padding: '14px 16px' }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--txt)', marginBottom: 2 }}>{cotizClient.company || cotizClient.contact}</div>
                 {cotizClient.company && cotizClient.contact && (
                   <div style={{ fontSize: 12, color: 'var(--txt3)', marginBottom: 8 }}>{cotizClient.contact}</div>
@@ -1320,7 +1320,7 @@ export default function Logistica() {
                 }
               }}
               style={{
-                background: cotizClient?.wa ? '#16A34A' : '#F0FDF4',
+                background: cotizClient?.wa ? '#16A34A' : '#F2F8EB',
                 border: `1.5px solid ${cotizClient?.wa ? '#15803D' : '#86EFAC'}`,
                 color: cotizClient?.wa ? '#fff' : '#15803D',
               }}>
@@ -1453,7 +1453,7 @@ export default function Logistica() {
                       <div key={b.label} onMouseEnter={() => setHoveredStatus(b.label)} onMouseLeave={() => setHoveredStatus(null)}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 12, cursor: 'default', transition: 'background .12s', background: hoveredStatus === b.label ? 'var(--surface2)' : 'transparent' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                          <span style={{ width: 10, height: 10, borderRadius: '50%', background: DONUT_COLORS[b.label] || '#CBD5E1', flexShrink: 0, display: 'inline-block', boxShadow: hoveredStatus === b.label ? `0 0 0 3px ${(DONUT_COLORS[b.label] || '#CBD5E1')}30` : 'none', transition: 'box-shadow .15s' }} />
+                          <span style={{ width: 10, height: 10, borderRadius: '50%', background: DONUT_COLORS[b.label] || '#DCD1C0', flexShrink: 0, display: 'inline-block', boxShadow: hoveredStatus === b.label ? `0 0 0 3px ${(DONUT_COLORS[b.label] || '#DCD1C0')}30` : 'none', transition: 'box-shadow .15s' }} />
                           <span style={{ fontSize: 12.5, color: 'var(--txt)', fontWeight: hoveredStatus === b.label ? 700 : 500 }}>{b.label}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
@@ -1543,7 +1543,7 @@ export default function Logistica() {
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <i className="fa fa-location-dot" style={{ color: 'var(--brand)' }} />Destinatario
-                {form.budgetId && <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', background: '#F0FDF4', padding: '1px 8px', borderRadius: 10 }}>Auto-completado</span>}
+                {form.budgetId && <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', background: '#F2F8EB', padding: '1px 8px', borderRadius: 10 }}>Auto-completado</span>}
               </div>
               <div className="grid2">
                 <div className="fg" style={{ marginBottom: 10 }}>
@@ -1560,7 +1560,7 @@ export default function Logistica() {
                 <input type="text" value={form.addr || ''} onChange={e => setF('addr', e.target.value)} placeholder="Av. Colón 1234, B° Centro" />
               </div>
               {estimatedArrival && (
-                <div style={{ marginTop: 10, background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#065F46', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ marginTop: 10, background: '#F2F8EB', border: '1px solid #86EFAC', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#065F46', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <i className="fa fa-calendar-check" style={{ color: '#16A34A' }} />
                   Llegada estimada: <b style={{ textTransform: 'capitalize' }}>{estimatedArrival}</b>
                 </div>
@@ -1578,7 +1578,7 @@ export default function Logistica() {
                 </select>
               </div>
               {marginImpact !== null && (
-                <div style={{ background: marginImpact >= 0 ? '#F0FDF4' : '#FFF1F2', border: `1.5px solid ${marginImpact >= 0 ? '#86EFAC' : '#FCA5A5'}`, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: marginImpact >= 0 ? '#F2F8EB' : '#FFF1F2', border: `1.5px solid ${marginImpact >= 0 ? '#86EFAC' : '#FCA5A5'}`, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
                     <i className="fa fa-chart-line" style={{ marginRight: 6, color: marginImpact >= 0 ? '#16A34A' : '#DC2626' }} />
                     Ganancia neta <span style={{ fontSize: 10, color: 'var(--txt3)' }}>(después del flete)</span>
@@ -1645,7 +1645,7 @@ export default function Logistica() {
                         </div>
                       </div>
                       {fleteEstimado !== null && (
-                        <div style={{ background: '#EFF6FF', border: '1.5px solid #93C5FD', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: feats.costoInterno ? 10 : 0 }}>
+                        <div style={{ background: '#FBF4EC', border: '1.5px solid #93C5FD', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: feats.costoInterno ? 10 : 0 }}>
                           <span style={{ fontSize: 12, color: 'var(--txt2)' }}>
                             <i className="fa fa-calculator" style={{ marginRight: 6, color: '#3B82F6' }} />
                             Flete estimado · <b>{form.service}</b>

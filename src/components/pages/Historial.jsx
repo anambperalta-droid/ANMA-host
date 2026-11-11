@@ -13,13 +13,13 @@ import { getMPConfig, getBankConfig, createPaymentLink, buildBankInfoText } from
 
 // Color por estado nuevo — chip filtro
 const ESTADO_TAB_COLOR = {
-  consulta:      '#64748b',
+  consulta:      '#6E6355',
   presupuestado: '#1d4ed8',
   pausado:       '#b45309',
   confirmado:    '#15803d',
   produccion:    '#6d28d9',
   entregado:     '#065f46',
-  cerrado:       '#475569',
+  cerrado:       '#4A4237',
   perdido:       '#b91c1c',
 }
 import GuideBanner from '../layout/GuideBanner'
@@ -133,7 +133,7 @@ function HoyImportaCard({ list, icon, color, label, subtitle, isExpanded, onTogg
 function Badge({ b }) {
   // Reemplazo del badge legacy — misma fuente de verdad que DotBadge / tabs.
   const e = getEstado(b)
-  const color = ESTADO_DOT[e] || '#94A3B8'
+  const color = ESTADO_DOT[e] || '#A89A86'
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -217,7 +217,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
   const totalPaid  = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0)
   const remaining  = totalDue - totalPaid
   const newStatus  = totalPaid <= 0 ? 'pending' : (totalDue > 0 && totalPaid >= totalDue ? 'paid' : 'partial')
-  const statusInfo = { pending:{bg:'#FEF2F2',c:'#DC2626',l:'Pendiente'}, partial:{bg:'#FFFBEB',c:'#D97706',l:'Parcial'}, paid:{bg:'#F0FDF4',c:'#15803D',l:'Pagado'} }[newStatus]
+  const statusInfo = { pending:{bg:'#FEF2F2',c:'#DC2626',l:'Pendiente'}, partial:{bg:'#FFFBEB',c:'#D97706',l:'Parcial'}, paid:{bg:'#F2F8EB',c:'#15803D',l:'Pagado'} }[newStatus]
 
   // Auto-guarda al instante para evitar pérdida de datos por olvidar "Guardar"
   const addPayment = () => {
@@ -458,7 +458,7 @@ function LossReasonModal({ budget, onSave, onClose }) {
 
 // Color por estado — mismo mapa que usan los tabs de filtros para consistencia
 const ESTADO_DOT = {
-  consulta:      '#94A3B8',
+  consulta:      '#A89A86',
   presupuestado: '#3B82F6',
   pausado:       '#D97706',
   confirmado:    '#16A34A',
@@ -476,7 +476,7 @@ function DotBadge({ b }) {
   const e = getEstado(b)
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--txt2)', fontSize: 12, whiteSpace: 'nowrap', fontWeight: 500 }}>
-      <span style={{ width: 8, height: 8, borderRadius: '50%', background: ESTADO_DOT[e] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: ESTADO_DOT[e] || '#A89A86', flexShrink: 0, display: 'inline-block' }} />
       {ESTADO_LABELS[e] || 'Consulta'}
     </span>
   )
@@ -1062,7 +1062,7 @@ export default function Historial() {
   // Status
   // Estados nuevos con color por etapa — usado por StatusDonut
   const statuses = [
-    { k: 'consulta',      l: 'Consulta',      c: '#94A3B8' },
+    { k: 'consulta',      l: 'Consulta',      c: '#A89A86' },
     { k: 'presupuestado', l: 'Presupuestado', c: 'var(--blue)' },
     { k: 'confirmado',    l: 'Confirmado',    c: 'var(--green)' },
     { k: 'entregado',     l: 'Entregado',     c: '#065f46' },
@@ -1295,16 +1295,16 @@ export default function Historial() {
     })
   }
   const STATUS_COLORS = {
-    draft:       { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
-    sent:        { bg: '#EFF6FF', color: '#1D4ED8', border: '#93C5FD' },
+    draft:       { bg: '#F6F1E9', color: '#4A4237', border: '#DCD1C0' },
+    sent:        { bg: '#FBF4EC', color: '#1D4ED8', border: '#93C5FD' },
     negotiating: { bg: '#FFFBEB', color: '#D97706', border: '#FCD34D' },
-    confirmed:   { bg: '#F0FDF4', color: '#16A34A', border: '#86EFAC' },
+    confirmed:   { bg: '#F2F8EB', color: '#16A34A', border: '#86EFAC' },
     lost:        { bg: '#FEF2F2', color: '#DC2626', border: '#FCA5A5' },
   }
   const PAY_STATUS_COLORS = {
     pending: { bg: '#FEF2F2', color: '#DC2626', border: '#FCA5A5' },
     partial: { bg: '#FFFBEB', color: '#D97706', border: '#FCD34D' },
-    paid:    { bg: '#F0FDF4', color: '#16A34A', border: '#86EFAC' },
+    paid:    { bg: '#F2F8EB', color: '#16A34A', border: '#86EFAC' },
   }
   const handlePayStatusChange = (id, payStatus) => {
     const b = budgets.find(x => x.id === id)
@@ -2122,7 +2122,7 @@ export default function Historial() {
                           {OVERFLOW.map(f => (
                             <button key={f} onClick={() => { setFilter(f); setShowStatusMenu(false) }}
                               className={`hist-status-menu-item${filter === f ? ' active' : ''}`}>
-                              <span className="hist-status-menu-dot" style={{ background: ESTADO_TAB_COLOR[f] || '#94A3B8' }} />
+                              <span className="hist-status-menu-dot" style={{ background: ESTADO_TAB_COLOR[f] || '#A89A86' }} />
                               {ESTADO_LABELS[f]}
                               {filter === f && <i className="fa fa-check" style={{ marginLeft: 'auto', fontSize: 10 }} />}
                             </button>
@@ -2244,7 +2244,7 @@ export default function Historial() {
                           onMouseEnter={(e) => { e.currentTarget.querySelector('[data-cli]').style.color = 'var(--brand)' }}
                           onMouseLeave={(e) => { e.currentTarget.querySelector('[data-cli]').style.color = 'var(--txt)' }}
                         >
-                          <div data-cli style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--border2, #cbd5e1)', textUnderlineOffset: 3, transition: 'color .12s' }}>{b.company || b.contact || '—'}</div>
+                          <div data-cli style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--border2, #DCD1C0)', textUnderlineOffset: 3, transition: 'color .12s' }}>{b.company || b.contact || '—'}</div>
                           {b.company && b.contact && <div style={{ fontSize: 11, color: 'var(--txt3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.contact}</div>}
                         </button>
                       </td>
@@ -2270,7 +2270,7 @@ export default function Historial() {
                       })()}
                       <td data-cell="estado" style={{ whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: ESTADO_DOT[getEstado(b)] || '#94A3B8', flexShrink: 0, display: 'inline-block' }} />
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: ESTADO_DOT[getEstado(b)] || '#A89A86', flexShrink: 0, display: 'inline-block' }} />
                           <div>
                             <select style={{ fontSize: 11, padding: '2px 2px', border: 'none', background: 'transparent', color: 'var(--txt2)', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
                               value={getEstado(b)} onChange={e => handleStatusChange(b.id, e.target.value)}>
@@ -2296,7 +2296,7 @@ export default function Historial() {
                           const pays        = Array.isArray(b.payments) ? b.payments : []
                           const hasPayments = pays.length > 0
                           const statusColor = DOT_PAY[b.payStatus] || '#DC2626'
-                          const statusBg = b.payStatus === 'paid' ? '#F0FDF4'
+                          const statusBg = b.payStatus === 'paid' ? '#F2F8EB'
                                          : b.payStatus === 'partial' ? '#FFFBEB'
                                          : '#FEF2F2'
                           return (
@@ -2334,7 +2334,7 @@ export default function Historial() {
                               ) : totalDue > 0 && (
                                 <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
                                   title="Registrar cobro"
-                                  style={{ background: 'var(--brand-xlt, #F5F3FF)', border: '1px solid var(--brand)', color: 'var(--brand)', cursor: 'pointer', padding: '3px 10px', fontSize: 10.5, fontWeight: 700, borderRadius: 6, alignSelf: 'flex-start', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                  style={{ background: 'var(--brand-xlt, #FBF4F7)', border: '1px solid var(--brand)', color: 'var(--brand)', cursor: 'pointer', padding: '3px 10px', fontSize: 10.5, fontWeight: 700, borderRadius: 6, alignSelf: 'flex-start', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                                   <i className="fa fa-hand-holding-dollar" /> Cobrar
                                 </button>
                               )}
@@ -2584,7 +2584,7 @@ export default function Historial() {
                       return (
                         <div key={i} style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginBottom: 6, lineHeight: 1.4 }}>{reason}</div>
-                          <div style={{ height: 5, background: '#E5E7EB', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
+                          <div style={{ height: 5, background: '#ECE3D6', borderRadius: 99, overflow: 'hidden', marginBottom: 6 }}>
                             <div style={{ height: '100%', width: `${barPct}%`, background: '#DC2626', borderRadius: 99, transition: 'width .5s ease' }} />
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2682,7 +2682,7 @@ export default function Historial() {
             const altKits = (alt.kits || []).filter(i => i.type === 'kit' ? (i.name || i.packaging?.length || i.products?.length) : i.name)
             if (!altKits.length) return ''
             const altSubtotal = altKits.reduce((s, i) => s + numV(i.qty) * numV(i.priceUnit), 0)
-            const hBg    = alt.approved ? '#E8F8F0' : '#F5F3FF'
+            const hBg    = alt.approved ? '#E8F8F0' : '#FBF4F7'
             const hColor = alt.approved ? '#059669' : brandColor
             return `
               <tr><td colspan="4" style="padding:7px 9px;background:${hBg};font-weight:700;font-size:11px;color:${hColor};border-bottom:1px solid ${hColor}33">
@@ -2777,7 +2777,7 @@ export default function Historial() {
                 )
               })()}
               <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid var(--border)', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                <button className="btn btn-sm" onClick={() => { setPreviewBudget(null); setPaymentsBudget(b) }} style={{ background: '#F0FDF4', color: '#15803D', border: '1px solid #86EFAC' }}>
+                <button className="btn btn-sm" onClick={() => { setPreviewBudget(null); setPaymentsBudget(b) }} style={{ background: '#F2F8EB', color: '#15803D', border: '1px solid #86EFAC' }}>
                   <i className="fa fa-hand-holding-dollar" /> Registrar pago
                 </button>
                 <div style={{ display: 'flex', gap: 8 }}>

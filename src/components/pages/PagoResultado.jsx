@@ -15,7 +15,7 @@ const VARIANTS = {
   exitoso: {
     icon: 'fa-circle-check',
     color: '#059669',
-    bg: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
+    bg: 'linear-gradient(135deg, #EFF6E9, #D1FAE5)',
     ring: 'rgba(5,150,105,.3)',
     title: '¡Pago confirmado!',
     subtitle: 'Recibimos tu pago. En las próximas 24 horas te vamos a contactar por WhatsApp para coordinar el setup llave en mano de tu cuenta.',
@@ -107,7 +107,7 @@ export default function PagoResultado({ variant = 'exitoso' }) {
       minHeight: 'calc(100vh - 100px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '40px 20px',
-      background: variant === 'exitoso' ? 'linear-gradient(160deg, #faf8ff 0%, #f0fdf4 100%)' : 'var(--bg)',
+      background: variant === 'exitoso' ? 'linear-gradient(160deg, #faf8ff 0%, #F2F8EB 100%)' : 'var(--bg)',
     }}>
       <div style={{ maxWidth: 520, width: '100%', textAlign: 'center' }}>
         {/* Icon con ring */}

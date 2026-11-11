@@ -20,7 +20,7 @@ import {
 import { getEstado } from '../../lib/pedido'
 
 const ESTADO_COLOR = {
-  consulta:      '#94A3B8',
+  consulta:      '#A89A86',
   presupuestado: '#3B82F6',
   pausado:       '#D97706',
   confirmado:    '#16A34A',
@@ -77,7 +77,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
   const pedido   = pedidoFromBudget(budget)
   const totales  = calcularTotales(pedido)
   const estado   = getEstado(budget)
-  const eColor   = ESTADO_COLOR[estado] || '#94A3B8'
+  const eColor   = ESTADO_COLOR[estado] || '#A89A86'
   const productos = pedido.lineas.filter(l => TAGS_PROD.has(l.tag || 'producto'))
   const costos    = pedido.lineas.filter(l => TAGS_COSTO.has(l.tag))
   const timeline  = eventosPedido(budget)
@@ -168,7 +168,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
             }
             if (estado === 'perdido' && cobrado > 0) {
               const kept = budget.keptDeposit === true
-              alerts.push({ color: kept ? '#15803D' : '#DC2626', bg: kept ? '#F0FDF4' : '#FEE2E2', border: kept ? '#86EFAC' : '#FCA5A5', icon: kept ? 'fa-circle-check' : 'fa-rotate-left', title: kept ? 'Perdido · seña preservada' : 'Perdido · falta devolución', msg: kept ? `Te quedaste con ${fmt(cobrado)} como compensación.` : `Debés devolver ${fmt(cobrado)} al cliente.` })
+              alerts.push({ color: kept ? '#15803D' : '#DC2626', bg: kept ? '#F2F8EB' : '#FEE2E2', border: kept ? '#86EFAC' : '#FCA5A5', icon: kept ? 'fa-circle-check' : 'fa-rotate-left', title: kept ? 'Perdido · seña preservada' : 'Perdido · falta devolución', msg: kept ? `Te quedaste con ${fmt(cobrado)} como compensación.` : `Debés devolver ${fmt(cobrado)} al cliente.` })
             }
             return alerts.length === 0 ? null : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -273,9 +273,9 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   padding: '2px 9px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                  background: '#F1F5F9', color: '#64748B', border: '1px solid #E2E8F0',
+                  background: '#F6F1E9', color: '#6E6355', border: '1px solid #ECE3D6',
                 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#94A3B8' }} />
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#A89A86' }} />
                   Sin cobros aún
                 </span>
               ) : (
@@ -319,7 +319,7 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
                     title="Registrar un pago recibido"
                     style={{
                       flex: 1, padding: '9px 12px',
-                      background: '#F0FDF4', color: '#15803D', border: '1px solid #86EFAC',
+                      background: '#F2F8EB', color: '#15803D', border: '1px solid #86EFAC',
                       borderRadius: 9, cursor: 'pointer', fontSize: 12, fontWeight: 700,
                       fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                     }}>

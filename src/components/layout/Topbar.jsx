@@ -69,9 +69,9 @@ export default function Topbar({ onMenuClick, onCollapseClick, collapsed }) {
           display: 'flex', alignItems: 'center', gap: 4,
           fontSize: 11, fontWeight: 600, padding: '0 8px', height: 28,
           borderRadius: 8, transition: 'all .3s',
-          background: syncStatus === 'ok' ? '#D1FAE5' : '#EDE9FE',
+          background: syncStatus === 'ok' ? '#D1FAE5' : '#F7E8F0',
           color: syncStatus === 'ok' ? '#065F46' : '#7C3AED',
-          border: `1px solid ${syncStatus === 'ok' ? '#A7F3D0' : '#DDD6FE'}`,
+          border: `1px solid ${syncStatus === 'ok' ? '#A7F3D0' : '#EFD4E4'}`,
           flexShrink: 0,
         }}>
           <i className={`fa ${syncStatus === 'ok' ? 'fa-cloud-arrow-up' : 'fa-rotate fa-spin'}`} style={{ fontSize: 12 }} />

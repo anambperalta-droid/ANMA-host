@@ -18,7 +18,7 @@ const ENTIDADES = [
     label:   'Clientes',
     icon:    'fa-building',
     color:   '#7C3AED',
-    bg:      '#EDE9FE',
+    bg:      '#F7E8F0',
     nameKey: 'company',
     headers: 'Empresa, Contacto, WhatsApp, Email, Rubro, Notas',
     ejemplo: 'Banco del Sur SA, Laura Ibáñez, 1155667788, laura@bancosur.com, Financiero, Pedido anual regalos ejecutivos',
@@ -68,7 +68,7 @@ function StatusDot({ status }) {
   const MAP = {
     valid:     { color: '#059669', icon: 'fa-plus-circle',    title: 'Nuevo' },
     duplicate: { color: '#2563EB', icon: 'fa-rotate',         title: 'Actualiza' },
-    empty:     { color: '#94A3B8', icon: 'fa-minus-circle',   title: 'Vacío' },
+    empty:     { color: '#A89A86', icon: 'fa-minus-circle',   title: 'Vacío' },
   }
   const s = MAP[status] || MAP.empty
   return <i className={`fa ${s.icon}`} style={{ color: s.color, fontSize: 12 }} title={s.title} />
@@ -158,7 +158,7 @@ function SeccionEntidad({ ent, existingList, onChange }) {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
               {validas  > 0 && <KpiChip count={validas}  label="nuevos"    color="#059669" bg="#D1FAE5" icon="fa-plus-circle" />}
               {dupls    > 0 && <KpiChip count={dupls}    label="actualiza" color="#2563EB" bg="#DBEAFE" icon="fa-rotate" />}
-              {omitidas > 0 && <KpiChip count={omitidas} label="omitidos"  color="#94A3B8" bg="var(--surface2)" icon="fa-minus-circle" />}
+              {omitidas > 0 && <KpiChip count={omitidas} label="omitidos"  color="#A89A86" bg="var(--surface2)" icon="fa-minus-circle" />}
             </div>
           ) : (
             <div style={{ fontSize: 11, color: 'var(--txt4)', marginTop: 1 }}>Sin datos — pegá o subí un archivo</div>

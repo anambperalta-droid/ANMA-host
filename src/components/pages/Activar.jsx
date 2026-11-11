@@ -112,7 +112,7 @@ export default function Activar() {
   return (
     <div style={{
       minHeight: 'calc(100vh - 100px)',
-      background: 'linear-gradient(160deg, #faf8ff 0%, #f0fdf4 100%)',
+      background: 'linear-gradient(160deg, #faf8ff 0%, #F2F8EB 100%)',
       padding: '32px 20px',
     }}>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
@@ -131,7 +131,7 @@ export default function Activar() {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '6px 14px', borderRadius: 99,
-              background: trialDaysLeft <= 1 ? '#FEE2E2' : trialDaysLeft <= 3 ? '#FEF3C7' : '#EDE9FE',
+              background: trialDaysLeft <= 1 ? '#FEE2E2' : trialDaysLeft <= 3 ? '#FEF3C7' : '#F7E8F0',
               color: trialDaysLeft <= 1 ? '#DC2626' : trialDaysLeft <= 3 ? '#D97706' : '#7C3AED',
               fontSize: 12, fontWeight: 700, marginBottom: 14,
             }}>
@@ -182,7 +182,7 @@ export default function Activar() {
                   <span style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1 }}>$120.000</span>
                   <span style={{ fontSize: 13, color: '#c4b5fd', fontWeight: 600 }}>por única vez</span>
                 </div>
-                <p style={{ fontSize: 12, color: '#cbd5e1', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12, color: '#DCD1C0', margin: 0, lineHeight: 1.5 }}>
                   Incluye <strong style={{ color: '#fff' }}>Setup llave en mano</strong> (configuración y carga de tus datos) + <strong style={{ color: '#c4b5fd' }}>tu primer mes totalmente cubierto</strong>.
                 </p>
               </div>
@@ -310,7 +310,7 @@ export default function Activar() {
                         onClick={() => copyToClipboard(r.value, r.key)}
                         style={{
                           flexShrink: 0, padding: '7px 12px', borderRadius: 9,
-                          background: copied === r.key ? '#ECFDF5' : 'var(--surface2, #F3F4F6)',
+                          background: copied === r.key ? '#EFF6E9' : 'var(--surface2, #F6F1E9)',
                           border: '1px solid var(--border)',
                           color: copied === r.key ? '#059669' : 'var(--txt2)',
                           fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -324,7 +324,7 @@ export default function Activar() {
                   ))}
 
                 <div style={{
-                  marginTop: 14, padding: '10px 12px', background: '#F0FDF4',
+                  marginTop: 14, padding: '10px 12px', background: '#F2F8EB',
                   border: '1px solid #BBF7D0', borderRadius: 10,
                   fontSize: 12, color: '#166534', lineHeight: 1.5,
                 }}>
@@ -334,7 +334,7 @@ export default function Activar() {
 
                 {transferSent ? (
                   <div style={{
-                    marginTop: 14, padding: '14px 16px', background: '#ECFDF5',
+                    marginTop: 14, padding: '14px 16px', background: '#EFF6E9',
                     border: '1.5px solid #6EE7B7', borderRadius: 12,
                     display: 'flex', alignItems: 'flex-start', gap: 10,
                   }}>

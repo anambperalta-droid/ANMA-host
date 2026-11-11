@@ -87,7 +87,7 @@ export default function WelcomeTour() {
         <div style={{
           padding: '24px 24px 20px',
           background: `linear-gradient(135deg, ${s.color}10, ${s.color}05)`,
-          borderBottom: '1px solid var(--border, #e5e7eb)',
+          borderBottom: '1px solid var(--border, #ECE3D6)',
           display: 'flex', alignItems: 'flex-start', gap: 14,
         }}>
           <div style={{
@@ -121,7 +121,7 @@ export default function WelcomeTour() {
           {STEPS.map((_, i) => (
             <span key={i} style={{
               width: i === step ? 22 : 6, height: 6, borderRadius: 99,
-              background: i === step ? s.color : 'var(--border, #e5e7eb)',
+              background: i === step ? s.color : 'var(--border, #ECE3D6)',
               transition: 'width .25s, background .25s',
             }} />
           ))}
@@ -130,7 +130,7 @@ export default function WelcomeTour() {
           {step > 0 ? (
             <button onClick={prev} style={{
               padding: '10px 16px', borderRadius: 10,
-              background: 'transparent', border: '1.5px solid var(--border, #e5e7eb)',
+              background: 'transparent', border: '1.5px solid var(--border, #ECE3D6)',
               color: 'var(--txt2, #374151)', fontSize: 13, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
             }}>

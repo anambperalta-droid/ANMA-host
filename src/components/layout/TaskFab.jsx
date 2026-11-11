@@ -4,7 +4,7 @@ import { useTaskFab } from '../../context/TaskFabContext'
 const PRIORITIES = [
   { key: 'today',    label: 'Urgente hoy',   color: '#DC2626', bg: '#FEF2F2' },
   { key: 'tomorrow', label: 'Mañana',         color: '#D97706', bg: '#FFFBEB' },
-  { key: 'week',     label: 'Esta semana',    color: '#2563EB', bg: '#EFF6FF' },
+  { key: 'week',     label: 'Esta semana',    color: '#2563EB', bg: '#FBF4EC' },
 ]
 const getPriority = (key) => PRIORITIES.find(p => p.key === key) || PRIORITIES[2]
 
@@ -87,12 +87,12 @@ export default function TaskFab() {
             title="Modo Enfoque — pantalla completa"
             style={{
               width: 28, height: 28, borderRadius: 8,
-              background: '#EEF2FF', border: 'none', cursor: 'pointer', fontSize: 11,
+              background: '#FBF4F7', border: 'none', cursor: 'pointer', fontSize: 11,
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5',
               transition: 'background .15s',
             }}
             onMouseEnter={e => e.currentTarget.style.background = '#312e81'}
-            onMouseLeave={e => e.currentTarget.style.background = '#EEF2FF'}
+            onMouseLeave={e => e.currentTarget.style.background = '#FBF4F7'}
           >
             <i className="fa fa-expand" style={{ pointerEvents: 'none' }} />
           </button>

@@ -1270,7 +1270,7 @@ export default function Config() {
                     </div>
                   </div>
                   {gsShowScript && (
-                    <pre style={{ background: '#0F172A', color: '#E2E8F0', padding: '14px 16px', borderRadius: 10, fontSize: 10, maxHeight: 260, overflow: 'auto', fontFamily: 'Menlo, Monaco, monospace', lineHeight: 1.5, whiteSpace: 'pre', border: '1px solid var(--border)' }}>
+                    <pre style={{ background: '#1C160F', color: '#ECE3D6', padding: '14px 16px', borderRadius: 10, fontSize: 10, maxHeight: 260, overflow: 'auto', fontFamily: 'Menlo, Monaco, monospace', lineHeight: 1.5, whiteSpace: 'pre', border: '1px solid var(--border)' }}>
                       {APPS_SCRIPT_TEMPLATE}
                     </pre>
                   )}

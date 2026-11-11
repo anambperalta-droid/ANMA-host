@@ -561,7 +561,7 @@ export default function Insumos() {
                 <MoneyInput value={form.cost === '' ? '' : Number(form.cost)} onChange={v => setF('cost', v)} allowEmpty placeholder="0" />
               </div>
               <div className="fg">
-                <label><i className="fa fa-ruler-combined" style={{ color: '#64748B', fontSize: 10, marginRight: 4 }} />Unidad de medida</label>
+                <label><i className="fa fa-ruler-combined" style={{ color: '#6E6355', fontSize: 10, marginRight: 4 }} />Unidad de medida</label>
                 <select value={form.unit} onChange={e => setF('unit', e.target.value)}>
                   {units.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>

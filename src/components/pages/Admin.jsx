@@ -51,13 +51,13 @@ const deriveTrialState = (ws) => {
 
 // Conversion-likely signal: cuántos datos cargó el workspace
 const deriveTemperature = (data) => {
-  if (!data) return { level: 'cold', icon: '❄️', label: 'Sin uso', tone: '#94A3B8' }
+  if (!data) return { level: 'cold', icon: '❄️', label: 'Sin uso', tone: '#A89A86' }
   const budgets  = Array.isArray(data.budgets)  ? data.budgets.length  : 0
   const clients  = Array.isArray(data.clients)  ? data.clients.length  : 0
   const products = Array.isArray(data.products) ? data.products.length : 0
   if (budgets >= 5 || clients >= 10) return { level: 'hot',  icon: '🔥', label: 'Caliente', tone: '#DC2626' }
   if (budgets >= 1 || clients >= 3 || products >= 3) return { level: 'warm', icon: '🌡️', label: 'Tibio', tone: '#D97706' }
-  return { level: 'cold', icon: '❄️', label: 'Frío', tone: '#94A3B8' }
+  return { level: 'cold', icon: '❄️', label: 'Frío', tone: '#A89A86' }
 }
 
 const urgencyTone = (u) => ({
@@ -65,9 +65,9 @@ const urgencyTone = (u) => ({
   warm:    { bg: 'rgba(217,119,6,.12)',  fg: '#D97706' },
   hot:     { bg: 'rgba(220,38,38,.12)',  fg: '#DC2626' },
   last:    { bg: '#DC2626',              fg: '#fff' },
-  expired: { bg: 'rgba(148,163,184,.18)', fg: '#475569' },
+  expired: { bg: 'rgba(148,163,184,.18)', fg: '#4A4237' },
   paid:    { bg: 'rgba(22,163,74,.12)',  fg: '#16A34A' },
-  lost:    { bg: 'rgba(148,163,184,.12)', fg: '#94A3B8' },
+  lost:    { bg: 'rgba(148,163,184,.12)', fg: '#A89A86' },
 }[u] || { bg: 'var(--surface2)', fg: 'var(--txt3)' })
 
 const fmtDate = (iso) => {
@@ -854,7 +854,7 @@ export default function Admin() {
       {!loading && todayTasks.length === 0 && rows.length > 0 && (
         <div style={{
           marginBottom: 14, padding: '11px 16px',
-          background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
+          background: 'linear-gradient(135deg, #EFF6E9, #D1FAE5)',
           border: '1px solid #86EFAC', borderRadius: 12,
           display: 'flex', alignItems: 'center', gap: 10,
           fontSize: 13, color: '#065F46',
@@ -966,7 +966,7 @@ export default function Admin() {
       {tab === 'billing' && selectedBilling.size > 0 && (
         <div style={{
           marginBottom: 10, padding: '12px 16px',
-          background: 'linear-gradient(135deg, #EDE9FE, #C7D2FE)',
+          background: 'linear-gradient(135deg, #F7E8F0, #C7D2FE)',
           border: '1.5px solid #A78BFA',
           borderRadius: 12,
           display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',

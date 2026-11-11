@@ -156,10 +156,10 @@ export default function PaymentDueBanner() {
           }}>
             <i className={`fa ${modalCopy.icon}`} />
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', margin: '0 0 10px', letterSpacing: '-.4px' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1C160F', margin: '0 0 10px', letterSpacing: '-.4px' }}>
             {modalCopy.title}
           </h2>
-          <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.65, margin: '0 0 22px' }}>
+          <p style={{ fontSize: 14, color: '#4A4237', lineHeight: 1.65, margin: '0 0 22px' }}>
             {modalCopy.body}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -179,7 +179,7 @@ export default function PaymentDueBanner() {
               onClick={openWA}
               style={{
                 width: '100%', padding: '12px 24px', borderRadius: 12,
-                background: 'transparent', border: '1.5px solid var(--border, #e5e7eb)',
+                background: 'transparent', border: '1.5px solid var(--border, #ECE3D6)',
                 color: 'var(--txt2, #374151)', fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -189,7 +189,7 @@ export default function PaymentDueBanner() {
               Charlar con soporte
             </button>
           </div>
-          <p style={{ fontSize: 11.5, color: '#94a3b8', margin: '14px 0 0' }}>
+          <p style={{ fontSize: 11.5, color: '#A89A86', margin: '14px 0 0' }}>
             <i className="fa fa-shield-halved" style={{ marginRight: 5 }} />
             Tus datos siguen seguros · 90 días de retención garantizados
           </p>

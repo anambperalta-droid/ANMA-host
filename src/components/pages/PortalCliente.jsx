@@ -145,7 +145,7 @@ export default function PortalCliente() {
       <div style={S.errorCard}>
         <div style={{ fontSize: 40, marginBottom: 12, color: '#DC2626' }}><i className="fa fa-triangle-exclamation" /></div>
         <h2 style={{ fontSize: 18, color: '#111', margin: '0 0 10px', fontWeight: 800 }}>Link no válido</h2>
-        <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, margin: 0 }}>{error}</p>
+        <p style={{ fontSize: 13, color: '#6E6355', lineHeight: 1.5, margin: 0 }}>{error}</p>
       </div>
     </div>
   )
@@ -204,7 +204,7 @@ export default function PortalCliente() {
                   <div key={st} style={S.timelineItem} className="pc-timeline-step">
                     <div style={{
                       ...S.timelineDot,
-                      background: done ? '#15803D' : active ? '#7C3AED' : '#E5E7EB',
+                      background: done ? '#15803D' : active ? '#7C3AED' : '#ECE3D6',
                       color: done || active ? '#fff' : '#9CA3AF',
                       boxShadow: active ? '0 0 0 4px rgba(124,58,237,.15)' : 'none',
                     }}>
@@ -216,7 +216,7 @@ export default function PortalCliente() {
                       fontWeight: active ? 800 : done ? 700 : 500,
                     }}>{label}</div>
                     {i < STATUS_FLOW.length - 1 && (
-                      <div style={{ ...S.timelineLine, background: done ? '#15803D' : '#E5E7EB' }} />
+                      <div style={{ ...S.timelineLine, background: done ? '#15803D' : '#ECE3D6' }} />
                     )}
                   </div>
                 )
@@ -246,11 +246,11 @@ export default function PortalCliente() {
                 return (
                   <div key={i} style={{
                     ...S.item,
-                    borderBottom: i < items.length - 1 ? '1px solid #F1F5F9' : 'none',
+                    borderBottom: i < items.length - 1 ? '1px solid #F6F1E9' : 'none',
                   }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.n}</div>
-                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: 11, color: '#6E6355', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
                         {hasPrice ? `${qty}u × ${fmt(pu)}` : `${qty}u`}
                       </div>
                     </div>
@@ -268,7 +268,7 @@ export default function PortalCliente() {
         <div style={S.section}>
           <div style={S.card}>
             <div style={S.totalRow}>
-              <span style={{ fontSize: 13, color: '#64748b' }}>Total del pedido</span>
+              <span style={{ fontSize: 13, color: '#6E6355' }}>Total del pedido</span>
               <span style={{ fontSize: 15, fontWeight: 700, color: '#111', fontVariantNumeric: 'tabular-nums' }}>{fmt(data.t)}</span>
             </div>
             {/* "Seña recibida" solo tiene sentido cuando hay un pago parcial Y
@@ -281,12 +281,12 @@ export default function PortalCliente() {
               </div>
             )}
             {saldo > 0 ? (
-              <div style={{ ...S.totalRow, borderTop: '1px dashed #E5E7EB', paddingTop: 12, marginTop: 4 }}>
+              <div style={{ ...S.totalRow, borderTop: '1px dashed #ECE3D6', paddingTop: 12, marginTop: 4 }}>
                 <span style={{ fontSize: 13, color: '#DC2626', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>Saldo pendiente</span>
                 <span style={{ fontSize: 20, fontWeight: 900, color: '#DC2626', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em' }}>{fmt(saldo)}</span>
               </div>
             ) : payStatus === 'paid' ? (
-              <div style={{ ...S.totalRow, borderTop: '1px dashed #E5E7EB', paddingTop: 12, marginTop: 4, justifyContent: 'center' }}>
+              <div style={{ ...S.totalRow, borderTop: '1px dashed #ECE3D6', paddingTop: 12, marginTop: 4, justifyContent: 'center' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#15803D', fontWeight: 800 }}>
                   <i className="fa fa-circle-check" /> Pedido pagado al 100%
                 </span>
@@ -338,7 +338,7 @@ export default function PortalCliente() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 2px' }}>
                 <div style={S.icoBox}><i className="fa fa-calendar-check" /></div>
                 <div>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Fecha de entrega</div>
+                  <div style={{ fontSize: 11, color: '#6E6355', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Fecha de entrega</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#111', marginTop: 2 }}>{fmtDate(data.d)}</div>
                 </div>
               </div>
@@ -370,7 +370,7 @@ export default function PortalCliente() {
               className="pc-pay-btn"
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: '#fff', color: '#111', border: '1.5px solid #E5E7EB',
+                background: '#fff', color: '#111', border: '1.5px solid #ECE3D6',
                 padding: '12px 14px', borderRadius: 12, fontSize: 13, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
@@ -397,8 +397,8 @@ export default function PortalCliente() {
 
 function PayRow({ label, value, onCopy }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 2px', borderBottom: '1px solid #F1F5F9' }}>
-      <div style={{ minWidth: 60, fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 2px', borderBottom: '1px solid #F6F1E9' }}>
+      <div style={{ minWidth: 60, fontSize: 11, color: '#6E6355', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
       <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 700, color: '#111', fontFamily: "'SF Mono','Courier New',monospace", overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-all' }}>{value}</div>
       {onCopy && (
         <button onClick={onCopy} style={{
@@ -416,7 +416,7 @@ function PayRow({ label, value, onCopy }) {
 const S = {
   page: {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%)',
+    background: 'linear-gradient(180deg, #FBF7F0 0%, #F6F1E9 100%)',
     fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
     color: '#111',
     paddingBottom: 48,
@@ -453,7 +453,7 @@ const S = {
   },
   section: { marginBottom: 18 },
   sectionLabel: {
-    fontSize: 10, color: '#64748b', fontWeight: 800,
+    fontSize: 10, color: '#6E6355', fontWeight: 800,
     textTransform: 'uppercase', letterSpacing: '.08em',
     marginBottom: 8, padding: '0 2px',
   },
@@ -461,7 +461,7 @@ const S = {
     background: '#fff',
     borderRadius: 14,
     padding: '14px 16px',
-    border: '1px solid #F1F5F9',
+    border: '1px solid #F6F1E9',
     boxShadow: '0 1px 3px rgba(0,0,0,.04)',
   },
   item: {
@@ -508,11 +508,11 @@ const S = {
     transition: 'transform .12s',
   },
   footer: {
-    textAlign: 'center', paddingTop: 24, borderTop: '1px dashed #E5E7EB', marginTop: 24,
+    textAlign: 'center', paddingTop: 24, borderTop: '1px dashed #ECE3D6', marginTop: 24,
   },
   errorWrap: {
     minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: '#F8FAFC', padding: 20, fontFamily: "'Inter', sans-serif",
+    background: '#FBF7F0', padding: 20, fontFamily: "'Inter', sans-serif",
   },
   errorCard: {
     background: '#fff', borderRadius: 16, padding: '32px 24px', textAlign: 'center',
@@ -520,7 +520,7 @@ const S = {
   },
   loadingWrap: {
     minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    background: '#F8FAFC', fontFamily: "'Inter', sans-serif",
+    background: '#FBF7F0', fontFamily: "'Inter', sans-serif",
   },
   spinner: {
     width: 32, height: 32, borderRadius: '50%',

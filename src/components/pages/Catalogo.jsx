@@ -33,14 +33,14 @@ const compressImage = (file, maxBytes = 180000) => new Promise((resolve) => {
 })
 
 const CAT_PALETTE = [
-  { bg: '#F5F3FF', color: '#8B5CF6' },
-  { bg: '#EFF6FF', color: '#60A5FA' },
-  { bg: '#ECFDF5', color: '#34D399' },
+  { bg: '#FBF4F7', color: '#8B5CF6' },
+  { bg: '#FBF4EC', color: '#60A5FA' },
+  { bg: '#EFF6E9', color: '#34D399' },
   { bg: '#FFFBEB', color: '#F59E0B' },
   { bg: '#FDF2F8', color: '#F472B6' },
   { bg: '#F0FDFA', color: '#2DD4BF' },
   { bg: '#FFF7ED', color: '#FB923C' },
-  { bg: '#F1F5F9', color: '#94A3B8' },
+  { bg: '#F6F1E9', color: '#A89A86' },
 ]
 
 // ── Badge KIT ───────────────────────────────────────────────────────
@@ -48,8 +48,8 @@ function KitBadge({ small }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 3,
-      background: 'linear-gradient(135deg, #FDF2F8, #F5F3FF)',
-      color: '#8B5CF6', border: '1px solid #DDD6FE',
+      background: 'linear-gradient(135deg, #FDF2F8, #FBF4F7)',
+      color: '#8B5CF6', border: '1px solid #EFD4E4',
       fontSize: small ? 8.5 : 9.5, fontWeight: 800,
       padding: small ? '1px 5px' : '2px 7px',
       borderRadius: 20, letterSpacing: 0.3, flexShrink: 0,
@@ -711,7 +711,7 @@ export default function Catalogo() {
     const isKit = p.tipo === 'kit'
     return (
       <div key={p.id} className="prod-card" onClick={() => open(p)}>
-        <div className="prod-card-img" style={{ background: isKit ? '#F5F3FF' : cc.bg }}>
+        <div className="prod-card-img" style={{ background: isKit ? '#FBF4F7' : cc.bg }}>
           {p.image
             ? <img src={p.image} alt={p.name} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : <i className={`fa ${isKit ? 'fa-gift' : 'fa-box-open'}`} style={{ fontSize: 38, color: isKit ? '#8B5CF6' : cc.color, opacity: .5 }} />
@@ -723,7 +723,7 @@ export default function Catalogo() {
         </div>
         <div className="prod-card-body">
           <div className="prod-card-name" title={p.name}>{p.name}</div>
-          <span className="prod-card-cat qcat-badge" style={{ background: isKit ? '#F5F3FF' : cc.bg, color: isKit ? '#8B5CF6' : cc.color }}
+          <span className="prod-card-cat qcat-badge" style={{ background: isKit ? '#FBF4F7' : cc.bg, color: isKit ? '#8B5CF6' : cc.color }}
             onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setQuickCatPop({ prod: p, x: r.left, y: r.bottom + 4 }); setQuickCatInput('') }}>
             {p.cat || '—'} <i className="fa fa-pen" />
           </span>
@@ -738,7 +738,7 @@ export default function Catalogo() {
             ? <div className="prod-card-cost" style={{ fontWeight: 800, fontSize: 14, color: 'var(--money)' }}>{fmt(p.cost)}</div>
             : <div className="prod-card-cost" title="Sin costo cargado" style={{ fontWeight: 700, fontSize: 11, color: '#B45309' }}><i className="fa fa-triangle-exclamation" style={{ fontSize: 9, marginRight: 4 }} />Sin costo</div>)}
           {p.stock != null && (
-            <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
+            <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F2F8EB', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
               <i className="fa fa-cubes-stacked" style={{ fontSize: 8 }} />
               {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
             </div>
@@ -831,7 +831,7 @@ export default function Catalogo() {
             sub-línea del producto; el margen/precio se definen al armar el presupuesto. */}
         <td><div className="acts" style={{ display:'flex',gap:5 }}>
           <button onClick={() => open(p)} title="Editar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid var(--border2)',background:'var(--surface2)',color:'var(--txt2)',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-pen" /></button>
-          <button onClick={() => duplicateProduct(p)} title={p.tipo === 'kit' ? 'Duplicar kit — crea una copia editable' : 'Duplicar producto'} style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #DDD6FE',background:'#F5F3FF',color:'#7C3AED',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-copy" /></button>
+          <button onClick={() => duplicateProduct(p)} title={p.tipo === 'kit' ? 'Duplicar kit — crea una copia editable' : 'Duplicar producto'} style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #EFD4E4',background:'#FBF4F7',color:'#7C3AED',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-copy" /></button>
           <button onClick={() => del(p.id)} title="Eliminar" style={{ width:28,height:28,borderRadius:'50%',border:'1.5px solid #FECACA',background:'#FEF2F2',color:'#DC2626',cursor:'pointer',fontSize:11,display:'inline-flex',alignItems:'center',justifyContent:'center',padding:0,flexShrink:0,transition:'all .15s' }}><i className="fa fa-trash" /></button>
         </div></td>
       </tr>
@@ -843,7 +843,7 @@ export default function Catalogo() {
       {/* Banner: categorías desactualizadas para regalos */}
       {showCatsUpgrade && (
         <div style={{
-          background: 'linear-gradient(135deg, #F5F3FF 0%, #EFF6FF 100%)',
+          background: 'linear-gradient(135deg, #FBF4F7 0%, #FBF4EC 100%)',
           border: '1px solid #C4B5FD', borderRadius: 12,
           padding: '12px 16px', marginBottom: 12,
           display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
@@ -1061,7 +1061,7 @@ export default function Catalogo() {
                       {p.cat} <i className="fa fa-pen" />
                     </span>}
                     {p.stock != null && (
-                      <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F0FDF4', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: p.stock === 0 ? '#FEF2F2' : p.stock <= 5 ? '#FFFBEB' : '#F2F8EB', color: p.stock === 0 ? '#DC2626' : p.stock <= 5 ? '#D97706' : '#059669', border: `1px solid ${p.stock === 0 ? '#FECACA' : p.stock <= 5 ? '#FDE68A' : '#86EFAC'}` }}>
                         <i className="fa fa-cubes-stacked" style={{ marginRight: 3, fontSize: 8 }} />
                         {p.stock === 0 ? 'Sin stock' : `${p.stock} u.`}
                       </span>
@@ -1389,7 +1389,7 @@ export default function Catalogo() {
                     </label>
                     <div style={{ position: 'relative' }}>
                       <input tabIndex={4} type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ width: '100%', paddingRight: form.stock !== '' ? 52 : undefined }} />
-                      {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
+                      {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F2F8EB', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
                     </div>
                   </div>
                 </div>
@@ -1403,9 +1403,9 @@ export default function Catalogo() {
                 (mismo save/load que antes → kits ya guardados NO se pierden).
             ══════════════════════════════════════════════ */}
             <div style={{
-              background: 'linear-gradient(135deg, #FAF5FF, #FDF2F8)',
+              background: 'linear-gradient(135deg, #FBF4F7, #FDF2F8)',
               borderRadius: 12, padding: '14px 16px', marginBottom: 12,
-              border: '1.5px solid #DDD6FE',
+              border: '1.5px solid #EFD4E4',
             }}>
               {/* ── Header ── */}
               <div style={{ marginBottom: 10 }}>
@@ -1420,7 +1420,7 @@ export default function Catalogo() {
                     </div>
                   </div>
                   {kitItems.length > 0 && (
-                    <span style={{ background: '#EDE9FE', color: '#8B5CF6', fontSize: 10, padding: '3px 9px', borderRadius: 12, fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <span style={{ background: '#F7E8F0', color: '#8B5CF6', fontSize: 10, padding: '3px 9px', borderRadius: 12, fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {kitItems.length} {kitItems.length === 1 ? 'item' : 'items'}
                     </span>
                   )}
@@ -1429,9 +1429,9 @@ export default function Catalogo() {
 
               {/* ── Lista unificada de items ── */}
               {kitItems.length > 0 && (
-                <div style={{ background: 'rgba(255,255,255,.85)', borderRadius: 10, border: '1px solid #DDD6FE', marginBottom: 10, overflow: 'hidden' }}>
+                <div style={{ background: 'rgba(255,255,255,.85)', borderRadius: 10, border: '1px solid #EFD4E4', marginBottom: 10, overflow: 'hidden' }}>
                   {/* Headers de columnas */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, padding: '8px 10px 6px', fontSize: 9, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.5, background: 'rgba(139,92,246,.05)', borderBottom: '1px solid #EDE9FE' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, padding: '8px 10px 6px', fontSize: 9, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.5, background: 'rgba(139,92,246,.05)', borderBottom: '1px solid #F7E8F0' }}>
                     <span title="Tipo: contenido / packaging">Tipo</span>
                     <span>Item</span>
                     <span style={{ textAlign: 'center' }}>Cant.</span>
@@ -1451,7 +1451,7 @@ export default function Catalogo() {
                           style={{
                             width: 28, height: 26, borderRadius: 6,
                             border: `1px solid ${isPack ? '#FBCFE8' : '#C4B5FD'}`,
-                            background: isPack ? '#FCE7F3' : '#EDE9FE',
+                            background: isPack ? '#FCE7F3' : '#F7E8F0',
                             color: isPack ? '#DB2777' : '#8B5CF6',
                             fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1597,7 +1597,7 @@ export default function Catalogo() {
                       placeholder={compForm._type === 'packaging' ? 'Caja, cinta, tarjeta…' : 'Termo, mate, libreta… o buscar del catálogo'}
                       style={{
                         width: '100%', padding: '7px 10px',
-                        border: `1.5px solid ${compForm._type === 'packaging' ? '#FBCFE8' : '#DDD6FE'}`, borderRadius: 8,
+                        border: `1.5px solid ${compForm._type === 'packaging' ? '#FBCFE8' : '#EFD4E4'}`, borderRadius: 8,
                         fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
                         background: 'var(--surface)', outline: 'none', boxSizing: 'border-box',
                       }}
@@ -1616,7 +1616,7 @@ export default function Catalogo() {
                       return (
                       <div style={{
                         position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 400,
-                        background: 'var(--surface)', border: '1.5px solid #DDD6FE',
+                        background: 'var(--surface)', border: '1.5px solid #EFD4E4',
                         borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.12)',
                         maxHeight: 220, overflowY: 'auto', marginTop: 2,
                       }}>
@@ -1625,7 +1625,7 @@ export default function Catalogo() {
                             onMouseDown={() => { setCompForm(f => ({ ...f, nombre: compSearch, productId: null })); setCompDropdown(false) }}
                             style={{ padding: '8px 12px', fontSize: 11.5, cursor: 'pointer', color: 'var(--txt3)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6 }}
                           >
-                            <i className="fa fa-pen" style={{ color: '#94A3B8' }} />
+                            <i className="fa fa-pen" style={{ color: '#A89A86' }} />
                             Usar "<b>{compSearch}</b>" como item libre
                           </div>
                         )}
@@ -1638,7 +1638,7 @@ export default function Catalogo() {
                               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                               borderBottom: '1px solid var(--border)',
                             }}
-                            onMouseEnter={e => e.currentTarget.style.background = compForm._type === 'packaging' ? '#FDF2F8' : '#F5F3FF'}
+                            onMouseEnter={e => e.currentTarget.style.background = compForm._type === 'packaging' ? '#FDF2F8' : '#FBF4F7'}
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
                             <span style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1659,7 +1659,7 @@ export default function Catalogo() {
                     onChange={e => setCompForm(f => ({ ...f, qty: e.target.value }))}
                     onFocus={selectOnFocus}
                     placeholder="Cant."
-                    style={{ padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
+                    style={{ padding: '7px 8px', border: '1.5px solid #EFD4E4', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}
                   />
                   {/* Costo unitario (MoneyInput tolerante: acepta 10.000, $8.500, 1.5k) */}
                   <MoneyInput
@@ -1667,7 +1667,7 @@ export default function Catalogo() {
                     onChange={v => setCompForm(f => ({ ...f, costoUnit: v }))}
                     allowEmpty
                     placeholder="Costo"
-                    inputStyle={{ padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
+                    inputStyle={{ padding: '7px 8px', border: '1.5px solid #EFD4E4', borderRadius: 8, fontSize: 12, fontFamily: 'inherit', textAlign: 'right', width: '100%', boxSizing: 'border-box' }}
                   />
                   <button
                     onClick={() => {
@@ -1714,7 +1714,7 @@ export default function Catalogo() {
 
               {/* Costo total de 1 kit — resumen prominente */}
               {kitTotal > 0 && (
-                <div style={{ marginTop: 10, padding: '10px 14px', background: 'linear-gradient(135deg,#F0FDF4,#ECFDF5)', borderRadius: 10, border: '1.5px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ marginTop: 10, padding: '10px 14px', background: 'linear-gradient(135deg,#F2F8EB,#EFF6E9)', borderRadius: 10, border: '1.5px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: .6 }}>
                       <i className="fa fa-calculator" style={{ marginRight: 5 }} />Costo de 1 kit
@@ -1737,15 +1737,15 @@ export default function Catalogo() {
             ══════════════════════════════════════════════ */}
             {false && (
               <div style={{
-                background: 'linear-gradient(135deg, #FAF5FF, #FDF2F8)',
+                background: 'linear-gradient(135deg, #FBF4F7, #FDF2F8)',
                 borderRadius: 12, padding: '14px 16px', marginBottom: 12,
-                border: '1.5px solid #DDD6FE',
+                border: '1.5px solid #EFD4E4',
               }}>
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '.7px', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <i className="fa fa-layer-group" /> Receta de 1 Kit
-                      <span style={{ background: '#EDE9FE', color: '#8B5CF6', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
+                      <span style={{ background: '#F7E8F0', color: '#8B5CF6', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 800 }}>
                         {componentes.length}
                       </span>
                     </div>
@@ -1937,7 +1937,7 @@ export default function Catalogo() {
                 {/* Formulario para agregar componente */}
                 <div style={{
                   background: 'rgba(255,255,255,.7)', borderRadius: 10, padding: '10px 12px',
-                  border: '1px dashed #DDD6FE', marginTop: componentes.length > 0 ? 8 : 0,
+                  border: '1px dashed #EFD4E4', marginTop: componentes.length > 0 ? 8 : 0,
                 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', marginBottom: 7, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     <i className="fa fa-plus-circle" style={{ marginRight: 4 }} />Agregar componente
@@ -1960,19 +1960,19 @@ export default function Catalogo() {
                         placeholder="Nombre o buscar del catálogo…"
                         style={{
                           width: '100%', padding: '7px 10px',
-                          border: '1.5px solid #DDD6FE', borderRadius: 8,
+                          border: '1.5px solid #EFD4E4', borderRadius: 8,
                           fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
                           background: 'var(--surface)', outline: 'none', boxSizing: 'border-box',
                         }}
                         onFocusCapture={e => e.target.style.borderColor = '#8B5CF6'}
-                        onBlurCapture={e  => e.target.style.borderColor = '#DDD6FE'}
+                        onBlurCapture={e  => e.target.style.borderColor = '#EFD4E4'}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addComp() } }}
                       />
                       {/* Dropdown de sugerencias */}
                       {compDropdown && compSuggestions.length > 0 && (
                         <div style={{
                           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 400,
-                          background: 'var(--surface)', border: '1.5px solid #DDD6FE',
+                          background: 'var(--surface)', border: '1.5px solid #EFD4E4',
                           borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,.12)',
                           maxHeight: 200, overflowY: 'auto', marginTop: 2,
                         }}>
@@ -1981,7 +1981,7 @@ export default function Catalogo() {
                               onMouseDown={() => { setCompForm(f => ({ ...f, nombre: compSearch, productId: null })); setCompDropdown(false) }}
                               style={{ padding: '8px 12px', fontSize: 11.5, cursor: 'pointer', color: 'var(--txt3)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6 }}
                             >
-                              <i className="fa fa-pen" style={{ color: '#94A3B8' }} />
+                              <i className="fa fa-pen" style={{ color: '#A89A86' }} />
                               Usar "<b>{compSearch}</b>" como componente libre
                             </div>
                           )}
@@ -1995,7 +1995,7 @@ export default function Catalogo() {
                                 borderBottom: '1px solid var(--border)',
                                 transition: 'background .1s',
                               }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#F5F3FF'}
+                              onMouseEnter={e => e.currentTarget.style.background = '#FBF4F7'}
                               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
                               <span style={{ fontWeight: 600, color: 'var(--txt)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -2018,7 +2018,7 @@ export default function Catalogo() {
                       onFocus={selectOnFocus}
                       placeholder="Cant."
                       style={{
-                        padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8,
+                        padding: '7px 8px', border: '1.5px solid #EFD4E4', borderRadius: 8,
                         fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
                         background: 'var(--surface)', textAlign: 'center', width: '100%', boxSizing: 'border-box',
                       }}
@@ -2032,7 +2032,7 @@ export default function Catalogo() {
                       onFocus={selectOnFocus}
                       placeholder="$ Costo"
                       style={{
-                        padding: '7px 8px', border: '1.5px solid #DDD6FE', borderRadius: 8,
+                        padding: '7px 8px', border: '1.5px solid #EFD4E4', borderRadius: 8,
                         fontSize: 12, fontFamily: 'inherit', color: 'var(--txt)',
                         background: 'var(--surface)', textAlign: 'right', width: '100%', boxSizing: 'border-box',
                       }}
@@ -2075,7 +2075,7 @@ export default function Catalogo() {
 
                 {/* ═══ COSTO TOTAL DE 1 KIT — resumen prominente ═══ */}
                 {kitTotal > 0 && (
-                  <div style={{ marginTop: 14, padding: '12px 14px', background: 'linear-gradient(135deg,#F0FDF4,#ECFDF5)', borderRadius: 10, border: '2px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ marginTop: 14, padding: '12px 14px', background: 'linear-gradient(135deg,#F2F8EB,#EFF6E9)', borderRadius: 10, border: '2px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: .6 }}>
                         <i className="fa fa-calculator" style={{ marginRight: 5 }} />Costo de 1 kit
@@ -2131,7 +2131,7 @@ export default function Catalogo() {
                 Simplificada: solo lo esencial (cuántos armás + inversión).
                 Los cálculos de ingresos y ganancia se ven al armar el
                 presupuesto (contexto correcto, no acá). */}
-            <div style={{ background: 'linear-gradient(135deg, #F0FDF4, #ECFDF5)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1.5px solid #6EE7B7' }}>
+            <div style={{ background: 'linear-gradient(135deg, #F2F8EB, #EFF6E9)', borderRadius: 12, padding: '14px 16px', marginBottom: 12, border: '1.5px solid #6EE7B7' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#059669,#10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <i className="fa fa-hammer" style={{ color: '#fff', fontSize: 13 }} />
@@ -2197,7 +2197,7 @@ export default function Catalogo() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {form.image
                       ? <img src={form.image} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1.5px solid var(--border)', flexShrink: 0 }} />
-                      : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: '#F5F3FF' }}>
+                      : <div style={{ width: 60, height: 60, borderRadius: 8, border: '1.5px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: '#FBF4F7' }}>
                           <i className="fa fa-gift" style={{ color: '#8B5CF6', fontSize: 20, opacity: .5 }} />
                         </div>
                     }
@@ -2260,7 +2260,7 @@ export default function Catalogo() {
                       </label>
                       <div style={{ position: 'relative' }}>
                         <input type="number" min="0" step="1" value={form.stock} onChange={e => setF('stock', e.target.value)} onFocus={selectOnFocus} placeholder="—" style={{ paddingRight: form.stock !== '' ? 52 : undefined }} />
-                        {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F0FDF4', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
+                        {form.stock !== '' && <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 6, background: num(form.stock) === 0 ? '#FEF2F2' : num(form.stock) <= 5 ? '#FFFBEB' : '#F2F8EB', color: num(form.stock) === 0 ? '#DC2626' : num(form.stock) <= 5 ? '#D97706' : '#059669', pointerEvents: 'none' }}>{num(form.stock) === 0 ? 'AGOTADO' : num(form.stock) <= 5 ? 'BAJO' : 'OK'}</span>}
                       </div>
                     </div>
                   </div>
@@ -2649,18 +2649,18 @@ export default function Catalogo() {
               const missing = OCASIONES.filter(o => !cats.includes(o))
               if (missing.length === 0) return null
               return (
-                <div style={{ marginTop: 14, padding: '12px 14px', background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)', borderRadius: 10, border: '1px solid #DDD6FE' }}>
+                <div style={{ marginTop: 14, padding: '12px 14px', background: 'linear-gradient(135deg,#FBF4F7,#FDF2F8)', borderRadius: 10, border: '1px solid #EFD4E4' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: .6, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <i className="fa fa-gift" /> Ocasiones sugeridas para kits
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
                     {missing.map(o => (
-                      <span key={o} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: 'var(--surface)', border: '1px solid #DDD6FE', color: 'var(--txt2)' }}>{o}</span>
+                      <span key={o} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: 'var(--surface)', border: '1px solid #EFD4E4', color: 'var(--txt2)' }}>{o}</span>
                     ))}
                   </div>
                   <button
                     className="btn btn-ghost btn-sm"
-                    style={{ color: '#8B5CF6', borderColor: '#DDD6FE', width: '100%', justifyContent: 'center' }}
+                    style={{ color: '#8B5CF6', borderColor: '#EFD4E4', width: '100%', justifyContent: 'center' }}
                     onClick={() => {
                       const newCats = [...cats, ...missing]
                       updateConfig({ productCats: newCats })

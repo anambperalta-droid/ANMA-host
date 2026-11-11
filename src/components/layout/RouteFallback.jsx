@@ -12,8 +12,8 @@ export default function RouteFallback() {
 }
 
 const sk = {
-  base: { background: 'var(--surface2, #f3f4f6)', borderRadius: 10, animation: 'skPulse 1.4s ease infinite' },
-  card: { background: 'var(--surface, #fff)', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, padding: 16 },
+  base: { background: 'var(--surface2, #F6F1E9)', borderRadius: 10, animation: 'skPulse 1.4s ease infinite' },
+  card: { background: 'var(--surface, #fff)', border: '1px solid var(--border, #ECE3D6)', borderRadius: 12, padding: 16 },
 }
 
 function Bar({ w = '100%', h = 14, mb = 8, style }) {
@@ -69,7 +69,7 @@ function TableSkeleton() {
       <Bar w={280} h={38} mb={4} />
       <div style={sk.card}>
         {[1,2,3,4,5,6].map(i => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i < 6 ? '1px solid var(--border, #e5e7eb)' : 'none' }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i < 6 ? '1px solid var(--border, #ECE3D6)' : 'none' }}>
             <div style={{ ...sk.base, width: 32, height: 32, borderRadius: '50%' }} />
             <div style={{ flex: 1 }}>
               <Bar w="45%" h={12} mb={6} />

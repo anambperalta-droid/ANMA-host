@@ -47,7 +47,7 @@ const ACTION_MAP = {
     label: 'Cambiar Estado',
     icon: 'fa-truck-ramp-box',
     color: '#2563EB',
-    bg: '#EFF6FF',
+    bg: '#FBF4EC',
     handler: (alert, { nav, setOpen }) => {
       setOpen(false)
       nav(alert.route || '/')
@@ -307,9 +307,9 @@ const LEVEL_COLORS = {
 /* Color del ÍCONO por categoría (independiente del semáforo del borde).
    Borde-izquierdo = urgencia; ícono = tipo. Dos ejes visuales. */
 const CATEGORY_STYLE = {
-  logistica:    { color: '#2563EB', bg: '#EFF6FF', label: 'Entrega' },
-  pago:         { color: '#059669', bg: '#ECFDF5', label: 'Cobro' },
-  comercial:    { color: '#7C3AED', bg: '#F5F3FF', label: 'Presupuesto' },
+  logistica:    { color: '#2563EB', bg: '#FBF4EC', label: 'Entrega' },
+  pago:         { color: '#059669', bg: '#EFF6E9', label: 'Cobro' },
+  comercial:    { color: '#7C3AED', bg: '#FBF4F7', label: 'Presupuesto' },
   stock:        { color: '#B45309', bg: '#FEF3C7', label: 'Stock' },
   insumo:       { color: '#B45309', bg: '#FEF3C7', label: 'Insumo' },
   cumpleaños:   { color: '#DB2777', bg: '#FCE7F3', label: 'Cumpleaños' },

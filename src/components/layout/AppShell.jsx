@@ -38,7 +38,7 @@ function PresupuestoRedirect() {
 const PRIORITIES = [
   { key: 'today',    label: 'Urgente hoy',  color: '#DC2626', bg: '#FEF2F2' },
   { key: 'tomorrow', label: 'Mañana',        color: '#D97706', bg: '#FFFBEB' },
-  { key: 'week',     label: 'Esta semana',   color: '#2563EB', bg: '#EFF6FF' },
+  { key: 'week',     label: 'Esta semana',   color: '#2563EB', bg: '#FBF4EC' },
 ]
 const getPriority = (key) => PRIORITIES.find(p => p.key === key) || PRIORITIES[2]
 
@@ -189,7 +189,7 @@ function FocusOverlay() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1E293B', lineHeight: 1.45 }}>{t.desc}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#2A2118', lineHeight: 1.45 }}>{t.desc}</div>
                   <span style={{
                     fontSize: 9.5, fontWeight: 700, color: p.color,
                     background: 'rgba(255,255,255,.7)', padding: '1px 8px', borderRadius: 10,
