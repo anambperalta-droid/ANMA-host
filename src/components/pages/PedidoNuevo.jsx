@@ -388,7 +388,7 @@ export default function PedidoNuevo() {
           {(pedido.id || saving || lastSaved) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
               {pedido.id && <span style={{ fontSize: 11, color: 'var(--txt4)', fontWeight: 600 }}>{pedido.numero || `#${pedido.id}`}</span>}
-              <SaveIndicator saving={saving} lastSaved={lastSaved} pedido={pedido} />
+              <SaveIndicator saving={saving} lastSaved={lastSaved} />
             </div>
           )}
           {pedido.id && (
@@ -884,8 +884,7 @@ export default function PedidoNuevo() {
 
 // ── Sub-componentes ────────────────────────────────────────────────
 
-function SaveIndicator({ saving, lastSaved, pedido }) {
-  const ready = hasMinimum(pedido)
+function SaveIndicator({ saving, lastSaved }) {
   // Compacto: solo icono con tooltip. Evita ruido en el header, mantiene reassurance
   const tsLabel = lastSaved ? (() => {
     try {
