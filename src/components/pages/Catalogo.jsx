@@ -1709,7 +1709,7 @@ export default function Catalogo() {
                       </div>
                     )}
                   </div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: '#059669' }}>{fmt(kitTotal)}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#059669' }}>{fmt(kitTotal)}</div>
                 </div>
               )}
             </div>
@@ -1820,7 +1820,7 @@ export default function Catalogo() {
                     {packTotal > 0 && (
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 9, color: 'var(--txt4)', fontWeight: 600 }}>TOTAL PACKAGING</div>
-                        <div style={{ fontSize: 13, fontWeight: 900, color: '#DB2777' }}>{fmt(packTotal)}</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#DB2777' }}>{fmt(packTotal)}</div>
                       </div>
                     )}
                   </div>
@@ -2070,7 +2070,7 @@ export default function Catalogo() {
                         </div>
                       )}
                     </div>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: '#059669' }}>{fmt(kitTotal)}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#059669' }}>{fmt(kitTotal)}</div>
                   </div>
                 )}
               </div>
@@ -2150,7 +2150,7 @@ export default function Catalogo() {
                       {fmt(kitTotal)} × {num(form.stock)} kit{num(form.stock) !== 1 ? 's' : ''}
                     </div>
                   </div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: '#059669', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#059669', whiteSpace: 'nowrap' }}>
                     {fmt(kitTotal * num(form.stock))}
                   </div>
                 </div>

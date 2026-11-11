@@ -134,7 +134,7 @@ export default function PagoResultado({ variant = 'exitoso' }) {
 
         {/* Title + subtitle */}
         <h1 style={{
-          fontSize: 28, fontWeight: 900, color: 'var(--txt)',
+          fontSize: 28, fontWeight: 800, color: 'var(--txt)',
           margin: '0 0 12px', letterSpacing: '-.4px', lineHeight: 1.2,
         }}>
           {v.title}

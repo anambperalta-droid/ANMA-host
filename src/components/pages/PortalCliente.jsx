@@ -283,7 +283,7 @@ export default function PortalCliente() {
             {saldo > 0 ? (
               <div style={{ ...S.totalRow, borderTop: '1px dashed #ECE3D6', paddingTop: 12, marginTop: 4 }}>
                 <span style={{ fontSize: 13, color: '#DC2626', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>Saldo pendiente</span>
-                <span style={{ fontSize: 20, fontWeight: 900, color: '#DC2626', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em' }}>{fmt(saldo)}</span>
+                <span style={{ fontSize: 20, fontWeight: 800, color: '#DC2626', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em' }}>{fmt(saldo)}</span>
               </div>
             ) : payStatus === 'paid' ? (
               <div style={{ ...S.totalRow, borderTop: '1px dashed #ECE3D6', paddingTop: 12, marginTop: 4, justifyContent: 'center' }}>
@@ -445,7 +445,7 @@ const S = {
     marginBottom: 12, color: '#fff',
   },
   heroTitle: {
-    fontSize: 26, fontWeight: 900, margin: '6px 0 10px', letterSpacing: '-.03em',
+    fontSize: 26, fontWeight: 800, margin: '6px 0 10px', letterSpacing: '-.03em',
     lineHeight: 1.15,
   },
   heroSub: {

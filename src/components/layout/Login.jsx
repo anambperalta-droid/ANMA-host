@@ -198,7 +198,7 @@ export default function Login() {
         }
         .lpr-logo i{font-size:20px;color:#fff}
         .lpr-brand-txt{display:flex;flex-direction:column;line-height:1}
-        .lpr-brand-name{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.5px}
+        .lpr-brand-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.5px}
         .lpr-brand-name span{background:linear-gradient(90deg,#fbcfe8,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent}
         .lpr-brand-tag{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;letter-spacing:.3px}
 

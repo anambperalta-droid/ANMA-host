@@ -957,7 +957,7 @@ function CompraDrawer(props) {
                   />
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--brand)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.03em' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.03em' }}>
                       {fmt(derivedTotal)}
                     </div>
                     <button type="button" onClick={() => setDraft(d => ({ ...d, monto: fmtLive(String(Math.round(derivedTotal))), montoOverride: true }))}

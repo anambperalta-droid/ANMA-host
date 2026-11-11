@@ -1008,7 +1008,7 @@ export default function Proveedores() {
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                      <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailSupplier.name}</h3>
+                      <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.4px', margin: 0, lineHeight: 1.2 }}>{detailSupplier.name}</h3>
                       {(() => {
                         const e = supplierEstado(detailSupplier)
                         const m = PROV_ESTADO_META[e]
@@ -1365,7 +1365,7 @@ export default function Proveedores() {
                         <div style={{ fontSize: 11, color: 'var(--txt3)', fontWeight: 600 }}>
                           {stats.count} {stats.count === 1 ? 'compra' : 'compras'} · {stats.months} {stats.months === 1 ? 'mes' : 'meses'} con actividad
                         </div>
-                        <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--brand)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.03em', marginTop: 2 }}>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.03em', marginTop: 2 }}>
                           {fmt(stats.total)}
                         </div>
                       </div>

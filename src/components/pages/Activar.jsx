@@ -141,7 +141,7 @@ export default function Activar() {
                `Te quedan ${trialDaysLeft} días de prueba`}
             </div>
           )}
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: 'var(--txt)', margin: '0 0 8px', letterSpacing: '-.5px' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: 'var(--txt)', margin: '0 0 8px', letterSpacing: '-.5px' }}>
             Activá tu plan
           </h1>
           <p style={{ fontSize: 15, color: 'var(--txt3)', margin: 0, lineHeight: 1.6, maxWidth: 540, marginLeft: 'auto', marginRight: 'auto' }}>
@@ -179,7 +179,7 @@ export default function Activar() {
                   Pago de ingreso
                 </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
-                  <span style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1 }}>$120.000</span>
+                  <span style={{ fontSize: 36, fontWeight: 800, letterSpacing: '-1.5px', lineHeight: 1 }}>$120.000</span>
                   <span style={{ fontSize: 13, color: '#c4b5fd', fontWeight: 600 }}>por única vez</span>
                 </div>
                 <p style={{ fontSize: 12, color: '#DCD1C0', margin: 0, lineHeight: 1.5 }}>

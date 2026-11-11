@@ -121,7 +121,7 @@ export default function MiCuenta() {
           width: 64, height: 64, borderRadius: 16,
           background: 'var(--surface)', color: '#7C3AED',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22, fontWeight: 900, flexShrink: 0,
+          fontSize: 22, fontWeight: 800, flexShrink: 0,
           boxShadow: '0 6px 16px rgba(0,0,0,.1)',
         }}>
           {initials}
@@ -130,7 +130,7 @@ export default function MiCuenta() {
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,.7)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2 }}>
             Mi cuenta · {user?.email}
           </div>
-          <h1 style={{ color: '#fff', margin: 0, fontSize: 22, fontWeight: 900, letterSpacing: '-.4px' }}>
+          <h1 style={{ color: '#fff', margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-.4px' }}>
             {c.businessName || 'Mi negocio'}
           </h1>
         </div>

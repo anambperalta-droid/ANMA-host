@@ -621,7 +621,7 @@ export default function Insumos() {
                       <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 4 }}>
                         <i className="fa fa-star" style={{ marginRight: 3 }} />Costo real por regalo
                       </div>
-                      <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--brand)', letterSpacing: '-.03em', lineHeight: 1 }}>
+                      <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--brand)', letterSpacing: '-.03em', lineHeight: 1 }}>
                         {fmtDec(costPerGift)}
                       </div>
                       <div style={{ fontSize: 10, color: 'rgba(99,102,241,.7)', marginTop: 3 }}>
