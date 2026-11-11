@@ -1816,7 +1816,7 @@ export default function Presupuesto() {
         grid-template-columns:170px 1fr 110px 26px!important;
         gap:8px!important;align-items:center!important;
         padding:8px 4px!important;
-        border-bottom:1px solid #F3F4F6!important;background:transparent!important;border-radius:0!important;
+        border-bottom:1px solid var(--border)!important;background:transparent!important;border-radius:0!important;
       }
       .logi-parada-row:last-child{border-bottom:none!important}
       /* Mobile de paradas: ver override .kit-tbl-row.logi-parada-row más abajo
@@ -1903,7 +1903,7 @@ export default function Presupuesto() {
            Esta regla, con la misma especificidad y después en cascada, gana. */
         .kit-tbl-row input[type=text],.kit-tbl-row input[type=number],
         .simple-tbl-row input[type=text],.simple-tbl-row input[type=number]{
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+          background:var(--surface2)!important;border:1px solid var(--border)!important;
         }
         /* 1: drag icon — oculto en mobile (no usable con dedo) */
         .kit-tbl-row > :nth-child(1){display:none!important}
@@ -1914,7 +1914,7 @@ export default function Presupuesto() {
         .kit-tbl-row > :nth-child(2) input{
           font-size:13px!important;font-weight:700!important;
           padding:8px 10px!important;min-height:38px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;border-radius:8px!important;
+          background:var(--surface2)!important;border:1px solid var(--border)!important;border-radius:8px!important;
           text-overflow:ellipsis!important;
         }
         /* 3: cant (input number) */
@@ -1923,7 +1923,7 @@ export default function Presupuesto() {
           min-height:38px!important;height:38px!important;font-size:13px!important;
           text-align:center!important;font-weight:700!important;
           padding:0 8px!important;border-radius:8px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+          background:var(--surface2)!important;border:1px solid var(--border)!important;
         }
         /* 4: costo unitario (input text) */
         .kit-tbl-row > :nth-child(4){
@@ -1931,13 +1931,13 @@ export default function Presupuesto() {
           min-height:38px!important;height:38px!important;font-size:13px!important;
           text-align:right!important;font-weight:600!important;
           padding:0 10px!important;border-radius:8px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+          background:var(--surface2)!important;border:1px solid var(--border)!important;
         }
         /* 5: subtotal calculado (div) */
         .kit-tbl-row > :nth-child(5){
           grid-area:sub!important;
           display:flex!important;justify-content:space-between!important;align-items:center!important;
-          padding:8px 10px 2px!important;border-top:1px solid #F3F4F6!important;
+          padding:8px 10px 2px!important;border-top:1px solid var(--border)!important;
           font-size:13px!important;font-weight:800!important;color:var(--money)!important;
           text-align:right!important;
         }
@@ -1974,7 +1974,7 @@ export default function Presupuesto() {
         .simple-tbl-row > :nth-child(1) input{font-size:13px!important;font-weight:700!important;min-height:38px!important;padding:8px 10px!important;text-overflow:ellipsis!important}
         .simple-tbl-row > :nth-child(2){grid-area:qty!important;width:100%!important;min-height:38px!important;height:38px!important;font-size:13px!important;text-align:center!important}
         .simple-tbl-row > :nth-child(3){grid-area:cost!important;width:100%!important;min-height:38px!important;height:38px!important;font-size:13px!important;text-align:right!important}
-        .simple-tbl-row > :nth-child(4){grid-area:sub!important;border-top:1px solid #F3F4F6!important;padding-top:8px!important;font-weight:800!important;color:var(--money)!important;text-align:right!important}
+        .simple-tbl-row > :nth-child(4){grid-area:sub!important;border-top:1px solid var(--border)!important;padding-top:8px!important;font-weight:800!important;color:var(--money)!important;text-align:right!important}
         .simple-tbl-row > :nth-child(5){grid-area:del!important;width:38px!important;height:38px!important;justify-self:end!important;align-self:start!important;opacity:1!important;background:#FEF2F2!important;color:#DC2626!important;border-radius:9px!important;border:1.5px solid #FECACA!important}
 
         /* ══════════════════════════════════════════════════════════════
@@ -2003,20 +2003,20 @@ export default function Presupuesto() {
           width:100%!important;min-width:0!important;
           min-height:42px!important;font-size:13px!important;font-weight:700!important;
           padding:0 10px!important;border-radius:8px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+          background:var(--surface2)!important;border:1px solid var(--border)!important;
         }
         .kit-tbl-row.logi-parada-row > :nth-child(2){
           grid-area:desc!important;width:100%!important;min-width:0!important;
           min-height:42px!important;font-size:13px!important;font-weight:500!important;
           padding:0 12px!important;text-align:left!important;border-radius:8px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+          background:var(--surface2)!important;border:1px solid var(--border)!important;
         }
         .kit-tbl-row.logi-parada-row > :nth-child(3){
           grid-area:cost!important;width:100%!important;
           min-height:42px!important;height:42px!important;font-size:14px!important;
           text-align:right!important;font-weight:700!important;
           padding:0 12px!important;border-radius:8px!important;
-          background:#FAFAFB!important;border:1px solid #E8EAF2!important;
+          background:var(--surface2)!important;border:1px solid var(--border)!important;
         }
         .kit-tbl-row.logi-parada-row > :nth-child(4){
           grid-area:del!important;

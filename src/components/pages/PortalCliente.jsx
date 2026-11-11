@@ -402,7 +402,7 @@ function PayRow({ label, value, onCopy }) {
       <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 700, color: '#111', fontFamily: "'SF Mono','Courier New',monospace", overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-all' }}>{value}</div>
       {onCopy && (
         <button onClick={onCopy} style={{
-          background: '#F3F4F6', border: 'none', borderRadius: 8, padding: '6px 10px',
+          background: 'var(--surface2)', border: 'none', borderRadius: 8, padding: '6px 10px',
           fontSize: 11, fontWeight: 700, color: '#374151', cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: 4,
         }} title="Copiar">

@@ -36,7 +36,7 @@ export default class ErrorBoundary extends Component {
 
     if (this.state.reloading) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: 'linear-gradient(180deg,#FAFAFB 0%,#F5F3FF 100%)', fontFamily: 'Inter, system-ui, sans-serif', color: '#7C3AED' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: 'linear-gradient(180deg,#FFFCF7 0%,#F7F2EA 100%)', fontFamily: 'Inter, system-ui, sans-serif', color: '#7C3AED' }}>
           <i className="fa fa-arrows-rotate fa-spin" style={{ fontSize: 26 }} />
           <p style={{ fontSize: 14, color: '#64748B', margin: 0 }}>Actualizando a la última versión…</p>
         </div>
@@ -51,7 +51,7 @@ export default class ErrorBoundary extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(180deg, #FAFAFB 0%, #F5F3FF 100%)',
+        background: 'linear-gradient(180deg, #FFFCF7 0%, #F7F2EA 100%)',
         padding: '24px',
         fontFamily: 'var(--font-sans, Inter, system-ui, sans-serif)',
       }}>
@@ -143,7 +143,7 @@ export default class ErrorBoundary extends Component {
                 fontFamily: 'inherit',
                 transition: 'border-color .15s, background .15s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#7C3AED'; e.currentTarget.style.background = '#FAFAFB' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#7C3AED'; e.currentTarget.style.background = '#FBF7F0' }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#fff' }}
             >
               Intentar de nuevo

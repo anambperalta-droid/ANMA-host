@@ -754,14 +754,14 @@ export default function Proveedores() {
             </div>
             <div className="prov-mob-mid">
               <div className="prov-mob-cicons">
-                <span className="prov-mob-ci-ph" style={{ background: '#F3F4F6', borderRadius: 8 }} />
-                <span className="prov-mob-ci-ph" style={{ background: '#F3F4F6', borderRadius: 8 }} />
+                <span className="prov-mob-ci-ph" style={{ background: 'var(--surface2)', borderRadius: 8 }} />
+                <span className="prov-mob-ci-ph" style={{ background: 'var(--surface2)', borderRadius: 8 }} />
               </div>
               <div className="sk sk-text" style={{ height: 10, width: 40 }} />
             </div>
             <div className="prov-mob-acts">
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: '#F3F4F6' }} />
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: '#F3F4F6' }} />
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface2)' }} />
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface2)' }} />
             </div>
           </div>
         )) : filtered.length ? filtered.map(s => {

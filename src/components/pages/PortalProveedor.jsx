@@ -563,7 +563,7 @@ const S = {
     fontSize: 11, fontWeight: 800,
     textTransform: 'uppercase', letterSpacing: '.7px',
   },
-  tr: { borderBottom: '1px solid #F3F4F6', transition: 'background .12s' },
+  tr: { borderBottom: '1px solid var(--border)', transition: 'background .12s' },
   td: { padding: '15px 14px', verticalAlign: 'middle' },
   badgeOk: {
     display: 'inline-block', background: '#F0FDF4', color: '#16A34A',
@@ -616,7 +616,7 @@ const S = {
     display: 'flex', alignItems: 'flex-start', gap: 7,
     fontSize: 11.5, color: '#9CA3AF', lineHeight: 1.5,
     background: '#F9FAFB', padding: '9px 13px', borderRadius: 8,
-    border: '1px solid #F3F4F6',
+    border: '1px solid var(--border)',
   },
 
   /* footer */

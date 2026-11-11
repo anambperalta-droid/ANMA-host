@@ -33,13 +33,22 @@
   --sidebar-bg: #262353;
   --panel-grad: linear-gradient(160deg, #262353 0%, #362FA0 50%, #5B2AB0 100%);
 
-  /* ── Neutros (fijos) — optimizados para lectura fácil ── */
-  --bg: #F8F9FA;
+  /* ── Feria luminosa: paleta viva sobre fondo claro (tono de categoría) ── */
+  --feria-rosa:    #E0458A;
+  --feria-verde:   #15A66A;
+  --feria-amarillo:#F2A93B;
+  --feria-azul:    #2E8BD6;
+  --feria-naranja: #F2762E;
+  --feria-violeta: #7C3AED;
+  --feria-ink:     #2A2118;
+
+  /* ── Neutros (fijos) — base cálida "feria luminosa" ── */
+  --bg: #FBF7F0;
   --surface: #FFFFFF;
-  --surface2: #F3F4F6;
-  --surface3: #EDEFF3;
-  --border: #E5E7EB;
-  --border2: #D1D5DB;
+  --surface2: #F6F1E9;
+  --surface3: #EFE8DC;
+  --border: #ECE3D6;
+  --border2: #DCD1C0;
   --txt: #111827;
   --txt2: #374151;
   --txt3: #6B7280;
@@ -67,18 +76,26 @@
   --sh-lg: 0 16px 48px rgba(0,0,0,.12), 0 4px 16px rgba(0,0,0,.05);
   --sh-brand: 0 6px 20px rgba(124,58,237,.25);
   --tr: .18s cubic-bezier(.4,0,.2,1);
+
+  /* ── Dirección "operativa pero amable" (base cálida + densidad) ── */
+  --sh-soft: 0 1px 2px rgba(42,33,24,.05), 0 8px 24px -10px rgba(42,33,24,.13);
+  --sh-soft-hv: 0 2px 8px rgba(42,33,24,.09), 0 16px 36px -12px rgba(42,33,24,.20);
+  --border-soft: rgba(124,58,237,.11);
+  --surface-warm: linear-gradient(180deg, #FFFCF7 0%, #F7F2EA 100%);
+  --r-card: 18px;
+  --r-dense: 12px;
 }
 
 /* ═══════════════════════════════════════
    Modo Oscuro — se activa con <html data-theme="dark">
 ═══════════════════════════════════════ */
 :root[data-theme="dark"] {
-  --bg: #0F1117;
-  --surface: #171A23;
-  --surface2: #1F2330;
-  --surface3: #262B3A;
-  --border: #2A2F3E;
-  --border2: #373D50;
+  --bg: #17120B;
+  --surface: #241C13;
+  --surface2: #2E2418;
+  --surface3: #3A2E1F;
+  --border: #3A2F20;
+  --border2: #4E4030;
   --txt: #F3F4F6;
   --txt2: #D1D5DB;
   --txt3: #9CA3AF;
@@ -91,6 +108,10 @@
   --sh: 0 1px 3px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.25);
   --sh-md: 0 4px 12px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
   --sh-lg: 0 16px 48px rgba(0,0,0,.55), 0 4px 16px rgba(0,0,0,.35);
+  --sh-soft: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -10px rgba(0,0,0,.5);
+  --sh-soft-hv: 0 2px 8px rgba(0,0,0,.45), 0 18px 40px -12px rgba(0,0,0,.6);
+  --border-soft: rgba(120,100,70,.16);
+  --surface-warm: linear-gradient(180deg, #2A2015 0%, #1A140D 100%);
 }
 :root[data-theme="dark"] img.inv-on-dark,
 :root[data-theme="dark"] .inv-on-dark{filter:invert(1) hue-rotate(180deg)}
@@ -316,9 +337,9 @@ input,select,textarea{font-family:inherit}
 .btn-primary{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light,#8B5CF6) 100%);color:#fff;box-shadow:0 6px 18px var(--brand-dim)}
 .btn-primary:hover{filter:brightness(1.05);box-shadow:0 10px 26px var(--brand-dim);transform:translateY(-1px)}
 .btn-primary:active{transform:scale(.95)}
-.btn-secondary{background:var(--surface);border:1.5px solid var(--border);color:var(--txt2)}
+.btn-secondary{background:var(--surface);border:1.5px solid var(--border-soft);color:var(--txt2)}
 .btn-secondary:hover{background:var(--brand-xlt);border-color:var(--brand);color:var(--brand)}
-.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--txt2)}
+.btn-ghost{background:transparent;border:1.5px solid var(--border-soft);color:var(--txt2)}
 .btn-ghost:hover{background:var(--brand-xlt);border-color:var(--brand);color:var(--brand)}
 .btn-brand{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light,#8B5CF6) 100%);color:#fff;box-shadow:var(--sh-brand)}
 .btn-brand:hover{filter:brightness(1.05);box-shadow:var(--sh-brand);transform:translateY(-1px)}
@@ -328,8 +349,8 @@ input,select,textarea{font-family:inherit}
 .btn-xs{padding:3px 8px;font-size:9px}
 
 /* ─── CARDS ─── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--sh);transition:box-shadow var(--tr)}
-.card:hover{box-shadow:var(--sh-md)}
+.card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-card);padding:14px;box-shadow:var(--sh-soft);transition:box-shadow var(--tr)}
+.card:hover{box-shadow:var(--sh-soft-hv)}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px}
 .card-title{font-size:14.5px;font-weight:700;color:var(--txt);letter-spacing:-.3px;line-height:1.25;display:inline-flex;align-items:center;font-family:'Space Grotesk','Inter',sans-serif}
 .card-link{font-size:11.5px;color:var(--acento);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;letter-spacing:.1px;padding:4px 8px;border-radius:7px;transition:background .15s}
@@ -346,8 +367,38 @@ input,select,textarea{font-family:inherit}
 /* Logística: stats de viajes adaptan a tamaño de pantalla */
 @media(max-width:700px){.viaje-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}}
 @media(max-width:380px){.viaje-stats-grid{grid-template-columns:1fr!important}}
-.bento-kpi{background:var(--surface);border:1px solid rgba(15,23,42,.06);border-radius:18px;padding:22px 22px 18px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -8px rgba(15,23,42,.06);position:relative;overflow:hidden;cursor:default;transition:box-shadow .25s ease,transform .15s ease,border-color .2s}
-.bento-kpi:hover{box-shadow:0 2px 6px rgba(15,23,42,.06),0 12px 32px -10px rgba(15,23,42,.12);transform:translateY(-1px);border-color:rgba(124,58,237,.18)}
+.bento-kpi{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-card);padding:22px 22px 18px;box-shadow:var(--sh-soft);position:relative;overflow:hidden;cursor:default;transition:box-shadow .25s ease,transform .15s ease,border-color .2s}
+.bento-kpi:hover{box-shadow:var(--sh-soft-hv);transform:translateY(-1px);border-color:rgba(124,58,237,.18)}
+/* ─── FERIA LUMINOSA — KPI tiles de color pleno (dashboard) ─── */
+.feria-kpi{
+  color:#fff;
+  box-shadow:0 1px 2px rgba(42,33,24,.06), 0 10px 26px -12px rgba(42,33,24,.28);
+  border:none;
+}
+.feria-kpi:hover{
+  transform:translateY(-2px);
+  box-shadow:0 2px 8px rgba(42,33,24,.10), 0 18px 38px -14px rgba(42,33,24,.38);
+  border-color:transparent;
+}
+.feria-kpi-ic{
+  width:30px;height:30px;border-radius:10px;display:grid;place-items:center;
+  font-size:13px;flex:none;color:#fff;background:rgba(255,255,255,.18);
+}
+.feria-kpi-label{
+  font-size:11px;font-weight:700;color:rgba(255,255,255,.92);
+  letter-spacing:.04em;text-transform:uppercase;line-height:1.2;
+}
+.feria-kpi-val{
+  font-size:30px;font-weight:800;color:#fff;
+  font-family:'Space Grotesk','Inter',sans-serif;
+  letter-spacing:-.03em;line-height:1.02;font-variant-numeric:tabular-nums;
+}
+.feria-kpi-delta{
+  font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;
+  line-height:1.2;white-space:nowrap;flex-shrink:0;
+  color:#fff;background:rgba(255,255,255,.2);
+}
+
 .bento-kpi-key{background:linear-gradient(180deg,rgba(34,197,94,.04) 0%,var(--surface) 35%);border-color:rgba(34,197,94,.22)}
 .bento-kpi-key::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#16A34A,#22C55E,#16A34A)}
 .kpi-label-elegant{font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.085em;text-transform:uppercase;line-height:1.2}
@@ -361,7 +412,7 @@ input,select,textarea{font-family:inherit}
 .kpi-val{font-size:28px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px;line-height:1.05;color:var(--money)!important}
 .kpi-foot{font-size:11px;color:var(--txt3)}
 .bento-wide{grid-column:span 2}
-.bento-chart{background:var(--surface);border:1px solid rgba(15,23,42,.06);border-radius:18px;padding:22px 24px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -8px rgba(15,23,42,.06);transition:box-shadow .25s ease}
+.bento-chart{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-card);padding:22px 24px;box-shadow:var(--sh-soft);transition:box-shadow .25s ease}
 .bento-chart:hover{box-shadow:0 2px 6px rgba(15,23,42,.06),0 12px 32px -10px rgba(15,23,42,.12)}
 .bento-seg{background:var(--panel-grad);border-radius:18px;padding:18px;box-shadow:0 8px 32px rgba(30,27,75,.2);color:#fff;overflow-y:auto;max-height:280px}
 .bento-seg::-webkit-scrollbar{width:4px}
@@ -387,8 +438,8 @@ input,select,textarea{font-family:inherit}
 .card-sm{padding:14px}
 
 /* ─── TABLES ─── */
-.tbl-card{background:var(--surface);border:1px solid rgba(15,23,42,.06);border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px -8px rgba(15,23,42,.06);transition:box-shadow .25s ease}
-.tbl-card:hover{box-shadow:0 2px 6px rgba(15,23,42,.06),0 12px 32px -10px rgba(15,23,42,.12)}
+.tbl-card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--sh-soft);transition:box-shadow .25s ease}
+.tbl-card:hover{box-shadow:var(--sh-soft-hv)}
 table{width:100%;border-collapse:collapse}
 thead th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border)}
 tbody td{padding:9px 12px;font-size:12px;color:var(--txt2);border-bottom:1px solid var(--border);transition:background var(--tr);font-variant-numeric:tabular-nums}
@@ -517,7 +568,7 @@ td b{color:var(--txt);font-weight:600}
 /* Labels: organizadores secundarios — gray-400, smaller, less bold */
 .fg label{display:block;font-size:10px;font-weight:600;color:#9CA3AF;margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase}
 /* Inputs/select/textarea: borde sutil, fondo gris ultra claro en reposo, brand al focus */
-.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;background:#FAFAFB;border:1px solid #E5E7EB;border-radius:8px;font-size:12.5px;color:#1f2937;outline:none;transition:border-color var(--tr),box-shadow var(--tr),background var(--tr);font-family:inherit}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;background:#FDFBF7;border:1px solid var(--border-soft);border-radius:8px;font-size:12.5px;color:#1f2937;outline:none;transition:border-color var(--tr),box-shadow var(--tr),background var(--tr);font-family:inherit}
 .fg input:hover,.fg select:hover,.fg textarea:hover{background:#fff;border-color:#D1D5DB}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.08)}
 .fg textarea{resize:vertical;min-height:68px;line-height:1.55}
