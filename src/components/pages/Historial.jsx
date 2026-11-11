@@ -922,7 +922,11 @@ export default function Historial() {
   } = useMemo(() => {
     const n = now
     const prevYM = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
-    const totBudgeted = periodBudgets.reduce((s, b) => s + montoConIva(b), 0)
+    /* Facturado excluye los PERDIDOS: un presupuesto rechazado no es una
+       venta. Mismo criterio que Hub, y que el sparkline de este mismo KPI,
+       que ya los excluia — el numero y su mini-grafico no cerraban. */
+    const nonLost     = periodBudgets.filter(b => getEstado(b) !== 'perdido')
+    const totBudgeted = nonLost.reduce((s, b) => s + montoConIva(b), 0)
     const confirmed   = periodBudgets.filter(b => ['confirmado', 'produccion', 'entregado'].includes(getEstado(b)))
     // Excluimos 'lost' — pedidos perdidos no cuentan como ingreso del período
     // Incluye perdidos donde te quedaste con la seña (keptDeposit:true)
@@ -934,7 +938,7 @@ export default function Historial() {
     /* Ticket promedio: solo las ventas CON monto. Un pedido a medio cargar no
        es una venta de $0: dividir por el bajaba el promedio sin que se notara
        (decision de Ana, 10/11 — mismo criterio que Hub y que Ventas). */
-    const conMonto    = periodBudgets.filter(b => montoConIva(b) > 0)
+    const conMonto    = nonLost.filter(b => montoConIva(b) > 0)
     const avgTicket   = conMonto.length ? Math.round(totBudgeted / conMonto.length) : 0
     const convRate    = periodBudgets.length ? Math.round(confirmed.length / periodBudgets.length * 100) + '%' : '—'
     let prevPeriodBudgets = []
@@ -958,9 +962,11 @@ export default function Historial() {
       if (getEstado(b) === 'perdido' && !b.keptDeposit) return false
       return b.payStatus === 'paid' || b.payStatus === 'partial'
     })
-    const prevTotBudgeted  = prevPeriodBudgets.reduce((s, b) => s + montoConIva(b), 0)
+    // Excluye perdidos, igual que totBudgeted, para que el % de variacion sea justo.
+    const prevNonLost      = prevPeriodBudgets.filter(b => getEstado(b) !== 'perdido')
+    const prevTotBudgeted  = prevNonLost.reduce((s, b) => s + montoConIva(b), 0)
     const prevTotCobrado   = prevPagados.reduce((s, b) => s + cobrado(b), 0)
-    const prevCountConMonto = prevPeriodBudgets.filter(b => montoConIva(b) > 0).length
+    const prevCountConMonto = prevNonLost.filter(b => montoConIva(b) > 0).length
     // Guardrail: si la base del período anterior es chica (<3 presupuestos), los deltas
     // se disparan a valores absurdos (+10961%). Ocultar hasta tener muestra minima.
     const capDelta = (v) => v === null ? null : Math.max(-999, Math.min(999, v))
