@@ -385,10 +385,12 @@ export default function PedidoNuevo() {
             })()}
             <EstadoSelect value={pedido.estado} onChange={v => update({ estado: v })} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-            {pedido.id && <span style={{ fontSize: 11, color: 'var(--txt4)', fontWeight: 600 }}>{pedido.numero || `#${pedido.id}`}</span>}
-            <SaveIndicator saving={saving} lastSaved={lastSaved} pedido={pedido} />
-          </div>
+          {(pedido.id || saving || lastSaved) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              {pedido.id && <span style={{ fontSize: 11, color: 'var(--txt4)', fontWeight: 600 }}>{pedido.numero || `#${pedido.id}`}</span>}
+              <SaveIndicator saving={saving} lastSaved={lastSaved} pedido={pedido} />
+            </div>
+          )}
           {pedido.id && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
               {pedido.createdAt && (
@@ -737,9 +739,20 @@ export default function PedidoNuevo() {
         @media (max-width: 720px) {
           .pedido-pane { padding: 13px 13px; border-radius: 12px; }
           .pedido-pane-head { margin-bottom: 10px; }
-          /* ── Header page: mas compacto, botones apretados ── */
-          .pedido-page-header { margin-bottom: 12px !important; gap: 8px !important; }
-          .pedido-page-header h2 { font-size: 17px !important; letter-spacing: -.3px; }
+          /* ── Header page: mas compacto, botones apretados ──
+             .ph global lo pone en columna en <=768, asi que el titulo y las
+             acciones ocupaban dos renglones con su gap en el medio. Entran en
+             uno: a 390px el titulo y el estado piden ~206px y las acciones
+             ~122px. El nombre del cliente elide si es largo. */
+          .pedido-page-header { flex-direction: row !important; align-items: center !important; margin-bottom: 12px !important; gap: 8px !important; }
+          .pedido-page-header > div:first-child { min-width: 0; }
+          .pedido-page-header h2 {
+            font-size: 17px !important; letter-spacing: -.3px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+          }
+          /* Chip de kit: alto de campo para algo que es un contador */
+          .kit-chip { gap: 8px !important; padding: 6px 10px !important; margin-bottom: 10px !important; }
+          .kit-chip input { width: 54px !important; padding: 3px 6px !important; }
           .pedido-page-header .btn.btn-sm {
             padding: 6px 11px !important; font-size: 12px !important;
             height: 32px !important; min-height: 32px !important; border-radius: 9px !important;
@@ -882,15 +895,17 @@ function SaveIndicator({ saving, lastSaved, pedido }) {
       return `Guardado automáticamente a las ${hh}:${mm}`
     } catch { return 'Guardado automáticamente' }
   })() : ''
+  // Sin nada que decir no ocupa lugar: antes reservaba 16px de alto y, en un
+  // pedido nuevo sin guardar, dejaba un hueco entre el titulo y lo de abajo.
+  if (!saving && !lastSaved) return null
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', minHeight: 16 }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center' }}>
       {saving && (
         <i className="fa fa-arrows-rotate fa-spin" title="Guardando..." style={{ fontSize: 11, color: 'var(--txt3)' }} />
       )}
       {!saving && lastSaved && (
         <i className="fa fa-circle-check" title={tsLabel} style={{ fontSize: 12, color: '#16a34a' }} />
       )}
-      {!saving && !lastSaved && !ready && null}
     </div>
   )
 }
@@ -1501,7 +1516,7 @@ function KitChip({ cantidad, onChange, onOff, costoTotal = 0, facturado = 0 }) {
   const costoPorKit = costoTotal > 0 ? costoTotal / n : 0
   const precioPorKit = facturado > 0 ? facturado / n : 0
   return (
-    <div style={{
+    <div className="kit-chip" style={{
       display: 'inline-flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
       padding: '8px 14px', marginBottom: 12,
       background: 'var(--brand-xlt)',
