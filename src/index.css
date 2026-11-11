@@ -1846,6 +1846,30 @@ td b{color:var(--txt);font-weight:600}
   .modal .grid2,.modal .grid3{grid-template-columns:1fr!important}
 }
 
+/* ── Ficha de cliente: header en dos filas en mobile ──────────────────
+   El bloque de acciones es flexShrink:0 y pide ~320px (Nuevo pedido +
+   Portal + editar + cerrar). A 390px, con el padding del modal, al lado
+   izquierdo le quedaban 22px: el avatar se aplastaba a cero y el nombre
+   desbordaba por debajo de los botones, que al venir despues en el DOM se
+   dibujan encima. Identidad arriba a lo ancho, acciones abajo, y la cruz
+   anclada arriba a la derecha.
+   Proveedores NO va aca: ese panel trae su propio bloque <style>. */
+@media (max-width: 768px){
+  .cli-dt-header{position:relative;padding:14px 16px 12px!important}
+  .cli-dt-head{flex-wrap:wrap;gap:0!important}
+  .cli-dt-id{flex:1 1 100%!important;min-width:0;gap:11px!important;padding-right:38px;align-items:flex-start!important}
+  .cli-dt-ava{width:40px!important;height:40px!important;font-size:16px!important;flex-shrink:0}
+  .cli-dt-id h3{font-size:16px!important}
+  /* Proveedores pide ~386px solo en acciones (Compartir portal + Registrar
+     gasto + Editar): con wrap caen en dos renglones en vez de desbordar. */
+  .cli-dt-acts{width:100%;margin-top:12px}
+  /* Solo Proveedores necesita dos renglones: sus tres acciones piden ~386px.
+     En Clientes entran en uno y el wrap tiraba el lapiz solo abajo. */
+  .cli-dt-acts.is-wrap{flex-wrap:wrap}
+  .cli-dt-acts .btn-primary{flex:1}
+  .cli-dt-acts .mclose{position:absolute;top:12px;right:12px}
+}
+
 /* ── Filas de carga en pantallas angostas ──────────────────────────────
    Las dos filas tienen columnas fijas para cantidad y monto, asi que el
    nombre se queda con lo que sobra. A 375px eran ~63px (componentes del

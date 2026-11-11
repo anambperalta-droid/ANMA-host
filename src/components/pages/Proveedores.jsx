@@ -1000,10 +1000,10 @@ export default function Proveedores() {
         <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setDetailSupplier(null) }}>
           <div className="modal-form-card cli-detail-card" style={{ width: '100%', maxWidth: 860, maxHeight: '95vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+            <div className="cli-dt-header" style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+              <div className="cli-dt-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="cli-dt-id" style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
+                  <div className="cli-dt-ava" style={{ width: 50, height: 50, borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
                     {(detailSupplier.name || '?')[0].toUpperCase()}
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
@@ -1026,7 +1026,7 @@ export default function Proveedores() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div className="cli-dt-acts is-wrap" style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
                   <button className="btn btn-ghost btn-sm" onClick={() => sharePortalLink(detailSupplier)} title="Genera un link público con resumen para la proveedora">
                     <i className="fa fa-share-nodes" /> Compartir portal
                   </button>
