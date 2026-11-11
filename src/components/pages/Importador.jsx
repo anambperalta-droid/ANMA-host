@@ -349,7 +349,7 @@ export default function Importador() {
   }
 
   return (
-    <div style={{ padding: '24px 20px 100px', maxWidth: 720, margin: '0 auto' }}>
+    <div className="imp-page" style={{ padding: '24px 20px 100px', maxWidth: 720, margin: '0 auto' }}>
 
       {/* Hero */}
       <div style={{ marginBottom: 24 }}>
@@ -390,7 +390,7 @@ export default function Importador() {
       </div>
 
       {/* Barra sticky de confirmación */}
-      <div style={{
+      <div className="imp-bar" style={{
         position: 'sticky', bottom: 0,
         marginTop: 20,
         background: 'var(--surface)',

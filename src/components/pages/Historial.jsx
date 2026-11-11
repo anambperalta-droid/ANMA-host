@@ -264,7 +264,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
             <span>Está marcado <b>Pagado</b> en la lista pero sin comprobantes — cargá el cobro real abajo.</span>
           </div>
         )}
-        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'center' }}>
+        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))', gap: 12, alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{budget.ivaAmt > 0 ? ' c/IVA' : ''}</div>
             <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)' }}>{fmtMoney(totalDue)}</div>
@@ -2762,7 +2762,7 @@ export default function Historial() {
                 if (totalDue === 0 && totalPaid === 0) return null
                 return (
                   <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface2)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: pays.length > 0 ? 12 : 0 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))', gap: 12, marginBottom: pays.length > 0 ? 12 : 0 }}>
                       <div>
                         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{b.ivaAmt > 0 ? ' c/IVA' : ''}</div>
                         <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', marginTop: 2 }}>{fmt(totalDue)}</div>

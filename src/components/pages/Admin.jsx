@@ -693,10 +693,14 @@ export default function Admin() {
 
         .urgency-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
 
+        /* La tabla scrollea de costado (minWidth 720-980) y nada lo decia: en
+           el celular las ultimas columnas parecian no existir. */
+        .admin-scroll-hint{display:none}
         @media(max-width:780px){
           .admin-tabs{display:flex;width:100%;overflow-x:auto;scrollbar-width:none}
           .admin-tabs::-webkit-scrollbar{display:none}
           .admin-tab{flex-shrink:0}
+          .admin-scroll-hint{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--txt3);background:var(--surface2);border-bottom:1px solid var(--border)}
         }
       `}</style>
 
@@ -1019,6 +1023,10 @@ export default function Admin() {
 
       {/* ── Tabla ───────────────────────────────────────────────────── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="admin-scroll-hint">
+          <i className="fa fa-arrows-left-right" />
+          Deslizá la tabla para ver el resto de las columnas
+        </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: tab === 'trials' ? 920 : tab === 'billing' ? 980 : 720 }}>
             <thead>
@@ -1394,7 +1402,8 @@ export default function Admin() {
               <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--txt3)' }}>
                 Tipo de pago
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
+              {/* auto-fit: a 390px tres columnas dejaban ~70px por boton. */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(104px, 1fr))', gap: 8, marginTop: 8 }}>
                 {[
                   { key: 'onboarding', lbl: 'Ingreso',    hint: '$120.000', ico: 'fa-rocket' },
                   { key: 'monthly',    lbl: 'Mensual',    hint: '$30.000',  ico: 'fa-calendar-days' },
@@ -1455,7 +1464,7 @@ export default function Admin() {
               <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--txt3)' }}>
                 Método de pago
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginTop: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(84px, 1fr))', gap: 6, marginTop: 8 }}>
                 {[
                   { key: 'transferencia', lbl: 'Transf.', ico: 'fa-building-columns' },
                   { key: 'efectivo',      lbl: 'Efectivo', ico: 'fa-money-bill-wave' },

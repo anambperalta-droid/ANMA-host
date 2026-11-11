@@ -2384,3 +2384,29 @@ td b{color:var(--txt);font-weight:600}
 /* Mantener selectores legacy por compatibilidad */
 .modal.modal-hbf{overflow:hidden!important;padding:0!important}
 .modal.modal-hbf::before{display:none!important}
+
+/* ===== Mobile: Importador ===== */
+/* La barra sticky de "Confirmar migracion" vivia en bottom:0 y el bottom-nav
+   flotante (10px + 60px, z-index 50) le tapaba el boton. La levantamos por
+   encima del nav, con z-index propio por debajo de el. Mismo arreglo que Hub. */
+@media (max-width: 768px){
+  .imp-page{padding:18px 14px 120px!important}
+  .imp-bar{
+    bottom:calc(78px + env(safe-area-inset-bottom))!important;
+    z-index:40;
+    margin-left:-14px;margin-right:-14px;
+    padding:12px 14px!important;
+    border-radius:14px 14px 0 0!important;
+  }
+  .imp-bar > button{padding:14px 0!important;min-height:var(--touch)}
+}
+
+/* ── Ficha de detalle: anclada arriba, no centrada ──
+   Una ficha alta centrada con `align-items:safe center` + `margin:auto 0`
+   arranca muy abajo en la pantalla y se corta contra el borde inferior.
+   Anclada a 5vh del techo siempre abre en el mismo lugar. Igual que Hub. */
+.modal-bg.open.modal-bg-top{align-items:flex-start;padding-top:5vh}
+.modal-bg.open.modal-bg-top > .modal-form-card{margin-top:0;margin-bottom:24px}
+@media(max-width:768px){
+  .modal-bg.open.modal-bg-top{padding-top:0}
+}
