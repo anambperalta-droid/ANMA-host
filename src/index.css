@@ -2541,21 +2541,59 @@ td b{color:var(--txt);font-weight:600}
    peso 900 y boton rojo solido: cuatro capas diciendo lo mismo. Ahora apoya
    sobre la superficie de la ficha, el color queda en una regla de 3px al
    costado y en el monto, y la accion es el boton del sistema. Igual que Hub. */
+/* ── Banda de alerta (saldo pendiente / reposicion pendiente) ─────────
+   Grid de dos filas: el rotulo arriba a lo ancho, y abajo el monto con su
+   accion en la misma linea. Antes era flex y la accion caia en un tercer
+   renglon: .cli-alert-txt pedia 150px minimos y, con el boton al lado,
+   dentro de la ficha a 375px quedaban ~141px. Con grid la columna 1fr se
+   achica y el texto envuelve en vez de empujar al boton.
+   .cli-alert-txt pasa a display:contents para que el rotulo y el monto
+   sean celdas de esta grilla sin tocar el markup de las cuatro pantallas
+   que la usan (Clientes y Proveedores de las dos apps). */
 .cli-alert-band{
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  padding:11px 14px;margin-bottom:14px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:
+    'label label'
+    'val   btn';
+  align-items:center;
+  column-gap:12px;row-gap:5px;
+  padding:12px 14px;margin-bottom:14px;
   border-radius:12px;
-  background:var(--surface2);
-  border:1px solid var(--border);
+  background:var(--alert-bg);
+  border:1px solid var(--alert-line);
   border-left:3px solid var(--alert-tone);
 }
-.cli-alert-txt{flex:1;min-width:150px;display:flex;flex-direction:column;gap:2px}
-.cli-alert-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3)}
-.cli-alert-val{font-size:18px;font-weight:800;letter-spacing:-.3px;line-height:1.15;color:var(--alert-ink)}
-.cli-alert-band .cli-alert-btn{flex-shrink:0}
+.cli-alert-txt{display:contents}
+.cli-alert-label{
+  grid-area:label;
+  font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--alert-ink);opacity:.75;
+}
+.cli-alert-val{
+  grid-area:val;min-width:0;
+  /* El monto se achica con el viewport: un saldo de 8 cifras no empuja al boton. */
+  font-size:clamp(17px, 5.2vw, 21px);font-weight:800;letter-spacing:-.4px;line-height:1.1;
+  color:var(--alert-ink);font-variant-numeric:tabular-nums;
+}
+/* En stock el "valor" es una frase, no un numero: no pide tamano de titular. */
+.cli-alert-band.is-stock .cli-alert-val{font-size:15px;font-weight:700;letter-spacing:-.1px;line-height:1.25}
+.cli-alert-band .cli-alert-btn{grid-area:btn;justify-self:end;flex-shrink:0}
 .cli-alert-band .cli-alert-btn i{color:var(--alert-tone)}
 .cli-alert-band .cli-alert-btn:hover i{color:inherit}
-.cli-alert-band.is-debt{--alert-tone:var(--red);--alert-ink:#991B1B}
+.cli-alert-band.is-debt{
+  --alert-tone:var(--red);--alert-ink:#991B1B;
+  --alert-bg:var(--red-lt);--alert-line:rgba(220,38,38,.18);
+}
+.cli-alert-band.is-stock{
+  --alert-tone:var(--amber);--alert-ink:#92400E;
+  --alert-bg:var(--amber-lt);--alert-line:rgba(217,119,6,.18);
+}
+:root[data-theme="dark"] .cli-alert-band.is-debt{--alert-ink:#FCA5A5;--alert-bg:var(--red-dim);--alert-line:rgba(220,38,38,.3)}
+:root[data-theme="dark"] .cli-alert-band.is-stock{--alert-ink:#FCD34D;--alert-bg:var(--amber-dim);--alert-line:rgba(217,119,6,.3)}
+@media (max-width: 380px){
+  .cli-alert-band{column-gap:8px;padding:11px 12px}
+}
 
 /* El WhatsApp y el mail se tocan, no se leen: dos chips anchos con el dato
    entero ocupaban media ficha. Quedan dos botones redondos. */
@@ -2591,13 +2629,6 @@ td b{color:var(--txt);font-weight:600}
   .cli-kpi-l{font-size:10px}
 }
 
-.cli-alert-band.is-stock{--alert-tone:var(--amber);--alert-ink:#92400E}
-:root[data-theme="dark"] .cli-alert-band.is-debt{--alert-ink:#FCA5A5}
-:root[data-theme="dark"] .cli-alert-band.is-stock{--alert-ink:#FCD34D}
-@media (max-width: 380px){
-  .cli-alert-band{gap:8px}
-  .cli-alert-band .cli-alert-btn{width:100%}
-}
 
 /* Accion "compartir portal" en cada pedido de la ficha del cliente */
 .cli-portal-btn{
