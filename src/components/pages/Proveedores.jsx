@@ -3,9 +3,18 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
-import { fmt, cfg, db, dbW } from '../../lib/storage'
+import { fmt, fmtDate, cfg, db, dbW } from '../../lib/storage'
 import { createPortalShortLink } from '../../lib/portalLink'
 import { triggerEncouragement } from '../layout/MilestoneToast'
+
+/**
+ * conDias(v) — los plazos son texto libre: a veces "30", a veces "30 dias
+ * fecha factura". Solo agregamos "dias" si el valor es un numero pelado.
+ */
+function conDias(v) {
+  const t = String(v).trim()
+  return /^\d+$/.test(t) ? `${t} días` : t
+}
 
 export default function Proveedores() {
   const { get, set, saveEntity, deleteEntity } = useData()
@@ -1080,40 +1089,29 @@ export default function Proveedores() {
                       </div>
                     )
                   })()}
-                  {/* Contacto activo — links funcionales */}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+                  {/* Contacto activo — links funcionales.
+                      El numero y el mail enteros ocupaban dos chips anchos; el
+                      rubro ya esta en el subtitulo del header. */}
+                  <div className="cli-contact-row" style={{ marginBottom: 14 }}>
                     {detailSupplier.wa && (
-                      <a
-                        href="#"
-                        onClick={e => { e.preventDefault(); openWA(detailSupplier) }}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DCFCE7', color: '#16A34A', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', cursor: 'pointer', transition: 'opacity .15s' }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                        title="Abrir chat de WhatsApp"
-                      >
-                        <i className="fa-brands fa-whatsapp" /> WA: {detailSupplier.wa}
+                      <a href="#" onClick={e => { e.preventDefault(); openWA(detailSupplier) }}
+                        className="cli-ico-btn cli-ico-wa"
+                        title={`WhatsApp · ${detailSupplier.wa}`} aria-label={`Abrir WhatsApp de ${detailSupplier.name}`}>
+                        <i className="fa-brands fa-whatsapp" />
                       </a>
                     )}
                     {detailSupplier.email && (
-                      <a
-                        href={`mailto:${detailSupplier.email}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DBEAFE', color: '#1D4ED8', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', transition: 'opacity .15s' }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                      >
-                        <i className="fa fa-envelope" /> Email: {detailSupplier.email}
+                      <a href={`mailto:${detailSupplier.email}`}
+                        className="cli-ico-btn cli-ico-mail"
+                        title={`Email · ${detailSupplier.email}`} aria-label={`Escribir a ${detailSupplier.name}`}>
+                        <i className="fa fa-envelope" />
                       </a>
-                    )}
-                    {detailSupplier.rubro && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#F7E8F0', color: '#7C3AED', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20 }}>
-                        <i className="fa fa-tag" /> Rubro: {detailSupplier.rubro}
-                      </span>
                     )}
                   </div>
 
                   {/* Datos fiscales y operativos */}
                   {(detailSupplier.cuit || detailSupplier.ivaCondition || detailSupplier.paymentTerm || detailSupplier.leadTime || detailSupplier.cbu) && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, marginBottom: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(126px, 1fr))', gap: 8, marginBottom: 14 }}>
                       {detailSupplier.cuit && (
                         <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px' }}>
                           <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>CUIT</div>
@@ -1131,13 +1129,13 @@ export default function Proveedores() {
                       {detailSupplier.paymentTerm && (
                         <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px' }}>
                           <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Plazo pago</div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{detailSupplier.paymentTerm} días</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{conDias(detailSupplier.paymentTerm)}</div>
                         </div>
                       )}
                       {detailSupplier.leadTime && (
                         <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '8px 12px' }}>
-                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Lead time</div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{detailSupplier.leadTime} días</div>
+                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Demora entrega</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{conDias(detailSupplier.leadTime)}</div>
                         </div>
                       )}
                       {detailSupplier.cbu && (
@@ -1149,62 +1147,59 @@ export default function Proveedores() {
                     </div>
                   )}
 
-                  {/* KPI rápido */}
-                  {(() => {
-                    const prods = supplierProducts(detailSupplier)
-                    const costTotal = supplierCostTotal(detailSupplier)
-                    if (!prods.length) return null
-                    return (
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                        <div style={{ flex: '1 1 100px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--txt)' }}>{prods.length}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Productos</div>
-                        </div>
-                        <div style={{ flex: '1 1 120px', background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--money)' }}>{fmt(costTotal)}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Costo total</div>
-                        </div>
-                      </div>
-                    )
-                  })()}
-
-                  {/* KPIs de Compras — vida real del proveedor */}
+                  {/* KPIs — una sola card dividida, igual que la ficha de Cliente.
+                      Antes eran dos bloques (2 cajas grises + 4 cajas, una con el
+                      tinte de marca) con tres estilos distintos para seis numeros.
+                      "Costo total" pasa a llamarse "Costo de lista": es la suma de
+                      precios del catalogo, no plata gastada, y al lado de "Total
+                      gastado" se leia como lo mismo. */}
                   {(() => {
                     const stats = supplierComprasStats(detailSupplier)
+                    const prods = supplierProducts(detailSupplier)
                     if (stats.count === 0) {
                       return (
-                        <div
-                          onClick={() => { const n = detailSupplier.name; setDetailSupplier(null); nav(`/compras?prov=${encodeURIComponent(n)}&new=1`) }}
-                          style={{ background: 'linear-gradient(135deg, rgba(193,66,114,.06), rgba(193,66,114,.02))', borderRadius: 10, padding: '14px 16px', marginBottom: 14, fontSize: 12.5, color: 'var(--txt3)', borderLeft: '3px solid var(--brand)', cursor: 'pointer', transition: 'background .15s' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(135deg, rgba(193,66,114,.12), rgba(193,66,114,.05))'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(135deg, rgba(193,66,114,.06), rgba(193,66,114,.02))'}
-                        >
-                          <i className="fa fa-cart-shopping" style={{ marginRight: 6, color: 'var(--brand)' }} />
-                          <b style={{ color: 'var(--txt2)' }}>Todavía sin compras.</b> Registrá el primer gasto a este proveedor para empezar a ver su historial.
-                        </div>
+                        <>
+                          {prods.length > 0 && (
+                            <div className="cli-kpis" style={{ '--kpi-cols': 2 }}>
+                              <div className="cli-kpi">
+                                <div className="cli-kpi-v">{prods.length}</div>
+                                <div className="cli-kpi-l">Productos</div>
+                              </div>
+                              <div className="cli-kpi">
+                                <div className="cli-kpi-v" style={{ color: 'var(--money)' }}>{fmt(supplierCostTotal(detailSupplier))}</div>
+                                <div className="cli-kpi-l">Costo de lista</div>
+                              </div>
+                            </div>
+                          )}
+                          <div
+                            onClick={() => { const n = detailSupplier.name; setDetailSupplier(null); nav(`/compras?prov=${encodeURIComponent(n)}&new=1`) }}
+                            style={{ background: 'var(--brand-xlt)', borderRadius: 10, padding: '14px 16px', marginBottom: 14, fontSize: 12.5, color: 'var(--txt3)', borderLeft: '3px solid var(--brand)', cursor: 'pointer', transition: 'background .15s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-dim)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'var(--brand-xlt)'}
+                          >
+                            <i className="fa fa-cart-shopping" style={{ marginRight: 6, color: 'var(--brand)' }} />
+                            <b style={{ color: 'var(--txt2)' }}>Todavía sin compras.</b> Registrá el primer gasto para ver su historial.
+                          </div>
+                        </>
                       )
                     }
-                    const lastDate = stats.last.fecha ? (() => {
-                      const [y, m, d] = stats.last.fecha.split('-')
-                      return `${Number(d)}/${Number(m)}/${y.slice(2)}`
-                    })() : '—'
                     return (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, marginBottom: 14 }}>
-                        <div style={{ background: 'var(--brand-xlt)', borderRadius: 10, padding: '10px 12px' }}>
-                          <div style={{ fontSize: 9, color: 'var(--brand)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Total gastado</div>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--brand)', marginTop: 2, fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em' }}>{fmt(stats.total)}</div>
+                      <div className="cli-kpis">
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v" style={{ color: 'var(--money)' }}>{fmt(stats.total)}</div>
+                          <div className="cli-kpi-l">Total gastado</div>
                         </div>
-                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }}>
-                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Compras</div>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--txt)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{stats.count}</div>
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v">{fmt(stats.avgMensual)}</div>
+                          <div className="cli-kpi-l">Prom/mes</div>
                         </div>
-                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }}>
-                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Última</div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--txt)', marginTop: 2 }}>{lastDate}</div>
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v">{fmtDate(stats.last.fecha)}</div>
+                          <div className="cli-kpi-l">Última compra</div>
                         </div>
-                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 12px' }} title="Promedio por mes con actividad">
-                          <div style={{ fontSize: 9, color: 'var(--txt3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.5px' }}>Prom/mes</div>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--money)', marginTop: 2, fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em' }}>{fmt(stats.avgMensual)}</div>
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v">{stats.count}</div>
+                          <div className="cli-kpi-l">Compras</div>
                         </div>
                       </div>
                     )
@@ -1310,7 +1305,7 @@ export default function Proveedores() {
                                     return (
                                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: 'var(--txt2)' }}>
                                         <i className="fa fa-clock" style={{ color: 'var(--txt4)' }} />
-                                        <span style={{ color: 'var(--txt3)' }}>{h.date}</span>
+                                        <span style={{ color: 'var(--txt3)' }}>{fmtDate(h.date)}</span>
                                         <span>{fmt(h.prevCost)} → <b>{fmt(h.newCost)}</b></span>
                                         <span style={{ color: pct > 0 ? '#DC2626' : '#16A34A', fontWeight: 700 }}>
                                           {pct > 0 ? '+' : ''}{Number.isInteger(Math.round(pct * 10) / 10) ? Math.round(pct) : pct.toFixed(1)}%
