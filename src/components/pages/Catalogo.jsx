@@ -1415,7 +1415,7 @@ export default function Catalogo() {
               {kitItems.length > 0 && (
                 <div style={{ background: 'rgba(255,255,255,.85)', borderRadius: 10, border: '1px solid #EFD4E4', marginBottom: 10, overflow: 'hidden' }}>
                   {/* Headers de columnas */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, padding: '8px 10px 6px', fontSize: 9, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.5, background: 'rgba(139,92,246,.05)', borderBottom: '1px solid #F7E8F0' }}>
+                  <div className="kit-row kit-row-head" style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, padding: '8px 10px 6px', fontSize: 9, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: 0.5, background: 'rgba(139,92,246,.05)', borderBottom: '1px solid #F7E8F0' }}>
                     <span title="Tipo: contenido / packaging">Tipo</span>
                     <span>Item</span>
                     <span style={{ textAlign: 'center' }}>Cant.</span>
@@ -1426,7 +1426,7 @@ export default function Catalogo() {
                     const lineCost = num(it.qty) * num(it.costoUnit)
                     const isPack = it._type === 'packaging'
                     return (
-                      <div key={it._id} style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, alignItems: 'center', padding: '6px 10px', background: idx % 2 === 0 ? 'var(--surface)' : 'rgba(253,242,248,.4)', borderBottom: idx < kitItems.length - 1 ? '1px solid rgba(221,214,254,.4)' : 'none' }}>
+                      <div key={it._id} className="kit-row" style={{ display: 'grid', gridTemplateColumns: '34px 1fr 56px 84px 26px', gap: 6, alignItems: 'center', padding: '6px 10px', background: idx % 2 === 0 ? 'var(--surface)' : 'rgba(253,242,248,.4)', borderBottom: idx < kitItems.length - 1 ? '1px solid rgba(221,214,254,.4)' : 'none' }}>
                         {/* Chip de tipo (click para cambiar) */}
                         <button
                           type="button"

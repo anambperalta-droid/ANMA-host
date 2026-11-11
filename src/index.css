@@ -1846,6 +1846,42 @@ td b{color:var(--txt);font-weight:600}
   .modal .grid2,.modal .grid3{grid-template-columns:1fr!important}
 }
 
+/* ── Filas de carga en pantallas angostas ──────────────────────────────
+   Las dos filas tienen columnas fijas para cantidad y monto, asi que el
+   nombre se queda con lo que sobra. A 375px eran ~63px (componentes del
+   kit, con el modal y el padding de la fila descontados) y ~107px (linea
+   de venta): con los inputs a 16px por la regla anti-zoom, se ven cuatro
+   a seis caracteres. Se reparten en dos filas, mismo patron que
+   .pedido-linea-row. Los hijos se toman por posicion para no tener que
+   clasificar cada input ni el wrapper de MoneyInput. */
+@media(max-width:560px){
+  .kit-row-head{display:none!important}
+  .kit-row{
+    grid-template-columns:34px 1fr 1fr 26px!important;
+    grid-template-areas:
+      'tipo nombre nombre borrar'
+      'tipo cant   costo  borrar'!important;
+    row-gap:6px!important;align-items:center!important;
+  }
+  .kit-row > :nth-child(1){grid-area:tipo;align-self:start}
+  .kit-row > :nth-child(2){grid-area:nombre;min-width:0}
+  .kit-row > :nth-child(3){grid-area:cant;text-align:left!important}
+  .kit-row > :nth-child(4){grid-area:costo}
+  .kit-row > :nth-child(5){grid-area:borrar;align-self:start;justify-self:end}
+
+  .sd-line-grid{
+    grid-template-columns:1fr 1fr 28px!important;
+    grid-template-areas:
+      'nombre nombre borrar'
+      'cant   precio borrar'!important;
+    row-gap:6px!important;
+  }
+  .sd-line-grid > :nth-child(1){grid-area:nombre;min-width:0}
+  .sd-line-grid > :nth-child(2){grid-area:cant}
+  .sd-line-grid > :nth-child(3){grid-area:precio}
+  .sd-line-grid > :nth-child(4){grid-area:borrar;align-self:start;justify-self:end}
+}
+
 /* ── Floating bulk bar: above tab bar ── */
 @media(max-width:768px){
   .bulk-float{bottom:calc(78px + env(safe-area-inset-bottom) + 8px)!important}

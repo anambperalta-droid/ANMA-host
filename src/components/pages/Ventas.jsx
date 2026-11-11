@@ -1587,7 +1587,7 @@ function LineRow({ line, idx, products, onSelectProduct, onChange, onRemove, can
       padding: '8px 10px', marginBottom: 6,
       border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--bg)',
     }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 110px 28px', gap: 6, alignItems: 'center' }}>
+      <div className="sd-line-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 60px 110px 28px', gap: 6, alignItems: 'center' }}>
         <div style={{ position: 'relative', minWidth: 0 }}>
           <input className="sd-inp" placeholder={`Producto ${idx + 1}`}
             value={line.name}
