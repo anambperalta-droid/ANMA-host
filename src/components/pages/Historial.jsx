@@ -2857,18 +2857,21 @@ export default function Historial() {
               </div>
               {/* Scroll body */}
               <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 20px' }}>
-                {/* Contact pills */}
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {/* Contacto — los mismos botones redondos que las fichas: el
+                    mail entero estiraba la fila y el dato se toca, no se lee. */}
+                <div className="cli-contact-row" style={{ marginBottom: 16 }}>
                   {waNum && (
                     <a href={`https://wa.me/${waNum}`} target="_blank" rel="noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9999, background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.28)', color: '#16A34A', textDecoration: 'none', fontSize: 12, fontWeight: 700 }}>
-                      <i className="fa-brands fa-whatsapp" style={{ fontSize: 14 }} /> WhatsApp
+                      className="cli-ico-btn cli-ico-wa"
+                      title={`WhatsApp · ${cli.wa || waNum}`} aria-label="Abrir WhatsApp">
+                      <i className="fa-brands fa-whatsapp" />
                     </a>
                   )}
                   {cli.email && (
                     <a href={`mailto:${cli.email}`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9999, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--txt2)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}>
-                      <i className="fa fa-envelope" style={{ fontSize: 12 }} /> {cli.email}
+                      className="cli-ico-btn cli-ico-mail"
+                      title={`Email · ${cli.email}`} aria-label="Escribir un mail">
+                      <i className="fa fa-envelope" />
                     </a>
                   )}
                 </div>
