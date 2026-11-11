@@ -185,8 +185,9 @@ export default function PedidoDrawer({ budget, onClose, onEdit, onWA, onVerClien
             )
           })()}
 
-          {/* KPI cards — sync con PedidoNuevo */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+          {/* KPI cards — auto-fit igual que PedidoNuevo: en mobile caen a 2x2.
+              Con 4 columnas fijas el monto tabular de 13px se cortaba a 375px. */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 16 }}>
             {[
               { label: 'Facturado', value: fmt(totales.total), icon: 'fa-file-invoice-dollar', color: '#7C3AED' },
               { label: 'Costo', value: fmt(totales.costoTotal), icon: 'fa-lock', color: '#b45309' },

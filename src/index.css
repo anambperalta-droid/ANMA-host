@@ -1849,6 +1849,16 @@ td b{color:var(--txt);font-weight:600}
 /* ── Floating bulk bar: above tab bar ── */
 @media(max-width:768px){
   .bulk-float{bottom:calc(78px + env(safe-area-inset-bottom) + 8px)!important}
+  /* position:fixed con left:50% y sin right => el ancho disponible es 50vw:
+     la barra quedaba de ~187px y los controles se apilaban en 5 filas sobre
+     el bottom-nav. Banda de ancho completo con scroll lateral. */
+  .bulk-float{
+    left:10px!important;right:10px!important;transform:none!important;
+    flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;
+    justify-content:flex-start;
+  }
+  .bulk-float::-webkit-scrollbar{display:none}
+  .bulk-float > *{flex-shrink:0}
 }
 
 /* ── Presupuesto wizard tablet (768-1099px): hereda budget en 1 col, mejor spacing ── */

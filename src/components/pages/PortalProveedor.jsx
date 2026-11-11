@@ -244,7 +244,7 @@ export default function PortalProveedor() {
               { label: 'Valor estimado', value: fmt(totalValue) },
             ].map((t, i) => (
               <div key={i} style={{ background: '#fff', border: `1px solid ${brandLine}`, borderRadius: 12, padding: '13px 10px', textAlign: 'center', minWidth: 0 }}>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', fontFamily: "'Space Grotesk','Inter',sans-serif", letterSpacing: '-.4px', fontVariantNumeric: 'tabular-nums', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.value}</div>
+                <div style={{ fontSize: 'clamp(13px, 3.6vw, 17px)', fontWeight: 700, color: '#111827', fontFamily: "'Space Grotesk','Inter',sans-serif", letterSpacing: '-.4px', fontVariantNumeric: 'tabular-nums', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.value}</div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.5px', marginTop: 5 }}>{t.label}</div>
               </div>
             ))}
