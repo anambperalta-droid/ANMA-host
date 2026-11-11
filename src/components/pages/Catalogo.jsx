@@ -530,7 +530,6 @@ export default function Catalogo() {
   }
   const supplierName = (id) => { const s = suppliers.find(x => x.id === Number(id)); return s?.name || '—' }
 
-  const suggestedPrice = (cost) => Math.round(num(cost) * (1 + margin / 100))
 
   const onCostChange = (v) => {
     setF('cost', v)
@@ -556,19 +555,6 @@ export default function Catalogo() {
   const catColor = (cat) => {
     const idx = cats.indexOf(cat)
     return CAT_PALETTE[(idx < 0 ? 0 : idx) % CAT_PALETTE.length]
-  }
-
-  const marginPct = (p) => {
-    const cost = num(p.cost)
-    if (!cost) return null
-    return Math.round((suggestedPrice(cost) - cost) / cost * 100)
-  }
-
-  const marginColor = (pct) => {
-    if (pct === null) return 'var(--txt3)'
-    if (pct < 20) return '#DC2626'
-    if (pct < 35) return '#D97706'
-    return '#16A34A'
   }
 
   const priceUpdatePreview = priceSupplier === 'all'
@@ -706,7 +692,6 @@ export default function Catalogo() {
 
   // ── Helper: tarjeta de grilla reutilizable ────────────────────────
   const renderGridCard = (p) => {
-    const pct = marginPct(p)
     const cc  = catColor(p.cat)
     const isKit = p.tipo === 'kit'
     return (
@@ -759,7 +744,6 @@ export default function Catalogo() {
 
   // ── Helper: fila de tabla reutilizable (tabla lista + grupos) ─────
   const renderTableRow = (p) => {
-    const pct = marginPct(p)
     const cc  = catColor(p.cat)
     const isKit = p.tipo === 'kit'
     return (

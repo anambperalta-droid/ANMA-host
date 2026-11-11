@@ -1401,7 +1401,7 @@ export default function Logistica() {
              el 5to KPI solo abajo (feo). */}
           <div className="kpis logi-resumen-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
             {/* Costo total — with trend */}
-            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+            <div className="card" style={{ padding: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Costo total envíos</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--money)' }}>{fmt(totalShipCost)}</div>
               {trendPct !== null && (
@@ -1414,19 +1414,19 @@ export default function Logistica() {
             </div>
 
             {/* Envíos este mes */}
-            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+            <div className="card" style={{ padding: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Envíos este mes</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--txt)' }}>{thisMonth}</div>
             </div>
 
             {/* Promedio por envío */}
-            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+            <div className="card" style={{ padding: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Promedio por envío</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--money)' }}>{fmt(avgCost)}</div>
             </div>
 
             {/* Atrasados */}
-            <div className="card" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+            <div className="card" style={{ padding: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Atrasados</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: lateShipments.length > 0 ? '#DC2626' : 'var(--txt)' }}>{lateShipments.length}</div>
               <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 3 }}>{lateShipments.length > 0 ? 'Despachado/En tránsito > SLA' : 'Todo al día'}</div>
@@ -1434,7 +1434,7 @@ export default function Logistica() {
 
             {/* Desvíos de flete — red bg when > 0. En mobile span 2 col
                 para no dejar hueco a la derecha. */}
-            <div className="card logi-resumen-variance" style={{ padding: 16, borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', background: varianceCount > 0 ? '#FEF2F2' : undefined, border: varianceCount > 0 ? '1.5px solid #FCA5A5' : undefined }}>
+            <div className="card logi-resumen-variance" style={{ padding: 16, background: varianceCount > 0 ? '#FEF2F2' : undefined, border: varianceCount > 0 ? '1.5px solid #FCA5A5' : undefined }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: varianceCount > 0 ? '#991B1B' : 'var(--txt3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Desvíos de flete</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: varianceCount > 0 ? '#DC2626' : 'var(--txt)' }}>{varianceCount}</div>
               <div style={{ fontSize: 10, color: varianceCount > 0 ? '#B91C1C' : 'var(--txt3)', marginTop: 3 }}>{varianceCount > 0 ? 'Real ≠ cobrado al cliente' : 'Coincide con lo cobrado'}</div>
@@ -1443,7 +1443,7 @@ export default function Logistica() {
 
           <div className="logi-summary-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {/* Desglose por estado — donut centrado + leyenda */}
-            <div className="card" style={{ borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', padding: '18px 20px' }}>
+            <div className="card" style={{ padding: '18px 20px' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 18 }}>Desglose por estado</div>
               {byStatus.filter(b => b.count > 0).length ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
@@ -1470,7 +1470,7 @@ export default function Logistica() {
             </div>
 
             {/* Costo por mes — taller bars */}
-            <div className="card" style={{ borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,.07)', padding: 16 }}>
+            <div className="card" style={{ padding: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 14 }}>Costo por mes (últimos 6 meses)</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {monthlyData.map((m, idx) => {

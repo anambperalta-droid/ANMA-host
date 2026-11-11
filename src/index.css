@@ -2484,6 +2484,41 @@ td b{color:var(--txt);font-weight:600}
 .cli-alert-band .cli-alert-btn i{color:var(--alert-tone)}
 .cli-alert-band .cli-alert-btn:hover i{color:inherit}
 .cli-alert-band.is-debt{--alert-tone:var(--red);--alert-ink:#991B1B}
+
+/* El WhatsApp y el mail se tocan, no se leen: dos chips anchos con el dato
+   entero ocupaban media ficha. Quedan dos botones redondos. */
+.cli-contact-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cli-ico-btn{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:15px;text-decoration:none;cursor:pointer;border:none;
+  transition:transform .12s,filter .12s;
+}
+.cli-ico-btn:hover{transform:translateY(-1px);filter:brightness(.96)}
+.cli-ico-btn:active{transform:scale(.94)}
+.cli-ico-wa{background:#DCFCE7;color:#16A34A}
+.cli-ico-mail{background:var(--blue-lt);color:var(--blue)}
+
+/* Los 4 KPIs eran 4 cajas con fondo propio: mucho borde para 4 numeros.
+   Una sola card dividida pesa menos y se lee igual. */
+.cli-kpis{
+  display:grid;grid-template-columns:repeat(var(--kpi-cols,4),1fr);
+  background:var(--surface2);border-radius:10px;overflow:hidden;margin-bottom:14px;
+}
+.cli-kpi{padding:11px 8px;text-align:center;position:relative}
+.cli-kpi + .cli-kpi::before{
+  content:'';position:absolute;left:0;top:9px;bottom:9px;width:1px;background:var(--border);
+}
+.cli-kpi-v{font-size:15px;font-weight:800;color:var(--txt);line-height:1.15}
+.cli-kpi-l{font-size:9.5px;color:var(--txt3);margin-top:2px}
+@media (max-width: 560px){
+  .cli-kpis{grid-template-columns:repeat(2,1fr)}
+  .cli-kpi:nth-child(3)::before{display:none}
+  .cli-kpi:nth-child(3),.cli-kpi:nth-child(4){border-top:1px solid var(--border)}
+  .cli-kpi-v{font-size:16px}
+  .cli-kpi-l{font-size:10px}
+}
+
 .cli-alert-band.is-stock{--alert-tone:var(--amber);--alert-ink:#92400E}
 :root[data-theme="dark"] .cli-alert-band.is-debt{--alert-ink:#FCA5A5}
 :root[data-theme="dark"] .cli-alert-band.is-stock{--alert-ink:#FCD34D}

@@ -1447,22 +1447,19 @@ export default function Clientes() {
                       </div>
                     )
                   })()}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+                  <div className="cli-contact-row" style={{ marginBottom: 14 }}>
                     {detailClient.wa && (
                       <a href="#" onClick={e => { e.preventDefault(); openWA(detailClient) }}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#DCFCE7', color: '#16A34A', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', cursor: 'pointer', transition: 'opacity .15s' }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                        title="Abrir chat de WhatsApp">
-                        <i className="fa-brands fa-whatsapp" />{detailClient.wa}
+                        className="cli-ico-btn cli-ico-wa"
+                        title={`WhatsApp · ${detailClient.wa}`} aria-label="Abrir chat de WhatsApp">
+                        <i className="fa-brands fa-whatsapp" />
                       </a>
                     )}
                     {detailClient.email && (
                       <a href={`mailto:${detailClient.email}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--blue-lt)', color: 'var(--blue)', fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 20, textDecoration: 'none', transition: 'opacity .15s' }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = '.8'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                        <i className="fa fa-envelope" />{detailClient.email}
+                        className="cli-ico-btn cli-ico-mail"
+                        title={`Mail · ${detailClient.email}`} aria-label="Escribir un mail">
+                        <i className="fa fa-envelope" />
                       </a>
                     )}
                     {detailClient.rubro && <span className="badge b-purple">{detailClient.rubro}</span>}
@@ -1473,24 +1470,24 @@ export default function Clientes() {
                     const lastDays = clientLastBudgetDays(detailClient)
                     const ticket = clientTicketPromedio(detailClient)
                     if (bgs.length > 0) return (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
-                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--money)' }}>{fmt(totalVendido)}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Total vendido</div>
+                      <div className="cli-kpis">
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v" style={{ color: 'var(--money)' }}>{fmt(totalVendido)}</div>
+                          <div className="cli-kpi-l">Total vendido</div>
                         </div>
-                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)' }}>{ticket > 0 ? fmt(ticket) : '—'}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Ticket promedio</div>
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v">{ticket > 0 ? fmt(ticket) : '—'}</div>
+                          <div className="cli-kpi-l">Ticket promedio</div>
                         </div>
-                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)' }}>
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v">
                             {lastDays === null ? '—' : lastDays === 0 ? 'Hoy' : `hace ${lastDays}d`}
                           </div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Último pedido</div>
+                          <div className="cli-kpi-l">Último pedido</div>
                         </div>
-                        <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--txt)' }}>{bgs.length}</div>
-                          <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>Pedidos</div>
+                        <div className="cli-kpi">
+                          <div className="cli-kpi-v">{bgs.length}</div>
+                          <div className="cli-kpi-l">Pedidos</div>
                         </div>
                       </div>
                     )
