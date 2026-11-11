@@ -618,7 +618,7 @@ function SeguimientoCard({ b, onView, onWA, hasWA }) {
       </div>
 
       {/* Monto */}
-      <div className="seg-amount">{money(b.total)}</div>
+      <div className="seg-amount">{money(montoConIva(b))}</div>
 
       {/* Acción WA — tick verde chico si contactado reciente (<7d) */}
       {(() => {
@@ -758,6 +758,10 @@ function StatusDonut({ statuses, budgets, onSegmentClick }) {
 }
 
 // ── Pure helpers (module-level — no state deps) ──────────────────
+/* Base unica de monto: SIEMPRE con IVA. El presupuesto guarda `total` SIN IVA
+   y `totalFinal` con IVA; la venta rapida guarda `total` ya con IVA. Sumar
+   `b.total` pelado contaba de menos todo presupuesto con IVA. */
+const montoConIva = (b) => Number(b.totalFinal || b.total) || 0
 /**
  * Cuánto efectivamente entró por este presupuesto.
  * Prioridad: payments[] real > totalFinal (con IVA) > total (sin IVA).
@@ -768,7 +772,8 @@ const cobrado = (b) => {
   }
   const totalCobrado = b.totalFinal || b.total || 0
   if (b.payStatus === 'paid')    return totalCobrado
-  if (b.payStatus === 'partial') return b.depositAmt || Math.round(totalCobrado * (b.deposit || 50) / 100)
+  // depositFinal = seña sobre el total CON IVA; depositAmt es la de sin IVA.
+  if (b.payStatus === 'partial') return b.depositFinal || b.depositAmt || Math.round(totalCobrado * (b.deposit || 50) / 100)
   return 0
 }
 /** Cuánto cobrado el día/fecha. Suma payments[] de ese día o fallback legacy a b.date */
@@ -789,7 +794,12 @@ const ganCobrada = (b) => {
   const g = gananciaBudget(b)
   if (b.payStatus === 'paid') return g
   if (b.payStatus === 'partial') {
-    const pct = (b.depositAmt || 0) / ((b.total || 1))
+    /* Antes: pct = depositAmt / total, o sea SIEMPRE el porcentaje de la seña
+       original (y ademas mezclaba una seña con IVA contra un total sin IVA).
+       Si el cliente pagaba cuotas despues, cobrado() las sumaba pero esta
+       ganancia seguia contando solo la seña. */
+    const base = montoConIva(b)
+    const pct = base > 0 ? Math.min(1, cobrado(b) / base) : 0
     return Math.round(g * pct)
   }
   return 0
@@ -908,11 +918,11 @@ export default function Historial() {
   // ── KPIs (memoized on period slice) ──
   const {
     totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate,
-    deltaBrutas, deltaCaja, prevPeriodBudgets, prevTotBudgeted
+    deltaBrutas, deltaCaja, prevPeriodBudgets, prevTotBudgeted, prevCountConMonto
   } = useMemo(() => {
     const n = now
     const prevYM = (() => { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
-    const totBudgeted = periodBudgets.reduce((s, b) => s + (b.total || 0), 0)
+    const totBudgeted = periodBudgets.reduce((s, b) => s + montoConIva(b), 0)
     const confirmed   = periodBudgets.filter(b => ['confirmado', 'produccion', 'entregado'].includes(getEstado(b)))
     // Excluimos 'lost' — pedidos perdidos no cuentan como ingreso del período
     // Incluye perdidos donde te quedaste con la seña (keptDeposit:true)
@@ -921,7 +931,11 @@ export default function Historial() {
       return b.payStatus === 'paid' || b.payStatus === 'partial'
     })
     const totCobrado  = pagados.reduce((s, b) => s + cobrado(b), 0)
-    const avgTicket   = periodBudgets.length ? Math.round(totBudgeted / periodBudgets.length) : 0
+    /* Ticket promedio: solo las ventas CON monto. Un pedido a medio cargar no
+       es una venta de $0: dividir por el bajaba el promedio sin que se notara
+       (decision de Ana, 10/11 — mismo criterio que Hub y que Ventas). */
+    const conMonto    = periodBudgets.filter(b => montoConIva(b) > 0)
+    const avgTicket   = conMonto.length ? Math.round(totBudgeted / conMonto.length) : 0
     const convRate    = periodBudgets.length ? Math.round(confirmed.length / periodBudgets.length * 100) + '%' : '—'
     let prevPeriodBudgets = []
     if (period === 'thismonth') {
@@ -938,16 +952,22 @@ export default function Historial() {
     } else if (period === 'year') {
       prevPeriodBudgets = budgets.filter(b => b.date?.startsWith(String(n.getFullYear() - 1)))
     }
-    const prevPagados      = prevPeriodBudgets.filter(b => b.payStatus === 'paid' || b.payStatus === 'partial')
-    const prevTotBudgeted  = prevPeriodBudgets.reduce((s, b) => s + (b.total || 0), 0)
+    /* Misma regla que `pagados`: un perdido con la plata devuelta no es
+       ingreso. Sin esto el delta de Cobrado comparaba base contra base. */
+    const prevPagados      = prevPeriodBudgets.filter(b => {
+      if (getEstado(b) === 'perdido' && !b.keptDeposit) return false
+      return b.payStatus === 'paid' || b.payStatus === 'partial'
+    })
+    const prevTotBudgeted  = prevPeriodBudgets.reduce((s, b) => s + montoConIva(b), 0)
     const prevTotCobrado   = prevPagados.reduce((s, b) => s + cobrado(b), 0)
+    const prevCountConMonto = prevPeriodBudgets.filter(b => montoConIva(b) > 0).length
     // Guardrail: si la base del período anterior es chica (<3 presupuestos), los deltas
     // se disparan a valores absurdos (+10961%). Ocultar hasta tener muestra minima.
     const capDelta = (v) => v === null ? null : Math.max(-999, Math.min(999, v))
     const enoughBase = prevPeriodBudgets.length >= 3
     const deltaBrutas      = enoughBase && prevTotBudgeted > 0 ? capDelta(Math.round((totBudgeted - prevTotBudgeted) / prevTotBudgeted * 100)) : null
     const deltaCaja        = enoughBase && prevTotCobrado  > 0 ? capDelta(Math.round((totCobrado  - prevTotCobrado)  / prevTotCobrado  * 100)) : null
-    return { totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate, deltaBrutas, deltaCaja, prevPeriodBudgets, prevTotBudgeted }
+    return { totBudgeted, confirmed, pagados, totCobrado, avgTicket, convRate, deltaBrutas, deltaCaja, prevPeriodBudgets, prevTotBudgeted, prevCountConMonto }
   }, [periodBudgets, budgets, period]) // eslint-disable-line
 
   // ── Sparklines: últimos 14 días (memoized) ──
@@ -958,10 +978,12 @@ export default function Historial() {
       const ds = d.toISOString().slice(0, 10)
       // Ventas brutas: presupuestos creados ese día (excluye perdidos)
       const dayBs = budgets.filter(b => b.date === ds && getEstado(b) !== 'perdido')
-      brutas.push(dayBs.reduce((s, b) => s + (b.total || 0), 0))
+      brutas.push(dayBs.reduce((s, b) => s + montoConIva(b), 0))
       // Caja: pagos recibidos. Excluye perdidos sin seña preservada.
       caja.push(budgets.filter(b => !(getEstado(b) === 'perdido' && !b.keptDeposit)).reduce((s, b) => s + cobradoEnFecha(b, ds), 0))
-      ticket.push(dayBs.length ? dayBs.reduce((s, b) => s + (b.total || 0), 0) / dayBs.length : 0)
+      // Misma base que el KPI: solo las ventas con monto cargado.
+      const dayConMonto = dayBs.filter(b => montoConIva(b) > 0)
+      ticket.push(dayConMonto.length ? dayConMonto.reduce((s, b) => s + montoConIva(b), 0) / dayConMonto.length : 0)
     }
     return { sparkBrutas: brutas, sparkCaja: caja, sparkTicket: ticket }
   }, [budgets])
@@ -1070,7 +1092,7 @@ export default function Historial() {
     list = [...list].sort((a, b) => {
       const dir = sortDir === 'asc' ? 1 : -1
       if (sortKey === 'date') return ((a.date || '') > (b.date || '') ? 1 : -1) * dir
-      if (sortKey === 'total') return ((a.total || 0) - (b.total || 0)) * dir
+      if (sortKey === 'total') return (montoConIva(a) - montoConIva(b)) * dir
       if (sortKey === 'gain') return (gananciaBudget(a) - gananciaBudget(b)) * dir
       return (a.id - b.id) * dir
     })
@@ -1183,7 +1205,7 @@ export default function Historial() {
   confirmed.forEach(b => {
     const k = b.company || b.contact || '—'
     if (!byClient[k]) byClient[k] = { total: 0, count: 0 }
-    byClient[k].total += (b.total || 0)
+    byClient[k].total += montoConIva(b)
     byClient[k].count += 1
   })
   const topClients = Object.entries(byClient).sort((a, b) => b[1].total - a[1].total).slice(0, 3)
@@ -1271,7 +1293,7 @@ export default function Historial() {
   const handleDelete = (b) => {
     const label = b.num || `#${b.id}`
     confirm({
-      body: `⚠ ELIMINAR ${label}\n\nCliente: ${b.contact || b.company || '—'}\nTotal: ${fmt(b.total)}\n\nEsta acción no se puede deshacer.`,
+      body: `⚠ ELIMINAR ${label}\n\nCliente: ${b.contact || b.company || '—'}\nTotal: ${fmt(montoConIva(b))}\n\nEsta acción no se puede deshacer.`,
       danger: true,
       requireText: 'ELIMINAR',
       confirmLabel: 'Eliminar definitivamente',
@@ -1470,7 +1492,7 @@ export default function Historial() {
   const insights = useMemo(() => {
     const out = []
     if (topClients.length > 0 && totBudgeted > 0) {
-      const topPct = Math.round((topClients[0][1].total / Math.max(1, confirmed.reduce((s, b) => s + (b.total || 0), 0))) * 100)
+      const topPct = Math.round((topClients[0][1].total / Math.max(1, confirmed.reduce((s, b) => s + montoConIva(b), 0))) * 100)
       if (topPct >= 60) {
         out.push({ tone: 'warning', icon: 'fa-triangle-exclamation', label: 'Concentración de ventas', value: `${topPct}%`, title: `Riesgo de concentración: ${topPct}% en una sola clienta`, desc: `${topClients[0][0]} concentra el ${topPct}% de tus ventas confirmadas. Si se va, te golpea fuerte. Pensá en diversificar.` })
       } else if (topPct >= 40) {
@@ -1506,7 +1528,8 @@ export default function Historial() {
       out.push({ tone: 'warning', icon: 'fa-hand-holding-dollar', label: 'Cobros vencidos', value: money(cobrosVencidosMonto), title: `${cobrosVencidos.length} cobros vencidos · ${money(cobrosVencidosMonto)}`, desc: `Hay dinero pendiente que ya debería estar en caja. Empezá por los más antiguos.` })
     }
     if (period === 'thismonth' && prevPeriodBudgets.length >= 3 && periodBudgets.length > 0) {
-      const prevAvg = Math.round(prevTotBudgeted / prevPeriodBudgets.length)
+      // Misma base que avgTicket, si no la comparacion es contra otra cosa.
+      const prevAvg = prevCountConMonto > 0 ? Math.round(prevTotBudgeted / prevCountConMonto) : 0
       if (prevAvg > 0) {
         const rawTicketDelta = Math.round((avgTicket - prevAvg) / prevAvg * 100)
         const ticketDelta = Math.max(-999, Math.min(999, rawTicketDelta))
@@ -1520,7 +1543,7 @@ export default function Historial() {
       }
     }
     return out
-  }, [budgets, periodBudgets, prevPeriodBudgets, deltaBrutas, topClients, confirmed, cobrosVencidos, avgTicket, period, prevTotBudgeted, totBudgeted])
+  }, [budgets, periodBudgets, prevPeriodBudgets, deltaBrutas, topClients, confirmed, cobrosVencidos, avgTicket, period, prevTotBudgeted, totBudgeted, prevCountConMonto])
 
   // Alias — mismo comportamiento que copyWA (siempre abre WA, mensaje contextual).
   const openWADirect = (b) => copyWA(b)
@@ -1693,7 +1716,7 @@ export default function Historial() {
                       renderLine={b => (
                         <span>
                           <b style={{ color: 'var(--txt)' }}>{b.company || b.contact || '—'}</b>
-                          <span style={{ color: 'var(--txt3)' }}> · {money(b.total || 0)}</span>
+                          <span style={{ color: 'var(--txt3)' }}> · {money(montoConIva(b))}</span>
                         </span>
                       )}
                     />
@@ -1712,7 +1735,7 @@ export default function Historial() {
                       renderLine={b => (
                         <span>
                           <b style={{ color: 'var(--txt)' }}>{b.company || b.contact || '—'}</b>
-                          <span style={{ color: 'var(--txt3)' }}> · {money(b.total || 0)}</span>
+                          <span style={{ color: 'var(--txt3)' }}> · {money(montoConIva(b))}</span>
                         </span>
                       )}
                     />
@@ -1822,7 +1845,7 @@ export default function Historial() {
                                 ) : cliName}
                                 {firstDesc && <small>{firstDesc}</small>}
                               </td>
-                              <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(b.total)}</td>
+                              <td className="c-tot" style={{ fontWeight: 700, color: 'var(--money)' }}>{money(montoConIva(b))}</td>
                               <td className="c-est"><DotBadge b={b} /></td>
                               <td className="c-fec">{relTime(b.updatedAt || (b.date ? new Date(b.date).getTime() : 0))}</td>
                               <td className="c-act" style={{ position: 'relative' }}>
@@ -1922,7 +1945,7 @@ export default function Historial() {
                                     {b.company || b.contact || '—'}
                                   </div>
                                   <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
-                                    {b.num} · {b.days}d · {money(b.total)}
+                                    {b.num} · {b.days}d · {money(montoConIva(b))}
                                   </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: 4 }}>
@@ -1968,7 +1991,7 @@ export default function Historial() {
                               {b.company || b.contact || '—'}
                             </div>
                             <div style={{ fontSize: 10, color: 'var(--txt3)' }}>
-                              {b.num} · {money(b.total)}
+                              {b.num} · {money(montoConIva(b))}
                             </div>
                           </div>
                           <span style={{ flexShrink: 0, background: bg, color, fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 6, textTransform: 'uppercase' }}>{lbl}</span>
@@ -2247,7 +2270,7 @@ export default function Historial() {
                         const ganColor = hidden ? 'var(--txt4)' : (gan === 0 ? 'var(--txt4)' : gan < 0 ? 'var(--red)' : 'var(--green)')
                         return (
                           <td data-cell="total" data-label="Total" style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>
-                            <div>{money(b.total)}</div>
+                            <div>{money(montoConIva(b))}</div>
                             <div className="col-hide-mobile" style={{ fontSize: 10.5, fontWeight: 600, color: ganColor, marginTop: 2 }}>
                               {gan === 0 ? 'sin ganancia' : `${gan > 0 ? '+' : ''}${money(gan)} gan.`}
                             </div>
@@ -2536,7 +2559,7 @@ export default function Historial() {
           {(() => {
             const lostBudgets = budgets.filter(b => getEstado(b) === 'perdido')
             const lostWithReason = lostBudgets.filter(b => b.lossReason)
-            const lostValue = lostBudgets.reduce((s, b) => s + (b.total || 0), 0)
+            const lostValue = lostBudgets.reduce((s, b) => s + montoConIva(b), 0)
             const reasonCount = {}
             lostWithReason.forEach(b => { reasonCount[b.lossReason] = (reasonCount[b.lossReason] || 0) + 1 })
             const reasonEntries = Object.entries(reasonCount).sort((a, b) => b[1] - a[1])
@@ -2878,7 +2901,7 @@ export default function Historial() {
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', minWidth: 40 }}>{b.num || '#—'}</span>
                         <span style={{ flex: 1, fontSize: 11, color: 'var(--txt3)' }}>{b.date || ''}</span>
                         <DotBadge b={b} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{money(b.total)}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{money(montoConIva(b))}</span>
                       </div>
                     ))}
                   </div>
