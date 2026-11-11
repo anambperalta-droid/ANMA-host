@@ -74,6 +74,24 @@ function fmtDateShort(iso) {
 }
 
 // Mediana — Fase 2 auditoria 02/10/26 (robusta a outliers).
+/* Base unica de monto: SIEMPRE con IVA. La venta rapida guarda `total` ya con
+   IVA; el presupuesto guarda `total` SIN IVA y `totalFinal` con IVA. Ventas
+   sumaba `b.total` pelado, asi que todo presupuesto con IVA se contaba de
+   menos en Facturado, Cobrado, Ticket, Top cliente y el pivot por producto.
+   Historial ya usaba `totalFinal || total`: los dos numeros no cerraban. */
+const montoConIva = (b) => Number(b.totalFinal || b.total) || 0
+const senaCobrada = (b) => Number(b.depositFinal || b.depositAmt) || 0
+
+/* Lo REALMENTE cobrado. Si hay `payments[]` (seña + cuotas) se suman todos:
+   quedarse con la seña dejaba afuera cada cuota posterior. */
+const cobradoReal = (b) => {
+  const pays = Array.isArray(b.payments) ? b.payments : []
+  if (pays.length > 0) return pays.reduce((acc, p) => acc + (Number(p.amount) || 0), 0)
+  if (b.payStatus === 'paid')    return montoConIva(b)
+  if (b.payStatus === 'partial') return senaCobrada(b)
+  return 0
+}
+
 function median(nums) {
   const arr = nums.filter(n => Number.isFinite(n) && n > 0).sort((a, b) => a - b)
   if (!arr.length) return 0
@@ -165,11 +183,11 @@ export default function Ventas() {
   const totals = useMemo(() => {
     let facturado = 0, iva = 0, cobrado = 0, pendiente = 0
     monthBudgets.forEach(b => {
-      const t = Number(b.total) || 0
-      const ivaAmt = Number(b._quickIva) || 0
+      const t = montoConIva(b)
+      const ivaAmt = Number(b.ivaAmt || b._quickIva) || 0
       facturado += t; iva += ivaAmt
       if (b.payStatus === 'paid') cobrado += t
-      else if (b.payStatus === 'partial') { cobrado += Number(b.depositAmt) || 0; pendiente += t - (Number(b.depositAmt) || 0) }
+      else if (b.payStatus === 'partial') { const ya = Math.min(t, cobradoReal(b)); cobrado += ya; pendiente += t - ya }
       else pendiente += t
     })
     return { facturado, iva, cobrado, pendiente, count: monthBudgets.length }
@@ -195,23 +213,33 @@ export default function Ventas() {
       })
     }
 
-    const facturado = pmBudgets.reduce((s, b) => s + (Number(b.total) || 0), 0)
-    return { count: pmBudgets.length, facturado }
+    const facturado = pmBudgets.reduce((s, b) => s + montoConIva(b), 0)
+    /* countConMonto: el ticket del mes anterior se calcula con el mismo
+       criterio que el de este mes, si no el delta compara base contra base
+       distinta y la flecha miente. */
+    return { count: pmBudgets.length, facturado, countConMonto: pmBudgets.filter(b => montoConIva(b) > 0).length }
   }, [allBudgets, month, year])
 
   const pctCobrado = totals.facturado > 0 ? Math.round(totals.cobrado / totals.facturado * 100) : 0
 
-  const avgTicket = totals.count > 0 ? Math.round(totals.facturado / totals.count) : 0
-  // Mediana vs promedio — Fase 2 auditoria 02/10/26.
-  const medianTicket = useMemo(() => median(monthBudgets.map(b => Number(b.total) || 0)), [monthBudgets])
-  const maxTicket    = monthBudgets.reduce((m, b) => Math.max(m, Number(b.total) || 0), 0)
-  const hasOutlier   = totals.count >= 3 && avgTicket > 0 && maxTicket > avgTicket * 3
+  /* Ticket promedio solo sobre las ventas CON monto (decision de Ana, 10/11).
+     Una venta a medio cargar no es una venta de $0: dividir por ella bajaba el
+     promedio sin que se notara. */
+  const ventasConMonto = useMemo(() => monthBudgets.filter(b => montoConIva(b) > 0), [monthBudgets])
+  const avgTicket = ventasConMonto.length > 0 ? Math.round(totals.facturado / ventasConMonto.length) : 0
+  // Mediana vs promedio — Fase 2 auditoria 02/10/26. Misma base que el promedio.
+  const medianTicket = useMemo(() => median(ventasConMonto.map(b => montoConIva(b))), [ventasConMonto])
+  const maxTicket    = ventasConMonto.reduce((m, b) => Math.max(m, montoConIva(b)), 0)
+  /* El umbral se compara contra la MEDIANA, no contra el promedio: con tres
+     valores positivos "max > avg*3" exige que los otros dos sumen menos que
+     cero, asi que el aviso de la mediana no aparecia nunca. */
+  const hasOutlier   = ventasConMonto.length >= 3 && medianTicket > 0 && maxTicket > medianTicket * 3
 
   const topClient = useMemo(() => {
     const rev = {}
     monthBudgets.forEach(b => {
       const n = b.company || b.contact || ''
-      if (n) rev[n] = (rev[n] || 0) + (Number(b.total) || 0)
+      if (n) rev[n] = (rev[n] || 0) + montoConIva(b)
     })
     const e = Object.entries(rev)
     if (!e.length) return null
@@ -227,8 +255,8 @@ export default function Ventas() {
       // y en la tabla actual). Si no hay items, usamos '(sin producto)'.
       const name = (b.items?.[0]?.name || '').trim() || '(sin producto)'
       const qty = Number(b.items?.[0]?.qty) || 1
-      const total = Number(b.total) || 0
-      const cobrado = b.payStatus === 'paid' ? total : (b.payStatus === 'partial' ? (Number(b.depositAmt) || 0) : 0)
+      const total = montoConIva(b)
+      const cobrado = b.payStatus === 'paid' ? total : (b.payStatus === 'partial' ? Math.min(total, cobradoReal(b)) : 0)
       const cur = map.get(name) || { name, unidades: 0, facturado: 0, cobrado: 0, ventas: 0 }
       cur.unidades += qty
       cur.facturado += total
@@ -272,7 +300,12 @@ export default function Ventas() {
       if (b.payStatus !== 'paid' && b.payStatus !== 'partial') return s
       const g = gananciaBudget(b) || 0
       if (b.payStatus === 'paid') return s + g
-      const pct = (Number(b.depositAmt) || 0) / (Number(b.total) || 1)
+      /* El porcentaje va contra lo REALMENTE cobrado y con la misma base (con
+         IVA) que ese monto. Antes era depositAmt / total: siempre el % de la
+         seña original, asi que las cuotas posteriores no subian la ganancia y
+         el "Resultado operativo" salia mas bajo de lo real. */
+      const base = montoConIva(b)
+      const pct = base > 0 ? Math.min(1, cobradoReal(b) / base) : 0
       return s + Math.round(g * pct)
     }, 0)
   }, [monthBudgets])
@@ -281,8 +314,8 @@ export default function Ventas() {
 
   const capDelta = (v) => v === null ? null : Math.max(-999, Math.min(999, v))
   const deltaCount = prevMonthData.count >= 3 ? capDelta(Math.round(((totals.count - prevMonthData.count) / prevMonthData.count) * 100)) : null
-  const prevAvgTicket = prevMonthData.count > 0 ? Math.round(prevMonthData.facturado / prevMonthData.count) : 0
-  const deltaTicket = prevMonthData.count >= 3 && prevAvgTicket > 0 ? capDelta(Math.round(((avgTicket - prevAvgTicket) / prevAvgTicket) * 100)) : null
+  const prevAvgTicket = prevMonthData.countConMonto > 0 ? Math.round(prevMonthData.facturado / prevMonthData.countConMonto) : 0
+  const deltaTicket = prevMonthData.countConMonto >= 3 && prevAvgTicket > 0 ? capDelta(Math.round(((avgTicket - prevAvgTicket) / prevAvgTicket) * 100)) : null
 
   const sortedBudgets = useMemo(() => {
     if (!sortCol) return monthBudgets
@@ -291,7 +324,7 @@ export default function Ventas() {
       if (sortCol === 'cliente') return dir * (a.company || a.contact || '').localeCompare(b.company || b.contact || '')
       if (sortCol === 'producto') return dir * ((a.items?.[0]?.name || '').localeCompare(b.items?.[0]?.name || ''))
       if (sortCol === 'cant') return dir * ((a.items?.[0]?.qty || 1) - (b.items?.[0]?.qty || 1))
-      if (sortCol === 'facturado') return dir * ((Number(a.total) || 0) - (Number(b.total) || 0))
+      if (sortCol === 'facturado') return dir * (montoConIva(a) - montoConIva(b))
       if (sortCol === 'fecha') return dir * ((a.date || '').localeCompare(b.date || ''))
       if (sortCol === 'num')   return dir * ((a.num || '').localeCompare(b.num || '', undefined, { numeric: true }))
       if (sortCol === 'cobro') {
@@ -336,8 +369,8 @@ export default function Ventas() {
     const rows = filteredBudgets.map(b => {
       const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null) || 'consumidor'
       const item1 = b.items?.[0] || {}
-      const total = Number(b.total) || 0
-      const iva   = Number(b._quickIva) || 0
+      const total = montoConIva(b)
+      const iva   = Number(b.ivaAmt || b._quickIva) || 0
       const neto  = total - iva
       return [
         b.num || '', b.date || '',
@@ -877,9 +910,9 @@ export default function Ventas() {
             const isPending = b.payStatus === 'pending'
             const isPartial = b.payStatus === 'partial'
             // Desglose parcial — Fase 1 auditoria 02/10/26.
-            const totalDue = Number(b.total) || 0
+            const totalDue = montoConIva(b)
             const paid = b.payStatus === 'paid' ? totalDue
-                       : isPartial ? (Number(b.depositAmt) || 0)
+                       : isPartial ? Math.min(totalDue, cobradoReal(b))
                        : 0
             const owed = Math.max(0, totalDue - paid)
             const method = payMethodOf(b)
@@ -921,8 +954,8 @@ export default function Ventas() {
               <span style={{ color: 'var(--txt3)', fontSize: 11, textTransform: 'uppercase' }}>Total</span>
               <span />
               <span className="vt-hide-m" />
-              <span className="vt-cell-r" style={{ color: 'var(--txt)', fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(filteredBudgets.reduce((s, b) => s + (Number(b.total) || 0), 0))}</span>
-              <span className="vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(filteredBudgets.reduce((s, b) => s + (Number(b._quickIva) || 0), 0))}</span>
+              <span className="vt-cell-r" style={{ color: 'var(--txt)', fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(filteredBudgets.reduce((s, b) => s + montoConIva(b), 0))}</span>
+              <span className="vt-cell-r vt-hide-m" style={{ color: 'var(--txt3)', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{hidden ? '***' : fmt(filteredBudgets.reduce((s, b) => s + (Number(b.ivaAmt || b._quickIva) || 0), 0))}</span>
               <span className="vt-hide-m" />
               <span />
             </div>
@@ -1419,7 +1452,7 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast, mesLabel }) 
     return Math.floor((Date.now() - ref) / 86400000)
   }
   const pendientes = useMemo(() =>
-    budgets.filter(b => b.payStatus !== 'paid' && (Number(b.total) || 0) > 0).sort((a, b) => {
+    budgets.filter(b => b.payStatus !== 'paid' && montoConIva(b) > 0).sort((a, b) => {
       const da = ageDays(a)
       const db = ageDays(b)
       return db - da
@@ -1427,7 +1460,8 @@ function PendientesCobro({ budgets, hidden, nav, saveBudget, toast, mesLabel }) 
     [budgets]
   )
   if (pendientes.length === 0) return null
-  const totalPend = pendientes.reduce((s, b) => { const t = Number(b.total) || 0; const d = Number(b.depositAmt) || 0; return s + (b.payStatus === 'partial' ? t - d : t) }, 0)
+  /* El saldo va contra lo realmente cobrado (payments[]), nunca total - seña. */
+  const totalPend = pendientes.reduce((s, b) => { const t = montoConIva(b); return s + Math.max(0, t - (b.payStatus === 'partial' ? cobradoReal(b) : 0)) }, 0)
 
   const markPaid = (b) => {
     if (!saveBudget) return
