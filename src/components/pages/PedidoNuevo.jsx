@@ -1201,7 +1201,10 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
   const margenTarget = Number(pedido.margenObjetivo) || 0
   const margenReal = totales.total > 0 ? Math.round((totales.ganancia / totales.total) * 100) : 0
   const margenBajo = totales.total > 0 && margenReal < margenTarget
-  const saldo = Math.max(0, totales.total - (pedido.seniaMonto || 0))
+  /* El saldo va contra lo realmente cobrado: si despues de la seña entraron
+     cuotas, restar solo la seña muestra una deuda que ya no existe. */
+  const cobrado = Math.max(Number(pedido.cobradoTotal) || 0, Number(pedido.seniaMonto) || 0)
+  const saldo = Math.max(0, totales.total - cobrado)
   const sg = { fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }
   const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', fontSize: 12.5 }
   const lbl = { color: 'rgba(255,255,255,.72)' }
@@ -1254,7 +1257,7 @@ function PrecioBlock({ pedido, totales, onTotalChange, onMargenChange, onIvaChan
       <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: 10, paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', fontWeight: 700, letterSpacing: '.06em' }}>TOTAL</div>
-          {pedido.seniaMonto > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 2 }}>Seña {fmt(pedido.seniaMonto)} · Saldo {fmt(saldo)}</div>}
+          {cobrado > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 2 }}>{cobrado > (Number(pedido.seniaMonto) || 0) ? 'Cobrado' : 'Seña'} {fmt(cobrado)} · Saldo {fmt(saldo)}</div>}
         </div>
         <input type="number" min={0} value={totales.total || ''} onChange={e => onTotalChange(e.target.value)}
           style={{ width: 150, textAlign: 'right', padding: '8px 12px', fontSize: 22, fontWeight: 700, borderRadius: 10, border: '1px solid rgba(196,181,253,.45)', background: 'rgba(255,255,255,.1)', color: '#fff', ...sg }} />

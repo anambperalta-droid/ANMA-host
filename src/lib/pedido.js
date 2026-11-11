@@ -410,7 +410,13 @@ export function pedidoFromBudget(budget) {
     horarioEntrega:   budget.deliveryTime    || '',
     direccionEntrega: budget.deliveryAddress || '',
     contactoEntrega:  budget.deliveryContact || '',
-    seniaMonto:       num(budget.depositAmt) || (num(budget.total) * num(budget.deposit) / 100) || 0,
+    seniaMonto:       num(budget.depositFinal) || num(budget.depositAmt) || (num(budget.total) * num(budget.deposit) / 100) || 0,
+    /* Solo lectura, para mostrar el saldo real en el editor: lo que de verdad
+       entro. Con cuotas, la seña se queda corta. No se persiste de vuelta
+       (budgetFromPedido arma su objeto campo por campo). */
+    cobradoTotal:     Array.isArray(budget.payments) && budget.payments.length
+      ? budget.payments.reduce((acc, p) => acc + (num(p.amount) || 0), 0)
+      : (num(budget.depositFinal) || num(budget.depositAmt) || 0),
 
     notaInterna:  budget.noteInt || '',
 
@@ -524,6 +530,10 @@ export function budgetFromPedido(pedido, prevBudget = {}) {
     // ── Precio ──
     total:      totales.total,
     totalFinal: totales.total,
+    /* El IVA calculado no se guardaba: Ventas y el CSV lo leen de `ivaAmt`, asi
+       que todo pedido cargado con el flujo nuevo mostraba IVA $0 y un subtotal
+       igual al total — justo la columna que mira la contadora. */
+    ivaAmt:     totales.iva,
     depositAmt: num(pedido.seniaMonto),
     deposit:    totales.total > 0 ? Math.round((num(pedido.seniaMonto) / totales.total) * 100) : 0,
     margin:     totales.margen,

@@ -1039,6 +1039,10 @@ export default function Historial() {
   const { chartData, prevChartData, gainData } = useMemo(() => {
     const n = now; const bm = period === '3m' ? 3 : period === 'year' ? 12 : 6
     const chartData = []; const prevChartData = []; const gainData = []
+    /* Los graficos sumaban TODOS los pedidos, incluidos los perdidos donde la
+       plata se devolvio. El KPI "Cobrado" y el sparkline ya los excluian, asi
+       que la barra del dia no cerraba con el KPI de arriba. */
+    const cobrables = budgets.filter(b => !(getEstado(b) === 'perdido' && !b.keptDeposit))
     if (period === 'thismonth') {
       const cy = n.getFullYear(); const cmo = n.getMonth()
       const cymStr = `${cy}-${String(cmo + 1).padStart(2, '0')}`
@@ -1047,29 +1051,29 @@ export default function Historial() {
       const daysInMonth = new Date(cy, cmo + 1, 0).getDate()
       const daysInPrev = new Date(py, pmo + 1, 0).getDate()
       // Cash flow REAL: sumamos payments[] del día, no la fecha de creación
-      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${cymStr}-${ds}`; chartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
-      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr}-${ds}`; prevChartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
+      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${cymStr}-${ds}`; chartData.push({ lbl: String(d), val: cobrables.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
+      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr}-${ds}`; prevChartData.push({ lbl: String(d), val: cobrables.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
     } else if (period === 'prevmonth') {
       const pmd = new Date(n.getFullYear(), n.getMonth() - 1, 1); const pymStr1 = `${pmd.getFullYear()}-${String(pmd.getMonth() + 1).padStart(2, '0')}`
       const pmd2 = new Date(n.getFullYear(), n.getMonth() - 2, 1); const pymStr2 = `${pmd2.getFullYear()}-${String(pmd2.getMonth() + 1).padStart(2, '0')}`
       const daysInMonth = new Date(pmd.getFullYear(), pmd.getMonth() + 1, 0).getDate()
       const daysInPrev = new Date(pmd2.getFullYear(), pmd2.getMonth() + 1, 0).getDate()
-      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr1}-${ds}`; chartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
-      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr2}-${ds}`; prevChartData.push({ lbl: String(d), val: budgets.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
+      for (let d = 1; d <= daysInMonth; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr1}-${ds}`; chartData.push({ lbl: String(d), val: cobrables.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
+      for (let d = 1; d <= daysInPrev; d++) { const ds = String(d).padStart(2, '0'); const fecha = `${pymStr2}-${ds}`; prevChartData.push({ lbl: String(d), val: cobrables.reduce((s, b) => s + cobradoEnFecha(b, fecha), 0) }) }
     } else {
       // Vista mensual: cobrado del mes = suma de payments en ese mes
       for (let i = bm - 1; i >= 0; i--) {
         const d = new Date(n.getFullYear(), n.getMonth() - i, 1); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
         const from = `${key}-01`; const to = `${key}-31`
-        chartData.push({ lbl: MONTHS[d.getMonth()], val: budgets.reduce((s, b) => s + cobradoEnRango(b, from, to), 0) })
+        chartData.push({ lbl: MONTHS[d.getMonth()], val: cobrables.reduce((s, b) => s + cobradoEnRango(b, from, to), 0) })
         const pd = new Date(n.getFullYear(), n.getMonth() - i - bm, 1); const pkey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`
         const pfrom = `${pkey}-01`; const pto = `${pkey}-31`
-        prevChartData.push({ lbl: MONTHS[pd.getMonth()], val: budgets.reduce((s, b) => s + cobradoEnRango(b, pfrom, pto), 0) })
+        prevChartData.push({ lbl: MONTHS[pd.getMonth()], val: cobrables.reduce((s, b) => s + cobradoEnRango(b, pfrom, pto), 0) })
       }
     }
     for (let i = bm - 1; i >= 0; i--) {
       const d = new Date(n.getFullYear(), n.getMonth() - i, 1); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      gainData.push({ lbl: MONTHS[d.getMonth()], val: budgets.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + ganCobrada(b), 0) })
+      gainData.push({ lbl: MONTHS[d.getMonth()], val: cobrables.filter(b => b.date?.startsWith(key)).reduce((s, b) => s + ganCobrada(b), 0) })
     }
     return { chartData, prevChartData, gainData }
   }, [budgets, period]) // eslint-disable-line
