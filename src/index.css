@@ -2541,6 +2541,18 @@ td b{color:var(--txt);font-weight:600}
    peso 900 y boton rojo solido: cuatro capas diciendo lo mismo. Ahora apoya
    sobre la superficie de la ficha, el color queda en una regla de 3px al
    costado y en el monto, y la accion es el boton del sistema. Igual que Hub. */
+/* ── Pestana Pedidos: barra de contexto y chips ───────────────────────
+   La barra enumeraba de que va la pestana ("estados, entregas y
+   seguimiento") y, con el atajo a cobranza al lado, ocupaba dos renglones
+   enteros en el celular para no decir nada nuevo: el nombre de la pestana
+   ya lo dice. Queda el titulo y el atajo, en una linea.
+   "Ver motivo perdida" tenia margin-left:auto, asi que en vez de seguir a
+   los otros chips se iba solo a un tercer renglon contra el borde. */
+@media(max-width:640px){
+  .hist-ciclo-sub{display:none}
+  .hist-loss-toggle{margin-left:0!important}
+}
+
 /* ── Banda de alerta (saldo pendiente / reposicion pendiente) ─────────
    Grid de dos filas: el rotulo arriba a lo ancho, y abajo el monto con su
    accion en la misma linea. Antes era flex y la accion caia en un tercer

@@ -2041,21 +2041,22 @@ export default function Historial() {
           {/* Subtítulo + atajo cruzado: deja explícito que esta vista es el
               CICLO comercial del pedido (estados, entrega, seguimiento). Para
               operar la COBRANZA — pagos, canales, medios — se cruza a /ventas. */}
-          <div style={{
+          <div className="hist-ciclo-bar" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            gap: 10, flexWrap: 'wrap',
-            padding: '10px 14px', marginBottom: 12,
+            gap: 10, flexWrap: 'nowrap',
+            padding: '8px 12px', marginBottom: 10,
             background: 'var(--brand-xlt)', border: '1px solid var(--border)', borderRadius: 10,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-              <i className="fa fa-route" style={{ color: 'var(--brand)', fontSize: 12 }} />
-              <span style={{ fontSize: 11.5, color: 'var(--txt3)', fontWeight: 500 }}>
-                <b style={{ color: 'var(--txt)', fontWeight: 700 }}>Ciclo del pedido</b> · estados, entregas y seguimiento
+              <i className="fa fa-route" style={{ color: 'var(--brand)', fontSize: 12, flexShrink: 0 }} />
+              <span style={{ fontSize: 11.5, color: 'var(--txt3)', fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <b style={{ color: 'var(--txt)', fontWeight: 700 }}>Ciclo del pedido</b>
+                <span className="hist-ciclo-sub"> · estados, entregas y seguimiento</span>
               </span>
             </div>
             <button onClick={() => nav('/ventas')}
               style={{ background: 'transparent', border: 'none', color: 'var(--brand)', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 4px' }}>
-              Ver registro de cobranza <i className="fa fa-arrow-right" style={{ fontSize: 9 }} />
+              Ver <span className="hist-ciclo-sub">registro de </span>cobranza <i className="fa fa-arrow-right" style={{ fontSize: 9 }} />
             </button>
           </div>
           {/* "Para hoy" eliminado: duplicaba la campana (que ya tiene todas
@@ -2170,6 +2171,7 @@ export default function Historial() {
             <button
               onClick={() => setShowLossReason(v => !v)}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', border: `1.5px solid ${showLossReason ? '#DC2626' : 'var(--border)'}`, background: showLossReason ? '#FEE2E2' : 'transparent', color: showLossReason ? '#DC2626' : 'var(--txt3)', marginLeft: 'auto' }}
+              className="hist-loss-toggle"
               title={showLossReason ? 'Ocultar motivo de pérdida' : 'Mostrar motivo de pérdida'}>
               <i className="fa fa-circle-xmark" style={{ fontSize: 10 }} />
               {showLossReason ? 'Ocultar motivo' : 'Ver motivo pérdida'}

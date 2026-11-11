@@ -204,16 +204,22 @@ export async function sharePortalCliente(b, cfg = {}, { toast } = {}) {
      por WhatsApp. Lo guardamos del lado del servidor y mandamos un id corto;
      si falla, cae al link largo de siempre y el toast dice por que. */
   let link = buildClientePortalLink(b, cfg)
+  let motivoLargo = ''
   try {
     const payload = buildClientePortalPayload(b, cfg)
     const id = await createPortalShortLink(payload, payload.e)
     link = `${portalClienteBase()}?id=${id}`
   } catch (err) {
-    const motivo = err?.message || 'error desconocido'
+    motivoLargo = String(err?.message || 'error desconocido').slice(0, 90)
     console.warn('[portal cliente] no se pudo crear el short-link:', err)
-    if (typeof toast === 'function') toast(`Link largo: no se pudo acortar (${String(motivo).slice(0, 90)})`, 'in')
   }
-  try { navigator.clipboard?.writeText(link) } catch { /* ignore */ }
+  /* El copiado se dispara ya, pero el aviso espera a saber si salio: en el
+     celular, despues de un await, el navegador suele rechazar el acceso al
+     portapapeles por no venir de un toque directo, y antes el toast decia
+     "copiado" igual. Un solo aviso al final, con lo que realmente paso. */
+  const copiando = (async () => {
+    try { await navigator.clipboard?.writeText(link); return true } catch { return false }
+  })()
   const nombre = b.contact || ''
   const neg = cfg.businessName || 'nosotros'
   const text = [
@@ -227,7 +233,11 @@ export async function sharePortalCliente(b, cfg = {}, { toast } = {}) {
   const url = num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`
   const w = window.open(url, '_blank')
   if (!w) { window.location.href = url }
-  if (typeof toast === 'function') toast('Link del cliente copiado al portapapeles', 'ok')
+  const copiado = await copiando
+  if (typeof toast === 'function') {
+    if (motivoLargo) toast(`Link largo: no se pudo acortar (${motivoLargo})`, 'in')
+    else toast(copiado ? 'Link del cliente copiado al portapapeles' : 'Link del cliente listo en WhatsApp', 'ok')
+  }
   return link
 }
 
