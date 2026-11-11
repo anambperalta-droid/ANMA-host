@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import { decodeClientePortal } from '../../lib/waMsg'
+import { supabase } from '../../lib/supabase'
 
 /**
  * Portal público del cliente (sin auth). Se abre desde el link
@@ -36,7 +37,21 @@ export default function PortalCliente() {
 
   useEffect(() => {
     const params = new URLSearchParams(loc.search)
+    const id = params.get('id')
     const d = params.get('d')
+    /* ?id= es el link corto: el payload vive en Supabase y se lee por una RPC
+       publica (solo por id). ?d= es el link viejo con todo embebido — sigue
+       funcionando para los ya enviados. */
+    if (id) {
+      let cancel = false
+      supabase.rpc('get_portal_link', { link_id: id }).then(({ data: payload, error }) => {
+        if (cancel) return
+        if (error || !payload) { setError('Este link ya venció o no existe. Pedí uno nuevo.'); return }
+        if (payload.e && Date.now() > payload.e) { setError('Este link ya venció. Pedí a quien te lo compartió uno nuevo.'); return }
+        setData(payload)
+      })
+      return () => { cancel = true }
+    }
     if (!d) { setError('Link inválido. Pedí a quien te lo compartió uno nuevo.'); return }
     const raw = decodeClientePortal(d)
     if (!raw) { setError('No se pudo abrir el link. Verificá que esté completo.'); return }

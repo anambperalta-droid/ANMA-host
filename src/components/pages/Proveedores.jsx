@@ -4,7 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, cfg, db, dbW } from '../../lib/storage'
-import { supabase } from '../../lib/supabase'
+import { createPortalShortLink } from '../../lib/portalLink'
 import { triggerEncouragement } from '../layout/MilestoneToast'
 
 export default function Proveedores() {
@@ -518,28 +518,23 @@ export default function Proveedores() {
     // Short-link: payload en Supabase + id corto. Fallback al link largo (?d=).
     let url
     try {
-      const id = (crypto?.randomUUID?.() || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))).replace(/-/g, '').slice(0, 16)
-      const { error } = await supabase.from('portal_links').insert({ id, payload, expires_at: new Date(payload.e).toISOString() })
-      if (error) throw error
+      const id = await createPortalShortLink(payload, payload.e)
       url = `${window.location.origin}/portal-proveedor?id=${id}`
-    } catch {
-      const json = JSON.stringify(payload)
+    } catch (err) {
+      /* El motivo va en el toast a proposito: sin el, "el link sale largo" no
+         se puede diagnosticar sin abrir la consola del navegador. */
+      const motivo = err?.message || 'error desconocido'
+      console.warn('[portal proveedor] no se pudo crear el short-link:', err)
+      toast(`Link largo: no se pudo acortar (${String(motivo).slice(0, 90)})`, 'in')
+      /* El link embebido lleva TODO el payload adentro, asi que lo achicamos:
+         el historial de precios y el stock son contexto nuestro. */
+      const slim = { ...payload }
+      delete slim.ph
+      slim.p = (payload.p || []).map(({ n, c, r }) => (r ? { n, c, r } : { n, c }))
+      const json = JSON.stringify(slim)
       const b64 = btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
       url = `${window.location.origin}/portal-proveedor?d=${b64}`
     }
-
-    // Mensaje WA personalizable
-    const tpl = appCfg.portalShareMsg ||
-      'Hola {contacto}! Te paso el portal con el resumen del pedido y los productos que necesito. Tiene los precios acordados, las condiciones y un botón para confirmar disponibilidad.'
-    const text = tpl
-      .replace(/\{contacto\}/g, s.contact || s.name)
-      .replace(/\{proveedor\}/g, s.name)
-      .replace(/\{empresa\}/g,  ownerName)
-      .replace(/\{cant\}/g, prods.length)
-      .replace(/\{link\}/g, url)
-      + (tpl.includes('{link}') ? '' : `\n\n${url}`)
-      + '\n\nVálido por 30 días.'
-
     if (s.wa) {
       const waNum = s.wa.replace(/\D/g, '')
       window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(text)}`, '_blank')

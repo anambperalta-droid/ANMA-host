@@ -1,4 +1,5 @@
 import { fmt, fmtDate } from './storage'
+import { createPortalShortLink } from './portalLink'
 
 /**
  * Firma de cierre por rubro — personalidad de marca ligera + override manual.
@@ -116,7 +117,16 @@ export function openWAFor(b, { onNoNumber, onSent, cfg } = {}) {
  * con un payload compacto (keys cortas) para que la URL no sea gigante.
  * Expira a los 60 días. Backward-compatible con el patrón del PortalProveedor.
  */
-export function buildClientePortalLink(b, cfg = {}) {
+/** Base publica del portal del cliente. */
+export function portalClienteBase() {
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  return typeof window !== 'undefined' && window.location.pathname.startsWith('/app')
+    ? origin + '/app/portal-cliente'
+    : origin + '/portal-cliente'
+}
+
+/** Payload del portal — compartido por el link embebido y por el short-link. */
+export function buildClientePortalPayload(b, cfg = {}) {
   // Precio unitario con múltiples fallbacks: pu, price, unitPrice, precio.
   // Si no hay ninguno pero el item trae su subtotal/total, lo derivamos de qty.
   const items = (Array.isArray(b.items) ? b.items : []).map(i => {
@@ -128,10 +138,17 @@ export function buildClientePortalLink(b, cfg = {}) {
     return { n: String(i.name || '').slice(0, 60), q: qty, pu }
   })
   // Saldo honesto según payStatus — un pedido 'paid' NO tiene saldo pendiente.
-  const total = Number(b.total) || 0
-  const depAmt = Number(b.depositAmt) || 0
+  /* Base CON IVA: es lo que el cliente realmente paga. Con `total` pelado, a
+     un presupuesto con IVA el portal le mostraba un total y un saldo mas
+     chicos que los reales. `iva` va aparte para el desglose. */
+  const total = Number(b.totalFinal || b.total) || 0
+  const ivaAmt = Number(b.ivaAmt || b._quickIva) || 0
+  const depAmt = Number(b.depositFinal || b.depositAmt) || 0
   const pay = b.payStatus || 'pending'
-  const seniaReal = pay === 'paid' ? total : (pay === 'partial' ? depAmt : 0)
+  /* Lo cobrado de verdad: con cuotas, `payments[]` manda sobre la seña. */
+  const pays = Array.isArray(b.payments) ? b.payments : []
+  const cobradoReal = pays.length ? pays.reduce((acc, pp) => acc + (Number(pp.amount) || 0), 0) : depAmt
+  const seniaReal = pay === 'paid' ? total : (pay === 'partial' ? Math.min(total, cobradoReal) : 0)
   // Logo: solo si ≤8KB; fallback a iniciales en el portal (Linear/Slack-style).
   const logoRaw = cfg.logo || cfg.logoDataUrl || ''
   const lg = (typeof logoRaw === 'string' && logoRaw.length <= 8192) ? logoRaw : ''
@@ -143,6 +160,7 @@ export function buildClientePortalLink(b, cfg = {}) {
     lg,
     it: items,
     t: total,
+    iva: ivaAmt,
     s: seniaReal,
     d: b.deliveryDate || null,
     st: b.status || 'draft',
@@ -154,16 +172,15 @@ export function buildClientePortalLink(b, cfg = {}) {
     mp: cfg.linkPago || cfg.mpLink || '',
     e: Date.now() + 60 * 86400000, // 60 días
   }
-  const json = JSON.stringify(payload)
+  return payload
+}
+
+export function buildClientePortalLink(b, cfg = {}) {
+  const json = JSON.stringify(buildClientePortalPayload(b, cfg))
   // base64 URL-safe (igual que PortalProveedor)
   const b64 = btoa(unescape(encodeURIComponent(json)))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  // En Hub el app está bajo /app; portal es público bajo /portal-cliente
-  const base = typeof window !== 'undefined' && window.location.pathname.startsWith('/app')
-    ? origin + '/app/portal-cliente'
-    : origin + '/portal-cliente'
-  return `${base}?d=${b64}`
+  return `${portalClienteBase()}?d=${b64}`
 }
 
 /**
@@ -171,8 +188,20 @@ export function buildClientePortalLink(b, cfg = {}) {
  * y abre WhatsApp con un mensaje corto + el link. Si no hay número, abre WA
  * en vacío para que el usuario elija contacto.
  */
-export function sharePortalCliente(b, cfg = {}, { toast } = {}) {
-  const link = buildClientePortalLink(b, cfg)
+export async function sharePortalCliente(b, cfg = {}, { toast } = {}) {
+  /* El payload entero en la URL le llega al cliente como un parrafo de base64
+     por WhatsApp. Lo guardamos del lado del servidor y mandamos un id corto;
+     si falla, cae al link largo de siempre y el toast dice por que. */
+  let link = buildClientePortalLink(b, cfg)
+  try {
+    const payload = buildClientePortalPayload(b, cfg)
+    const id = await createPortalShortLink(payload, payload.e)
+    link = `${portalClienteBase()}?id=${id}`
+  } catch (err) {
+    const motivo = err?.message || 'error desconocido'
+    console.warn('[portal cliente] no se pudo crear el short-link:', err)
+    if (typeof toast === 'function') toast(`Link largo: no se pudo acortar (${String(motivo).slice(0, 90)})`, 'in')
+  }
   try { navigator.clipboard?.writeText(link) } catch { /* ignore */ }
   const nombre = b.contact || ''
   const neg = cfg.businessName || 'nosotros'
