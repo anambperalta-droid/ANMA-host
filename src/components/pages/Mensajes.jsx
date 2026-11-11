@@ -248,9 +248,15 @@ function ClientSelector({ clients, selected, onSelect, onClear }) {
 /* ── Panel de variables sticky ── */
 function VariablesPanel({ client, config, budget }) {
   const c = config
-  const senia = budget ? (Number(budget.depositAmt) || 0) : 0
-  const total = budget ? (Number(budget.total) || 0) : 0
-  const saldo = Math.max(0, total - senia)
+  /* Base con IVA: lo que la clienta realmente paga (totalFinal/depositFinal en
+     presupuestos con IVA). Con total/depositAmt le mandabamos montos sin IVA. */
+  const senia = budget ? (Number(budget.depositFinal || budget.depositAmt) || 0) : 0
+  const total = budget ? (Number(budget.totalFinal || budget.total) || 0) : 0
+  /* El saldo va contra lo REALMENTE cobrado: si despues de la seña pago
+     cuotas, restarle solo la seña le reclama de mas. */
+  const pagosB = Array.isArray(budget?.payments) ? budget.payments : []
+  const cobradoB = pagosB.length > 0 ? pagosB.reduce((s2, p) => s2 + (Number(p.amount) || 0), 0) : senia
+  const saldo = Math.max(0, total - cobradoB)
   const deliveryISO = budget?.deliveryDate
   const dd = deliveryISO ? Math.ceil((new Date(deliveryISO + 'T00:00') - new Date()) / 86400000) : null
   const diasVencido = dd !== null && dd < 0 ? Math.abs(dd) : null
@@ -259,7 +265,7 @@ function VariablesPanel({ client, config, budget }) {
     { key: 'nombre', icon: 'fa-user', value: client?.contact },
     { key: 'empresa', icon: 'fa-building', value: client?.company },
     { key: 'negocio', icon: 'fa-store', value: c.businessName || 'ANMA' },
-    { key: 'precio', icon: 'fa-coins', value: budget ? fmt(budget.total) : null },
+    { key: 'precio', icon: 'fa-coins', value: budget ? fmt(total) : null },
     { key: 'saldo', icon: 'fa-scale-balanced', value: budget && saldo > 0 ? fmt(saldo) : null },
     { key: 'seña', icon: 'fa-hand-holding-dollar', value: budget && senia > 0 ? fmt(senia) : null },
     { key: 'producto', icon: 'fa-box-open', value: budget?.items?.length ? budget.items.map(i => i.name).filter(Boolean).join(', ') : null },
@@ -372,13 +378,16 @@ export default function Mensajes() {
     const empresa = activeClient?.company || ''
     const wa = activeClient?.wa || ''
     const negocio = c.businessName || 'ANMA'
-    const precio = clientBudget ? fmt(clientBudget.total) : ''
+    const precio = clientBudget ? fmt(clientBudget.totalFinal || clientBudget.total) : ''
     const producto = clientBudget?.items?.length ? clientBudget.items.map(i => i.name).filter(Boolean).join(', ') : ''
     const fecha = formatFechaAR(clientBudget?.deliveryDate || clientBudget?.date)
     // Variables de cobro: saldo pendiente, seña recibida, días vencidos, link de pago.
-    const seniaN = clientBudget ? (Number(clientBudget.depositAmt) || 0) : 0
-    const totalN = clientBudget ? (Number(clientBudget.total) || 0) : 0
-    const saldo = clientBudget && (totalN - seniaN) > 0 ? fmt(totalN - seniaN) : ''
+    const seniaN = clientBudget ? (Number(clientBudget.depositFinal || clientBudget.depositAmt) || 0) : 0
+    const totalN = clientBudget ? (Number(clientBudget.totalFinal || clientBudget.total) || 0) : 0
+    /* Mismo criterio que el panel de variables: contra lo cobrado, no la seña. */
+    const pagosC = Array.isArray(clientBudget?.payments) ? clientBudget.payments : []
+    const cobradoC = pagosC.length > 0 ? pagosC.reduce((s2, p) => s2 + (Number(p.amount) || 0), 0) : seniaN
+    const saldo = clientBudget && (totalN - cobradoC) > 0 ? fmt(totalN - cobradoC) : ''
     const seña = clientBudget && seniaN > 0 ? fmt(seniaN) : ''
     const deliveryISO = clientBudget?.deliveryDate
     const dd = deliveryISO ? Math.ceil((new Date(deliveryISO + 'T00:00') - new Date()) / 86400000) : null

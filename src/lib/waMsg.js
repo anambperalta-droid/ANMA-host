@@ -43,16 +43,27 @@ export function buildWAMsg(b, { cfg } = {}) {
   const signoff = pickSignoff(cfg)
   const withSignoff = (lines) => signoff ? [...lines, '', signoff].join('\n') : lines.join('\n')
   const empresa = b.company ? ` para ${b.company}` : ''
-  const monto = b.total ? fmt(b.total) : ''
+  /* Base CON IVA en todo el mensaje: es la plata que la clienta realmente
+     paga y la que figura en su presupuesto. Con `total` pelado le mandabamos
+     un 21% menos, y lo peor era el saldo: le pediamos cualquier cosa. */
+  const totalConIva = Number(b.totalFinal || b.total) || 0
+  const monto = totalConIva ? fmt(totalConIva) : ''
   // Nota: no incluimos el número interno de presupuesto (ej. P-0018) en el
   // mensaje al cliente — no le aporta nada. Lo identificamos por el monto
   // y la fecha, que para el cliente sí es claro.
   const num = ''
   const deliveryISO = b.deliveryDate
   const deliveryStr = deliveryISO ? fmtDate(deliveryISO) : ''
-  const senia = Number(b.depositAmt) || 0
-  const total = Number(b.total) || 0
-  const saldo = Math.max(0, total - senia)
+  /* Lo cobrado sale de payments[] cuando existe — es la plata que de verdad
+     entro. Sin pagos registrados, cae a la seña (depositFinal, con IVA). Antes
+     el saldo era total - seña y no miraba los pagos posteriores: a una clienta
+     que ya habia pagado cuotas le reclamabamos el saldo entero. */
+  const pagos = Array.isArray(b.payments) ? b.payments : []
+  const senia = Number(b.depositFinal || b.depositAmt) || 0
+  const cobrado = pagos.length > 0
+    ? pagos.reduce((s2, p) => s2 + (Number(p.amount) || 0), 0)
+    : senia
+  const saldo = Math.max(0, totalConIva - cobrado)
   const dd = deliveryISO
     ? Math.ceil((new Date(deliveryISO + 'T00:00') - new Date()) / 86400000)
     : null
