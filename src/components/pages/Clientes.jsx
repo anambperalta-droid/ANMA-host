@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
-import { fmt, STATUS_MAP, STATUS_CLS } from '../../lib/storage'
+import { fmt, fmtDate, STATUS_MAP, STATUS_CLS } from '../../lib/storage'
 import { openWAFor, sharePortalCliente } from '../../lib/waMsg'
 import { triggerMilestone, triggerEncouragement } from '../layout/MilestoneToast'
 
@@ -1513,25 +1513,26 @@ export default function Clientes() {
                           onMouseEnter={e => e.currentTarget.style.background = 'var(--brand-xlt)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}
                           onClick={() => setPreviewBudget(b)}>
-                          <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--brand-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', fontSize: 12, flexShrink: 0 }}>
-                            <i className="fa fa-file-invoice-dollar" />
-                          </div>
+                          {/* El icono de archivo era el mismo en todas las filas: no
+                              distinguia nada y se comia 40px de los 275 utiles. */}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--txt)' }}>{b.num || '—'}</span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, minWidth: 0 }}>
+                              <span style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--txt)', letterSpacing: '-.1px', whiteSpace: 'nowrap' }}>{b.num || '—'}</span>
+                              <span style={{ fontSize: 10.5, color: 'var(--txt4)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{fmtDate(b.date)}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
                               <span className={`badge ${STATUS_CLS[b.status] || 'b-draft'}`}>{STATUS_MAP[b.status] || 'Borrador'}</span>
                               {(() => {
                                 const s = budgetSaldo(b)
                                 if (s > 0 && b.payStatus !== 'paid' && ['confirmed', 'delivered', 'production', 'inprogress'].includes(b.status)) {
-                                  return <span style={{ fontSize: 10, fontWeight: 700, background: '#FEE2E2', color: '#991B1B', padding: '2px 7px', borderRadius: 10 }}>Debe {fmt(s)}</span>
+                                  return <span style={{ fontSize: 10, fontWeight: 700, background: '#FEE2E2', color: '#991B1B', padding: '2px 7px', borderRadius: 10, whiteSpace: 'nowrap' }}>Debe {fmt(s)}</span>
                                 }
                                 return null
                               })()}
                             </div>
-                            <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{b.date || '—'}</div>
                           </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--money)' }}>{fmt(montoConIva(b))}</div>
+                          <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 88 }}>
+                            <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.2px', whiteSpace: 'nowrap' }}>{fmt(montoConIva(b))}</div>
                           </div>
                           {/* Portal de ESTE pedido, para elegir uno puntual. */}
                           <button className="cli-portal-btn" title="Compartir portal de este pedido"

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
-import { fmt, STATUS_MAP } from '../../lib/storage'
+import { fmt, fmtDate, STATUS_MAP } from '../../lib/storage'
 
 export default function CommandPalette({ onClose }) {
   const [q, setQ] = useState('')
@@ -38,7 +38,7 @@ export default function CommandPalette({ onClose }) {
 
   const budgets = get('budgets').map(b => ({
     type: 'bud', icon: 'fa-file-invoice', label: `${b.num || '—'} — ${b.company || b.contact || 'Sin cliente'}`,
-    sub: `${STATUS_MAP[b.status] || 'Borrador'} · ${b.date || '—'} · ${fmt(b.total)}`,
+    sub: `${STATUS_MAP[b.status] || 'Borrador'} · ${fmtDate(b.date)} · ${fmt(b.total)}`,
     path: `/pedido/${b.id}`,
   }))
 

@@ -427,7 +427,7 @@ input,select,textarea{font-family:inherit}
 .hoy-importa-count{font-size:11px;font-weight:800;color:#92400E;background:#FEF3C7;padding:3px 9px;border-radius:99px;letter-spacing:.05em}
 
 /* ─── BADGES ─── */
-.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:.01em}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
 .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 .b-confirmed{background:var(--green-lt);color:var(--green)}
 .b-sent{background:var(--blue-lt);color:var(--blue)}

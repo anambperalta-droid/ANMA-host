@@ -284,7 +284,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ fontWeight: 700, color: 'var(--txt)' }}>{fmtMoney(p.amount)}</span>
                   <span style={{ color: 'var(--txt2)' }}>{methodLbl(p.method)}</span>
-                  <span style={{ fontSize: 10.5, color: 'var(--txt3)' }}>{p.date}{(p.comprobante || p.notes) ? ` · ${p.comprobante || p.notes}` : ''}</span>
+                  <span style={{ fontSize: 10.5, color: 'var(--txt3)' }}>{fmtDate(p.date)}{(p.comprobante || p.notes) ? ` · ${p.comprobante || p.notes}` : ''}</span>
                 </div>
                 <button onClick={() => delPayment(p.id)} title="Eliminar" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: 4, borderRadius: 5, fontSize: 11 }}>
                   <i className="fa fa-trash" />
@@ -2765,7 +2765,7 @@ export default function Historial() {
                       <div style={{ maxHeight: 110, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)' }}>
                         {pays.map((p, idx) => (
                           <div key={p.id || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '7px 11px', borderBottom: idx < pays.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12 }}>
-                            <span style={{ fontSize: 11, color: 'var(--txt3)' }}>{p.date}</span>
+                            <span style={{ fontSize: 11, color: 'var(--txt3)' }}>{fmtDate(p.date)}</span>
                             <span style={{ color: 'var(--txt2)' }}>{pcMethod(p.method)}</span>
                             {p.notes && <span style={{ fontSize: 10.5, color: 'var(--txt4)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.notes}</span>}
                             <span style={{ fontWeight: 700, color: 'var(--txt)' }}>{fmt(p.amount)}</span>
@@ -2890,9 +2890,9 @@ export default function Historial() {
                         onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}
                       >
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', minWidth: 40 }}>{b.num || '#—'}</span>
-                        <span style={{ flex: 1, fontSize: 11, color: 'var(--txt3)' }}>{b.date || ''}</span>
+                        <span style={{ flex: 1, fontSize: 11, color: 'var(--txt3)' }}>{fmtDate(b.date)}</span>
                         <DotBadge b={b} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums' }}>{money(montoConIva(b))}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--money)', fontVariantNumeric: 'tabular-nums', minWidth: 84, textAlign: 'right' }}>{money(montoConIva(b))}</span>
                       </div>
                     ))}
                   </div>
