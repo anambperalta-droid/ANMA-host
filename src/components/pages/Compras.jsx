@@ -74,7 +74,20 @@ export default function Compras() {
     const pm = month === 0 ? 11 : month - 1
     const py = month === 0 ? year - 1 : year
     const pmk = monthKey(py, pm)
-    const arr = allCompras.filter(c => compraMonth(c) === pmk)
+    let arr = allCompras.filter(c => compraMonth(c) === pmk)
+    /* Si estamos viendo el mes ACTUAL (ej. 5 de noviembre), comparamos contra
+       los primeros 5 dias del mes anterior. Contra el mes anterior completo,
+       el delta de Gastos arranca cada mes en "-90%" y no significa nada.
+       Mismo guardrail que ya tenia Ventas. */
+    const now = new Date()
+    if (year === now.getFullYear() && month === now.getMonth()) {
+      const todayDay = now.getDate()
+      arr = arr.filter(c => {
+        const d = c.fecha || (c.updatedAt ? new Date(c.updatedAt).toISOString().slice(0, 10) : '')
+        const day = parseInt(String(d).slice(8, 10), 10)
+        return day > 0 && day <= todayDay
+      })
+    }
     return { count: arr.length, gastado: arr.reduce((s, c) => s + (Number(c.monto) || 0), 0) }
   }, [allCompras, month, year])
 

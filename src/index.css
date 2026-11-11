@@ -338,6 +338,9 @@ input,select,textarea{font-family:inherit}
 /* ─── BENTO GRID — premium feel, breathing room ─── */
 .bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(0,auto);gap:20px;margin-bottom:28px}
 .bento-kpis-4{grid-template-columns:repeat(4,1fr)}
+/* Dos KPIs: anchos acotados, no dos columnas gigantes a lo ancho de la pantalla. */
+.bento-kpis-2{grid-template-columns:repeat(2,minmax(0,230px))!important}
+@media(max-width:560px){.bento-kpis-2{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}}
 @media(max-width:900px){.bento-kpis-4{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}}
 @media(max-width:380px){.bento-kpis-4{grid-template-columns:1fr!important}}
 /* Logística: stats de viajes adaptan a tamaño de pantalla */
@@ -2128,10 +2131,9 @@ td b{color:var(--txt);font-weight:600}
 .ins-layout{display:block}
 .ins-main{min-width:0}
 .ins-panel{display:none}
-@media(min-width:641px){
-  .ins-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start}
-  .ins-panel{display:flex;flex-direction:column;gap:12px}
-}
+/* El panel lateral se fue (repetia los KPIs de arriba): la tabla usa todo el
+   ancho. .ins-panel queda neutralizado por si algun estilo viejo lo referencia. */
+.ins-panel{display:none!important}
 /* Panel stat rows */
 .ins-pstat{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--txt3)}
 .ins-pstat:last-child{border-bottom:none;padding-bottom:0}

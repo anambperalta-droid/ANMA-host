@@ -291,11 +291,10 @@ export default function Insumos() {
       </div>
 
       {/* ── KPIs (visible en desktop + mobile 2×2) ── */}
-      <div className="bento bento-kpis-4 ins-kpis" style={{ marginBottom: 14 }}>
-        <div className="bento-kpi" style={{ borderLeft: '3px solid var(--brand)', padding: '12px 14px 10px' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Total materiales</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--txt)', letterSpacing: '-.03em', lineHeight: 1.1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{insumos.length}</div>
-        </div>
+      <div className="bento bento-kpis-2 ins-kpis" style={{ marginBottom: 14 }}>
+        {/* "Total materiales" y "Categorias" se fueron: el primero se cuenta en
+            la tabla de abajo y el segundo no cambia ninguna decision. Quedan
+            los dos que si: cuanta plata hay parada y que falta reponer. */}
         <div className="bento-kpi" style={{ borderLeft: '3px solid var(--green)', padding: '12px 14px 10px' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Valor en packaging</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--money)', letterSpacing: '-.03em', lineHeight: 1.1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{fmt(totalValue)}</div>
@@ -309,10 +308,6 @@ export default function Insumos() {
                 Ver faltantes <i className="fa fa-arrow-right" style={{ fontSize: 8 }} />
               </button>
           }
-        </div>
-        <div className="bento-kpi" style={{ borderLeft: '3px solid var(--amber)', padding: '12px 14px 10px' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Categorías</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--txt)', letterSpacing: '-.03em', lineHeight: 1.1 }}>{cats.length}</div>
         </div>
       </div>
 
@@ -530,63 +525,11 @@ export default function Insumos() {
           </div>
         </div>
 
-        {/* ── RIGHT: panel lateral (desktop only) ── */}
-        <div className="ins-panel">
-          {/* Resumen */}
-          <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <i className="fa fa-chart-simple" /> Resumen packaging
-            </div>
-            <div className="ins-pstat">
-              <span><i className="fa fa-cubes" style={{ color: 'var(--brand)', marginRight: 5, fontSize: 11 }} />Total materiales</span>
-              <b>{insumos.length}</b>
-            </div>
-            <div className="ins-pstat">
-              <span><i className="fa fa-coins" style={{ color: '#F59E0B', marginRight: 5, fontSize: 11 }} />Valor packaging</span>
-              <b style={{ color: 'var(--money)' }}>{fmt(totalValue)}</b>
-            </div>
-            <div className="ins-pstat">
-              <span><i className="fa fa-gift" style={{ color: '#8B5CF6', marginRight: 5, fontSize: 11 }} />Con rendimiento</span>
-              <b style={{ color: '#16A34A' }}>{insumos.filter(x => x.qtyPerGift > 0).length}</b>
-            </div>
-          </div>
-
-          {/* Stock crítico o Todo OK */}
-          {lowStock.length > 0 ? (
-            <div className="card" style={{ padding: '14px 16px' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <i className="fa fa-triangle-exclamation" /> Packaging crítico ({lowStock.length})
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {lowStock.slice(0, 7).map(item => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--txt)', marginRight: 8 }}>{item.name}</div>
-                    <div style={{ fontSize: 11, color: '#DC2626', fontWeight: 700, flexShrink: 0 }}>
-                      {item.stock || 0}<span style={{ color: 'var(--txt4)', fontWeight: 400, marginLeft: 2 }}>{item.unit || 'un'}</span>
-                    </div>
-                  </div>
-                ))}
-                {lowStock.length > 7 && <div style={{ fontSize: 10, color: 'var(--txt4)', paddingTop: 6 }}>+{lowStock.length - 7} más</div>}
-              </div>
-            </div>
-          ) : (
-            <div className="card" style={{ padding: '20px 16px', textAlign: 'center' }}>
-              <i className="fa fa-circle-check" style={{ color: 'var(--green)', fontSize: 24, marginBottom: 8, display: 'block' }} />
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', marginBottom: 3 }}>Packaging completo</div>
-              <div style={{ fontSize: 11, color: 'var(--txt3)' }}>Todos los materiales tienen stock suficiente</div>
-            </div>
-          )}
-
-          {/* Tip calculadora */}
-          <div className="card" style={{ padding: '12px 14px', borderLeft: '3px solid var(--brand)' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <i className="fa fa-lightbulb" /> Tip: calculadora de fraccionamiento
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--txt3)', lineHeight: 1.55 }}>
-              Al crear un material, indicá el <b>costo del rollo/pack completo</b> y cuánto usás por regalo para calcular el costo real por unidad.
-            </div>
-          </div>
-        </div>
+        {/* El panel lateral derecho se fue: "Resumen packaging" repetia dos de
+            los KPIs de arriba (total materiales, valor en packaging) y
+            "Packaging critico" repetia el KPI de stock bajo, el banner rojo y
+            el filtro "Ver faltantes". La tabla se queda con todo el ancho.
+            Mismo criterio que en Hub. */}
 
       </div>
 
