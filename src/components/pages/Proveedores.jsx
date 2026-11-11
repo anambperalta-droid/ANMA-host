@@ -1065,15 +1065,15 @@ export default function Proveedores() {
                     const low = supplierProducts(detailSupplier).filter(p => p.minStock > 0 && (p.stock || 0) <= p.minStock)
                     if (!low.length) return null
                     return (
-                      <div style={{ background: 'linear-gradient(135deg,#FEF3C7,#FFFBEB)', border: '1.5px solid #FCD34D', borderRadius: 12, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#D97706', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}><i className="fa fa-boxes-stacked" /></div>
-                        <div style={{ flex: 1, minWidth: 140 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '.5px' }}>Reposición pendiente</div>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: '#92400E', lineHeight: 1.15, marginTop: 2 }}>{low.length} producto{low.length !== 1 ? 's' : ''} bajo stock</div>
-                          <div style={{ fontSize: 11, color: '#92400E', marginTop: 2 }}>Pedí reposición antes de quedarte sin unidades.</div>
+                      <div className="cli-alert-band is-stock">
+                        <div className="cli-alert-txt">
+                          <div className="cli-alert-label">Reposición pendiente</div>
+                          <div className="cli-alert-val">
+                            {low.length} producto{low.length !== 1 ? 's' : ''} bajo stock
+                          </div>
                         </div>
                         {detailSupplier.wa && (
-                          <button onClick={() => sendReorderWA(detailSupplier, low)} style={{ background: '#16A34A', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '9px 14px', borderRadius: 9, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
+                          <button className="btn btn-secondary btn-sm cli-alert-btn" onClick={() => sendReorderWA(detailSupplier, low)}>
                             <i className="fa-brands fa-whatsapp" /> Pedir reposición
                           </button>
                         )}

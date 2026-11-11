@@ -4,7 +4,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, STATUS_MAP, STATUS_CLS } from '../../lib/storage'
-import { openWAFor } from '../../lib/waMsg'
+import { openWAFor, sharePortalCliente } from '../../lib/waMsg'
 import { triggerMilestone, triggerEncouragement } from '../layout/MilestoneToast'
 
 /* ── Modal de vista previa de presupuesto (solo lectura, mobile-first) ── */
@@ -549,15 +549,22 @@ export default function Clientes() {
     return result
   }
 
+  /* Base unica de monto: SIEMPRE con IVA. El presupuesto guarda `total` SIN
+     IVA y `totalFinal` con IVA. Contra `total` pelado, el saldo salia mas
+     chico que el real (y podia dar cero con el pedido impago), y el total
+     vendido de cada cliente se quedaba corto — de ahi sale el umbral VIP. */
+  const montoConIva = (b) => Number(b.totalFinal || b.total) || 0
+
   const clientTotalVendido = (c) => clientBudgets(c)
     .filter(b => ['confirmed', 'paid', 'partial'].includes(b.status))
-    .reduce((s, b) => s + (Number(b.total) || 0), 0)
+    .reduce((s, b) => s + montoConIva(b), 0)
 
   const budgetSaldo = (b) => {
-    const total = Number(b.total) || 0
+    const total = montoConIva(b)
     const pagos = Array.isArray(b.payments) ? b.payments : []
     const cobradoPagos = pagos.reduce((s, p) => s + (Number(p.amount) || 0), 0)
-    const cobrado = cobradoPagos > 0 ? cobradoPagos : (Number(b.depositAmt) || 0)
+    // depositFinal = seña sobre el total CON IVA; depositAmt es la de sin IVA.
+    const cobrado = cobradoPagos > 0 ? cobradoPagos : (Number(b.depositFinal || b.depositAmt) || 0)
     return Math.max(0, total - cobrado)
   }
 
@@ -568,10 +575,19 @@ export default function Clientes() {
 
   const clientSaldoTotal = (c) => clientPedidosConSaldo(c).reduce((s, b) => s + b._saldo, 0)
 
+  /* Pedido que abre el portal desde la ficha: el que tiene saldo (que es de lo
+     que se habla con la clienta) y, si no hay, el ultimo. */
+  const clientPedidoPortal = (c) => {
+    const conSaldo = clientPedidosConSaldo(c).sort((a, b) => b.id - a.id)
+    if (conSaldo.length) return conSaldo[0]
+    const todos = clientBudgets(c).slice().sort((a, b) => b.id - a.id)
+    return todos[0] || null
+  }
+
   const clientTicketPromedio = (c) => {
     const bs = clientBudgets(c).filter(b => ['confirmed', 'paid', 'partial', 'delivered'].includes(b.status))
     if (!bs.length) return 0
-    return bs.reduce((s, b) => s + (Number(b.total) || 0), 0) / bs.length
+    return bs.reduce((s, b) => s + montoConIva(b), 0) / bs.length
   }
 
   const vipThreshold = useMemo(() => {
@@ -1382,6 +1398,18 @@ export default function Clientes() {
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
                   <button className="btn btn-primary btn-sm" onClick={() => nuevoPedidoParaCliente(detailClient)} title="Crear pedido para este cliente"><i className="fa fa-plus" /> Nuevo pedido</button>
+                  {/* Portal de la clienta a mano: antes solo se llegaba desde el
+                      detalle del pedido en Historial. */}
+                  {(() => {
+                    const bp = clientPedidoPortal(detailClient)
+                    if (!bp) return null
+                    return (
+                      <button className="btn btn-ghost btn-sm" title={`Compartir portal del pedido ${bp.num || ''}`}
+                        onClick={() => sharePortalCliente(bp, config(), { toast })}>
+                        <i className="fa fa-share-nodes" /> Portal
+                      </button>
+                    )
+                  })()}
                   <button className="btn btn-ghost btn-sm" onClick={() => openEdit(detailClient)}><i className="fa fa-pen" /></button>
                   <button className="mclose" onClick={() => setDetailClient(null)}><i className="fa fa-xmark" /></button>
                 </div>
@@ -1404,16 +1432,16 @@ export default function Clientes() {
                     const pends = clientPedidosConSaldo(detailClient)
                     if (saldo <= 0) return null
                     return (
-                      <div style={{ background: 'linear-gradient(135deg,#FEE2E2,#FEF2F2)', border: '1.5px solid #FCA5A5', borderRadius: 12, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#DC2626', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}><i className="fa fa-circle-exclamation" /></div>
-                        <div style={{ flex: 1, minWidth: 140 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '.5px' }}>Saldo pendiente</div>
-                          <div style={{ fontSize: 22, fontWeight: 900, color: '#991B1B', letterSpacing: '-.5px', lineHeight: 1.1 }}>{fmt(saldo)}</div>
-                          <div style={{ fontSize: 11, color: '#991B1B', marginTop: 2 }}>{pends.length} pedido{pends.length !== 1 ? 's' : ''} sin cobrar</div>
+                      <div className="cli-alert-band is-debt">
+                        <div className="cli-alert-txt">
+                          <div className="cli-alert-label">
+                            Saldo pendiente · {pends.length} pedido{pends.length !== 1 ? 's' : ''}
+                          </div>
+                          <div className="cli-alert-val">{fmt(saldo)}</div>
                         </div>
                         {detailClient.wa && (
-                          <button onClick={() => cobrarWA(detailClient)} style={{ background: '#DC2626', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '9px 14px', borderRadius: 9, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
-                            <i className="fa-brands fa-whatsapp" /> Enviar recordatorio
+                          <button className="btn btn-secondary btn-sm cli-alert-btn" onClick={() => cobrarWA(detailClient)}>
+                            <i className="fa-brands fa-whatsapp" /> Recordar cobro
                           </button>
                         )}
                       </div>
@@ -1506,8 +1534,14 @@ export default function Clientes() {
                             <div style={{ fontSize: 10, color: 'var(--txt3)', marginTop: 1 }}>{b.date || '—'}</div>
                           </div>
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--money)' }}>{fmt(b.total)}</div>
+                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--money)' }}>{fmt(montoConIva(b))}</div>
                           </div>
+                          {/* Portal de ESTE pedido, para elegir uno puntual. */}
+                          <button className="cli-portal-btn" title="Compartir portal de este pedido"
+                            aria-label={`Compartir portal del pedido ${b.num || ''}`}
+                            onClick={e => { e.stopPropagation(); sharePortalCliente(b, config(), { toast }) }}>
+                            <i className="fa fa-share-nodes" />
+                          </button>
                           <i className="fa fa-chevron-right" style={{ color: 'var(--txt4)', fontSize: 10 }} />
                         </div>
                       ))}

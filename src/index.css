@@ -2410,3 +2410,42 @@ td b{color:var(--txt);font-weight:600}
 @media(max-width:768px){
   .modal-bg.open.modal-bg-top{padding-top:0}
 }
+
+/* ── Banda de saldo pendiente (ficha de cliente) ──
+   Era un recuadro con degrade rojo, icono en circulo rojo, monto de 22px en
+   peso 900 y boton rojo solido: cuatro capas diciendo lo mismo. Ahora apoya
+   sobre la superficie de la ficha, el color queda en una regla de 3px al
+   costado y en el monto, y la accion es el boton del sistema. Igual que Hub. */
+.cli-alert-band{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:11px 14px;margin-bottom:14px;
+  border-radius:12px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-left:3px solid var(--alert-tone);
+}
+.cli-alert-txt{flex:1;min-width:150px;display:flex;flex-direction:column;gap:2px}
+.cli-alert-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3)}
+.cli-alert-val{font-size:18px;font-weight:800;letter-spacing:-.3px;line-height:1.15;color:var(--alert-ink)}
+.cli-alert-band .cli-alert-btn{flex-shrink:0}
+.cli-alert-band .cli-alert-btn i{color:var(--alert-tone)}
+.cli-alert-band .cli-alert-btn:hover i{color:inherit}
+.cli-alert-band.is-debt{--alert-tone:var(--red);--alert-ink:#991B1B}
+.cli-alert-band.is-stock{--alert-tone:var(--amber);--alert-ink:#92400E}
+:root[data-theme="dark"] .cli-alert-band.is-debt{--alert-ink:#FCA5A5}
+:root[data-theme="dark"] .cli-alert-band.is-stock{--alert-ink:#FCD34D}
+@media (max-width: 380px){
+  .cli-alert-band{gap:8px}
+  .cli-alert-band .cli-alert-btn{width:100%}
+}
+
+/* Accion "compartir portal" en cada pedido de la ficha del cliente */
+.cli-portal-btn{
+  width:30px;height:30px;flex-shrink:0;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--txt3);font-size:12px;cursor:pointer;padding:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:border-color .12s,color .12s,background .12s;
+}
+.cli-portal-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
+.cli-portal-btn:active{transform:scale(.94)}
