@@ -1,4 +1,5 @@
 import { fmt, fmtDate } from './storage'
+import { ivaDeBudget } from './pedido'
 import { createPortalShortLink } from './portalLink'
 
 /**
@@ -153,7 +154,7 @@ export function buildClientePortalPayload(b, cfg = {}) {
      un presupuesto con IVA el portal le mostraba un total y un saldo mas
      chicos que los reales. `iva` va aparte para el desglose. */
   const total = Number(b.totalFinal || b.total) || 0
-  const ivaAmt = Number(b.ivaAmt || b._quickIva) || 0
+  const ivaAmt = ivaDeBudget(b)
   const depAmt = Number(b.depositFinal || b.depositAmt) || 0
   const pay = b.payStatus || 'pending'
   /* Lo cobrado de verdad: con cuotas, `payments[]` manda sobre la seña. */

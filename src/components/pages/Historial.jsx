@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
-import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, registrarEvento } from '../../lib/pedido'
+import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, ivaDeBudget, registrarEvento } from '../../lib/pedido'
 import { buildWAMsg, openWAFor, relTimeShort, sharePortalCliente } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
@@ -264,7 +264,7 @@ function PaymentsModal({ budget, onSave, onClose }) {
         )}
         <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))', gap: 12, alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{budget.ivaAmt > 0 ? ' c/IVA' : ''}</div>
+            <div style={{ fontSize: 9, color: 'var(--txt3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{ivaDeBudget(budget) > 0 ? ' c/IVA' : ''}</div>
             <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)' }}>{fmtMoney(totalDue)}</div>
           </div>
           <div>
@@ -2751,7 +2751,7 @@ export default function Historial() {
                   <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface2)' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))', gap: 12, marginBottom: pays.length > 0 ? 12 : 0 }}>
                       <div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{b.ivaAmt > 0 ? ' c/IVA' : ''}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Total{ivaDeBudget(b) > 0 ? ' c/IVA' : ''}</div>
                         <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--txt)', marginTop: 2 }}>{fmt(totalDue)}</div>
                       </div>
                       <div>

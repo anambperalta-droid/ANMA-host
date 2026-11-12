@@ -587,6 +587,40 @@ export function budgetFromPedido(pedido, prevBudget = {}) {
  *  · Ganancia = total - costoTotal.
  *  · Margen (%) = ganancia / total * 100 (sobre precio, no sobre costo).
  */
+/**
+ * ivaDeBudget(b) — cuanto IVA tiene este pedido.
+ *
+ * `ivaAmt` recien se empezo a guardar el 11/11 (commit 60295fc): todo lo
+ * cargado antes con el flujo nuevo tiene el IVA cobrado dentro del total pero
+ * sin registrar aparte, y Ventas y el CSV lo mostraban en $0 — justo la
+ * columna que mira la contadora.
+ *
+ * En vez de reescribir los pedidos viejos, se recalcula al leerlos, con la
+ * misma formula que usa el pedido hoy, asi un pedido viejo y uno nuevo dan el
+ * mismo numero:
+ *   1. Si ya esta guardado, ese.
+ *   2. Si el pedido no aplica IVA, 0.
+ *   3. Se reconstruye el pedido desde el budget y se recalcula sobre sus
+ *      lineas (es lo que habria guardado el codigo de hoy).
+ *   4. Si no quedan lineas con precio, se despeja del total, que ya lo
+ *      incluye: iva = total - total / (1 + tasa).
+ */
+export function ivaDeBudget(b, ivaRate = 0.21) {
+  if (!b) return 0
+  const guardado = num(b.ivaAmt) || num(b._quickIva)
+  if (guardado > 0) return guardado
+  if (!b.aplicaIva) return 0
+
+  try {
+    const recalculado = num(calcularTotales(pedidoFromBudget(b), ivaRate).iva)
+    if (recalculado > 0) return recalculado
+  } catch { /* budget sin lineas reconstruibles: se despeja del total */ }
+
+  const conIva = num(b.totalFinal) || num(b.total)
+  if (conIva <= 0) return 0
+  return conIva - Math.round(conIva / (1 + ivaRate))
+}
+
 export function calcularTotales(pedido, ivaRate = 0.21) {
   if (!pedido?.lineas?.length) {
     return { subtotal: 0, iva: 0, total: num(pedido?.precioFinalManual), costoTotal: 0, ganancia: 0, margen: 0 }

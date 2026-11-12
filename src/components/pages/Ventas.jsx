@@ -5,7 +5,7 @@ import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { usePrivacy } from '../../context/PrivacyContext'
 import { fmt } from '../../lib/storage'
-import { gananciaBudget } from '../../lib/pedido'
+import { gananciaBudget, ivaDeBudget } from '../../lib/pedido'
 import { buildWAMsg } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
 
@@ -184,7 +184,7 @@ export default function Ventas() {
     let facturado = 0, iva = 0, cobrado = 0, pendiente = 0
     monthBudgets.forEach(b => {
       const t = montoConIva(b)
-      const ivaAmt = Number(b.ivaAmt || b._quickIva) || 0
+      const ivaAmt = ivaDeBudget(b)
       facturado += t; iva += ivaAmt
       if (b.payStatus === 'paid') cobrado += t
       else if (b.payStatus === 'partial') { const ya = Math.min(t, cobradoReal(b)); cobrado += ya; pendiente += t - ya }
@@ -370,7 +370,7 @@ export default function Ventas() {
       const fc = b.fiscalCondition || (b.clientId ? (clients.find(c => c.id === b.clientId)?.fiscalCondition) : null) || 'consumidor'
       const item1 = b.items?.[0] || {}
       const total = montoConIva(b)
-      const iva   = Number(b.ivaAmt || b._quickIva) || 0
+      const iva   = ivaDeBudget(b)
       const neto  = total - iva
       return [
         b.num || '', b.date || '',
