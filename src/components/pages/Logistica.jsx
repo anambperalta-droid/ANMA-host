@@ -608,6 +608,13 @@ export default function Logistica() {
           .viaje-header-grid{grid-template-columns:1fr!important}
         }
         /* ── COTIZAR TAB ── */
+        /* Dos niveles de rotulo para toda la pantalla. Antes cada seccion
+           elegia su propio tamaño, peso e interletrado: cinco variantes del
+           mismo elemento. */
+        .lg-lbl{font-size:10px;font-weight:800;color:var(--txt3);text-transform:uppercase;
+          letter-spacing:.09em;display:flex;align-items:center;gap:6px}
+        .lg-title{font-size:12px;font-weight:800;color:var(--txt2);text-transform:uppercase;
+          letter-spacing:.06em}
         /* ── Fila de viaje ────────────────────────────────────────────
            Ocupaba ~88px para decir una fecha y dos chips, con la mitad
            derecha vacia. Ahora usa el ancho: identidad a la izquierda,
@@ -694,6 +701,15 @@ export default function Logistica() {
         .cotiz-wa-btn:hover{filter:brightness(1.06)}
         .cotiz-wa-btn:active{transform:scale(.97)}
         .cotiz-desp-field{position:relative}
+        /* Estos dos inputs no tenian clase: salian con el estilo por defecto
+           del navegador, al lado de un buscador con el de la app. */
+        .cotiz-desp-input{width:100%;box-sizing:border-box;height:42px;padding:0 44px 0 12px;
+          font-family:inherit;font-size:13.5px;color:var(--txt);
+          border:1.5px solid var(--border);border-radius:12px;background:var(--surface2);
+          outline:none;transition:border-color .15s,background .15s}
+        .cotiz-desp-input:hover{background:var(--surface3)}
+        .cotiz-desp-input:focus{background:var(--surface);border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-xlt)}
+        .cotiz-desp-input::placeholder{color:var(--txt4)}
         .cotiz-desp-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--txt4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s}
         .cotiz-desp-copy:hover{background:var(--brand-xlt);color:var(--brand);border-color:var(--brand-dim)}
       `}</style>
@@ -983,7 +999,7 @@ export default function Logistica() {
 
                     {/* Bloque de tareas/paradas */}
                     <div>
-                      <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className="lg-lbl" style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <i className="fa fa-map-pin" style={{ color: 'var(--brand)', fontSize: 10 }} />
                         Recorrido
                         {/* El conteo ya esta en la cabecera del viaje, que se ve
@@ -1065,7 +1081,7 @@ export default function Logistica() {
                       const assocBudget = viaje.budgetId ? budgets.find(b => String(b.id) === String(viaje.budgetId)) : null
                       return (
                         <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 14, background: 'var(--surface2)', border: '1px solid var(--border)' }}>
-                          <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div className="lg-lbl" style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <i className="fa fa-calculator" style={{ color: 'var(--brand)', fontSize: 10 }} />Resumen de costos
                           </div>
                           {/* Desglose por categoría */}
@@ -1162,7 +1178,7 @@ export default function Logistica() {
               <div key={k.label} className="card" style={{ flex: 1, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                 <i className={`fa ${k.icon}`} style={{ color: k.val > 0 ? k.color : 'var(--txt4)', fontSize: 16, flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k.label}</div>
+                  <div className="lg-lbl" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k.label}</div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: k.val > 0 ? k.color : 'var(--txt)', lineHeight: 1.2 }}>{k.val}</div>
                 </div>
               </div>
@@ -1363,7 +1379,7 @@ export default function Logistica() {
 
           {/* ── ÁREA: Cliente a cotizar ── */}
           <div className="cotiz-area-cliente card" style={{ borderRadius: 20, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="lg-lbl" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <i className="fa fa-user" style={{ color: 'var(--brand)', fontSize: 11 }} />Cliente a cotizar
             </div>
 
@@ -1440,7 +1456,7 @@ export default function Logistica() {
 
             {/* Selector de transportista + Badge dinámico */}
             <div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="lg-lbl" style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <i className="fa fa-truck" style={{ fontSize: 10 }} />Mensaje para la clienta · transportista
               </div>
 
@@ -1502,7 +1518,7 @@ export default function Logistica() {
 
           {/* ── ÁREA: Mis Datos de Despacho ── */}
           <div className="cotiz-area-despacho card" style={{ borderRadius: 20, padding: '16px 18px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="lg-lbl" style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
               <i className="fa fa-box-archive" style={{ color: 'var(--brand)', fontSize: 11 }} />Mis Datos de Despacho
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1518,7 +1534,7 @@ export default function Logistica() {
                     value={despachoDir}
                     onChange={e => { setDespachoDir(e.target.value); dbW('despDir', e.target.value) }}
                     placeholder="Av. Ejemplo 1234, Localidad…"
-                    style={{ width: '100%', boxSizing: 'border-box', paddingRight: 44 }}
+                    className="cotiz-desp-input"
                   />
                   <button className="cotiz-desp-copy" title="Copiar dirección"
                     onClick={() => { if (despachoDir) { navigator.clipboard.writeText(despachoDir); toast('Dirección copiada ✓', 'ok') } }}>
@@ -1538,7 +1554,7 @@ export default function Logistica() {
                     value={despachoCUIT}
                     onChange={e => { setDespachoCUIT(e.target.value); dbW('despCuit', e.target.value) }}
                     placeholder="20-12345678-9"
-                    style={{ width: '100%', boxSizing: 'border-box', paddingRight: 44 }}
+                    className="cotiz-desp-input"
                   />
                   <button className="cotiz-desp-copy" title="Copiar CUIT"
                     onClick={() => { if (despachoCUIT) { navigator.clipboard.writeText(despachoCUIT); toast('CUIT copiado ✓', 'ok') } }}>
@@ -1614,7 +1630,7 @@ export default function Logistica() {
           <div className="logi-summary-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {/* Desglose por estado — donut centrado + leyenda */}
             <div className="card" style={{ padding: '18px 20px' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 18 }}>Desglose por estado</div>
+              <div className="lg-title" style={{ marginBottom: 18 }}>Desglose por estado</div>
               {byStatus.filter(b => b.count > 0).length ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
                   <DonutChart data={byStatus.filter(b => b.count > 0)} hovered={hoveredStatus} />
@@ -1641,7 +1657,7 @@ export default function Logistica() {
 
             {/* Costo por mes — taller bars */}
             <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--txt2)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 14 }}>Costo por mes (últimos 6 meses)</div>
+              <div className="lg-title" style={{ marginBottom: 14 }}>Costo por mes (últimos 6 meses)</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {monthlyData.map((m, idx) => {
                   const isLast = idx === monthlyData.length - 1
@@ -1652,7 +1668,7 @@ export default function Logistica() {
                         <span style={{ color: isLast ? 'var(--txt)' : 'var(--txt2)', fontWeight: isLast ? 700 : 500, textTransform: 'capitalize' }}>{m.label}</span>
                         <span style={{ fontWeight: 700, color: m.cost ? 'var(--money)' : 'var(--txt4)', fontFamily: 'ui-monospace,SFMono-Regular,monospace', fontSize: 12 }}>
                           {m.cost ? fmt(m.cost) : '—'}
-                          {m.count > 0 && <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10, marginLeft: 4 }}>({m.count})</span>}
+                          {m.count > 0 && <span style={{ fontWeight: 400, color: 'var(--txt4)', fontSize: 10, marginLeft: 5 }}>{m.count} env.</span>}
                         </span>
                       </div>
                       <div style={{ height: 10, background: 'var(--surface2)', borderRadius: 6, overflow: 'hidden' }}>
@@ -1662,6 +1678,14 @@ export default function Logistica() {
                   )
                 })}
               </div>
+              {/* Seis barras vacias debajo de un KPI que dice $67.178 parecen
+                  un error del sistema. No lo es: los envios con flete cargado
+                  son anteriores a esta ventana. Conviene decirlo. */}
+              {maxCost <= 1 && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 11.5, color: 'var(--txt3)', lineHeight: 1.5 }}>
+                  Sin flete cargado en estos seis meses. El costo total de arriba incluye envíos anteriores.
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -1680,7 +1704,7 @@ export default function Logistica() {
 
             {/* ── 1. ENVÍO — datos esenciales ─────────────────────────── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10 }}>
+              <div className="lg-lbl" style={{ marginBottom: 10 }}>
                 <i className="fa fa-truck-fast" style={{ marginRight: 6, color: 'var(--brand)' }} />Envío
               </div>
               <div className="fg" style={{ marginBottom: 10 }}>
@@ -1711,7 +1735,7 @@ export default function Logistica() {
 
             {/* ── 2. DESTINATARIO ──────────────────────────────────────── */}
             <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: '14px 16px', marginBottom: 10, border: '1.5px solid var(--border)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.8px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="lg-lbl" style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <i className="fa fa-location-dot" style={{ color: 'var(--brand)' }} />Destinatario
                 {form.budgetId && <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', background: '#F2F8EB', padding: '1px 8px', borderRadius: 10 }}>Auto-completado</span>}
               </div>
