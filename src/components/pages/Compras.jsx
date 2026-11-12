@@ -304,7 +304,7 @@ export default function Compras() {
   }
 
   return (
-    <div className="compras-page" style={{ padding: '10px 20px 80px', maxWidth: 1000, margin: '0 auto' }}>
+    <div className="compras-page page-wide" style={{ padding: '10px 20px 80px' }}>
       <style>{`
         .cp-row{display:grid;grid-template-columns:.7fr 1fr 1.2fr .7fr .35fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
         .cp-row:hover{background:var(--surface2)}

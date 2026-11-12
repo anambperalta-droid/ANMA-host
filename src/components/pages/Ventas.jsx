@@ -629,7 +629,7 @@ export default function Ventas() {
   }
 
   return (
-    <div style={{ padding: '10px 20px 80px', maxWidth: 1000, margin: '0 auto' }}>
+    <div className="page-wide" style={{ padding: '10px 20px 80px' }}>
       <style>{`
         .vt-row{display:grid;grid-template-columns:.4fr .4fr 1fr .7fr .3fr .7fr .4fr .55fr .5fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;transition:background .1s}
         /* Smart Tabs — Fase 1 auditoria 02/10/26 */

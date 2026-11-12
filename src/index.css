@@ -326,6 +326,12 @@ input,select,textarea{font-family:inherit}
 .tb-btn.is-on{background:var(--acento-xlt);border-color:var(--acento);color:var(--acento)}
 .tb-btn.is-alert{background:#FEE2E2;border-color:#FCA5A5;color:#DC2626}
 .content{padding:14px 16px;flex:1;overflow-y:auto;overflow-x:hidden}
+/* Ancho de las pantallas de datos (Ventas, Compras). Estaban en 1000px cada
+   una, con el numero suelto en su archivo: en un monitor de 1600 dejaban 600
+   vacios al costado de una tabla de nueve columnas, mientras Pedidos ocupa
+   todo. 1400 usa la pantalla sin dejar que la fila se estire sin fin en un
+   monitor de 2560, que es lo que hace perder el renglon al leer. */
+.page-wide{max-width:1400px;margin:0 auto}
 
 /* ─── COMMON COMPONENTS ─── */
 /* Page header — manda visualmente en toda la app */
