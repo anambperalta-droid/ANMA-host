@@ -614,7 +614,14 @@ export default function Logistica() {
         @media(min-width:768px){.cotiz-layout{grid-template-columns:1fr 1.2fr;gap:16px;grid-template-areas:"cliente tools" "despacho tools"}}
         .cotiz-search-input{width:100%;box-sizing:border-box;padding:0 36px 0 38px;height:44px;font-size:14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--txt);outline:none;font-family:inherit;transition:border-color .15s}
         .cotiz-search-input:focus{border-color:var(--brand)}
-        .cotiz-vc-badge{display:flex;align-items:center;gap:12px;background:#F2F8EB;border:1.5px solid #A7F3D0;border-radius:14px;padding:12px 16px}
+        /* Link al sitio del transportista. Reemplaza a .cotiz-vc-badge, que era
+           una tarjeta de 60px cuyo unico contenido propio era este link. */
+        .cotiz-sitio{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;
+          font-size:12px;font-weight:700;color:var(--txt2);text-decoration:none;
+          padding:7px 14px;border-radius:9999px;border:1.5px solid var(--border2);
+          transition:all .15s}
+        .cotiz-sitio:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
+        .cotiz-sitio i{font-size:10px;opacity:.8}
         .cotiz-preview{margin:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--txt2);line-height:1.7;font-style:italic}
         .cotiz-wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:13px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;width:100%;font-family:inherit}
         .cotiz-wa-btn:hover{filter:brightness(1.06)}
@@ -1337,13 +1344,13 @@ export default function Logistica() {
             )}
           </div>
 
-          {/* ── ÁREA: Herramientas (Vía Cargo + Preview + WA) ── */}
+          {/* ── ÁREA: el mensaje que se manda ── */}
           <div className="cotiz-area-tools card" style={{ borderRadius: 20, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Selector de transportista + Badge dinámico */}
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <i className="fa fa-truck" style={{ fontSize: 10 }} />Transportista
+                <i className="fa fa-truck" style={{ fontSize: 10 }} />Mensaje para la clienta · transportista
               </div>
 
               {/* Toggle Vía Cargo / Andreani */}
@@ -1361,49 +1368,20 @@ export default function Logistica() {
                 ))}
               </div>
 
-              {/* Badge dinámico según carrier */}
-              {carrier === 'viacargo' ? (
-                <div className="cotiz-vc-badge">
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className="fa fa-truck" style={{ color: '#fff', fontSize: 17 }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#065F46', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Operado por</div>
-                    <div style={{ fontSize: 17, fontWeight: 800, color: '#059669', letterSpacing: '-.3px', marginTop: 3 }}>Vía Cargo</div>
-                  </div>
-                  <a href="https://www.viacargo.com.ar" target="_blank" rel="noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#059669', background: '#fff', border: '1.5px solid #A7F3D0', borderRadius: 9, padding: '7px 13px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap', transition: 'filter .15s' }}
-                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(.93)'}
-                    onMouseLeave={e => e.currentTarget.style.filter = ''}>
-                    <i className="fa fa-arrow-up-right-from-square" style={{ fontSize: 9 }} />Cotizar
-                  </a>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 14, padding: '12px 16px' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className="fa fa-truck" style={{ color: '#fff', fontSize: 17 }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '.08em', lineHeight: 1 }}>Operado por</div>
-                    <div style={{ fontSize: 17, fontWeight: 800, color: '#DC2626', letterSpacing: '-.3px', marginTop: 3 }}>Andreani</div>
-                  </div>
-                  <a href="https://www.andreani.com" target="_blank" rel="noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#DC2626', background: '#fff', border: '1.5px solid #FECACA', borderRadius: 9, padding: '7px 13px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap', transition: 'filter .15s' }}
-                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(.93)'}
-                    onMouseLeave={e => e.currentTarget.style.filter = ''}>
-                    <i className="fa fa-arrow-up-right-from-square" style={{ fontSize: 9 }} />Cotizar
-                  </a>
-                </div>
-              )}
+              {/* El nombre del transportista ya lo dicen las pastillas de
+                  arriba: la tarjeta que lo repetia en grande existia solo para
+                  alojar este link. Queda el link. */}
+              <a href={carrier === 'andreani' ? 'https://www.andreani.com' : 'https://www.viacargo.com.ar'}
+                target="_blank" rel="noreferrer" className="cotiz-sitio">
+                <i className="fa fa-arrow-up-right-from-square" />
+                Cotizar en el sitio de {carrier === 'andreani' ? 'Andreani' : 'Vía Cargo'}
+              </a>
             </div>
 
             {/* Vista previa del mensaje — se actualiza según carrier */}
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt4)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <i className="fa fa-eye" style={{ fontSize: 10 }} />Vista previa del mensaje
-                <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: carrier === 'andreani' ? '#FEF2F2' : '#DCFCE7', color: carrier === 'andreani' ? '#DC2626' : '#059669' }}>
-                  {carrier === 'andreani' ? 'Andreani' : 'Vía Cargo'}
-                </span>
               </div>
               <p className="cotiz-preview">"{cotizMsg}"</p>
             </div>
@@ -1491,8 +1469,9 @@ export default function Logistica() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
             <button className="btn btn-sm" onClick={() => window.print()}
               style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface2)', border: '1.5px solid var(--border)', color: 'var(--txt2)', borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-              <i className="fa fa-file-arrow-down" style={{ fontSize: 13 }} />
-              Descargar reporte
+              {/* window.print(): abre el dialogo de impresion, no descarga. */}
+              <i className="fa fa-print" style={{ fontSize: 13 }} />
+              Imprimir resumen
             </button>
           </div>
 
