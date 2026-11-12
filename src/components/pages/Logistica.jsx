@@ -115,6 +115,7 @@ export default function Logistica() {
     return list.length ? list[list.length - 1].id : null
   })
   // ── Filtros de la lista de viajes ──
+  const [editViajeId, setEditViajeId] = useState(null)
   const [viajeSearch, setViajeSearch] = useState('')
   const [viajeStateFilter, setViajeStateFilter] = useState('all')
   const [viajeTimeFilter, setViajeTimeFilter] = useState('all') // all | thisMonth | lastMonth | last90
@@ -518,6 +519,74 @@ export default function Logistica() {
         .viaje-month-sep:first-child{margin-top:0}
         .viaje-month-lbl{font-size:10.5px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;font-family:'Space Grotesk','Inter',sans-serif}
         .viaje-month-count{font-size:10px;color:var(--txt4);font-weight:600;background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:99px}
+        /* ── Registro del viaje: linea de datos y paradas ──────────────
+           El panel desplegado era un formulario: tres campos a ancho completo
+           que repetian la cabecera, y cada parada con cinco cajas con borde.
+           Ahora el viaje se lee y los campos aparecen cuando se los pide. */
+        .viaje-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;
+          padding:9px 12px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+        .viaje-meta-item{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2)}
+        .viaje-meta-item i{font-size:11px;color:var(--txt4)}
+        .viaje-meta-item b{color:var(--txt);font-weight:700}
+        .viaje-meta-soft{color:var(--txt4)}
+        .viaje-meta-edit{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+          background:transparent;border:1.5px solid var(--border2);border-radius:9999px;
+          padding:5px 13px;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--txt2);
+          cursor:pointer;transition:all .15s;white-space:nowrap}
+        .viaje-meta-edit:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-xlt)}
+        .viaje-meta-edit i{font-size:10px}
+
+        /* Una parada: numero, categoria, detalle y monto. Los campos son planos
+           (se leen como texto) y muestran el borde al pasar por encima o al
+           enfocarlos — mismo patron que las lineas de PedidoNuevo. */
+        /* Tope de ancho: en una pantalla grande el detalle se estiraba y el
+           monto quedaba a media cuadra del texto al que pertenece. */
+        .lg-stop{display:grid;grid-template-columns:26px 124px minmax(0,1fr) 92px 28px;max-width:860px;
+          align-items:center;gap:8px;padding:5px 8px;border-radius:10px;
+          border-bottom:1px solid var(--border);transition:background .12s}
+        .lg-stop:last-of-type{border-bottom:none}
+        .lg-stop:hover{background:var(--surface2)}
+        .lg-stop.is-done{opacity:.62}
+        .lg-stop-n{width:26px;height:26px;border-radius:50%;flex-shrink:0;padding:0;
+          border:1.5px solid var(--border2);background:var(--surface);color:var(--txt3);
+          font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;
+          display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+        .lg-stop-n:hover{border-color:#059669;color:#059669}
+        .lg-stop.is-done .lg-stop-n{background:#DCFCE7;border-color:#86EFAC;color:#059669}
+        .lg-flat{width:100%;min-width:0;box-sizing:border-box;font-family:inherit;
+          border:1.5px solid transparent;background:transparent;border-radius:8px;
+          padding:6px 8px;color:var(--txt);outline:none;transition:border-color .12s,background .12s}
+        .lg-flat:hover{background:var(--surface);border-color:var(--border)}
+        .lg-flat:focus{background:var(--surface);border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-xlt)}
+        .lg-flat::placeholder{color:var(--txt4);font-weight:400}
+        .lg-stop-cat{font-size:11.5px;font-weight:700;color:var(--txt2);cursor:pointer}
+        .lg-stop-det{font-size:12.5px}
+        /* Sin tachado: el tilde verde y la fila apagada ya dicen que esta
+           hecha, y tachar un campo que se puede editar se lee raro. */
+        .lg-stop-cost{position:relative;display:flex;align-items:center}
+        .lg-stop-cost > span{position:absolute;left:6px;font-size:11px;font-weight:700;color:var(--txt4);pointer-events:none}
+        .lg-stop-cost .lg-flat{padding-left:16px;padding-right:6px;text-align:right;font-size:12.5px;font-weight:700;
+          font-variant-numeric:tabular-nums}
+        .lg-stop-del{width:26px;height:26px;border-radius:50%;padding:0;border:none;background:transparent;
+          color:var(--txt4);font-size:12px;cursor:pointer;opacity:0;transition:opacity .12s,color .12s}
+        .lg-stop:hover .lg-stop-del{opacity:1}
+        .lg-stop-del:hover{color:var(--red);background:var(--red-lt)}
+
+        /* En el celular la parada se parte en dos filas: detalle arriba a lo
+           ancho, categoria y monto abajo. Con cinco columnas el detalle se
+           quedaba sin lugar. */
+        @media(max-width:640px){
+          .lg-stop{grid-template-columns:26px minmax(0,1fr) 84px 26px;
+            grid-template-areas:'n det det del' 'n cat costo .';row-gap:2px}
+          .lg-stop-n{grid-area:n;align-self:start;margin-top:4px}
+          .lg-stop-det{grid-area:det}
+          .lg-stop-cat{grid-area:cat}
+          .lg-stop-cost{grid-area:costo}
+          .lg-stop-del{grid-area:del;opacity:1}
+          .viaje-meta{gap:8px;padding:8px 10px}
+          .viaje-meta-edit{margin-left:0;width:100%;justify-content:center}
+        }
+
         /* ── CONTROL DE VIAJES: grilla de campos en mobile → 1 col ── */
         @media(max-width:640px){
           .viaje-header-grid{grid-template-columns:1fr 1fr!important}
@@ -617,7 +686,7 @@ export default function Logistica() {
                 return (
                   <div key={c.key} style={{ background: c.bg, borderRadius: 14, padding: '10px 12px', border: `1px solid ${c.color}22` }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: c.color, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><i className={`fa ${c.icon}`} style={{ marginRight: 5 }} />{c.key}</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--txt)', lineHeight: 1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{st.count}<span style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', marginLeft: 3, fontFamily: "'Inter',sans-serif" }}>veces</span></div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--txt)', lineHeight: 1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{st.count}<span style={{ fontSize: 10, fontWeight: 600, color: 'var(--txt3)', marginLeft: 3, fontFamily: "'Inter',sans-serif" }}>parada{st.count !== 1 ? 's' : ''}</span></div>
                     <div style={{ fontSize: 11, fontWeight: 700, color: c.color, marginTop: 2, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{fmt(st.total)}</div>
                   </div>
                 )
@@ -626,7 +695,7 @@ export default function Logistica() {
               <div style={{ background: 'var(--panel-grad, #1E1B4B)', borderRadius: 14, padding: '10px 12px', color: '#fff' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.6)', marginBottom: 3, whiteSpace: 'nowrap' }}><i className="fa fa-wallet" style={{ marginRight: 5 }} />Gasto total</div>
                 <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1, fontFamily: "'Space Grotesk','Inter',sans-serif", fontVariantNumeric: 'tabular-nums' }}>{fmt(gastoLogisticoTotal)}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', marginTop: 4 }}>{viajes.length} viaje{viajes.length !== 1 ? 's' : ''}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', marginTop: 4 }}>{viajes.length} viaje{viajes.length !== 1 ? 's' : ''} · {viajes.reduce((n, v) => n + (v.tasks || []).length, 0)} paradas</div>
               </div>
             </div>
           )}
@@ -757,39 +826,73 @@ export default function Logistica() {
                 {isOpen && (
                   <div style={{ borderTop: '1px solid var(--border)', padding: '16px 18px' }}>
 
-                    {/* Campos del header del viaje — sin horario (no es relevante para el flujo de entregas) */}
-                    <div className="viaje-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-                      <div className="fg" style={{ marginBottom: 0 }}>
-                        <label>Fecha de salida</label>
-                        <input type="date" value={viaje.date}
-                          onChange={e => patchViaje(viaje.id, { date: e.target.value })} />
+                    {/* Linea de datos del viaje. Antes eran tres campos de
+                        formulario a ancho completo que repetian la cabecera:
+                        fecha, estado y pedido ya estan arriba. Ahora se leen de
+                        corrido y los campos aparecen al tocar "Editar datos". */}
+                    {editViajeId !== viaje.id ? (
+                      <div className="viaje-meta">
+                        <span className="viaje-meta-item">
+                          <i className="fa fa-calendar-day" />
+                          Sale el <b>{fmtDate(viaje.date)}</b>
+                        </span>
+                        {(() => {
+                          const b = viaje.budgetId ? budgets.find(x => String(x.id) === String(viaje.budgetId)) : null
+                          return b ? (
+                            <span className="viaje-meta-item">
+                              <i className="fa fa-gift" style={{ color: 'var(--brand)' }} />
+                              Para <b>{b.num || ''} {b.company || b.contact || ''}</b>
+                            </span>
+                          ) : (
+                            <span className="viaje-meta-item viaje-meta-soft">
+                              <i className="fa fa-gift" />
+                              Viaje general, sin pedido asociado
+                            </span>
+                          )
+                        })()}
+                        <button className="viaje-meta-edit" onClick={() => setEditViajeId(viaje.id)}>
+                          <i className="fa fa-pen" /> Editar datos
+                        </button>
                       </div>
-                      <div className="fg" style={{ marginBottom: 0 }}>
-                        <label>Estado general</label>
-                        <select value={viaje.status}
-                          onChange={e => patchViaje(viaje.id, { status: e.target.value })}
-                          style={{ borderRadius: 10, fontWeight: 700, color: stateColor, borderColor: stateColor, background: stateBg }}>
-                          {['Planificado', 'En Curso', 'Finalizado'].map(s => <option key={s}>{s}</option>)}
-                        </select>
+                    ) : (
+                      <div className="viaje-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                        <div className="fg" style={{ marginBottom: 0 }}>
+                          <label>Fecha de salida</label>
+                          <input type="date" value={viaje.date}
+                            onChange={e => patchViaje(viaje.id, { date: e.target.value })} />
+                        </div>
+                        <div className="fg" style={{ marginBottom: 0 }}>
+                          <label>Estado general</label>
+                          <select value={viaje.status}
+                            onChange={e => patchViaje(viaje.id, { status: e.target.value })}
+                            style={{ borderRadius: 10, fontWeight: 700, color: stateColor, borderColor: stateColor, background: stateBg }}>
+                            {['Planificado', 'En Curso', 'Finalizado'].map(st => <option key={st}>{st}</option>)}
+                          </select>
+                        </div>
+                        <div className="fg" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                          <label><i className="fa fa-gift" style={{ marginRight: 5, color: 'var(--brand)', fontSize: 10 }} />Pedido / Cliente asociado (opcional)</label>
+                          <select value={viaje.budgetId || ''}
+                            onChange={e => patchViaje(viaje.id, { budgetId: e.target.value })}>
+                            <option value="">Sin asociar — viaje general</option>
+                            {budgets.map(b => (
+                              <option key={b.id} value={b.id}>{b.num || `#${b.id}`} — {b.company || b.contact || 'Cliente'}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <button className="btn btn-secondary btn-sm" style={{ gridColumn: '1 / -1', justifySelf: 'start' }}
+                          onClick={() => setEditViajeId(null)}>
+                          <i className="fa fa-check" /> Listo
+                        </button>
                       </div>
-                      <div className="fg" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
-                        <label><i className="fa fa-gift" style={{ marginRight: 5, color: 'var(--brand)', fontSize: 10 }} />Pedido / Cliente asociado (opcional)</label>
-                        <select value={viaje.budgetId || ''}
-                          onChange={e => patchViaje(viaje.id, { budgetId: e.target.value })}>
-                          <option value="">Sin asociar — viaje general</option>
-                          {budgets.map(b => (
-                            <option key={b.id} value={b.id}>{b.num || `#${b.id}`} — {b.company || b.contact || 'Cliente'}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                    )}
 
                     {/* Bloque de tareas/paradas */}
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <i className="fa fa-map-pin" style={{ color: 'var(--brand)', fontSize: 10 }} />
-                        Recorrido — Paradas y Tareas
-                        {tasks.length > 0 && <span style={{ fontWeight: 600, color: '#059669', marginLeft: 4 }}>{doneTasks}/{tasks.length}</span>}
+                        Recorrido
+                        {/* El conteo ya esta en la cabecera del viaje, que se ve
+                            tanto plegada como desplegada: repetirlo aca no sumaba. */}
                       </div>
 
                       {tasks.length === 0 && (
@@ -799,52 +902,46 @@ export default function Logistica() {
                       )}
 
                       {tasks.map((task, idx) => (
-                        <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 10px', borderRadius: 12, background: task.done ? 'rgba(5,150,105,.04)' : 'var(--surface2)', border: `1px solid ${task.done ? 'rgba(5,150,105,.2)' : 'var(--border)'}`, transition: 'all .12s' }}>
-                          {/* Número de parada */}
-                          <div style={{ width: 22, height: 22, borderRadius: '50%', background: task.done ? '#DCFCE7' : 'var(--surface)', border: `1.5px solid ${task.done ? '#86EFAC' : 'var(--border2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: task.done ? '#059669' : 'var(--txt3)', flexShrink: 0 }}>
-                            {idx + 1}
-                          </div>
-                          {/* Selector de categoría */}
+                        <div key={task.id} className={`lg-stop${task.done ? ' is-done' : ''}`}>
+                          {/* El numero dice si la parada esta hecha: tilde verde
+                              cuando si, numero cuando no. Antes lo decian tres
+                              cosas a la vez (tachado, color y un boton aparte). */}
+                          <button
+                            className="lg-stop-n"
+                            onClick={() => patchTask(viaje.id, task.id, { done: !task.done })}
+                            title={task.done ? 'Marcar como pendiente' : 'Marcar como hecha'}>
+                            {task.done ? <i className="fa fa-check" /> : idx + 1}
+                          </button>
                           <select
+                            className="lg-flat lg-stop-cat"
                             value={task.category}
-                            onChange={e => patchTask(viaje.id, task.id, { category: e.target.value })}
-                            style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: task.category === 'Insumos' ? '#D97706' : task.category === 'Mercadería' ? '#2563EB' : '#7C3AED', cursor: 'pointer', fontFamily: 'inherit', minWidth: 120 }}>
+                            onChange={e => patchTask(viaje.id, task.id, { category: e.target.value })}>
                             <option value="Insumos">Insumos</option>
                             <option value="Mercadería">Mercadería</option>
                             <option value="Entrega Pedido">Entrega Pedido</option>
                           </select>
-                          {/* Campo de detalle */}
                           <input
                             type="text"
+                            className="lg-flat lg-stop-det"
                             value={task.detail}
                             onChange={e => patchTask(viaje.id, task.id, { detail: e.target.value })}
-                            placeholder={task.category === 'Entrega Pedido' ? 'Ej: Dejar pedido #4025 en Saavedra' : task.category === 'Mercadería' ? 'Ej: Retirar cajas en depósito Once' : 'Ej: Comprar cintas en Palermo'}
-                            style={{ flex: 1, minWidth: 0, fontSize: 12, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', outline: 'none', opacity: task.done ? .55 : 1, textDecoration: task.done ? 'line-through' : 'none' }}
+                            placeholder={task.category === 'Entrega Pedido' ? 'Ej: dejar el pedido en Saavedra' : task.category === 'Mercadería' ? 'Ej: retirar en el mayorista' : 'Ej: comprar cintas'}
                           />
-                          {/* Costo de la parada */}
-                          <div style={{ position: 'relative', flexShrink: 0, width: 96 }}>
-                            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 11, fontWeight: 700, color: 'var(--txt4)', pointerEvents: 'none' }}>$</span>
+                          <div className="lg-stop-cost">
+                            <span>$</span>
                             <input
                               type="number" min="0" inputMode="numeric"
+                              className="lg-flat"
                               value={task.cost ?? ''}
                               onChange={e => patchTask(viaje.id, task.id, { cost: e.target.value })}
                               placeholder="0"
                               title="Costo de esta parada"
-                              style={{ width: '100%', boxSizing: 'border-box', fontSize: 12, fontWeight: 700, padding: '6px 8px 6px 18px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--txt)', fontFamily: 'inherit', outline: 'none', textAlign: 'right' }}
                             />
                           </div>
-                          {/* Botón completar */}
                           <button
-                            onClick={() => patchTask(viaje.id, task.id, { done: !task.done })}
-                            title={task.done ? 'Marcar como pendiente' : 'Marcar como completada'}
-                            style={{ width: 34, height: 34, borderRadius: '50%', border: `1.5px solid ${task.done ? '#059669' : 'var(--border2)'}`, background: task.done ? '#DCFCE7' : 'var(--surface)', color: task.done ? '#059669' : 'var(--txt4)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0, transition: 'all .15s', WebkitTapHighlightColor: 'transparent' }}>
-                            <i className={`fa ${task.done ? 'fa-check' : 'fa-circle-dot'}`} />
-                          </button>
-                          {/* Eliminar tarea */}
-                          <button
+                            className="lg-stop-del"
                             onClick={() => removeTask(viaje.id, task.id)}
-                            title="Eliminar parada"
-                            style={{ width: 28, height: 28, borderRadius: '50%', border: '1.5px solid #FECACA', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0, transition: 'all .15s' }}>
+                            title="Eliminar parada">
                             <i className="fa fa-xmark" />
                           </button>
                         </div>
