@@ -800,7 +800,9 @@ td b{color:var(--txt);font-weight:600}
 @keyframes optFlash{0%{background:var(--brand-xlt)}100%{background:transparent}}
 
 /* ─── TOAST ─── */
-.toast-hub{position:fixed;bottom:20px;right:20px;z-index:9000;display:flex;flex-direction:column;gap:6px}
+/* 11000: por encima de los cajones (9999) y los overlays (10000). Un aviso
+   de error con un cajon abierto quedaba tapado y no se veia nunca. */
+.toast-hub{position:fixed;bottom:20px;right:20px;z-index:11000;display:flex;flex-direction:column;gap:6px}
 .toast{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;min-width:260px;box-shadow:var(--sh-md);font-size:12px;color:var(--txt);animation:tin .3s ease both}
 .toast.ok{border-left:3px solid var(--green)}.toast.ok i{color:var(--green)}
 .toast.er{border-left:3px solid var(--red)}.toast.er i{color:var(--red)}

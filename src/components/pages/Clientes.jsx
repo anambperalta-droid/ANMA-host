@@ -1216,7 +1216,7 @@ export default function Clientes() {
 
       {/* MODAL EDITAR */}
       {modal && (
-        <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+        <div className="modal-bg open" style={{ zIndex: 9050 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           {/* Modal SIN scroll interno — el .modal-bg scrollea la pagina entera
               si el contenido excede viewport (arquitectura global de Regalos). */}
           <div className="modal-form-card" style={{ maxWidth: 680 }}>
@@ -1405,7 +1405,11 @@ export default function Clientes() {
                     if (!bp) return null
                     return (
                       <button className="btn btn-ghost btn-sm" title={`Compartir portal del pedido ${bp.num || ''}`}
-                        onClick={() => sharePortalCliente(bp, config(), { toast })}>
+                        onClick={() => sharePortalCliente(
+                          /* El pedido guarda una copia del telefono del dia que se
+                             cargo. Desde la ficha manda el dato actual de la clienta. */
+                          { ...bp, wa: detailClient.wa || bp.wa, contact: detailClient.contact || bp.contact, company: detailClient.company || bp.company },
+                          config(), { toast })}>
                         <i className="fa fa-share-nodes" /> Portal
                       </button>
                     )

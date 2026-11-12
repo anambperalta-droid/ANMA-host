@@ -935,7 +935,7 @@ export default function Proveedores() {
 
       {/* MODAL EDITAR */}
       {modal && (
-        <div className="modal-bg open" style={{ zIndex: 700 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
+        <div className="modal-bg open" style={{ zIndex: 9050 }} onClick={e => { if (e.target === e.currentTarget) setModal(false) }}>
           <div className="modal-form-card" style={{ maxWidth: 620 }}
             onKeyDown={e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && form.name && form.name.trim()) save() }}>
 
