@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { usePrivacy } from '../../context/PrivacyContext'
-import { fmt } from '../../lib/storage'
+import { fmt, fmtDate } from '../../lib/storage'
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
@@ -354,7 +354,6 @@ export default function Compras() {
           .cp-card-m{display:block!important}
           .cp-total{display:none!important}
           .cp-mob-total{display:flex!important;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:0 0 12px 12px}
-          .cp-mob-total-hidden{display:none}
         }
       `}</style>
 
@@ -467,8 +466,9 @@ export default function Compras() {
         )}
 
         {sortedCompras.map(c => {
-          const [y, m, d] = (c.fecha || '').split('-')
-          const fechaCorta = c.fecha ? `${Number(d)}/${Number(m)}` : ''
+          /* d/m sin año: en una lista que cruza meses y años no alcanza.
+             fmtDate da el formato ANMA d-m-aa, el mismo del resto de la app. */
+          const fechaCorta = fmtDate(c.fecha)
           return (
             <div key={c.id} className="cp-row" style={{ cursor: 'pointer' }} onClick={() => editCompra(c)}>
               <span className="cp-cell" style={{ color: 'var(--txt3)', fontSize: 12 }}>{fechaCorta}</span>
@@ -499,8 +499,7 @@ export default function Compras() {
         {/* Cards mobile */}
         <div className="cp-card-m">
           {sortedCompras.map(c => {
-            const [y, m, d] = (c.fecha || '').split('-')
-            const fechaCorta = c.fecha ? `${Number(d)}/${Number(m)}` : ''
+            const fechaCorta = fmtDate(c.fecha)
             const sub = [fechaCorta, c.concepto, c.cantidad > 0 ? `${c.cantidad}u` : ''].filter(Boolean).join(' · ')
             return (
               <div key={c.id} className="cp-card-item" style={{ borderLeftColor: c.recurrente ? 'var(--brand)' : 'transparent' }} onClick={() => editCompra(c)}>
@@ -533,7 +532,7 @@ export default function Compras() {
         )}
         {/* Total mobile */}
         {monthCompras.length > 0 && (
-          <div className="cp-mob-total cp-mob-total-hidden" style={{ display: 'none' }}>
+          <div className="cp-mob-total">
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--txt3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Total</span>
             <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.02em' }}>{hidden ? '***' : fmt(totals.gastado)}</span>
           </div>

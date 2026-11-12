@@ -2381,7 +2381,12 @@ td b{color:var(--txt);font-weight:600}
   .ins-mob-list{gap:10px}
   .ins-mob-card.v2{
     padding:14px 16px;border-radius:16px;background:var(--surface);border:1.5px solid var(--border);
-    display:flex;flex-direction:column;gap:10px;cursor:pointer;
+    /* align-items:stretch deshace el center que .ins-mob-card trae de la
+       version vieja (una fila horizontal). En la v2, que es una columna, ese
+       center encogia cada bloque a su contenido y lo centraba: el nombre
+       arrancaba a 76px del borde en vez de 16, y el stock y los botones no
+       llegaban al margen derecho. */
+    display:flex;flex-direction:column;align-items:stretch;gap:10px;cursor:pointer;
     transition:transform .12s,box-shadow .12s,border-color .12s;-webkit-tap-highlight-color:transparent;
   }
   .ins-mob-card.v2:active{transform:scale(.98);box-shadow:0 4px 14px rgba(0,0,0,.06)}
