@@ -856,6 +856,13 @@ export default function Historial() {
   const products = get('products')
   const insumos  = get('insumos')
   const clients = get('clients')
+  /* El pedido guarda una copia del telefono del dia que se cargo. Para
+     escribirle hoy vale el de la ficha de la clienta; el del pedido queda
+     de respaldo para los que se cargaron sin vincular. */
+  const waActualDe = (b) => {
+    if (!b?.clientId) return ''
+    return clients.find(c => String(c.id) === String(b.clientId))?.wa || ''
+  }
   const c = config()
   const { role } = useAuth()
   const opHideMetrics = role === 'operator' && c.opShowMetrics === false
@@ -1222,6 +1229,7 @@ export default function Historial() {
   // objetivo es llegarle al cliente al toque).
   const copyWA = (b) => {
     openWAFor(b, {
+      wa: waActualDe(b),
       onNoNumber: (bb) => toast(`${bb.contact || 'El cliente'} no tiene WhatsApp cargado — elegí contacto`, 'in'),
       onSent: (bb) => {
         // Registramos último contacto (para "sin contactar en 7 días" y "hace Xd").

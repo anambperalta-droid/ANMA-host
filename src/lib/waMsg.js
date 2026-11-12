@@ -113,9 +113,12 @@ export function buildWAMsg(b, { cfg } = {}) {
  * `onSent(b)` se dispara después de abrir WA — útil para registrar
  * lastContactAt en el budget sin acoplar la lib a DataContext.
  */
-export function openWAFor(b, { onNoNumber, onSent, cfg } = {}) {
+export function openWAFor(b, { onNoNumber, onSent, cfg, wa } = {}) {
   const text = buildWAMsg(b, { cfg })
-  const num = (b.wa || '').replace(/\D/g, '')
+  /* `b.wa` es la copia del telefono del dia que se cargo el pedido. Si la
+     clienta cambio de numero, el recordatorio no le llega: por eso quien
+     llama puede pasar el telefono actual de su ficha. */
+  const num = String(wa || b.wa || '').replace(/\D/g, '')
   const encoded = encodeURIComponent(text)
   const url = num ? `https://wa.me/${num}?text=${encoded}` : `https://wa.me/?text=${encoded}`
   const w = window.open(url, '_blank')

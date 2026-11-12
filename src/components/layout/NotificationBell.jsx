@@ -182,7 +182,7 @@ const daysUntil = (iso) => {
   return Math.ceil((d - t) / 86400000)
 }
 
-function buildAlerts(budgets, products) {
+function buildAlerts(budgets, products, clients = []) {
   const alerts = []
 
   // ── STOCK ALERTS ──
@@ -232,7 +232,11 @@ function buildAlerts(budgets, products) {
       ? pagosB.reduce((s2, p) => s2 + (Number(p.amount) || 0), 0)
       : (Number(b.depositFinal || b.depositAmt) || 0)
     const saldoB = Math.max(0, totalConIva - cobradoB)
-    const meta = { wa: b.wa, clientName: cliente, budgetNum: b.num, amount: fmt(saldoB > 0 ? saldoB : totalConIva) }
+    /* El pedido guarda una copia del telefono del dia que se cargo: si
+       la clienta cambio de numero, el recordatorio de la campana no le
+       llega. Manda el de su ficha; el del pedido queda de respaldo. */
+    const waHoy = (b.clientId && clients.find(c => String(c.id) === String(b.clientId))?.wa) || b.wa
+    const meta = { wa: waHoy, clientName: cliente, budgetNum: b.num, amount: fmt(saldoB > 0 ? saldoB : totalConIva) }
 
     // 🔴 CRÍTICO: entrega vencida → logística
     if (b.deliveryDate && delivDays !== null && delivDays < 0 && active && e !== 'entregado') {
@@ -442,7 +446,8 @@ export default function NotificationBell({ extraCount = 0, className = '', varia
 
   const budgets  = get('budgets')
   const products = get('products')
-  const localAlerts = useMemo(() => buildAlerts(budgets, products), [budgets, products])
+  const clients  = get('clients')
+  const localAlerts = useMemo(() => buildAlerts(budgets, products, clients), [budgets, products, clients])
 
   /* ── Admin alerts (Supabase, solo si isGlobalAdmin) ─────────────
      Vive en Topbar → funciona en toda la app (no solo en /admin). */

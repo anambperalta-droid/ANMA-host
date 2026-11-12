@@ -633,7 +633,7 @@ export default function Clientes() {
   const cobrarWA = (c) => {
     const pendientes = clientPedidosConSaldo(c).sort((a, b) => b._saldo - a._saldo)
     if (!pendientes.length) return
-    openWAFor(pendientes[0], { cfg: config() })
+    openWAFor(pendientes[0], { cfg: config(), wa: c.wa })
   }
 
   const clientLastBudgetDays = (c) => {
