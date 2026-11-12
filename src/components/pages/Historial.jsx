@@ -2312,8 +2312,7 @@ export default function Historial() {
                         {(() => {
                           const totalDue    = b.totalFinal || b.total || 0
                           const paid        = cobrado(b)
-                          const pays        = Array.isArray(b.payments) ? b.payments : []
-                          const hasPayments = pays.length > 0
+                          const hasPayments = Array.isArray(b.payments) && b.payments.length > 0
                           const statusColor = DOT_PAY[b.payStatus] || '#DC2626'
                           const statusBg = b.payStatus === 'paid' ? '#F2F8EB'
                                          : b.payStatus === 'partial' ? '#FFFBEB'
@@ -2332,25 +2331,30 @@ export default function Historial() {
                                   {Object.entries(PAY_STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                                 </select>
                               </span>
-                              {/* Fila 2: acción o resumen mínimo */}
-                              {b.payStatus === 'paid' && hasPayments ? (
-                                <span style={{ fontSize: 10.5, color: 'var(--txt4)' }}>
-                                  <i className="fa fa-check" style={{ color: '#16A34A', marginRight: 4 }} />
-                                  {pays.length} pago{pays.length > 1 ? 's' : ''}
-                                </span>
-                              ) : b.payStatus === 'partial' ? (
+                              {/* Fila 2: solo lo que pide algo.
+                                  Antes esta linea decia cuatro cosas distintas:
+                                  una accion, un estado, una advertencia y, en las
+                                  filas cobradas, "N pagos", que no pide nada y ya
+                                  esta en el detalle. Sacado eso, la segunda linea
+                                  significa siempre lo mismo: aca falta algo. */}
+                              {b.payStatus === 'partial' ? (
                                 <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
-                                  title="Ver / agregar pagos"
+                                  title={`Cobrado ${fmt(paid)} de ${fmt(totalDue)} — ver o agregar pagos`}
                                   style={{ background: 'transparent', border: 'none', color: 'var(--brand)', cursor: 'pointer', padding: 0, fontSize: 10.5, fontWeight: 700, textAlign: 'left', fontFamily: 'inherit' }}>
-                                  {fmt(paid)}<span style={{ color: 'var(--txt4)', fontWeight: 400 }}> / {fmt(totalDue)}</span>
+                                  {/* El saldo es con lo que se sale a cobrar; antes
+                                      habia que restarlo de cabeza en cada fila. */}
+                                  Debe {fmt(Math.max(0, totalDue - paid))}
                                 </button>
-                              ) : b.payStatus === 'paid' ? (
+                              ) : (b.payStatus === 'paid' && !hasPayments) ? (
                                 <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
                                   title="Registrar comprobante del pago"
                                   style={{ background: 'transparent', border: 'none', color: '#D97706', cursor: 'pointer', padding: 0, fontSize: 10.5, fontWeight: 600, textAlign: 'left', fontFamily: 'inherit' }}>
                                   <i className="fa fa-triangle-exclamation" style={{ marginRight: 4 }} />Sin comprobante
                                 </button>
-                              ) : totalDue > 0 && (
+                              ) : (b.payStatus !== 'paid' && totalDue > 0) && (
+                                /* El guard de 'paid' es necesario: sin el, una fila
+                                   cobrada CON pagos cae en esta rama y ofrece
+                                   "Cobrar" un pedido que ya esta pago. */
                                 <button onClick={e => { e.stopPropagation(); setPaymentsBudget(b) }}
                                   title="Registrar cobro"
                                   style={{ background: 'var(--brand-xlt, #FBF4F7)', border: '1px solid var(--brand)', color: 'var(--brand)', cursor: 'pointer', padding: '3px 10px', fontSize: 10.5, fontWeight: 700, borderRadius: 6, alignSelf: 'flex-start', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
