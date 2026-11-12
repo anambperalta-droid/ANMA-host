@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
@@ -607,6 +608,72 @@ export default function Logistica() {
           .viaje-header-grid{grid-template-columns:1fr!important}
         }
         /* ── COTIZAR TAB ── */
+        /* ── Fila de viaje ────────────────────────────────────────────
+           Ocupaba ~88px para decir una fecha y dos chips, con la mitad
+           derecha vacia. Ahora usa el ancho: identidad a la izquierda,
+           plata en columna a la derecha. */
+        .lg-row{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;transition:background .14s}
+        .lg-row:hover{background:var(--surface2)}
+        .lg-row-ico{width:32px;height:32px;border-radius:10px;flex-shrink:0;
+          display:flex;align-items:center;justify-content:center;font-size:13px}
+        .lg-row-main{flex:1;min-width:0}
+        .lg-row-top{display:flex;align-items:baseline;gap:8px;min-width:0}
+        /* Solo la primera letra: capitalize ponia mayuscula en cada palabra
+           y daba "Jueves, 3 De Septiembre". */
+        .lg-row-date{font-size:13px;font-weight:800;color:var(--txt);white-space:nowrap}
+        .lg-row-date::first-letter{text-transform:uppercase}
+        .lg-row-que{font-size:11.5px;color:var(--txt3);min-width:0;overflow:hidden;
+          text-overflow:ellipsis;white-space:nowrap}
+        .lg-row-chips{display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap;
+          font-size:10px;color:var(--txt3);font-weight:600}
+        .lg-row-chips i{margin-right:3px;font-size:9px}
+        .lg-row-state{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+        .lg-row-done{color:#059669}
+        .lg-row-done i{color:#059669}
+        .lg-row-ped{color:var(--brand)}
+        .lg-row-total{flex-shrink:0;font-size:13.5px;font-weight:800;color:var(--money);
+          font-variant-numeric:tabular-nums;font-family:'Space Grotesk','Inter',sans-serif;
+          min-width:92px;text-align:right}
+        .lg-row-chev{font-size:11px;color:var(--txt4);flex-shrink:0;margin-left:2px}
+        @media(max-width:640px){
+          .lg-row{padding:10px 12px;gap:10px}
+          .lg-row-ico{width:28px;height:28px;font-size:12px}
+          /* En el celular no se oculta: es justo lo que distingue dos viajes
+             del mismo dia. Pasa a su propio renglon, cortado con puntos. */
+          .lg-row-top{flex-wrap:wrap}
+          .lg-row-que{width:100%;font-size:11px}
+          .lg-row-total{min-width:auto;font-size:12.5px}
+        }
+        /* ── Cajon del viaje ──────────────────────────────────────────
+           Antes el detalle se abria dentro de la lista: los viajes de abajo
+           se iban cientos de px y se perdia el lugar. Mismo patron que los
+           cajones de Pedidos, Ventas y Compras: lateral en escritorio, hoja
+           desde abajo en el celular, y la lista queda quieta atras. */
+        .lg-drawer-bg{position:fixed;inset:0;z-index:9998;background:rgba(42,33,24,.45);
+          backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:pgIn .18s ease both}
+        .lg-drawer{position:fixed;top:0;right:0;bottom:0;z-index:9999;width:560px;max-width:100vw;
+          background:var(--surface);border-left:1.5px solid var(--border);
+          display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(42,33,24,.18);
+          animation:lgDrawerIn .26s cubic-bezier(.16,1,.3,1) both}
+        @keyframes lgDrawerIn{from{transform:translateX(26px);opacity:.6}to{transform:none;opacity:1}}
+        .lg-drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+          padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+        .lg-drawer-date{font-size:15px;font-weight:800;color:var(--txt);letter-spacing:-.3px;line-height:1.2}
+        .lg-drawer-date::first-letter{text-transform:uppercase}
+        .lg-drawer-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px;
+          font-size:11px;color:var(--txt3);font-weight:600}
+        .lg-drawer-state{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+        .lg-drawer-total{font-weight:800;color:var(--money);font-variant-numeric:tabular-nums}
+        .lg-drawer-body{flex:1;overflow-y:auto;min-height:0;padding:16px 20px 24px;-webkit-overflow-scrolling:touch}
+        @media(max-width:640px){
+          .lg-drawer{top:auto;left:0;right:0;bottom:0;width:100vw;max-height:92vh;
+            border-left:none;border-radius:20px 20px 0 0;animation:lgSheetUp .28s cubic-bezier(.16,1,.3,1) both}
+          @keyframes lgSheetUp{from{transform:translateY(100%)}to{transform:none}}
+          .lg-drawer::before{content:'';display:block;width:36px;height:4px;border-radius:4px;
+            background:var(--border2);margin:10px auto 0;flex-shrink:0}
+          .lg-drawer-head{padding:10px 16px}
+          .lg-drawer-body{padding:12px 16px calc(20px + env(safe-area-inset-bottom))}
+        }
         .cotiz-layout{display:grid;grid-template-columns:1fr;gap:12px;grid-template-areas:"cliente" "tools" "despacho"}
         .cotiz-area-cliente{grid-area:cliente}
         .cotiz-area-tools{grid-area:tools}
@@ -794,44 +861,65 @@ export default function Logistica() {
                 {/* ── Cabecera del viaje (siempre visible) ── */}
                 <div
                   onClick={() => setActiveViajeId(isOpen ? null : viaje.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', cursor: 'pointer', background: isOpen ? 'var(--brand-xlt)' : 'transparent', transition: 'background .12s', userSelect: 'none' }}>
-                  {/* Icono estado */}
-                  <div style={{ width: 38, height: 38, borderRadius: 12, background: stateBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className={`fa ${ viaje.status === 'Finalizado' ? 'fa-check' : viaje.status === 'En Curso' ? 'fa-truck-fast' : 'fa-clock' }`} style={{ color: stateColor, fontSize: 14 }} />
+                  className="lg-row">
+                  <div className="lg-row-ico" style={{ background: stateBg }}>
+                    <i className={`fa ${ viaje.status === 'Finalizado' ? 'fa-check' : viaje.status === 'En Curso' ? 'fa-truck-fast' : 'fa-clock' }`} style={{ color: stateColor }} />
                   </div>
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--txt)', lineHeight: 1.2 }}>
-                      {new Date(viaje.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 20, background: stateBg, color: stateColor }}>{viaje.status}</span>
+                  <div className="lg-row-main">
+                    <div className="lg-row-top">
+                      <span className="lg-row-date">
+                        {new Date(viaje.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      </span>
+                      {/* Lo que distingue un viaje de otro del mismo dia: a que fue.
+                          La fecha sola no alcanza cuando se hacen varios. */}
                       {tasks.length > 0 && (
-                        <span style={{ fontSize: 10, color: 'var(--txt3)', fontWeight: 600 }}>
-                          <i className="fa fa-check" style={{ marginRight: 3, color: '#059669' }} />{doneTasks}/{tasks.length} paradas
+                        <span className="lg-row-que">
+                          {tasks.map(t => t.detail || t.category).filter(Boolean).join(' · ') || `${tasks.length} parada${tasks.length !== 1 ? 's' : ''}`}
                         </span>
                       )}
-                      {viajeTotal(viaje) > 0 && (
-                        <span style={{ fontSize: 10, fontWeight: 800, color: '#059669', background: '#DCFCE7', padding: '2px 9px', borderRadius: 20 }}>
-                          {fmt(viajeTotal(viaje))} total
+                    </div>
+                    <div className="lg-row-chips">
+                      <span className="lg-row-state" style={{ background: stateBg, color: stateColor }}>{viaje.status}</span>
+                      {tasks.length > 0 && (
+                        <span className={doneTasks === tasks.length ? 'lg-row-done' : undefined}>
+                          <i className="fa fa-check" />{doneTasks}/{tasks.length} paradas
                         </span>
                       )}
                       {viaje.budgetId && (() => {
                         const b = budgets.find(x => String(x.id) === String(viaje.budgetId))
                         return b ? (
-                          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand)', background: 'var(--brand-xlt)', padding: '2px 9px', borderRadius: 20 }}>
-                            <i className="fa fa-gift" style={{ marginRight: 3, fontSize: 9 }} />{b.company || b.contact || b.num}
+                          <span className="lg-row-ped">
+                            <i className="fa fa-gift" />{b.company || b.contact || b.num}
                           </span>
                         ) : null
                       })()}
                     </div>
                   </div>
-                  <i className={`fa fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: 11, color: isOpen ? 'var(--brand)' : 'var(--txt4)', flexShrink: 0 }} />
+                  <div className="lg-row-total">{viajeTotal(viaje) > 0 ? fmt(viajeTotal(viaje)) : ''}</div>
+                  <i className={`fa fa-chevron-${isOpen ? 'up' : 'right'} lg-row-chev`} />
                 </div>
 
                 {/* ── Contenido expandido ── */}
-                {isOpen && (
-                  <div style={{ borderTop: '1px solid var(--border)', padding: '16px 18px' }}>
+                {isOpen && createPortal(
+                  <>
+                    <div className="lg-drawer-bg" onClick={() => setActiveViajeId(null)} />
+                    <aside className="lg-drawer">
+                      <header className="lg-drawer-head">
+                        <div style={{ minWidth: 0 }}>
+                          <div className="lg-drawer-date">
+                            {new Date(viaje.date + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                          </div>
+                          <div className="lg-drawer-sub">
+                            <span className="lg-drawer-state" style={{ color: stateColor, background: stateBg }}>{viaje.status}</span>
+                            {tasks.length > 0 && <span>{doneTasks}/{tasks.length} paradas</span>}
+                            {viajeTotal(viaje) > 0 && <span className="lg-drawer-total">{fmt(viajeTotal(viaje))}</span>}
+                          </div>
+                        </div>
+                        <button className="mclose" onClick={() => setActiveViajeId(null)} aria-label="Cerrar">
+                          <i className="fa fa-xmark" />
+                        </button>
+                      </header>
+                      <div className="lg-drawer-body">
 
                     {/* Linea de datos del viaje. Antes eran tres campos de
                         formulario a ancho completo que repetian la cabecera:
@@ -1016,7 +1104,10 @@ export default function Logistica() {
                         <i className="fa fa-trash" /> Eliminar viaje
                       </button>
                     </div>
-                  </div>
+                      </div>
+                    </aside>
+                  </>,
+                  document.body
                 )}
               </div>
             )
