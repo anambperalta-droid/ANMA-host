@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import QrLocal from '../common/QrLocal'
 import { useData } from '../../context/DataContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
@@ -276,6 +277,7 @@ export default function Clientes() {
   const [importModal, setImportModal] = useState(false)
   const [regFormModal, setRegFormModal] = useState(false)
   const [detailClient, setDetailClient] = useState(null)
+  const qrPngRef = useRef('')   // PNG del QR de alta, para el boton de descarga
   const [detailTab, setDetailTab] = useState('info')
   const [viewMode, setViewMode] = useState('table')
   const [loading, setLoading] = useState(true)
@@ -1798,7 +1800,7 @@ export default function Clientes() {
         const adminWa = (cfg.wa || '').replace(/\D/g, '')
         const neg = cfg.businessName || 'ANMA'
         const intakeUrl = `${window.location.origin}/alta?neg=${encodeURIComponent(neg)}${adminWa ? `&admin=${adminWa}` : ''}`
-        const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(intakeUrl)}`
+
 
         return (
           <div className="modal-bg open" onClick={e => { if (e.target === e.currentTarget) setRegFormModal(false) }}>
@@ -1823,15 +1825,19 @@ export default function Clientes() {
 
               {/* QR centrado */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '16px', background: 'var(--surface2)', borderRadius: 12, border: '1px solid var(--border)', marginBottom: 14 }}>
-                <img src={qrSrc} alt="QR formulario de alta" width={192} height={192}
-                  style={{ borderRadius: 10, border: '4px solid #fff', boxShadow: '0 2px 12px rgba(0,0,0,.12)', display: 'block' }} />
+                <QrLocal data={intakeUrl} size={192} alt="QR del formulario de alta"
+                  onReady={url => { qrPngRef.current = url }}
+                  style={{ borderRadius: 10, border: '4px solid #fff', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }} />
                 <div style={{ fontSize: 11, color: 'var(--txt3)', textAlign: 'center' }}>
                   <i className="fa fa-mobile-screen-button" style={{ marginRight: 4 }} />Tus clientes escanean este QR y se registran
                 </div>
                 <button className="btn btn-ghost btn-xs"
                   onClick={() => {
+                    /* Se descarga el PNG que ya dibujo QrLocal, en vez de
+                       pedirselo de nuevo al servidor de un tercero. */
+                    if (!qrPngRef.current) return
                     const a = document.createElement('a')
-                    a.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(intakeUrl)}&download=1`
+                    a.href = qrPngRef.current
                     a.download = 'qr-registro-clientes.png'
                     a.click()
                   }}>

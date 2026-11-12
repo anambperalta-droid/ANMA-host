@@ -13,6 +13,7 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import QrLocal from '../common/QrLocal'
 
 export default function Alta({ appName = 'ANMA Regalos' }) {
   const [params] = useSearchParams()
@@ -59,7 +60,7 @@ export default function Alta({ appName = 'ANMA Regalos' }) {
     }
   }
 
-  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(deepLink)}`
+
 
   /* ── Estilos inline — sin dependencias externas ── */
   const s = {
@@ -173,7 +174,10 @@ export default function Alta({ appName = 'ANMA Regalos' }) {
 
               {/* QR del deep link */}
               <div style={{ margin: '0 auto 16px', display: 'inline-block', padding: 8, background: '#FBF7F0', borderRadius: 12, border: '1px solid #ECE3D6' }}>
-                <img src={qr} alt="QR de tus datos" width={160} height={160} style={{ display: 'block', borderRadius: 6 }} />
+                {/* Local, no api.qrserver.com: ese endpoint recibia el deep link
+                    entero, o sea el nombre, la empresa, el WhatsApp y el mail
+                    de quien se esta registrando. */}
+                <QrLocal data={deepLink} size={160} alt="QR con tus datos" style={{ borderRadius: 6 }} />
               </div>
 
               <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 16 }}>Tu código personal de registro</div>
