@@ -555,11 +555,11 @@ export default function Config() {
       </div>
 
       {tab === 'identidad' && (<>
-        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+        <div className="cfg-coach page-form">
           <i className="fa fa-lightbulb" />
           <p>Lo que cambies acá aparece en <b>tus pedidos, emails y portal</b>. Dedicale 2 minutos y quedan bien para siempre.</p>
         </div>
-        <div className="card" style={{ maxWidth: 900 }}>
+        <div className="card page-form">
           <div className="cfg-id-grid">
             {/* ── Columna Izquierda: Logo + Datos ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -693,11 +693,14 @@ export default function Config() {
       </>)}
 
       {tab === 'comercial' && (<>
-        <div className="cfg-coach" style={{ maxWidth: 1100 }}>
+        <div className="cfg-coach page-wide">
           <i className="fa fa-lightbulb" />
           <p>Definí tus <b>reglas de cobro una vez</b>. ANMA las aplica sola en cada pedido nuevo — vos ganás tiempo.</p>
         </div>
-        <div style={{ maxWidth: 1100 }}>
+        {/* Unica pestaña con grilla de 3 columnas: a 1100 cada una queda en
+            ~350px en un monitor de 1600. Con el ancho de las pantallas de
+            datos llegan a ~450. */}
+        <div className="page-wide">
           <div className="cfg-com-grid">
 
             {/* ══ COLUMNA 1 — Configuración general ══
@@ -824,7 +827,7 @@ export default function Config() {
       </>)}
 
       {tab === 'listas' && (<>
-        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+        <div className="cfg-coach page-form">
           <i className="fa fa-lightbulb" />
           <p>Cargá las <b>categorías, modalidades y ocasiones que usás</b>. Después las elegís con un clic — menos escribir, más vender.</p>
         </div>
@@ -872,11 +875,11 @@ export default function Config() {
       </>)}
 
       {tab === 'modulos' && (<>
-        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+        <div className="cfg-coach page-form">
           <i className="fa fa-lightbulb" />
           <p>Activá <b>solo lo que necesitás</b>. La app se adapta a cómo trabajás vos — menos ruido, más foco.</p>
         </div>
-        <div style={{ maxWidth: 900 }}>
+        <div className="page-form">
           <div className="feat-grid">
           {FEATURE_FLAGS.map(f => {
             const active = !!(c.features?.[f.key])
@@ -1282,11 +1285,11 @@ export default function Config() {
       </>)}
 
       {tab === 'equipo' && (<>
-        <div className="cfg-coach" style={{ maxWidth: 900 }}>
+        <div className="cfg-coach page-form">
           <i className="fa fa-lightbulb" />
           <p>Sumá gente con <b>permisos claros</b>. Cada rol ve solo lo suyo — vos seguís teniendo el control total.</p>
         </div>
-        <div style={{ display: 'grid', gap: 16, maxWidth: 900 }}>
+        <div className="page-form" style={{ display: 'grid', gap: 16 }}>
           {/* ── Permisos del Operador ── */}
           <div className="card">
             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--txt)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>

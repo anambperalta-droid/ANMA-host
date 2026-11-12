@@ -332,6 +332,10 @@ input,select,textarea{font-family:inherit}
    todo. 1400 usa la pantalla sin dejar que la fila se estire sin fin en un
    monitor de 2560, que es lo que hace perder el renglon al leer. */
 .page-wide{max-width:1400px;margin:0 auto}
+/* Ancho de las pantallas de formulario. Un campo de texto de 1400px es
+   incomodo de leer y de completar, asi que estas NO usan .page-wide. El
+   numero estaba repetido cuatro veces en Config. */
+.page-form{max-width:900px}
 
 /* ─── COMMON COMPONENTS ─── */
 /* Page header — manda visualmente en toda la app */
