@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { fmt, fmtDate, MONTHS, STATUS_MAP, STATUS_CLS, PAY_STATUS_MAP, PAY_STATUS_CLS, db, dbW } from '../../lib/storage'
-import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, ivaDeBudget, registrarEvento } from '../../lib/pedido'
+import { getEstado, ESTADOS, ESTADO_LABELS, ESTADO_TO_STATUS, estadoOptions, gananciaBudget, totalesBudget, ivaDeBudget, registrarEvento } from '../../lib/pedido'
 import { buildWAMsg, openWAFor, relTimeShort, sharePortalCliente } from '../../lib/waMsg'
 import PedidoDrawer from '../common/PedidoDrawer'
 import { usePrivacy } from '../../context/PrivacyContext'
@@ -2264,19 +2264,26 @@ export default function Historial() {
                         <div style={{ fontSize: 11 }}>{fmtDate(b.deliveryDate) || '—'}</div>
                         {dDays !== null && !['entregado','perdido','cerrado'].includes(getEstado(b)) && (
                           <div style={{ fontSize: 10, fontWeight: 700, color: overdue ? 'var(--red)' : dDays <= 2 ? 'var(--amber)' : 'var(--green)', marginTop: 1 }}>
-                            {overdue ? `⚠ ${dDays === 0 ? 'HOY' : Math.abs(dDays) + 'd atrás'}` : `${dDays}d`}
+                            {overdue ? `⚠ ${dDays === 0 ? 'hoy' : 'hace ' + Math.abs(dDays) + 'd'}` : `en ${dDays}d`}
                           </div>
                         )}
                       </td>
                       {(() => {
-                        const gan = gananciaBudget(b)
-                        const ganColor = hidden ? 'var(--txt4)' : (gan === 0 ? 'var(--txt4)' : gan < 0 ? 'var(--red)' : 'var(--green)')
+                        /* Antes iba la ganancia en pesos debajo de cada total. Sin
+                           costos cargados esa ganancia ES el total (margen 100%), asi
+                           que la lista afirmaba que se gano todo lo facturado. Ahora
+                           va el margen, y solo si hay con que calcularlo. */
+                        const t = totalesBudget(b)
+                        const margenColor = t.margen < 0 ? 'var(--red)' : t.margen < 20 ? 'var(--amber)' : 'var(--txt3)'
                         return (
                           <td data-cell="total" data-label="Total" style={{ fontWeight: 700, fontSize: 13, color: 'var(--txt)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', fontFamily: "'Space Grotesk','Inter',sans-serif" }}>
                             <div>{money(montoConIva(b))}</div>
-                            <div className="col-hide-mobile" style={{ fontSize: 10.5, fontWeight: 600, color: ganColor, marginTop: 2 }}>
-                              {gan === 0 ? 'sin ganancia' : `${gan > 0 ? '+' : ''}${money(gan)} gan.`}
-                            </div>
+                            {!hidden && t.costoTotal > 0 && (
+                              <div className="col-hide-mobile" style={{ fontSize: 10.5, fontWeight: 700, color: margenColor, marginTop: 2 }}
+                                title={`Ganancia ${money(t.ganancia)} sobre un costo de ${money(t.costoTotal)}`}>
+                                {t.margen}% margen
+                              </div>
+                            )}
                           </td>
                         )
                       })()}
