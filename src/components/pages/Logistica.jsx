@@ -531,7 +531,10 @@ export default function Logistica() {
           .logi-resumen-kpis .card > div:nth-child(4){font-size:9px!important;line-height:1.3!important;margin-top:2px!important}
           .logi-resumen-variance{grid-column:1 / -1!important}
         }
-        @media(max-width:400px){
+        /* Una columna recien abajo de 375: a 390 y a 375 las dos entran
+           (la fecha pide ~141px y hay ~152 por columna) y se ahorra una fila
+           entera de alto en la pantalla donde mas se nota. */
+        @media(max-width:374px){
           .viaje-header-grid{grid-template-columns:1fr!important}
         }
         /* ── COTIZAR TAB ── */

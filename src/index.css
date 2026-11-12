@@ -1200,8 +1200,10 @@ td b{color:var(--txt);font-weight:600}
   .bento-chart-inner{flex-direction:column!important}
   .bento-chart-inner > *{flex:0 0 auto!important;min-width:0!important;width:100%!important}
   .bento-chart-inner > .bento-chart-noflex{flex:none!important;height:auto!important;min-height:0!important}
-  .seg-card{flex-direction:column;gap:8px}
-  .seg-meta{flex-direction:row;justify-content:space-between;width:100%}
+  /* La tarjeta de Seguimiento se apilaba en columna acá y el bloque de <=640
+     la rediseño como fila, pero nunca deshizo este flex-direction: como es la
+     unica declaracion de esa propiedad, ganaba igual y la tarjeta quedaba en
+     una columna centrada, al triple de alto. (.seg-meta ya no existe.) */
   .period-pills{flex-wrap:wrap}
   .pill-row{flex-wrap:wrap;gap:6px}
   .modal{max-width:calc(100vw - 20px)!important}
@@ -1706,13 +1708,18 @@ td b{color:var(--txt);font-weight:600}
   /* Seguimiento cards — layout más claro y touch-friendly en mobile */
   .seg-card{
     padding:12px 14px!important;border-radius:14px!important;
+    flex-direction:row!important;
     gap:10px!important;align-items:center!important;flex-wrap:nowrap!important;
   }
   .seg-days-chip{min-width:52px;padding:7px 10px}
   .seg-days-num{font-size:18px!important}
   .seg-days-lbl{font-size:9px!important}
   .seg-body{flex:1;min-width:0}
-  .seg-row1{gap:5px!important;flex-wrap:wrap}
+  /* Sin wrap: con un nombre largo el numero caia a un segundo renglon y esa
+     tarjeta quedaba mas alta que las de al lado. El nombre elide. */
+  .seg-row1{gap:5px!important;flex-wrap:nowrap!important;min-width:0}
+  .seg-row1 .seg-cli{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:none!important}
+  .seg-row1 .seg-num{flex-shrink:0}
   .seg-cli{font-size:13.5px!important;font-weight:700}
   .seg-contact{display:none}
   .seg-num{font-size:11px!important;color:var(--txt3)}

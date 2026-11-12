@@ -600,7 +600,9 @@ function SeguimientoCard({ b, onView, onWA, hasWA }) {
           <span className="seg-num">{b.num}</span>
         </div>
         <div className="seg-row2">
-          <span className="seg-sent"><i className="fa fa-paper-plane" /> Enviado hace {days}d</span>
+          {/* El chip de la izquierda ya dice cuantos dias pasaron: repetirlo
+              aca no agregaba nada. La fecha si: dice cuando fue. */}
+          <span className="seg-sent"><i className="fa fa-paper-plane" /> {fmtDate(b.date)}</span>
           {dd != null && dd >= 0 && (
             <span style={{ color: dd <= 3 ? 'var(--red)' : dd <= 7 ? '#B45309' : 'var(--txt3)', fontWeight: dd <= 7 ? 700 : 500 }}>
               <i className="fa fa-truck-fast" /> entrega {dd === 0 ? 'hoy' : `en ${dd}d`}
