@@ -211,7 +211,7 @@ export default function Activar() {
                 { icon: 'fa-layer-group', text: 'Ecosistema ANMA Hub completo (pedidos, clientes, productos, logística)' },
                 { icon: 'fa-user-tie', text: 'Setup llave en mano: configuramos y cargamos tus datos por vos' },
                 { icon: 'fa-whatsapp', text: 'Soporte humano por WhatsApp en español, asistencia prioritaria', brand: true },
-                { icon: 'fa-shield-halved', text: 'Infraestructura segura, encriptación E2E y backups diarios' },
+                { icon: 'fa-shield-halved', text: 'Infraestructura segura, conexión cifrada y backups diarios' },
                 { icon: 'fa-circle-check', text: 'Sin contratos de permanencia. Cancelás cuando quieras.', accent: true },
               ].map((b, i) => (
                 <div key={i} style={{
@@ -375,7 +375,7 @@ export default function Activar() {
         {/* Trust line */}
         <div style={{ textAlign: 'center', marginTop: 18, display: 'flex', justifyContent: 'center', gap: 18, flexWrap: 'wrap', fontSize: 11.5, color: 'var(--txt3)' }}>
           <span><i className="fa fa-building-columns" style={{ marginRight: 5, color: '#059669' }} /> Transferencia directa sin comisión</span>
-          <span><i className="fa fa-shield-halved" style={{ marginRight: 5, color: '#7C3AED' }} /> SSL · Encriptación E2E</span>
+          <span><i className="fa fa-shield-halved" style={{ marginRight: 5, color: '#7C3AED' }} /> SSL · Conexión cifrada</span>
         </div>
 
         {/* FAQ resumido */}

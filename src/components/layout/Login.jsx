@@ -452,7 +452,7 @@ export default function Login() {
           </a>
 
           <div className="lpr-foot">
-            <span><i className="fa fa-lock" /> Cifrado E2E</span>
+            <span><i className="fa fa-lock" /> Conexión cifrada</span>
             <span className="lpr-dot" />
             <span>ANMA Regalos <b>{APP_VERSION}</b></span>
             <span className="lpr-dot" />
