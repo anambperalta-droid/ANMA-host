@@ -147,191 +147,219 @@ export default function Login() {
   return (
     <>
       <style>{`
-        @keyframes lpr-orb-a { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-32px,24px) scale(1.08)} }
-        @keyframes lpr-orb-b { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(28px,-22px) scale(1.12)} }
-        @keyframes lpr-orb-c { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(20px,18px) scale(1.06)} }
-        @keyframes lpr-card-in {
-          0%   { opacity:0; transform:translateY(18px) scale(.985); filter:blur(6px) }
-          100% { opacity:1; transform:none; filter:blur(0) }
-        }
+        /* ═══════════════════════════════════════════════════════
+           LA ENTRADA
+           Era un degrade de magenta, violeta y ambar con tres orbes
+           borrosos, grano y cuatro emojis flotando. Ahora: el rosa
+           profundo de la marca (#831843) con el corte diagonal en
+           la tinta de la casa (#1F1338), planos los dos, y tres
+           baldosas de color como unico adorno. La tarjeta va en el
+           rosa muy claro de los fondos suaves, con los campos en
+           blanco adentro.
+           ═══════════════════════════════════════════════════════ */
+
+        @keyframes lpr-card-in { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
         @keyframes lpr-fade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
-        @keyframes lpr-ring { 0%{box-shadow:0 0 0 0 rgba(244,114,182,.55)} 70%{box-shadow:0 0 0 16px rgba(244,114,182,0)} 100%{box-shadow:0 0 0 0 rgba(244,114,182,0)} }
-        @keyframes lpr-float { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-6px) rotate(5deg)} }
 
         .lpr-wrap{
-          position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+          position:fixed;inset:0;z-index:9999;
+          display:flex;align-items:center;justify-content:center;
           padding:24px;font-family:'Inter',system-ui,sans-serif;
-          background:radial-gradient(1100px 800px at 15% 12%,#831843 0%,transparent 58%),
-                     radial-gradient(900px 700px at 85% 88%,#7c3aed 0%,transparent 55%),
-                     linear-gradient(135deg,#1a0220 0%,#3d0626 35%,#6b1741 70%,#2d0a3a 100%);
-          overflow:hidden;
+          background:#831843;
+          /* Scroll, no recorte: con el teclado abierto o en apaisado la
+             tarjeta es mas alta que la pantalla y antes se cortaba el pie. */
+          overflow:auto;-webkit-overflow-scrolling:touch;
         }
-        .lpr-orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(40px)}
-        .lpr-orb1{width:520px;height:520px;top:-160px;right:-140px;background:radial-gradient(circle,rgba(236,72,153,.45) 0%,transparent 70%);animation:lpr-orb-a 16s ease-in-out infinite}
-        .lpr-orb2{width:380px;height:380px;bottom:-120px;left:-90px;background:radial-gradient(circle,rgba(168,85,247,.38) 0%,transparent 70%);animation:lpr-orb-b 20s ease-in-out infinite}
-        .lpr-orb3{width:240px;height:240px;top:48%;left:18%;background:radial-gradient(circle,rgba(251,191,36,.18) 0%,transparent 70%);animation:lpr-orb-c 22s ease-in-out infinite}
-        @media (prefers-reduced-motion:reduce){.lpr-orb1,.lpr-orb2,.lpr-orb3{animation:none}}
+        .lpr-wrap::before{
+          content:'';position:fixed;inset:0;pointer-events:none;
+          background:#1F1338;
+          clip-path:polygon(100% 26%,100% 100%,26% 100%);
+        }
+        .lpr-wrap::after{
+          content:'';position:fixed;top:0;left:0;right:0;height:5px;
+          background:#FBCFE8;pointer-events:none;
+        }
 
-        .lpr-grain{position:absolute;inset:0;pointer-events:none;opacity:.04;mix-blend-mode:overlay;
-          background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
-
-        .lpr-confetti{position:absolute;font-size:22px;pointer-events:none;animation:lpr-float 4s ease-in-out infinite;opacity:.45;filter:drop-shadow(0 4px 12px rgba(236,72,153,.4))}
+        /* Las baldosas que antes eran emojis flotando. */
+        .lpr-confetti{
+          position:fixed;width:84px;height:84px;border-radius:26px;
+          pointer-events:none;opacity:.5;
+        }
 
         .lpr-card{
-          position:relative;z-index:1;width:100%;max-width:540px;
-          background:rgba(255,255,255,.07);
-          backdrop-filter:blur(28px) saturate(180%);
-          -webkit-backdrop-filter:blur(28px) saturate(180%);
-          border:1px solid rgba(255,255,255,.14);
-          border-radius:28px;padding:48px 46px 40px;
-          box-shadow:0 24px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.10);
-          animation:lpr-card-in .6s cubic-bezier(.2,.7,.2,1) both;
+          position:relative;z-index:1;width:100%;max-width:480px;margin:auto;
+          background:#FDF2F8;
+          border:1px solid #F0D5E3;
+          border-radius:26px;padding:40px 38px 30px;
+          box-shadow:0 30px 70px -24px rgba(20,4,22,.6);
+          animation:lpr-card-in .5s cubic-bezier(.2,.7,.2,1) both;
         }
 
-        .lpr-top{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+        .lpr-top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
         .lpr-logo{
-          width:46px;height:46px;border-radius:13px;flex-shrink:0;
-          background:linear-gradient(135deg,#ec4899 0%,#f472b6 50%,#a855f7 100%);
+          width:44px;height:44px;border-radius:13px;flex-shrink:0;
+          background:#E11D74;
           display:flex;align-items:center;justify-content:center;
-          box-shadow:0 8px 24px rgba(236,72,153,.45);
-          animation:lpr-ring 2.6s ease-out 1.2s 1;
         }
-        .lpr-logo i{font-size:20px;color:#fff}
+        .lpr-logo i{font-size:19px;color:#fff}
         .lpr-brand-txt{display:flex;flex-direction:column;line-height:1}
-        .lpr-brand-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.5px}
-        .lpr-brand-name span{background:linear-gradient(90deg,#fbcfe8,#fda4af);-webkit-background-clip:text;background-clip:text;color:transparent}
-        .lpr-brand-tag{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;letter-spacing:.3px}
+        .lpr-brand-name{font-size:19px;font-weight:800;color:#1F1338;letter-spacing:-.5px}
+        .lpr-brand-name span{color:#BE185D}
+        .lpr-brand-tag{font-size:11px;color:#6B5B8C;margin-top:4px;letter-spacing:.3px}
 
         .lpr-greet{
-          font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.2;
-          margin-bottom:8px;animation:lpr-fade .5s .15s ease both
+          font-size:26px;font-weight:800;color:#1F1338;letter-spacing:-.5px;line-height:1.2;
+          margin-bottom:8px;animation:lpr-fade .5s .1s ease both
         }
-        .lpr-greet em{font-style:normal;background:linear-gradient(90deg,#f472b6,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .lpr-greet em{font-style:normal;color:#BE185D}
         .lpr-sub{
-          font-size:13.5px;color:rgba(255,255,255,.65);margin-bottom:26px;line-height:1.55;
-          animation:lpr-fade .5s .25s ease both
+          font-size:13.5px;color:#6B5B8C;margin-bottom:24px;line-height:1.55;
+          animation:lpr-fade .5s .18s ease both
         }
-        .lpr-sub b{color:rgba(255,255,255,.9);font-weight:600}
+        .lpr-sub b{color:#1F1338;font-weight:700}
 
-        .lpr-fg{margin-bottom:18px}
+        .lpr-fg{margin-bottom:16px}
         .lpr-lbl{
           display:flex;justify-content:space-between;align-items:center;
-          font-size:10.5px;font-weight:700;color:rgba(255,255,255,.7);
+          font-size:10.5px;font-weight:700;color:#6B5B8C;
           margin-bottom:7px;letter-spacing:.7px;text-transform:uppercase
         }
         .lpr-inp{
-          width:100%;padding:15px 18px;box-sizing:border-box;
-          background:rgba(255,255,255,.08);
-          border:1.5px solid rgba(255,255,255,.14);
-          border-radius:14px;font-size:15px;color:#fff;outline:none;
-          transition:border-color .2s,background .2s,box-shadow .2s;
+          width:100%;padding:15px 16px;box-sizing:border-box;
+          background:#fff;
+          border:1.5px solid #9D5B8C;
+          border-radius:13px;font-size:15px;color:#1F1338;outline:none;
+          transition:border-color .18s,box-shadow .18s;
           font-family:'Inter',sans-serif;
         }
-        .lpr-inp::placeholder{color:rgba(255,255,255,.32)}
+        .lpr-inp::placeholder{color:#9D5B8C}
         .lpr-inp:focus{
-          border-color:rgba(244,114,182,.65);
-          background:rgba(255,255,255,.12);
-          box-shadow:0 0 0 4px rgba(244,114,182,.14);
+          border-color:#BE185D;
+          box-shadow:0 0 0 4px rgba(190,24,93,.14);
         }
         .lpr-pw{position:relative}
         .lpr-eye{
-          position:absolute;right:12px;top:50%;transform:translateY(-50%);
-          background:none;border:none;color:rgba(255,255,255,.45);
-          font-size:13px;padding:6px;cursor:pointer;transition:color .2s;
+          position:absolute;right:8px;top:50%;transform:translateY(-50%);
+          background:none;border:none;color:#6B5B8C;
+          font-size:13px;cursor:pointer;transition:color .15s;
+          width:38px;height:38px;display:flex;align-items:center;justify-content:center;
         }
-        .lpr-eye:hover{color:rgba(255,255,255,.9)}
+        .lpr-eye:hover{color:#1F1338}
 
         .lpr-forgot{
-          background:none;border:none;color:#f9a8d4;font-size:11px;font-weight:600;
+          background:none;border:none;color:#BE185D;font-size:11px;font-weight:700;
           cursor:pointer;padding:0;font-family:inherit;letter-spacing:.2px;
           transition:color .15s;text-transform:none
         }
-        .lpr-forgot:hover{color:#fbcfe8;text-decoration:underline}
+        .lpr-forgot:hover{color:#9D174D;text-decoration:underline}
 
         .lpr-err{
-          background:rgba(220,38,38,.12);border:1.5px solid rgba(252,165,165,.4);border-radius:11px;
-          color:#fca5a5;font-size:12px;padding:10px 13px;margin-bottom:14px;
+          background:#FDECEC;border:1.5px solid #F4CDCA;border-radius:11px;
+          color:#B42318;font-size:12.5px;padding:11px 13px;margin-bottom:14px;
           display:flex;align-items:center;gap:8px;animation:lpr-fade .25s ease both;
         }
-        .lpr-caps{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:10.5px;color:#fbbf24;font-weight:600}
+        .lpr-caps{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:10.5px;color:#7A4F00;font-weight:700}
 
         .lpr-btn{
-          width:100%;padding:16px;margin-top:10px;
-          background:linear-gradient(135deg,#ec4899 0%,#db2777 60%,#a855f7 100%);
-          color:#fff;border:none;border-radius:14px;
+          width:100%;padding:16px;margin-top:10px;min-height:52px;
+          background:#BE185D;
+          color:#fff;border:none;border-radius:13px;
           font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
-          box-shadow:0 8px 24px rgba(219,39,119,.45),inset 0 1px 0 rgba(255,255,255,.18);
-          transition:transform .15s,box-shadow .25s,filter .2s;
+          box-shadow:0 8px 20px rgba(190,24,93,.26);
+          transition:background .18s,transform .15s,box-shadow .2s;
           display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.2px;
         }
-        .lpr-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 30px rgba(219,39,119,.6)}
+        .lpr-btn:hover:not(:disabled){background:#9D174D;transform:translateY(-1px);box-shadow:0 12px 26px rgba(190,24,93,.32)}
         .lpr-btn:active:not(:disabled){transform:translateY(0)}
-        .lpr-btn:disabled{opacity:.65;cursor:not-allowed}
+        .lpr-btn:disabled{opacity:.55;cursor:not-allowed}
 
         .lpr-divider{
           display:flex;align-items:center;gap:10px;
-          margin:20px 0 14px;font-size:10.5px;color:rgba(255,255,255,.35);
-          text-transform:uppercase;letter-spacing:1.2px;font-weight:600
+          margin:20px 0 14px;font-size:10.5px;color:#6B5B8C;
+          text-transform:uppercase;letter-spacing:1.2px;font-weight:700
         }
-        .lpr-divider::before,.lpr-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.10)}
+        .lpr-divider::before,.lpr-divider::after{content:'';flex:1;height:1px;background:#F0D5E3}
 
         .lpr-cta{
           display:flex;align-items:center;justify-content:center;gap:6px;
-          width:100%;padding:11px;border:1.5px solid rgba(255,255,255,.15);
-          background:rgba(255,255,255,.05);border-radius:11px;
-          color:rgba(255,255,255,.88);font-size:12.5px;font-weight:600;
-          text-decoration:none;transition:background .2s,border-color .2s,transform .15s;
+          width:100%;padding:12px;box-sizing:border-box;
+          border:1.5px solid #E5B9D2;background:#FCE7F3;border-radius:12px;
+          color:#9D174D;font-size:12.5px;font-weight:600;
+          text-decoration:none;transition:background .18s,border-color .18s,transform .15s;
         }
-        .lpr-cta:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.3);transform:translateY(-1px)}
-        .lpr-cta-pill{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
-          background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;padding:2px 7px;border-radius:8px;margin-right:4px}
+        .lpr-cta:hover{background:#FBCFE8;border-color:#C98FB0;transform:translateY(-1px)}
+        .lpr-cta-pill{
+          font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+          background:#FBCFE8;color:#831843;padding:3px 7px;border-radius:8px;margin-right:4px
+        }
 
         .lpr-foot{
-          margin-top:20px;text-align:center;font-size:10.5px;color:rgba(255,255,255,.32);
+          margin-top:18px;text-align:center;font-size:10.5px;color:#6B5B8C;
           letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap
         }
-        .lpr-foot i{color:#f472b6}
-        .lpr-foot b{color:rgba(255,255,255,.5);font-weight:600}
-        .lpr-foot a{color:rgba(255,255,255,.5);text-decoration:none}
-        .lpr-foot a:hover{color:#f9a8d4}
-        .lpr-dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.2);display:inline-block}
+        .lpr-foot i{color:#0B7D59}
+        .lpr-foot b{color:#4A3E63;font-weight:700}
+        .lpr-foot a{color:#BE185D;text-decoration:none}
+        .lpr-foot a:hover{text-decoration:underline}
+        .lpr-dot{width:3px;height:3px;border-radius:50%;background:#E5B9D2;display:inline-block}
 
-        .lpr-modal-bg{position:fixed;inset:0;z-index:10000;background:rgba(20,5,30,.72);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
-        .lpr-modal{
-          background:rgba(30,15,40,.88);backdrop-filter:blur(28px);
-          border:1px solid rgba(255,255,255,.14);
-          border-radius:20px;padding:30px 26px;width:100%;max-width:380px;
-          box-shadow:0 24px 64px rgba(0,0,0,.55);animation:lpr-card-in .35s ease both;
+        /* MODAL: RECUPERAR CONTRASENA */
+        .lpr-modal-bg{
+          position:fixed;inset:0;z-index:10000;background:rgba(31,19,56,.62);
+          display:flex;align-items:center;justify-content:center;padding:20px;
+          -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
         }
-        .lpr-modal h3{font-size:17px;font-weight:800;color:#fff;margin:0 0 6px;letter-spacing:-.3px}
-        .lpr-modal p{font-size:13px;color:rgba(255,255,255,.65);margin:0 0 20px;line-height:1.6}
-        .lpr-modal-ok{background:rgba(16,185,129,.12);border:1.5px solid rgba(110,231,183,.4);border-radius:12px;padding:14px;text-align:center;color:#86efac;font-size:13px;font-weight:600;line-height:1.6}
-        .lpr-modal-ok i{color:#10b981;font-size:18px;display:block;margin-bottom:6px}
+        .lpr-modal{
+          background:#FDF2F8;border:1px solid #F0D5E3;
+          border-radius:20px;padding:28px 26px;width:100%;max-width:380px;
+          box-shadow:0 30px 70px -24px rgba(20,4,22,.6);animation:lpr-card-in .3s ease both;
+        }
+        .lpr-modal h3{font-size:17px;font-weight:800;color:#1F1338;margin:0 0 6px;letter-spacing:-.3px}
+        .lpr-modal p{font-size:13px;color:#6B5B8C;margin:0 0 20px;line-height:1.6}
+        .lpr-modal-ok{
+          background:#E6F6F0;border:1.5px solid #6EE7B7;border-radius:12px;padding:14px;
+          text-align:center;color:#0B7D59;font-size:12.5px;line-height:1.6
+        }
+        .lpr-modal-ok i{color:#0B7D59;font-size:18px;display:block;margin-bottom:6px}
         .lpr-modal-row{display:flex;gap:8px;margin-top:16px}
-        .lpr-modal-cancel{flex:1;padding:11px;border:1.5px solid rgba(255,255,255,.14);border-radius:10px;background:transparent;color:rgba(255,255,255,.7);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
-        .lpr-modal-cancel:hover{background:rgba(255,255,255,.04)}
-        .lpr-modal-send{flex:2;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
-        .lpr-modal-send:disabled{opacity:.6;cursor:not-allowed}
+        .lpr-modal-cancel{
+          flex:1;padding:12px;border:1.5px solid #9D5B8C;border-radius:11px;
+          background:#fff;color:#6B5B8C;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+          transition:background .18s,border-color .18s
+        }
+        .lpr-modal-cancel:hover{background:#FCE7F3;border-color:#BE185D}
+        .lpr-modal-send{
+          flex:2;padding:12px;border:none;border-radius:11px;
+          background:#BE185D;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+          transition:background .18s
+        }
+        .lpr-modal-send:hover:not(:disabled){background:#9D174D}
+        .lpr-modal-send:disabled{opacity:.55;cursor:not-allowed}
+
+        /* Quien navega con el teclado tiene que ver donde esta parado. */
+        .lpr-card a:focus-visible,.lpr-card button:focus-visible,
+        .lpr-modal button:focus-visible{outline:2px solid #BE185D;outline-offset:3px;border-radius:10px}
+        .lpr-btn:focus-visible{outline-color:#1F1338}
+
+        @media(prefers-reduced-motion:reduce){
+          .lpr-card,.lpr-greet,.lpr-sub,.lpr-err{animation:none!important}
+        }
 
         @media(max-width:480px){
-          .lpr-card{padding:32px 24px 26px;border-radius:22px}
+          .lpr-wrap{padding:16px}
+          .lpr-card{padding:30px 22px 24px;border-radius:20px}
           .lpr-greet{font-size:22px}
           .lpr-confetti{display:none}
-          /* iOS zoom prevention: inputs necesitan font-size ≥16px */
+          /* iOS no hace zoom si el input mide 16px o mas */
           .lpr-inp{font-size:16px!important;padding:14px 15px!important}
         }
       `}</style>
 
       <div className="lpr-wrap">
-        <div className="lpr-orb lpr-orb1" />
-        <div className="lpr-orb lpr-orb2" />
-        <div className="lpr-orb lpr-orb3" />
-        <div className="lpr-grain" />
-        {/* Pequeños detalles temáticos: regalos flotantes */}
-        <span className="lpr-confetti" style={{ top: '14%', left: '10%' }}>🎁</span>
-        <span className="lpr-confetti" style={{ top: '22%', right: '12%', animationDelay: '.8s' }}>🎀</span>
-        <span className="lpr-confetti" style={{ bottom: '18%', left: '14%', animationDelay: '1.4s' }}>✨</span>
-        <span className="lpr-confetti" style={{ bottom: '22%', right: '10%', animationDelay: '2s' }}>💝</span>
+        {/* Tres baldosas planas, el unico adorno del fondo */}
+        <span className="lpr-confetti" style={{ top: '12%', left: '8%', background: '#E11D74' }} />
+        <span className="lpr-confetti" style={{ top: '26%', right: '10%', background: '#9D174D', width: 56, height: 56, borderRadius: 18 }} />
+        <span className="lpr-confetti" style={{ bottom: '16%', left: '13%', background: '#FBCFE8', width: 44, height: 44, borderRadius: 14, opacity: .35 }} />
 
         <form className="lpr-card" onSubmit={e => { e.preventDefault(); handleLogin() }}>
           <div className="lpr-top">
@@ -357,12 +385,12 @@ export default function Login() {
 
           {signupDone && (
             <div style={{
-              background: 'rgba(16,185,129,.12)', border: '1.5px solid rgba(110,231,183,.4)',
-              borderRadius: 11, color: '#86efac', fontSize: 13, fontWeight: 600,
+              background: '#E6F6F0', border: '1.5px solid #6EE7B7',
+              borderRadius: 11, color: '#0B7D59', fontSize: 13, fontWeight: 600,
               padding: '14px 16px', marginBottom: 14, lineHeight: 1.6, textAlign: 'center',
             }}>
-              <i className="fa fa-circle-check" style={{ color: '#10b981', fontSize: 18, display: 'block', marginBottom: 6 }} />
-              Revisá tu email <b style={{ color: '#fff' }}>{email}</b> para confirmar tu cuenta.
+              <i className="fa fa-circle-check" style={{ color: '#0B7D59', fontSize: 18, display: 'block', marginBottom: 6 }} />
+              Revisá tu email <b style={{ color: '#07533B' }}>{email}</b> para confirmar tu cuenta.
               <br />Despues volvé aca e ingresá con tu contraseña.
             </div>
           )}
@@ -420,13 +448,13 @@ export default function Login() {
 
           <div style={{
             textAlign: 'center', marginTop: 18, marginBottom: 14,
-            fontSize: 13, color: 'rgba(255,255,255,.65)',
+            fontSize: 13, color: '#6B5B8C',
           }}>
             {isSignup ? '¿Ya tenés cuenta? ' : '¿No tenés cuenta? '}
             <button type="button" onClick={() => { setIsSignup(!isSignup); setErr(''); setSignupDone(false) }} style={{
-              background: 'none', border: 'none', color: '#f0abfc', fontWeight: 700,
+              background: 'none', border: 'none', color: '#BE185D', fontWeight: 700,
               fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', padding: 0,
-              borderBottom: '1px dashed rgba(240,171,252,.5)', paddingBottom: 1,
+              borderBottom: '1px dashed #E5B9D2', paddingBottom: 1,
             }}>
               {isSignup ? 'Ingresá aca' : 'Registrate gratis'} →
             </button>
@@ -453,12 +481,12 @@ export default function Login() {
       {forgotModal && (
         <div className="lpr-modal-bg" onClick={e => { if (e.target === e.currentTarget) setForgotModal(false) }}>
           <div className="lpr-modal">
-            <h3><i className="fa fa-key" style={{ color: '#f472b6', marginRight: 8, fontSize: 15 }} />Recuperar contraseña</h3>
+            <h3><i className="fa fa-key" style={{ color: '#BE185D', marginRight: 8, fontSize: 15 }} />Recuperar contraseña</h3>
             {resetSent ? (
               <>
                 <div className="lpr-modal-ok">
                   <i className="fa fa-circle-check" />
-                  Listo. Te enviamos un enlace a <b style={{ color: '#fff' }}>{resetEmail}</b>.<br />
+                  Listo. Te enviamos un enlace a <b style={{ color: '#07533B' }}>{resetEmail}</b>.<br />
                   Revisá tu bandeja (incluso spam) para crear una nueva contraseña.
                 </div>
                 <div className="lpr-modal-row">
