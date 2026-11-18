@@ -170,20 +170,9 @@ export default function Login() {
              tarjeta es mas alta que la pantalla y antes se cortaba el pie. */
           overflow:auto;-webkit-overflow-scrolling:touch;
         }
-        .lpr-wrap::before{
-          content:'';position:fixed;inset:0;pointer-events:none;
-          background:#1F1338;
-          clip-path:polygon(100% 26%,100% 100%,26% 100%);
-        }
         .lpr-wrap::after{
           content:'';position:fixed;top:0;left:0;right:0;height:5px;
           background:#FBCFE8;pointer-events:none;
-        }
-
-        /* Las baldosas que antes eran emojis flotando. */
-        .lpr-confetti{
-          position:fixed;width:84px;height:84px;border-radius:26px;
-          pointer-events:none;opacity:.5;
         }
 
         .lpr-card{
@@ -200,8 +189,8 @@ export default function Login() {
           width:44px;height:44px;border-radius:13px;flex-shrink:0;
           background:#E11D74;
           display:flex;align-items:center;justify-content:center;
+          font-size:19px;font-weight:800;color:#fff;letter-spacing:-.5px;
         }
-        .lpr-logo i{font-size:19px;color:#fff}
         .lpr-brand-txt{display:flex;flex-direction:column;line-height:1}
         .lpr-brand-name{font-size:19px;font-weight:800;color:#1F1338;letter-spacing:-.5px}
         .lpr-brand-name span{color:#BE185D}
@@ -349,21 +338,15 @@ export default function Login() {
           .lpr-wrap{padding:16px}
           .lpr-card{padding:30px 22px 24px;border-radius:20px}
           .lpr-greet{font-size:22px}
-          .lpr-confetti{display:none}
           /* iOS no hace zoom si el input mide 16px o mas */
           .lpr-inp{font-size:16px!important;padding:14px 15px!important}
         }
       `}</style>
 
       <div className="lpr-wrap">
-        {/* Tres baldosas planas, el unico adorno del fondo */}
-        <span className="lpr-confetti" style={{ top: '12%', left: '8%', background: '#E11D74' }} />
-        <span className="lpr-confetti" style={{ top: '26%', right: '10%', background: '#9D174D', width: 56, height: 56, borderRadius: 18 }} />
-        <span className="lpr-confetti" style={{ bottom: '16%', left: '13%', background: '#FBCFE8', width: 44, height: 44, borderRadius: 14, opacity: .35 }} />
-
         <form className="lpr-card" onSubmit={e => { e.preventDefault(); handleLogin() }}>
           <div className="lpr-top">
-            <div className="lpr-logo"><i className="fa fa-gift" /></div>
+            <div className="lpr-logo" aria-hidden="true">A</div>
             <div className="lpr-brand-txt">
               <span className="lpr-brand-name">ANMA <span>Regalos</span></span>
               <span className="lpr-brand-tag">Tu negocio de regalos, ordenado</span>
@@ -373,7 +356,7 @@ export default function Login() {
           <div className="lpr-greet">
             {isSignup
               ? <>Creá tu cuenta</>
-              : <>{greeting()}{knownName ? <>, <em>{knownName}</em></> : <em> 🎁</em>}</>}
+              : <>{greeting()}{knownName ? <>, <em>{knownName}</em></> : <em></em>}</>}
           </div>
           <div className="lpr-sub">
             {isSignup
